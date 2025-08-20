@@ -9,7 +9,7 @@ import {
   HomeIcon,
   AcademicCapIcon,
   HeartIcon,
-  CarIcon,
+  TruckIcon,
   BeakerIcon,
   BanknotesIcon
 } from '@heroicons/react/24/outline'
@@ -81,7 +81,7 @@ export function GoalWizard({
     {
       id: 'car',
       name: 'Car Purchase',
-      icon: CarIcon,
+      icon: TruckIcon,
       suggestedAmount: 25000,
       suggestedTimeframe: 18,
       description: 'Buy your next vehicle with cash',

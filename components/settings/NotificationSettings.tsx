@@ -46,23 +46,29 @@ export function NotificationSettings({
   })
 
   const handleChannelToggle = (channel: string) => {
-    setSettings(prev => ({
-      ...prev,
-      [channel]: {
-        ...prev[channel as keyof typeof prev],
-        enabled: !prev[channel as keyof typeof prev].enabled,
-      },
-    }))
+    setSettings(prev => {
+      const channelSettings = prev[channel as keyof typeof prev] as any
+      return {
+        ...prev,
+        [channel]: {
+          ...channelSettings,
+          enabled: !channelSettings.enabled,
+        },
+      }
+    })
   }
 
   const handleTypeToggle = (channel: string, type: string) => {
-    setSettings(prev => ({
-      ...prev,
-      [channel]: {
-        ...prev[channel as keyof typeof prev],
-        [type]: !prev[channel as keyof typeof prev][type as keyof typeof prev[typeof channel as keyof typeof prev]],
-      },
-    }))
+    setSettings(prev => {
+      const channelSettings = prev[channel as keyof typeof prev] as any
+      return {
+        ...prev,
+        [channel]: {
+          ...channelSettings,
+          [type]: !channelSettings[type],
+        },
+      }
+    })
   }
 
   const getChannelIcon = (channel: string) => {
@@ -272,7 +278,10 @@ export function NotificationSettings({
                 </p>
               </div>
               <div className="flex space-x-2">
-                {channels.filter(channel => settings[channel as keyof typeof settings].enabled).map((channel) => (
+                {channels.filter(channel => {
+                  const channelSettings = settings[channel as keyof typeof settings] as any
+                  return channelSettings.enabled
+                }).map((channel) => (
                   <button
                     key={channel}
                     className="px-3 py-1 text-xs bg-primary-trust-blue text-white rounded-md hover:bg-primary-trust-blue-dark transition-colors duration-200"

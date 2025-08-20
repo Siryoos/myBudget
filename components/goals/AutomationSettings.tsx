@@ -57,11 +57,16 @@ export function AutomationSettings({
     },
   ])
 
-  const [newRule, setNewRule] = useState({
-    type: 'fixed' as const,
+  const [newRule, setNewRule] = useState<{
+    type: 'fixed' | 'percentage' | 'remainder'
+    amount: string
+    percentage: string
+    frequency: 'daily' | 'weekly' | 'biweekly' | 'monthly'
+  }>({
+    type: 'fixed',
     amount: '',
     percentage: '',
-    frequency: 'monthly' as const,
+    frequency: 'monthly',
   })
 
   const handleAddRule = () => {
@@ -69,7 +74,7 @@ export function AutomationSettings({
       id: Date.now().toString(),
       type: newRule.type,
       amount: newRule.type === 'fixed' ? parseFloat(newRule.amount) : undefined,
-      percentage: newRule.type === 'percentage' ? parseFloat(newRule.percentage) : undefined,
+      percentage: newRule.type === 'percentage' && newRule.percentage ? parseFloat(newRule.percentage) : undefined,
       frequency: newRule.frequency,
       isActive: true,
     }

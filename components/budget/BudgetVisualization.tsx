@@ -82,7 +82,7 @@ export function BudgetVisualization({
                 d={path}
                 fill={item.color}
                 className="hover:opacity-80 transition-opacity cursor-pointer"
-                title={`${item.name}: ${formatPercentage(percentage)}`}
+                aria-label={`${item.name}: ${formatPercentage(percentage)}`}
               />
             )
           })}

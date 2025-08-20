@@ -75,7 +75,7 @@ export function BudgetSummary({
                 d={path}
                 fill={category.color}
                 className="hover:opacity-80 transition-opacity cursor-pointer"
-                title={`${category.name}: ${formatPercentage(percentage)}`}
+                aria-label={`${category.name}: ${formatPercentage(percentage)}`}
               />
             )
           })}
