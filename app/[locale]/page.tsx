@@ -1,5 +1,5 @@
 import { Metadata } from 'next'
-import { DashboardPage } from './dashboard/page'
+import DashboardPage from './dashboard/page'
 
 export const metadata: Metadata = {
   title: 'Dashboard',

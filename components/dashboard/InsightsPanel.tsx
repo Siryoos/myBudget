@@ -11,6 +11,7 @@ import {
 import { Card, CardContent, CardHeader } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { formatCurrency } from '@/lib/utils'
+import { useTranslation } from '@/lib/useTranslation'
 import type { FinancialInsight } from '@/types'
 
 interface InsightsPanelProps {
@@ -26,20 +27,21 @@ export function InsightsPanel({
 }: InsightsPanelProps) {
   const [dismissedInsights, setDismissedInsights] = useState<string[]>([])
   const [activeTab, setActiveTab] = useState<'tips' | 'recommendations' | 'compare'>('tips')
+  const { t } = useTranslation(['dashboard', 'common'])
 
   // Mock insights data
   const insights: FinancialInsight[] = [
     {
       id: '1',
       type: 'saving-opportunity',
-      title: 'Reduce Coffee Spending',
-      description: 'You spent $45 on coffee this week. Making coffee at home could save you $35 weekly.',
+      title: t('insights.coffeeSpending.title'),
+      description: t('insights.coffeeSpending.description'),
       impact: 'medium',
-      category: 'Food',
+      category: t('categories.food'),
       actionable: true,
       actions: [
-        { id: '1', label: 'Set Coffee Budget', type: 'navigate', target: '/budget' },
-        { id: '2', label: 'Track Daily Coffee', type: 'execute', target: 'track_coffee' },
+        { id: '1', label: t('insights.coffeeSpending.actions.setBudget'), type: 'navigate', target: '/budget' },
+        { id: '2', label: t('insights.coffeeSpending.actions.trackDaily'), type: 'execute', target: 'track_coffee' },
       ],
       createdAt: new Date(),
       isRead: false,
@@ -47,13 +49,13 @@ export function InsightsPanel({
     {
       id: '2',
       type: 'goal-progress',
-      title: 'Emergency Fund Update',
-      description: 'Great progress! You\'re 68% towards your emergency fund goal. Keep it up!',
+      title: t('insights.emergencyFund.title'),
+      description: t('insights.emergencyFund.description'),
       impact: 'high',
-      category: 'Savings',
+      category: t('categories.savings'),
       actionable: true,
       actions: [
-        { id: '1', label: 'View Goal Details', type: 'navigate', target: '/goals' },
+        { id: '1', label: t('insights.emergencyFund.actions.viewDetails'), type: 'navigate', target: '/goals' },
       ],
       createdAt: new Date(),
       isRead: false,
@@ -61,13 +63,13 @@ export function InsightsPanel({
     {
       id: '3',
       type: 'spending-pattern',
-      title: 'Weekend Spending Alert',
-      description: 'Your weekend spending is 40% higher than weekdays. Consider planning weekend budgets.',
+      title: t('insights.weekendSpending.title'),
+      description: t('insights.weekendSpending.description'),
       impact: 'medium',
-      category: 'Budget',
+      category: t('categories.budget'),
       actionable: true,
       actions: [
-        { id: '1', label: 'View Spending Patterns', type: 'navigate', target: '/transactions' },
+        { id: '1', label: t('insights.weekendSpending.actions.viewPatterns'), type: 'navigate', target: '/transactions' },
       ],
       createdAt: new Date(),
       isRead: false,
@@ -77,44 +79,44 @@ export function InsightsPanel({
   const savingTips = [
     {
       id: '1',
-      title: '52-Week Challenge',
-      description: 'Save $1 in week 1, $2 in week 2, and so on. You\'ll have $1,378 by year-end!',
+      title: t('savingTips.week52Challenge.title'),
+      description: t('savingTips.week52Challenge.description'),
       icon: '💰',
-      difficulty: 'Easy',
+      difficulty: t('difficulty.easy'),
     },
     {
       id: '2',
-      title: 'Round-Up Savings',
-      description: 'Round up purchases to the nearest dollar and save the difference automatically.',
+      title: t('savingTips.roundUpSavings.title'),
+      description: t('savingTips.roundUpSavings.description'),
       icon: '🔄',
-      difficulty: 'Easy',
+      difficulty: t('difficulty.easy'),
     },
     {
       id: '3',
-      title: 'No-Spend Days',
-      description: 'Challenge yourself to have 2-3 no-spend days per week to boost savings.',
+      title: t('savingTips.noSpendDays.title'),
+      description: t('savingTips.noSpendDays.description'),
       icon: '🚫',
-      difficulty: 'Medium',
+      difficulty: t('difficulty.medium'),
     },
   ]
 
   const peerComparisons = [
     {
-      metric: 'Savings Rate',
+      metric: t('comparisons.savingsRate'),
       userValue: 18,
       peerAverage: 15,
       unit: '%',
       better: true,
     },
     {
-      metric: 'Monthly Savings',
+      metric: t('comparisons.monthlySavings'),
       userValue: 680,
       peerAverage: 520,
       unit: '$',
       better: true,
     },
     {
-      metric: 'Budget Adherence',
+      metric: t('comparisons.budgetAdherence'),
       userValue: 85,
       peerAverage: 78,
       unit: '%',
@@ -172,10 +174,10 @@ export function InsightsPanel({
           </div>
           <div>
             <h3 className="text-lg font-semibold text-neutral-dark-gray">
-              Financial Insights
+              {t('insights.title')}
             </h3>
             <p className="text-sm text-neutral-gray">
-              Personalized tips and recommendations
+              {t('insights.subtitle')}
             </p>
           </div>
         </div>
@@ -183,13 +185,13 @@ export function InsightsPanel({
         {/* Tab Navigation */}
         <div className="flex space-x-1 mt-4 bg-neutral-light-gray rounded-lg p-1">
           {showSavingTips && (
-            <TabButton tab="tips" label="Tips" icon={LightBulbIcon} />
+            <TabButton tab="tips" label={t('insights.tabs.tips')} icon={LightBulbIcon} />
           )}
           {personalizedRecommendations && (
-            <TabButton tab="recommendations" label="Insights" icon={ChartBarIcon} />
+            <TabButton tab="recommendations" label={t('insights.tabs.insights')} icon={ChartBarIcon} />
           )}
           {comparePeers && (
-            <TabButton tab="compare" label="Compare" icon={UserGroupIcon} />
+            <TabButton tab="compare" label={t('insights.tabs.compare')} icon={UserGroupIcon} />
           )}
         </div>
       </CardHeader>
@@ -215,7 +217,7 @@ export function InsightsPanel({
                       {tip.description}
                     </p>
                     <Button variant="outline" size="sm">
-                      Try This Tip
+                      {t('actions.tryThisTip')}
                     </Button>
                   </div>
                 </div>
@@ -231,7 +233,7 @@ export function InsightsPanel({
               <div className="text-center py-6">
                 <LightBulbIcon className="h-12 w-12 text-neutral-gray mx-auto mb-4" />
                 <p className="text-neutral-gray">
-                  No new insights available. Check back later!
+                  {t('insights.noInsightsAvailable')}
                 </p>
               </div>
             ) : (
@@ -240,7 +242,7 @@ export function InsightsPanel({
                   <button
                     onClick={() => handleDismissInsight(insight.id)}
                     className="absolute top-2 right-2 p-1 rounded-full hover:bg-neutral-light-gray text-neutral-gray hover:text-neutral-dark-gray transition-colors duration-200"
-                    aria-label="Dismiss insight"
+                    aria-label={t('actions.dismissInsight')}
                   >
                     <XMarkIcon className="h-4 w-4" />
                   </button>
@@ -252,7 +254,7 @@ export function InsightsPanel({
                           {insight.title}
                         </h4>
                         <span className={`text-xs px-2 py-1 rounded-full ${getImpactColor(insight.impact)}`}>
-                          {insight.impact} impact
+                          {t(`impact.${insight.impact}`)} {t('impact.label')}
                         </span>
                       </div>
                       <p className="text-sm text-neutral-gray mb-3">
@@ -287,7 +289,7 @@ export function InsightsPanel({
           <div className="space-y-4">
             <div className="text-center mb-4">
               <p className="text-sm text-neutral-gray">
-                Compare your financial habits with similar users
+                {t('comparisons.description')}
               </p>
             </div>
 
@@ -302,7 +304,7 @@ export function InsightsPanel({
                       ? 'bg-secondary-growth-green/10 text-secondary-growth-green'
                       : 'bg-accent-action-orange/10 text-accent-action-orange'
                   }`}>
-                    {comparison.better ? 'Above Average' : 'Below Average'}
+                    {comparison.better ? t('comparisons.aboveAverage') : t('comparisons.belowAverage')}
                   </div>
                 </div>
                 
@@ -314,7 +316,7 @@ export function InsightsPanel({
                         : `${comparison.userValue}${comparison.unit}`
                       }
                     </div>
-                    <div className="text-xs text-neutral-gray">You</div>
+                    <div className="text-xs text-neutral-gray">{t('comparisons.you')}</div>
                   </div>
                   
                   <div className="text-center">
@@ -324,7 +326,7 @@ export function InsightsPanel({
                         : `${comparison.peerAverage}${comparison.unit}`
                       }
                     </div>
-                    <div className="text-xs text-neutral-gray">Average</div>
+                    <div className="text-xs text-neutral-gray">{t('comparisons.average')}</div>
                   </div>
                 </div>
               </div>
@@ -332,7 +334,7 @@ export function InsightsPanel({
 
             <div className="bg-primary-trust-blue/5 rounded-lg p-3 text-center">
               <p className="text-sm text-primary-trust-blue font-medium">
-                🎉 You&apos;re doing great! Keep up the good work!
+                {t('comparisons.encouragement')}
               </p>
             </div>
           </div>

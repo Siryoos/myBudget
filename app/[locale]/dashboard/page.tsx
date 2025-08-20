@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   description: 'Your financial overview and insights',
 }
 
-export function DashboardPage() {
+export default function DashboardPage() {
   return (
     <div className="space-y-6" id="main-content">
       {/* Welcome Header */}
@@ -68,6 +68,4 @@ export function DashboardPage() {
     </div>
   )
 }
-
-export default DashboardPage
 

@@ -37,21 +37,26 @@ export function WelcomeHeader({
     setToday(new Date())
   }, [])
 
+  // Debug logging
+  useEffect(() => {
+    console.log('WelcomeHeader i18n state:', { isReady, language: i18n.language, isInitialized: i18n.isInitialized })
+  }, [isReady, i18n.language, i18n.isInitialized])
+
   const quickActions = [
     {
-      label: t('dashboard:quickActions.addTransaction'),
+      label: t('dashboard:quickActions.addTransaction', { defaultValue: 'Add Transaction' }),
       icon: PlusIcon,
       action: () => console.log('Add transaction'),
       variant: 'primary' as const,
     },
     {
-      label: t('dashboard:quickActions.quickSave'),
+      label: t('dashboard:quickActions.quickSave', { defaultValue: 'Quick Save' }),
       icon: BanknotesIcon,
       action: () => console.log('Quick save'),
       variant: 'secondary' as const,
     },
     {
-      label: t('dashboard:quickActions.viewBudget'),
+      label: t('dashboard:quickActions.viewBudget', { defaultValue: 'View Budget' }),
       icon: ChartBarIcon,
       action: () => console.log('View budget'),
       variant: 'outline' as const,
@@ -64,7 +69,7 @@ export function WelcomeHeader({
         <div className="flex-1">
           {showGreeting && (
             <h1 className="text-2xl sm:text-3xl font-bold mb-2">
-              {t(`common:app.greeting.${greeting}`)}, {userName}! 👋
+              {t(`common:app.greeting.${greeting}`, { defaultValue: `Good ${greeting}` })}, {userName}! 👋
             </h1>
           )}
           
@@ -81,7 +86,7 @@ export function WelcomeHeader({
             <div className="flex items-center text-primary-trust-blue-light">
               <BellIcon className="h-5 w-5 mr-2" />
               <span className="text-sm">
-                {String(t('dashboard:insights.newAvailable', { count: 3 } as any))}
+                {t('dashboard:insights.newAvailable', { count: 3, defaultValue: '3 new insights available' })}
               </span>
             </div>
           </div>
@@ -119,12 +124,16 @@ export function WelcomeHeader({
           </div>
           <div className="ml-3">
             <p className="text-sm font-medium">
-              {String(t('dashboard:achievements.monthlySaving', { 
-                amount: formatCurrency(500, i18n.language) 
-              } as any))}
+              {t('dashboard:achievements.monthlySaving', { 
+                amount: formatCurrency(500, i18n.language),
+                defaultValue: 'You\'ve saved $500 this month!'
+              })}
             </p>
             <p className="text-xs text-primary-trust-blue-light mt-1">
-              {String(t('dashboard:achievements.goalProgress', { percentage: 83 } as any))}
+              {t('dashboard:achievements.goalProgress', { 
+                percentage: 83,
+                defaultValue: 'You\'re 83% towards your goal!'
+              })}
             </p>
           </div>
         </div>

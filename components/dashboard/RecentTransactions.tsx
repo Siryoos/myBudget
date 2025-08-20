@@ -9,6 +9,7 @@ import {
 import { Card, CardContent, CardHeader } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { formatCurrency, formatRelativeTime } from '@/lib/utils'
+import { useTranslation } from '@/lib/useTranslation'
 import type { Transaction } from '@/types'
 
 interface RecentTransactionsProps {
@@ -23,54 +24,55 @@ export function RecentTransactions({
   showAmounts = true,
 }: RecentTransactionsProps) {
   const [filterType, setFilterType] = useState<'all' | 'income' | 'expense'>('all')
+  const { t } = useTranslation(['dashboard', 'transactions', 'common'])
   
   // Mock transaction data
   const allTransactions: Transaction[] = [
     {
       id: '1',
       amount: -85.50,
-      description: 'Grocery Store',
-      category: 'Food',
+      description: t('transactions:examples.groceryStore', { defaultValue: 'Grocery Store' }),
+      category: t('budget:categories.food'),
       date: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
       type: 'expense',
     },
     {
       id: '2',
       amount: 2500.00,
-      description: 'Salary Deposit',
-      category: 'Income',
+      description: t('transactions:examples.salaryDeposit', { defaultValue: 'Salary Deposit' }),
+      category: t('transactions:categories.income'),
       date: new Date(Date.now() - 24 * 60 * 60 * 1000), // 1 day ago
       type: 'income',
     },
     {
       id: '3',
       amount: -12.99,
-      description: 'Netflix Subscription',
-      category: 'Entertainment',
+      description: t('transactions:examples.netflixSubscription', { defaultValue: 'Netflix Subscription' }),
+      category: t('budget:categories.entertainment'),
       date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
       type: 'expense',
     },
     {
       id: '4',
       amount: -45.00,
-      description: 'Gas Station',
-      category: 'Transportation',
+      description: t('transactions:examples.gasStation', { defaultValue: 'Gas Station' }),
+      category: t('budget:categories.transportation'),
       date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
       type: 'expense',
     },
     {
       id: '5',
       amount: -120.00,
-      description: 'Electric Bill',
-      category: 'Utilities',
+      description: t('transactions:examples.electricBill', { defaultValue: 'Electric Bill' }),
+      category: t('budget:categories.utilities'),
       date: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000), // 4 days ago
       type: 'expense',
     },
     {
       id: '6',
       amount: 50.00,
-      description: 'Freelance Payment',
-      category: 'Income',
+      description: t('transactions:examples.freelancePayment', { defaultValue: 'Freelance Payment' }),
+      category: t('transactions:categories.income'),
       date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
       type: 'income',
     },
@@ -82,14 +84,14 @@ export function RecentTransactions({
 
   const getCategoryIcon = (category: string) => {
     const icons: Record<string, string> = {
-      'Food': '🍽️',
-      'Income': '💰',
-      'Entertainment': '🎬',
-      'Transportation': '🚗',
-      'Utilities': '⚡',
-      'Shopping': '🛍️',
-      'Healthcare': '🏥',
-      'Education': '📚',
+      [t('budget:categories.food')]: '🍽️',
+      [t('transactions:categories.income')]: '💰',
+      [t('budget:categories.entertainment')]: '🎬',
+      [t('budget:categories.transportation')]: '🚗',
+      [t('budget:categories.utilities')]: '⚡',
+      [t('budget:categories.shopping')]: '🛍️',
+      [t('budget:categories.healthcare')]: '🏥',
+      [t('budget:categories.education')]: '📚',
     }
     return icons[category] || '💳'
   }
@@ -98,13 +100,13 @@ export function RecentTransactions({
     if (type === 'income') return 'text-secondary-growth-green'
     
     const colors: Record<string, string> = {
-      'Food': 'text-accent-action-orange',
-      'Entertainment': 'text-purple-600',
-      'Transportation': 'text-blue-600',
-      'Utilities': 'text-yellow-600',
-      'Shopping': 'text-pink-600',
-      'Healthcare': 'text-red-600',
-      'Education': 'text-indigo-600',
+      [t('budget:categories.food')]: 'text-accent-action-orange',
+      [t('budget:categories.entertainment')]: 'text-purple-600',
+      [t('budget:categories.transportation')]: 'text-blue-600',
+      [t('budget:categories.utilities')]: 'text-yellow-600',
+      [t('budget:categories.shopping')]: 'text-pink-600',
+      [t('budget:categories.healthcare')]: 'text-red-600',
+      [t('budget:categories.education')]: 'text-indigo-600',
     }
     return colors[category] || 'text-neutral-gray'
   }
@@ -115,10 +117,10 @@ export function RecentTransactions({
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-lg font-semibold text-neutral-dark-gray">
-              Recent Transactions
+              {t('transactions:title', { defaultValue: 'Recent Transactions' })}
             </h3>
             <p className="text-sm text-neutral-gray">
-              Your latest financial activity
+              {t('transactions:subtitle', { defaultValue: 'Your latest financial activity' })}
             </p>
           </div>
           
@@ -135,7 +137,12 @@ export function RecentTransactions({
                       : 'text-neutral-gray hover:text-neutral-dark-gray'
                   }`}
                 >
-                  {type.charAt(0).toUpperCase() + type.slice(1)}
+                  {type === 'all' 
+                    ? t('transactions:filters.all', { defaultValue: 'All' })
+                    : type === 'income'
+                    ? t('transactions:filters.income', { defaultValue: 'Income' })
+                    : t('transactions:filters.expense', { defaultValue: 'Expense' })
+                  }
                 </button>
               ))}
             </div>
@@ -151,7 +158,9 @@ export function RecentTransactions({
         {filteredTransactions.length === 0 ? (
           <div className="text-center py-8">
             <MagnifyingGlassIcon className="h-12 w-12 text-neutral-gray mx-auto mb-4" />
-            <p className="text-neutral-gray">No transactions found for the selected filter.</p>
+            <p className="text-neutral-gray">
+              {t('transactions:noTransactions', { defaultValue: 'No transactions found for the selected filter.' })}
+            </p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -218,7 +227,7 @@ export function RecentTransactions({
         {/* View All Button */}
         <div className="mt-6 pt-4 border-t border-neutral-gray/20">
           <Button variant="outline" size="sm" className="w-full group">
-            <span>View All Transactions</span>
+            <span>{t('transactions:viewAll', { defaultValue: 'View All Transactions' })}</span>
             <ArrowRightIcon className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform duration-200" />
           </Button>
         </div>
@@ -233,7 +242,9 @@ export function RecentTransactions({
                   .reduce((sum, t) => sum + t.amount, 0)
               )}
             </div>
-            <div className="text-xs text-neutral-gray">Income This Period</div>
+            <div className="text-xs text-neutral-gray">
+              {t('transactions:stats.incomeThisPeriod', { defaultValue: 'Income This Period' })}
+            </div>
           </div>
           
           <div className="bg-accent-warning-red/10 rounded-lg p-3 text-center">
@@ -244,7 +255,9 @@ export function RecentTransactions({
                   .reduce((sum, t) => sum + t.amount, 0))
               )}
             </div>
-            <div className="text-xs text-neutral-gray">Expenses This Period</div>
+            <div className="text-xs text-neutral-gray">
+              {t('transactions:stats.expensesThisPeriod', { defaultValue: 'Expenses This Period' })}
+            </div>
           </div>
         </div>
       </CardContent>

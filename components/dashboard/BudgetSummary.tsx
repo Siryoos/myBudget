@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/Card'
 import { ProgressBar } from '@/components/ui/ProgressBar'
 import { Button } from '@/components/ui/Button'
 import { formatCurrency, formatPercentage, getBudgetCategoryColor } from '@/lib/utils'
+import { useTranslation } from '@/lib/useTranslation'
 import type { BudgetCategory } from '@/types'
 
 interface BudgetSummaryProps {
@@ -24,15 +25,16 @@ export function BudgetSummary({
   visualType = 'donutChart',
 }: BudgetSummaryProps) {
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month'>('month')
+  const { t } = useTranslation(['dashboard', 'budget'])
 
   // Mock budget data
   const budgetData: BudgetCategory[] = [
-    { id: '1', name: 'Housing', allocated: 1200, spent: 1200, remaining: 0, color: '#1E5A8D', isEssential: true },
-    { id: '2', name: 'Food', allocated: 400, spent: 320, remaining: 80, color: '#27AE60', isEssential: true },
-    { id: '3', name: 'Transportation', allocated: 300, spent: 280, remaining: 20, color: '#FF6B35', isEssential: true },
-    { id: '4', name: 'Entertainment', allocated: 200, spent: 250, remaining: -50, color: '#DC3545', isEssential: false },
-    { id: '5', name: 'Shopping', allocated: 150, spent: 90, remaining: 60, color: '#10B981', isEssential: false },
-    { id: '6', name: 'Healthcare', allocated: 100, spent: 45, remaining: 55, color: '#4A8BC2', isEssential: true },
+    { id: '1', name: t('budget:categories.housing'), allocated: 1200, spent: 1200, remaining: 0, color: '#1E5A8D', isEssential: true },
+    { id: '2', name: t('budget:categories.food'), allocated: 400, spent: 320, remaining: 80, color: '#27AE60', isEssential: true },
+    { id: '3', name: t('budget:categories.transportation'), allocated: 300, spent: 280, remaining: 20, color: '#FF6B35', isEssential: true },
+    { id: '4', name: t('budget:categories.entertainment'), allocated: 200, spent: 250, remaining: -50, color: '#DC3545', isEssential: false },
+    { id: '5', name: t('budget:categories.shopping'), allocated: 150, spent: 90, remaining: 60, color: '#10B981', isEssential: false },
+    { id: '6', name: t('budget:categories.healthcare'), allocated: 100, spent: 45, remaining: 55, color: '#4A8BC2', isEssential: true },
   ]
 
   const totalAllocated = budgetData.reduce((sum, cat) => sum + cat.allocated, 0)
@@ -94,13 +96,13 @@ export function BudgetSummary({
             className="text-xs font-semibold fill-neutral-dark-gray"
             transform={`rotate(90 ${centerX} ${centerY})`}
           >
-            Spent
+            {t('budget:expenses.spent', { defaultValue: 'Spent' })}
           </text>
           <text
             x={centerX}
-            y={centerY + 8}
+            y={centerY + 5}
             textAnchor="middle"
-            className="text-sm font-bold fill-neutral-dark-gray"
+            className="text-xs font-medium fill-neutral-gray"
             transform={`rotate(90 ${centerX} ${centerY})`}
           >
             {formatPercentage((totalSpent / totalAllocated) * 100)}
@@ -115,124 +117,144 @@ export function BudgetSummary({
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center">
-            <ChartPieIcon className="h-6 w-6 text-primary-trust-blue mr-2" />
+            <div className="bg-primary-trust-blue/10 rounded-lg p-2 mr-3">
+              <ChartPieIcon className="h-6 w-6 text-primary-trust-blue" />
+            </div>
             <div>
               <h3 className="text-lg font-semibold text-neutral-dark-gray">
-                Budget Overview
+                {t('budget:overview.title', { defaultValue: 'Budget Overview' })}
               </h3>
               <p className="text-sm text-neutral-gray">
-                {formatCurrency(totalSpent)} of {formatCurrency(totalAllocated)} spent
+                {t('budget:overview.description', { defaultValue: 'Get a comprehensive view of your financial plan' })}
               </p>
             </div>
           </div>
           
-          <div className="flex items-center space-x-2">
-            <select
-              value={selectedPeriod}
-              onChange={(e) => setSelectedPeriod(e.target.value as 'week' | 'month')}
-              className="text-sm border border-neutral-gray/30 rounded-md px-2 py-1 focus:outline-none focus:ring-2 focus:ring-primary-trust-blue"
-            >
-              <option value="week">This Week</option>
-              <option value="month">This Month</option>
-            </select>
-          </div>
+          <Button variant="outline" size="sm">
+            {t('dashboard:quickActions.viewBudget', { defaultValue: 'View Full Budget' })}
+            <ArrowRightIcon className="h-4 w-4 ml-1" />
+          </Button>
+        </div>
+
+        {/* Period Selector */}
+        <div className="flex space-x-1 bg-neutral-light-gray rounded-lg p-1 mt-4">
+          <button
+            onClick={() => setSelectedPeriod('week')}
+            className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+              selectedPeriod === 'week'
+                ? 'bg-white text-primary-trust-blue shadow-sm'
+                : 'text-neutral-gray hover:text-neutral-dark-gray'
+            }`}
+          >
+            {t('common:time.week', { defaultValue: 'Week' })}
+          </button>
+          <button
+            onClick={() => setSelectedPeriod('month')}
+            className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+              selectedPeriod === 'month'
+                ? 'bg-white text-primary-trust-blue shadow-sm'
+                : 'text-neutral-gray hover:text-neutral-dark-gray'
+            }`}
+          >
+            {t('common:time.month', { defaultValue: 'Month' })}
+          </button>
         </div>
       </CardHeader>
 
-      <CardContent>
+      <CardContent className="space-y-6">
+        {/* Budget Summary */}
+        <div className="grid grid-cols-3 gap-4 text-center">
+          <div className="bg-neutral-light-gray/50 rounded-lg p-4">
+            <div className="text-sm text-neutral-gray mb-1">
+              {t('budget:overview.totalIncome', { defaultValue: 'Total Income' })}
+            </div>
+            <div className="text-xl font-bold text-secondary-growth-green">
+              {formatCurrency(totalAllocated)}
+            </div>
+          </div>
+          <div className="bg-neutral-light-gray/50 rounded-lg p-4">
+            <div className="text-sm text-neutral-gray mb-1">
+              {t('budget:overview.totalExpenses', { defaultValue: 'Total Expenses' })}
+            </div>
+            <div className="text-xl font-bold text-accent-action-orange">
+              {formatCurrency(totalSpent)}
+            </div>
+          </div>
+          <div className="bg-neutral-light-gray/50 rounded-lg p-4">
+            <div className="text-sm text-neutral-gray mb-1">
+              {t('budget:overview.remaining', { defaultValue: 'Remaining' })}
+            </div>
+            <div className={`text-xl font-bold ${
+              totalRemaining >= 0 ? 'text-secondary-growth-green' : 'text-red-500'
+            }`}>
+              {formatCurrency(totalRemaining)}
+            </div>
+          </div>
+        </div>
+
         {/* Spending Alerts */}
         {showSpendingAlerts && overBudgetCategories.length > 0 && (
-          <div className="mb-6 bg-accent-warning-red/10 border border-accent-warning-red/20 rounded-lg p-4">
-            <div className="flex items-start">
-              <ExclamationTriangleIcon className="h-5 w-5 text-accent-warning-red mt-0.5 mr-3 flex-shrink-0" />
-              <div className="flex-1">
-                <h4 className="font-medium text-accent-warning-red mb-1">
-                  Budget Alerts
-                </h4>
-                <p className="text-sm text-neutral-dark-gray">
-                  {overBudgetCategories.length} {overBudgetCategories.length === 1 ? 'category is' : 'categories are'} over budget:
-                </p>
-                <ul className="mt-2 space-y-1">
-                  {overBudgetCategories.map(category => (
-                    <li key={category.id} className="text-sm text-neutral-gray">
-                      <span className="font-medium">{category.name}</span> - 
-                      {formatCurrency(Math.abs(category.remaining))} over
-                    </li>
-                  ))}
-                </ul>
-              </div>
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="flex items-center mb-3">
+              <ExclamationTriangleIcon className="h-5 w-5 text-red-500 mr-2" />
+              <h4 className="font-medium text-red-800">
+                {t('budget:alerts.title', { defaultValue: 'Budget Alerts' })}
+              </h4>
+            </div>
+            <div className="space-y-2">
+              {overBudgetCategories.map((category) => (
+                <div key={category.id} className="flex items-center justify-between text-sm">
+                  <span className="text-red-700">{category.name}</span>
+                  <span className="font-medium text-red-600">
+                    -{formatCurrency(category.spent - category.allocated)} {t('budget:alerts.overBudget', { defaultValue: 'over' })}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Visualization */}
-          <div className="flex flex-col items-center">
-            {visualType === 'donutChart' && <DonutChart />}
-            
+        {/* Category Breakdown */}
+        {showCategories && (
+          <div>
+            <h4 className="font-medium text-neutral-dark-gray mb-4">
+              {t('budget:categories.title', { defaultValue: 'Category Breakdown' })}
+            </h4>
+            <div className="space-y-3">
+              {budgetData.map((category) => (
+                <div key={category.id} className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="font-medium text-neutral-dark-gray">{category.name}</span>
+                    <span className="text-neutral-gray">
+                      {formatCurrency(category.spent)} {t('budget:overview.of', { defaultValue: 'of' })} {formatCurrency(category.allocated)}
+                    </span>
+                  </div>
+                  <ProgressBar
+                    value={category.spent}
+                    max={category.allocated}
+                    color={category.spent > category.allocated ? 'danger' : 'success'}
+                    className="h-2"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Visual Representation */}
+        {visualType === 'donutChart' && (
+          <div className="text-center">
+            <DonutChart />
             <div className="mt-4 text-center">
               <div className="text-2xl font-bold text-neutral-dark-gray">
                 {formatCurrency(totalRemaining)}
               </div>
               <div className="text-sm text-neutral-gray">
-                {totalRemaining >= 0 ? 'Remaining' : 'Over Budget'}
+                {t('budget:overview.remaining', { defaultValue: 'Remaining' })}
               </div>
             </div>
           </div>
-
-          {/* Categories List */}
-          {showCategories && (
-            <div className="space-y-3">
-              <h4 className="font-semibold text-neutral-dark-gray mb-3">
-                Category Breakdown
-              </h4>
-              
-              {budgetData.map(category => {
-                const percentage = (category.spent / category.allocated) * 100
-                const isOverBudget = category.spent > category.allocated
-                
-                return (
-                  <div key={category.id} className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <div 
-                          className="w-3 h-3 rounded-full mr-2"
-                          style={{ backgroundColor: category.color }}
-                        />
-                        <span className="text-sm font-medium text-neutral-dark-gray">
-                          {category.name}
-                        </span>
-                      </div>
-                      <div className="text-right">
-                        <div className={`text-sm font-semibold ${getBudgetCategoryColor(category.spent, category.allocated)}`}>
-                          {formatCurrency(category.spent)}
-                        </div>
-                        <div className="text-xs text-neutral-gray">
-                          of {formatCurrency(category.allocated)}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <ProgressBar
-                      value={category.spent}
-                      max={category.allocated}
-                      size="sm"
-                      color={isOverBudget ? 'danger' : percentage > 80 ? 'warning' : 'success'}
-                      className="mb-1"
-                    />
-                  </div>
-                )
-              })}
-              
-              <div className="pt-3 border-t border-neutral-gray/20">
-                <Button variant="outline" size="sm" className="w-full">
-                  <span>View Full Budget</span>
-                  <ArrowRightIcon className="h-4 w-4 ml-2" />
-                </Button>
-              </div>
-            </div>
-          )}
-        </div>
+        )}
       </CardContent>
     </Card>
   )

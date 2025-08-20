@@ -26,7 +26,7 @@ const initI18n = async () => {
           // Match Next.js App Route at app/locales/[lng]/[ns]/route.ts
           loadPath: '/locales/{{lng}}/{{ns}}',
           requestOptions: {
-            cache: 'default',
+            cache: 'no-store', // Disable caching for instant language switching
           },
         },
         detection: {
@@ -38,9 +38,13 @@ const initI18n = async () => {
           useSuspense: false,
         },
         // Preload common namespace to avoid initial loading issues
-        preload: ['en'],
+        preload: ['en', 'ar', 'fa'],
         // Wait for translations to load before rendering
         initImmediate: false,
+        // Enable instant language switching
+        load: 'languageOnly',
+        // Clear cache on language change
+        cleanCode: true,
       });
   }
   return i18n;
@@ -54,14 +58,48 @@ interface I18nProviderProps {
 const I18nContext = createContext<{
   locale: string;
   isLoading: boolean;
+  changeLanguage: (newLocale: string) => Promise<void>;
 }>({
   locale: 'en',
   isLoading: true,
+  changeLanguage: async () => {},
 });
 
 export function I18nProvider({ children, locale = 'en' }: I18nProviderProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [currentLocale, setCurrentLocale] = useState(locale);
+
+  const changeLanguage = async (newLocale: string) => {
+    try {
+      setIsLoading(true);
+      
+      // Clear all cached translations
+      if (i18n.isInitialized && i18n.reportNamespaces) {
+        // Remove all loaded namespaces for the current locale
+        const loadedNamespaces = i18n.reportNamespaces.getUsedNamespaces();
+        loadedNamespaces.forEach(ns => {
+          i18n.removeResourceBundle(currentLocale, ns);
+        });
+        
+        // Change language
+        await i18n.changeLanguage(newLocale);
+        
+        // Reload all required namespaces for the new locale
+        const requiredNamespaces = ['common', 'dashboard', 'budget', 'goals', 'transactions', 'education', 'settings', 'auth', 'errors'];
+        await Promise.all(
+          requiredNamespaces.map(ns => 
+            i18n.loadNamespaces(ns)
+          )
+        );
+      }
+      
+      setCurrentLocale(newLocale);
+    } catch (error) {
+      console.error('Failed to change language:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
     const initialize = async () => {
@@ -73,6 +111,14 @@ export function I18nProvider({ children, locale = 'en' }: I18nProviderProps) {
           await i18n.changeLanguage(locale);
         }
         
+        // Ensure all required namespaces are loaded for the current locale
+        const requiredNamespaces = ['common', 'dashboard'];
+        await Promise.all(
+          requiredNamespaces.map(ns => 
+            i18n.loadNamespaces(ns)
+          )
+        );
+        
         setCurrentLocale(locale);
         setIsLoading(false);
       } catch (error) {
@@ -83,6 +129,23 @@ export function I18nProvider({ children, locale = 'en' }: I18nProviderProps) {
 
     initialize();
   }, [locale]);
+
+  // Listen for language changes from other components
+  useEffect(() => {
+    const handleLanguageChanged = (lng: string) => {
+      setCurrentLocale(lng);
+    };
+
+    if (i18n.isInitialized) {
+      i18n.on('languageChanged', handleLanguageChanged);
+    }
+
+    return () => {
+      if (i18n.isInitialized) {
+        i18n.off('languageChanged', handleLanguageChanged);
+      }
+    };
+  }, []);
 
   // Show loading state while i18n is initializing
   if (isLoading) {
@@ -97,7 +160,7 @@ export function I18nProvider({ children, locale = 'en' }: I18nProviderProps) {
   }
 
   return (
-    <I18nContext.Provider value={{ locale: currentLocale, isLoading }}>
+    <I18nContext.Provider value={{ locale: currentLocale, isLoading, changeLanguage }}>
       <I18nextProvider i18n={i18n}>
         {children}
       </I18nextProvider>

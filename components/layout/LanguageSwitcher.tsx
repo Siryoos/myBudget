@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { ChevronDownIcon, GlobeAltIcon } from '@heroicons/react/24/outline';
 import { getDirection } from '@/lib/i18n';
+import i18n from 'i18next';
 
 type Locale = 'en' | 'fa' | 'ar';
 
@@ -50,8 +51,8 @@ export default function LanguageSwitcher({ currentLocale = 'en' }: LanguageSwitc
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleLanguageChange = (newLocale: Locale) => {
-    // Update the pathname with the new locale
+  const handleLanguageChange = async (newLocale: Locale) => {
+    // Calculate the new path first so it's available in both try and catch blocks
     const segments = pathname.split('/');
     const hasLocale = languages.some(lang => lang.code === segments[1]);
 
@@ -73,16 +74,38 @@ export default function LanguageSwitcher({ currentLocale = 'en' }: LanguageSwitc
       newPath += hash;
     }
 
-    // Set cookie for persistence
-    document.cookie = `NEXT_LOCALE=${newLocale};path=/;max-age=${60 * 60 * 24 * 365}`;
+    try {
+      // Clear all cached translations and namespaces
+      if (i18n.isInitialized && i18n.reportNamespaces) {
+        // Remove all loaded namespaces
+        const loadedNamespaces = i18n.reportNamespaces.getUsedNamespaces();
+        loadedNamespaces.forEach(ns => {
+          i18n.removeResourceBundle(newLocale, ns);
+        });
+        
+        // Clear the language detector cache
+        if ((i18n as any).languageDetector) {
+          (i18n as any).languageDetector.cacheUserLanguage(newLocale);
+        }
+      }
 
-    // Update HTML dir attribute
-    document.documentElement.dir = getDirection(newLocale);
-    document.documentElement.lang = newLocale;
+      // Set cookie for persistence
+      document.cookie = `NEXT_LOCALE=${newLocale};path=/;max-age=${60 * 60 * 24 * 365}`;
 
-    // Navigate to new locale
-    router.push(newPath);
-    setIsOpen(false);
+      // Update HTML dir attribute
+      document.documentElement.dir = getDirection(newLocale);
+      document.documentElement.lang = newLocale;
+
+      // Force a complete page reload to ensure all components are re-rendered with new language
+      // This ensures instant language switching across all modules
+      window.location.href = newPath;
+      
+      setIsOpen(false);
+    } catch (error) {
+      console.error('Error changing language:', error);
+      // Fallback to router navigation if something goes wrong
+      router.push(newPath);
+    }
   };
 
   return (
