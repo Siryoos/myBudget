@@ -16,6 +16,7 @@ import {
 import { Card, CardContent, CardHeader } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { formatCurrency, sanitizeNumberInput, formatDate } from '@/lib/utils'
+import { useTranslation } from '@/lib/useTranslation'
 import type { SavingsGoal, GoalCategory } from '@/types'
 
 interface GoalTemplate {
@@ -39,6 +40,7 @@ export function GoalWizard({
   visualGoalSetting = true,
   milestoneBreakdown = true,
 }: GoalWizardProps) {
+  const { t, isReady } = useTranslation(['goals', 'common'])
   const [showWizard, setShowWizard] = useState(false)
   const [currentStep, setCurrentStep] = useState(1)
   const [selectedTemplate, setSelectedTemplate] = useState<GoalTemplate | null>(null)
@@ -50,78 +52,123 @@ export function GoalWizard({
     priority: 'medium' as 'low' | 'medium' | 'high',
   })
 
+  if (!isReady) {
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-trust-blue mx-auto mb-4"></div>
+            <p className="text-neutral-gray">{t('common:status.loading', { defaultValue: 'Loading...' })}</p>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
   const goalTemplates: GoalTemplate[] = [
     {
       id: 'emergency',
-      name: 'Emergency Fund',
+      name: t('goals:templates.emergency.name', { defaultValue: 'Emergency Fund' }),
       icon: BanknotesIcon,
       suggestedAmount: 10000,
       suggestedTimeframe: 12,
-      description: 'Build a safety net for unexpected expenses',
-      tips: ['Aim for 3-6 months of expenses', 'Keep in high-yield savings', 'Automate contributions'],
+      description: t('goals:templates.emergency.description', { defaultValue: 'Build a safety net for unexpected expenses' }),
+      tips: [
+        t('goals:templates.emergency.tips.amount', { defaultValue: 'Aim for 3-6 months of expenses' }),
+        t('goals:templates.emergency.tips.account', { defaultValue: 'Keep in high-yield savings' }),
+        t('goals:templates.emergency.tips.automate', { defaultValue: 'Automate contributions' })
+      ],
     },
     {
       id: 'vacation',
-      name: 'Dream Vacation',
+      name: t('goals:templates.vacation.name', { defaultValue: 'Dream Vacation' }),
       icon: SparklesIcon,
       suggestedAmount: 3000,
       suggestedTimeframe: 8,
-      description: 'Save for your perfect getaway',
-      tips: ['Research costs early', 'Book in advance for deals', 'Consider off-season travel'],
+      description: t('goals:templates.vacation.description', { defaultValue: 'Save for your perfect getaway' }),
+      tips: [
+        t('goals:templates.vacation.tips.research', { defaultValue: 'Research costs early' }),
+        t('goals:templates.vacation.tips.booking', { defaultValue: 'Book in advance for deals' }),
+        t('goals:templates.vacation.tips.offseason', { defaultValue: 'Consider off-season travel' })
+      ],
     },
     {
       id: 'home',
-      name: 'Home Down Payment',
+      name: t('goals:templates.home.name', { defaultValue: 'Home Down Payment' }),
       icon: HomeIcon,
       suggestedAmount: 50000,
       suggestedTimeframe: 36,
-      description: 'Save for your dream home',
-      tips: ['Aim for 20% down payment', 'Factor in closing costs', 'Consider first-time buyer programs'],
+      description: t('goals:templates.home.description', { defaultValue: 'Save for your dream home' }),
+      tips: [
+        t('goals:templates.home.tips.downpayment', { defaultValue: 'Aim for 20% down payment' }),
+        t('goals:templates.home.tips.closing', { defaultValue: 'Factor in closing costs' }),
+        t('goals:templates.home.tips.programs', { defaultValue: 'Consider first-time buyer programs' })
+      ],
     },
     {
       id: 'car',
-      name: 'Car Purchase',
+      name: t('goals:templates.car.name', { defaultValue: 'Car Purchase' }),
       icon: TruckIcon,
       suggestedAmount: 25000,
       suggestedTimeframe: 18,
-      description: 'Buy your next vehicle with cash',
-      tips: ['Research depreciation rates', 'Consider certified pre-owned', 'Factor in insurance costs'],
+      description: t('goals:templates.car.description', { defaultValue: 'Buy your next vehicle with cash' }),
+      tips: [
+        t('goals:templates.car.tips.depreciation', { defaultValue: 'Research depreciation rates' }),
+        t('goals:templates.car.tips.certified', { defaultValue: 'Consider certified pre-owned' }),
+        t('goals:templates.car.tips.insurance', { defaultValue: 'Factor in insurance costs' })
+      ],
     },
     {
       id: 'wedding',
-      name: 'Wedding',
+      name: t('goals:templates.wedding.name', { defaultValue: 'Wedding' }),
       icon: HeartIcon,
       suggestedAmount: 15000,
       suggestedTimeframe: 24,
-      description: 'Plan your special day without debt',
-      tips: ['Set priorities early', 'Consider off-peak dates', 'Track expenses carefully'],
+      description: t('goals:templates.wedding.description', { defaultValue: 'Your special day without financial stress' }),
+      tips: [
+        t('goals:templates.wedding.tips.prioritize', { defaultValue: 'Prioritize what matters most' }),
+        t('goals:templates.wedding.tips.negotiate', { defaultValue: 'Negotiate with vendors' }),
+        t('goals:templates.wedding.tips.alternatives', { defaultValue: 'Consider cost-effective alternatives' })
+      ],
     },
     {
       id: 'education',
-      name: 'Education Fund',
+      name: t('goals:templates.education.name', { defaultValue: 'Education' }),
       icon: AcademicCapIcon,
-      suggestedAmount: 20000,
+      suggestedAmount: 25000,
       suggestedTimeframe: 48,
-      description: 'Invest in learning and growth',
-      tips: ['Research program costs', 'Look for scholarships', 'Consider employer assistance'],
+      description: t('goals:templates.education.description', { defaultValue: 'Invest in your future through learning' }),
+      tips: [
+        t('goals:templates.education.tips.scholarships', { defaultValue: 'Apply for scholarships and grants' }),
+        t('goals:templates.education.tips.community', { defaultValue: 'Consider community college first' }),
+        t('goals:templates.education.tips.workstudy', { defaultValue: 'Look into work-study programs' })
+      ],
     },
     {
       id: 'retirement',
-      name: 'Retirement Boost',
-      icon: BanknotesIcon,
-      suggestedAmount: 100000,
-      suggestedTimeframe: 120,
-      description: 'Supercharge your retirement savings',
-      tips: ['Maximize employer match', 'Consider Roth IRA', 'Increase contributions annually'],
+      name: t('goals:templates.retirement.name', { defaultValue: 'Retirement' }),
+      icon: BeakerIcon,
+      suggestedAmount: 1000000,
+      suggestedTimeframe: 360,
+      description: t('goals:templates.retirement.description', { defaultValue: 'Secure your golden years' }),
+      tips: [
+        t('goals:templates.retirement.tips.start', { defaultValue: 'Start early, compound interest is powerful' }),
+        t('goals:templates.retirement.tips.employer', { defaultValue: 'Maximize employer matching' }),
+        t('goals:templates.retirement.tips.diversify', { defaultValue: 'Diversify your investments' })
+      ],
     },
     {
       id: 'custom',
-      name: 'Custom Goal',
-      icon: BeakerIcon,
+      name: t('goals:templates.custom.name', { defaultValue: 'Custom Goal' }),
+      icon: PlusIcon,
       suggestedAmount: 5000,
       suggestedTimeframe: 12,
-      description: 'Create your own savings goal',
-      tips: ['Be specific about your target', 'Set realistic timeframes', 'Track progress regularly'],
+      description: t('goals:templates.custom.description', { defaultValue: 'Create your own personalized goal' }),
+      tips: [
+        t('goals:templates.custom.tips.specific', { defaultValue: 'Be specific about what you want' }),
+        t('goals:templates.custom.tips.realistic', { defaultValue: 'Set realistic timelines' }),
+        t('goals:templates.custom.tips.flexible', { defaultValue: 'Stay flexible and adjust as needed' })
+      ],
     },
   ]
 
@@ -132,29 +179,41 @@ export function GoalWizard({
       name: template.name,
       targetAmount: template.suggestedAmount.toString(),
       targetDate: new Date(Date.now() + template.suggestedTimeframe * 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      description: template.description,
     }))
     setCurrentStep(2)
   }
 
-  const handleCreateGoal = () => {
-    const newGoal: Partial<SavingsGoal> = {
-      name: goalData.name,
-      targetAmount: sanitizeNumberInput(goalData.targetAmount),
-      targetDate: new Date(goalData.targetDate),
-      description: goalData.description,
-      priority: goalData.priority,
-      category: selectedTemplate?.id || 'custom',
-      currentAmount: 0,
-      isActive: true,
-    }
-
-    console.log('Creating goal:', newGoal)
-    
-    // Reset wizard
+  const handleSubmit = () => {
+    // Handle goal creation
+    console.log('Creating goal:', goalData)
     setShowWizard(false)
     setCurrentStep(1)
     setSelectedTemplate(null)
-    setGoalData({ name: '', targetAmount: '', targetDate: '', description: '', priority: 'medium' })
+    setGoalData({
+      name: '',
+      targetAmount: '',
+      targetDate: '',
+      description: '',
+      priority: 'medium',
+    })
+  }
+
+  const handleBack = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1)
+    } else {
+      setShowWizard(false)
+      setCurrentStep(1)
+      setSelectedTemplate(null)
+      setGoalData({
+        name: '',
+        targetAmount: '',
+        targetDate: '',
+        description: '',
+        priority: 'medium',
+      })
+    }
   }
 
   const calculateMonthlyTarget = () => {
@@ -182,339 +241,212 @@ export function GoalWizard({
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <div className="bg-secondary-growth-green/10 rounded-lg p-2 mr-3">
-              <SparklesIcon className="h-6 w-6 text-secondary-growth-green" />
+    <div className="space-y-6">
+      {/* Create New Goal Card */}
+      <Card className="relative overflow-hidden">
+        <CardContent className="p-8 text-center">
+          <div className="mb-6">
+            <div className="bg-gradient-to-br from-primary-trust-blue/10 to-secondary-growth-green/10 rounded-full w-24 h-24 mx-auto mb-4 flex items-center justify-center">
+              <div className="text-4xl">?</div>
+              <div className="absolute inset-0 bg-gradient-to-br from-primary-trust-blue/20 to-secondary-growth-green/20 rounded-full animate-pulse"></div>
             </div>
-            <div>
-              <h3 className="text-lg font-semibold text-neutral-dark-gray">
-                Create New Goal
-              </h3>
-              <p className="text-sm text-neutral-gray">
-                Turn your dreams into actionable savings plans
-              </p>
-            </div>
+            <h3 className="text-2xl font-bold text-neutral-dark-gray mb-2">
+              {t('goals:wizard.createNewGoal.title', { defaultValue: 'Create New Goal' })}
+            </h3>
+            <p className="text-neutral-gray max-w-md mx-auto">
+              {t('goals:wizard.createNewGoal.subtitle', { defaultValue: 'Ready to achieve your dreams? Create your first savings goal and start your journey to financial success.' })}
+            </p>
           </div>
           
-          {!showWizard && (
-            <Button
-              variant="primary"
-              onClick={() => setShowWizard(true)}
-            >
-              <PlusIcon className="h-4 w-4 mr-2" />
-              New Goal
-            </Button>
-          )}
-        </div>
-      </CardHeader>
+          <Button
+            onClick={() => setShowWizard(true)}
+            className="bg-gradient-to-r from-primary-trust-blue to-secondary-growth-green hover:from-primary-trust-blue/90 hover:to-secondary-growth-green/90 text-white px-8 py-3 text-lg font-semibold"
+          >
+            {t('goals:wizard.createNewGoal.getStarted', { defaultValue: 'Get Started' })}
+          </Button>
+        </CardContent>
+      </Card>
 
-      <CardContent>
-        {!showWizard ? (
-          <div className="text-center py-8">
-            <SparklesIcon className="h-16 w-16 text-neutral-gray mx-auto mb-4" />
-            <h4 className="text-lg font-medium text-neutral-dark-gray mb-2">
-              Ready to achieve your dreams?
-            </h4>
-            <p className="text-neutral-gray mb-4">
-              Create your first savings goal and start your journey to financial success.
-            </p>
-            <Button variant="primary" onClick={() => setShowWizard(true)}>
-              Get Started
-            </Button>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {/* Progress Steps */}
-            <div className="flex items-center justify-center space-x-4 mb-6">
-              {[1, 2, 3].map((step) => (
-                <div key={step} className="flex items-center">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                    step <= currentStep
-                      ? 'bg-secondary-growth-green text-white'
-                      : 'bg-neutral-light-gray text-neutral-gray'
-                  }`}>
-                    {step}
-                  </div>
-                  {step < 3 && (
-                    <div className={`w-8 h-1 mx-2 ${
-                      step < currentStep ? 'bg-secondary-growth-green' : 'bg-neutral-light-gray'
-                    }`} />
-                  )}
-                </div>
-              ))}
-            </div>
-
-            {/* Step 1: Choose Template */}
-            {currentStep === 1 && (
-              <div>
-                <h4 className="text-lg font-semibold text-neutral-dark-gray mb-4 text-center">
-                  What would you like to save for?
-                </h4>
-                
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {goalTemplates.filter(template => 
-                    templates.includes(template.name) || templates.includes('Custom')
-                  ).map((template) => {
-                    const IconComponent = template.icon
-                    
-                    return (
-                      <button
-                        key={template.id}
-                        onClick={() => handleTemplateSelect(template)}
-                        className="p-4 rounded-lg border-2 border-neutral-gray/30 hover:border-secondary-growth-green/50 transition-all duration-200 text-center group hover:shadow-md"
-                      >
-                        <div className="bg-neutral-light-gray group-hover:bg-secondary-growth-green/10 rounded-lg p-3 mb-2 mx-auto w-fit transition-colors duration-200">
-                          <IconComponent className="h-6 w-6 text-neutral-gray group-hover:text-secondary-growth-green transition-colors duration-200" />
-                        </div>
-                        <div className="text-sm font-medium text-neutral-dark-gray">
-                          {template.name}
-                        </div>
-                        <div className="text-xs text-neutral-gray mt-1">
-                          {formatCurrency(template.suggestedAmount)}
-                        </div>
-                      </button>
-                    )
-                  })}
-                </div>
+      {/* Goal Creation Wizard Modal */}
+      {showWizard && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <CardHeader className="border-b border-neutral-gray/20">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-semibold text-neutral-dark-gray">
+                  {t('goals:wizard.title', { defaultValue: 'Create Your Savings Goal' })}
+                </h3>
+                <button
+                  onClick={() => setShowWizard(false)}
+                  className="text-neutral-gray hover:text-neutral-dark-gray transition-colors"
+                >
+                  <PlusIcon className="h-6 w-6 transform rotate-45" />
+                </button>
               </div>
-            )}
+            </CardHeader>
 
-            {/* Step 2: Goal Details */}
-            {currentStep === 2 && selectedTemplate && (
-              <div className="space-y-4">
-                <div className="text-center mb-6">
-                  <div className="bg-secondary-growth-green/10 rounded-lg p-3 w-fit mx-auto mb-2">
-                    <selectedTemplate.icon className="h-8 w-8 text-secondary-growth-green" />
-                  </div>
-                  <h4 className="text-lg font-semibold text-neutral-dark-gray">
-                    {selectedTemplate.name}
+            <CardContent className="p-6">
+              {/* Step 1: Choose Template */}
+              {currentStep === 1 && (
+                <div>
+                  <h4 className="text-lg font-semibold text-neutral-dark-gray mb-4 text-center">
+                    {t('goals:wizard.step1.title', { defaultValue: 'What would you like to save for?' })}
                   </h4>
-                  <p className="text-sm text-neutral-gray">
-                    {selectedTemplate.description}
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="goal-name" className="block text-sm font-medium text-neutral-dark-gray mb-1">
-                      Goal Name
-                    </label>
-                    <input
-                      id="goal-name"
-                      type="text"
-                      value={goalData.name}
-                      onChange={(e) => setGoalData(prev => ({ ...prev, name: e.target.value }))}
-                      className="input-field"
-                      placeholder="My savings goal"
-                    />
-                  </div>
                   
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {goalTemplates.filter(template => 
+                      templates.includes(template.name) || templates.includes('Custom')
+                    ).map((template) => {
+                      const IconComponent = template.icon
+                      
+                      return (
+                        <button
+                          key={template.id}
+                          onClick={() => handleTemplateSelect(template)}
+                          className="p-4 rounded-lg border-2 border-neutral-gray/30 hover:border-secondary-growth-green/50 transition-all duration-200 text-center group hover:shadow-md"
+                        >
+                          <div className="bg-neutral-light-gray group-hover:bg-secondary-growth-green/10 rounded-lg p-3 mb-2 mx-auto w-fit transition-colors duration-200">
+                            <IconComponent className="h-6 w-6 text-neutral-gray group-hover:text-secondary-growth-green transition-colors duration-200" />
+                          </div>
+                          <div className="text-sm font-medium text-neutral-dark-gray">
+                            {template.name}
+                          </div>
+                          <div className="text-xs text-neutral-gray mt-1">
+                            {formatCurrency(template.suggestedAmount)}
+                          </div>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Step 2: Goal Details */}
+              {currentStep === 2 && selectedTemplate && (
+                <div className="space-y-6">
                   <div>
-                    <label htmlFor="target-amount" className="block text-sm font-medium text-neutral-dark-gray mb-1">
-                      Target Amount
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <CurrencyDollarIcon className="h-5 w-5 text-neutral-gray" />
-                      </div>
+                    <h4 className="text-lg font-semibold text-neutral-dark-gray mb-4">
+                      {t('goals:wizard.step2.title', { defaultValue: 'Customize Your Goal' })}
+                    </h4>
+                    <p className="text-neutral-gray mb-4">
+                      {t('goals:wizard.step2.subtitle', { defaultValue: 'Fine-tune the details to match your specific needs and timeline.' })}
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-neutral-dark-gray mb-2">
+                        {t('goals:wizard.step2.fields.name', { defaultValue: 'Goal Name' })}
+                      </label>
                       <input
-                        id="target-amount"
-                        type="number"
-                        min="0"
-                        step="100"
-                        value={goalData.targetAmount}
-                        onChange={(e) => setGoalData(prev => ({ ...prev, targetAmount: e.target.value }))}
-                        className="input-field pl-10"
-                        placeholder="5000"
+                        type="text"
+                        value={goalData.name}
+                        onChange={(e) => setGoalData(prev => ({ ...prev, name: e.target.value }))}
+                        className="w-full px-3 py-2 border border-neutral-gray/30 rounded-lg focus:ring-2 focus:ring-primary-trust-blue focus:border-transparent"
+                        placeholder={t('goals:wizard.step2.fields.namePlaceholder', { defaultValue: 'Enter goal name' })}
                       />
                     </div>
-                  </div>
-                  
-                  <div>
-                    <label htmlFor="target-date" className="block text-sm font-medium text-neutral-dark-gray mb-1">
-                      Target Date
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <CalendarIcon className="h-5 w-5 text-neutral-gray" />
-                      </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-neutral-dark-gray mb-2">
+                        {t('goals:wizard.step2.fields.targetAmount', { defaultValue: 'Target Amount' })}
+                      </label>
                       <input
-                        id="target-date"
+                        type="number"
+                        value={goalData.targetAmount}
+                        onChange={(e) => setGoalData(prev => ({ ...prev, targetAmount: e.target.value }))}
+                        className="w-full px-3 py-2 border border-neutral-gray/30 rounded-lg focus:ring-2 focus:ring-primary-trust-blue focus:border-transparent"
+                        placeholder="0.00"
+                        min="0"
+                        step="0.01"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-neutral-dark-gray mb-2">
+                        {t('goals:wizard.step2.fields.targetDate', { defaultValue: 'Target Date' })}
+                      </label>
+                      <input
                         type="date"
                         value={goalData.targetDate}
                         onChange={(e) => setGoalData(prev => ({ ...prev, targetDate: e.target.value }))}
-                        className="input-field pl-10"
+                        className="w-full px-3 py-2 border border-neutral-gray/30 rounded-lg focus:ring-2 focus:ring-primary-trust-blue focus:border-transparent"
                       />
                     </div>
-                  </div>
-                  
-                  <div>
-                    <label htmlFor="priority" className="block text-sm font-medium text-neutral-dark-gray mb-1">
-                      Priority
-                    </label>
-                    <select
-                      id="priority"
-                      value={goalData.priority}
-                      onChange={(e) => setGoalData(prev => ({ ...prev, priority: e.target.value as any }))}
-                      className="input-field"
-                    >
-                      <option value="low">Low Priority</option>
-                      <option value="medium">Medium Priority</option>
-                      <option value="high">High Priority</option>
-                    </select>
-                  </div>
-                </div>
 
-                <div>
-                  <label htmlFor="description" className="block text-sm font-medium text-neutral-dark-gray mb-1">
-                    Description (Optional)
-                  </label>
-                  <textarea
-                    id="description"
-                    rows={3}
-                    value={goalData.description}
-                    onChange={(e) => setGoalData(prev => ({ ...prev, description: e.target.value }))}
-                    className="input-field resize-none"
-                    placeholder="Add more details about your goal..."
-                  />
-                </div>
-
-                {/* Goal Summary */}
-                {goalData.targetAmount && goalData.targetDate && (
-                  <div className="bg-neutral-light-gray/50 rounded-lg p-4">
-                    <h5 className="font-medium text-neutral-dark-gray mb-2">Goal Summary</h5>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <span className="text-neutral-gray">Monthly target:</span>
-                        <div className="font-semibold text-secondary-growth-green">
-                          {formatCurrency(calculateMonthlyTarget())}
-                        </div>
-                      </div>
-                      <div>
-                        <span className="text-neutral-gray">Priority:</span>
-                        <div className={`inline-block px-2 py-1 rounded-full text-xs font-medium ml-2 ${getPriorityColor(goalData.priority)}`}>
-                          {goalData.priority.charAt(0).toUpperCase() + goalData.priority.slice(1)}
-                        </div>
-                      </div>
+                    <div>
+                      <label className="block text-sm font-medium text-neutral-dark-gray mb-2">
+                        {t('goals:wizard.step2.fields.priority', { defaultValue: 'Priority' })}
+                      </label>
+                      <select
+                        value={goalData.priority}
+                        onChange={(e) => setGoalData(prev => ({ ...prev, priority: e.target.value as 'low' | 'medium' | 'high' }))}
+                        className="w-full px-3 py-2 border border-neutral-gray/30 rounded-lg focus:ring-2 focus:ring-primary-trust-blue focus:border-transparent"
+                      >
+                        <option value="low">{t('goals:wizard.step2.priority.low', { defaultValue: 'Low' })}</option>
+                        <option value="medium">{t('goals:wizard.step2.priority.medium', { defaultValue: 'Medium' })}</option>
+                        <option value="high">{t('goals:wizard.step2.priority.high', { defaultValue: 'High' })}</option>
+                      </select>
                     </div>
                   </div>
-                )}
 
-                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="block text-sm font-medium text-neutral-dark-gray mb-2">
+                      {t('goals:wizard.step2.fields.description', { defaultValue: 'Description' })}
+                    </label>
+                    <textarea
+                      value={goalData.description}
+                      onChange={(e) => setGoalData(prev => ({ ...prev, description: e.target.value }))}
+                      rows={3}
+                      className="w-full px-3 py-2 border border-neutral-gray/30 rounded-lg focus:ring-2 focus:ring-primary-trust-blue focus:border-transparent"
+                      placeholder={t('goals:wizard.step2.fields.descriptionPlaceholder', { defaultValue: 'Describe your goal in detail...' })}
+                    />
+                  </div>
+
+                  {/* Template Tips */}
+                  <div className="bg-neutral-light-gray/50 rounded-lg p-4">
+                    <h5 className="font-medium text-neutral-dark-gray mb-2">
+                      {t('goals:wizard.step2.tips.title', { defaultValue: 'Tips for Success' })}
+                    </h5>
+                    <ul className="space-y-1 text-sm text-neutral-gray">
+                      {selectedTemplate.tips.map((tip, index) => (
+                        <li key={index} className="flex items-start">
+                          <span className="text-secondary-growth-green mr-2">•</span>
+                          {tip}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              )}
+
+              {/* Navigation Buttons */}
+              <div className="flex justify-between mt-8 pt-6 border-t border-neutral-gray/20">
+                <Button
+                  variant="outline"
+                  onClick={handleBack}
+                  className="px-6"
+                >
+                  {currentStep === 1 
+                    ? t('common:actions.cancel', { defaultValue: 'Cancel' })
+                    : t('common:actions.back', { defaultValue: 'Back' })
+                  }
+                </Button>
+
+                {currentStep === 2 && (
                   <Button
-                    variant="ghost"
-                    onClick={() => setCurrentStep(1)}
-                  >
-                    Back
-                  </Button>
-                  <Button
-                    variant="primary"
-                    onClick={() => setCurrentStep(3)}
+                    onClick={handleSubmit}
+                    className="px-8"
                     disabled={!goalData.name || !goalData.targetAmount || !goalData.targetDate}
                   >
-                    Continue
+                    {t('goals:wizard.step2.createGoal', { defaultValue: 'Create Goal' })}
                   </Button>
-                </div>
+                )}
               </div>
-            )}
-
-            {/* Step 3: Confirmation */}
-            {currentStep === 3 && selectedTemplate && (
-              <div className="space-y-4">
-                <div className="text-center mb-6">
-                  <h4 className="text-lg font-semibold text-neutral-dark-gray mb-2">
-                    Review Your Goal
-                  </h4>
-                  <p className="text-neutral-gray">
-                    Make sure everything looks correct before creating your goal.
-                  </p>
-                </div>
-
-                <div className="bg-white border border-neutral-gray/20 rounded-lg p-6">
-                  <div className="flex items-start mb-4">
-                    <div className="bg-secondary-growth-green/10 rounded-lg p-3 mr-4">
-                      <selectedTemplate.icon className="h-8 w-8 text-secondary-growth-green" />
-                    </div>
-                    <div className="flex-1">
-                      <h5 className="text-lg font-semibold text-neutral-dark-gray">
-                        {goalData.name}
-                      </h5>
-                      {goalData.description && (
-                        <p className="text-sm text-neutral-gray mt-1">
-                          {goalData.description}
-                        </p>
-                      )}
-                    </div>
-                    <div className={`px-3 py-1 rounded-full text-sm font-medium ${getPriorityColor(goalData.priority)}`}>
-                      {goalData.priority.charAt(0).toUpperCase() + goalData.priority.slice(1)}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                    <div className="bg-neutral-light-gray/50 rounded-lg p-3">
-                      <div className="text-sm text-neutral-gray">Target Amount</div>
-                      <div className="text-lg font-bold text-neutral-dark-gray">
-                        {formatCurrency(sanitizeNumberInput(goalData.targetAmount))}
-                      </div>
-                    </div>
-                    <div className="bg-neutral-light-gray/50 rounded-lg p-3">
-                      <div className="text-sm text-neutral-gray">Target Date</div>
-                      <div className="text-lg font-bold text-neutral-dark-gray">
-                        {formatDate(new Date(goalData.targetDate), 'MMM yyyy')}
-                      </div>
-                    </div>
-                    <div className="bg-neutral-light-gray/50 rounded-lg p-3">
-                      <div className="text-sm text-neutral-gray">Monthly Target</div>
-                      <div className="text-lg font-bold text-secondary-growth-green">
-                        {formatCurrency(calculateMonthlyTarget())}
-                      </div>
-                    </div>
-                    <div className="bg-neutral-light-gray/50 rounded-lg p-3">
-                      <div className="text-sm text-neutral-gray">Time Remaining</div>
-                      <div className="text-lg font-bold text-accent-action-orange">
-                        {Math.ceil((new Date(goalData.targetDate).getTime() - new Date().getTime()) / (30 * 24 * 60 * 60 * 1000))} months
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Tips */}
-                <div className="bg-primary-trust-blue/5 rounded-lg p-4">
-                  <h5 className="font-medium text-primary-trust-blue mb-2">
-                    💡 Tips for {selectedTemplate.name}
-                  </h5>
-                  <ul className="text-sm text-neutral-gray space-y-1">
-                    {selectedTemplate.tips.map((tip, index) => (
-                      <li key={index} className="flex items-start">
-                        <span className="text-primary-trust-blue mr-2">•</span>
-                        {tip}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <Button
-                    variant="ghost"
-                    onClick={() => setCurrentStep(2)}
-                  >
-                    Back
-                  </Button>
-                  <Button
-                    variant="primary"
-                    onClick={handleCreateGoal}
-                  >
-                    Create Goal
-                  </Button>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+    </div>
   )
 }

@@ -53,6 +53,8 @@ const TabButton = React.memo(({
   )
 })
 
+TabButton.displayName = 'TabButton'
+
 function InsightsPanelContent({
   showSavingTips = true,
   personalizedRecommendations = true,
@@ -63,6 +65,7 @@ function InsightsPanelContent({
   const [isLoading, setIsLoading] = useState(false)
   const [isInitialLoading, setIsInitialLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [announcement, setAnnouncement] = useState<string>('')
   const { t, isReady } = useTranslation(['dashboard', 'common'])
 
   // Mock data - in a real app, these would come from API calls
@@ -157,47 +160,43 @@ function InsightsPanelContent({
         return
       }
       
+      // Add to dismissed list
       setDismissedInsights(prev => [...prev, sanitizedId])
+      
+      // Announce dismissal to screen readers
+      setAnnouncement('Insight dismissed')
+      
+      // In a real app, this would be sent to the backend
+      // await api.dismissInsight(sanitizedId)
     } catch (error) {
-      logError(error, 'handleDismissInsight', 'medium')
-      setError(sanitizeErrorMessage(error instanceof Error ? error.message : 'Invalid insight ID'))
+      logError(error, 'handleDismissInsight', 'low')
+      setError(sanitizeErrorMessage('Failed to dismiss insight'))
     }
   }, [insights, validateAndSanitizeInput, sanitizeErrorMessage, logError])
 
+  // Handle insight actions (navigate, execute, external)
   const handleInsightAction = useCallback(async (action: InsightAction) => {
-    // Validate action object
-    if (!action || typeof action !== 'object') {
-      setError(sanitizeErrorMessage('Invalid action object provided'))
-      return
-    }
-    
-    const { id, type, target } = action
-    
-    // Validate required fields
-    if (!id || !type || !target) {
-      setError(sanitizeErrorMessage('Action object missing required fields'))
-      return
-    }
-    
-    if (typeof id !== 'string' || typeof type !== 'string' || typeof target !== 'string') {
-      setError(sanitizeErrorMessage('Action fields must be strings'))
-      return
-    }
-
     setIsLoading(true)
     setError(null)
     
     try {
+      const { type, target } = action
+      
+      // Validate action data
+      if (!validateAndSanitizeInput(target, 'Action target')) {
+        throw new Error('Invalid action target')
+      }
+      
       switch (type) {
         case 'navigate':
-          // Validate internal navigation target
-          if (!target.startsWith('/')) {
-            throw new Error('Navigation target must be a valid internal path')
+          // Validate navigation target (should be a valid route)
+          if (target.trim().length === 0) {
+            throw new Error('Navigation target cannot be empty')
           }
-          // In a real app, you'd use Next.js router or similar
-          if (typeof window !== 'undefined') {
-            window.location.href = target
-          }
+          // In a real app, this would use Next.js router
+          // router.push(target)
+          // For now, just show a message
+          setAnnouncement(`Navigating to ${target}`)
           break
         case 'execute':
           // Validate execute target (should be a valid action identifier)
@@ -230,7 +229,7 @@ function InsightsPanelContent({
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [logError, sanitizeErrorMessage, validateAndSanitizeInput])
 
   // Memoize filtered insights to avoid recalculation on every render
   const visibleInsights = useMemo(() => 
@@ -301,7 +300,7 @@ function InsightsPanelContent({
     }
 
     loadInitialData()
-  }, [isReady])
+  }, [isReady, sanitizeErrorMessage])
 
   // Announce tab changes to screen readers
   useEffect(() => {
@@ -328,7 +327,16 @@ function InsightsPanelContent({
     }
   }, [])
 
+  // Announce changes to screen readers
+  useEffect(() => {
+    if (announcement) {
+      const timeout = setTimeout(() => setAnnouncement(''), 1000)
+      return () => clearTimeout(timeout)
+    }
+  }, [announcement])
 
+  // Detect RTL language support
+  const isRTL = typeof window !== 'undefined' && document.documentElement.dir === 'rtl'
 
   // Show loading state while initializing
   if (isInitialLoading) {
@@ -360,20 +368,6 @@ function InsightsPanelContent({
       </Card>
     )
   }
-
-  // Detect RTL language support
-  const isRTL = typeof window !== 'undefined' && document.documentElement.dir === 'rtl'
-  
-  // Accessibility enhancements
-  const [announcement, setAnnouncement] = useState<string>('')
-  
-  // Announce changes to screen readers
-  useEffect(() => {
-    if (announcement) {
-      const timeout = setTimeout(() => setAnnouncement(''), 1000)
-      return () => clearTimeout(timeout)
-    }
-  }, [announcement])
   
   return (
     <>
