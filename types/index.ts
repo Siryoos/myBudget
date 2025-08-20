@@ -1,0 +1,295 @@
+// Core financial types
+export interface Transaction {
+  id: string
+  amount: number
+  description: string
+  category: string
+  date: Date
+  type: 'income' | 'expense'
+  account?: string
+  tags?: string[]
+  isRecurring?: boolean
+}
+
+export interface BudgetCategory {
+  id: string
+  name: string
+  allocated: number
+  spent: number
+  remaining: number
+  color: string
+  icon?: string
+  isEssential: boolean
+}
+
+export interface Budget {
+  id: string
+  name: string
+  method: BudgetMethod
+  totalIncome: number
+  categories: BudgetCategory[]
+  period: 'weekly' | 'monthly' | 'yearly'
+  startDate: Date
+  endDate: Date
+}
+
+export type BudgetMethod = '50-30-20' | 'pay-yourself-first' | 'envelope' | 'zero-based' | 'kakeibo'
+
+export interface SavingsGoal {
+  id: string
+  name: string
+  description?: string
+  targetAmount: number
+  currentAmount: number
+  targetDate: Date
+  category: GoalCategory
+  priority: 'low' | 'medium' | 'high'
+  isActive: boolean
+  milestones?: Milestone[]
+  automationRules?: AutomationRule[]
+}
+
+export type GoalCategory = 'emergency' | 'vacation' | 'home' | 'car' | 'wedding' | 'education' | 'retirement' | 'custom'
+
+export interface Milestone {
+  id: string
+  amount: number
+  description: string
+  isCompleted: boolean
+  completedDate?: Date
+}
+
+export interface AutomationRule {
+  id: string
+  type: 'fixed' | 'percentage' | 'round-up' | 'remainder'
+  amount?: number
+  percentage?: number
+  frequency: 'daily' | 'weekly' | 'biweekly' | 'monthly'
+  isActive: boolean
+  conditions?: RuleCondition[]
+}
+
+export interface RuleCondition {
+  field: string
+  operator: 'equals' | 'greater_than' | 'less_than' | 'contains'
+  value: string | number
+}
+
+// User and profile types
+export interface UserProfile {
+  id: string
+  email: string
+  name: string
+  avatar?: string
+  preferences: UserPreferences
+  financialProfile: FinancialProfile
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface UserPreferences {
+  currency: string
+  language: string
+  timezone: string
+  dateFormat: string
+  notifications: NotificationPreferences
+  privacy: PrivacySettings
+  accessibility: AccessibilitySettings
+  regional: RegionalSettings
+}
+
+export interface FinancialProfile {
+  monthlyIncome: number
+  riskTolerance: 'conservative' | 'moderate' | 'aggressive'
+  savingsRate: number
+  debtToIncomeRatio?: number
+  creditScore?: number
+  financialGoals: string[]
+  dependents: number
+}
+
+export interface NotificationPreferences {
+  email: boolean
+  push: boolean
+  sms: boolean
+  frequency: 'realtime' | 'daily' | 'weekly'
+  types: {
+    savings: boolean
+    budget: boolean
+    goals: boolean
+    insights: boolean
+    achievements: boolean
+  }
+}
+
+export interface PrivacySettings {
+  dataSharing: boolean
+  analytics: boolean
+  marketing: boolean
+  socialFeatures: boolean
+}
+
+export interface AccessibilitySettings {
+  highContrast: boolean
+  reducedMotion: boolean
+  screenReader: boolean
+  fontSize: 'small' | 'medium' | 'large'
+  keyboardNavigation: boolean
+}
+
+export interface RegionalSettings {
+  region: 'middle-east' | 'united-states' | 'europe'
+  culturalPreferences: {
+    islamicBanking?: boolean
+    customCategories?: string[]
+    socialSharing?: 'prominent' | 'minimal' | 'none'
+  }
+}
+
+// Insights and analytics types
+export interface FinancialInsight {
+  id: string
+  type: InsightType
+  title: string
+  description: string
+  impact: 'low' | 'medium' | 'high'
+  category: string
+  actionable: boolean
+  actions?: InsightAction[]
+  createdAt: Date
+  isRead: boolean
+}
+
+export type InsightType = 'spending-pattern' | 'saving-opportunity' | 'budget-alert' | 'goal-progress' | 'market-trend'
+
+export interface InsightAction {
+  id: string
+  label: string
+  type: 'navigate' | 'execute' | 'external'
+  target: string
+  data?: Record<string, unknown>
+}
+
+// Gamification types
+export interface Achievement {
+  id: string
+  name: string
+  description: string
+  icon: string
+  category: AchievementCategory
+  points: number
+  isUnlocked: boolean
+  unlockedAt?: Date
+  progress?: number
+  maxProgress?: number
+}
+
+export type AchievementCategory = 'saving' | 'budgeting' | 'goals' | 'streaks' | 'milestones'
+
+export interface Challenge {
+  id: string
+  name: string
+  description: string
+  type: ChallengeType
+  duration: number // in days
+  reward: number // points
+  isActive: boolean
+  progress: number
+  startDate?: Date
+  endDate?: Date
+}
+
+export type ChallengeType = 'no-spend' | '52-week' | 'round-up' | 'budget-control'
+
+// Component props types
+export interface ComponentProps {
+  className?: string
+  children?: React.ReactNode
+}
+
+export interface CardProps extends ComponentProps {
+  title?: string
+  subtitle?: string
+  actions?: React.ReactNode
+  hoverable?: boolean
+}
+
+export interface ButtonProps extends ComponentProps {
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost'
+  size?: 'sm' | 'md' | 'lg'
+  loading?: boolean
+  disabled?: boolean
+  onClick?: () => void
+  type?: 'button' | 'submit' | 'reset'
+}
+
+// Chart and visualization types
+export interface ChartData {
+  name: string
+  value: number
+  color?: string
+  percentage?: number
+}
+
+export interface TimeSeriesData {
+  date: string
+  value: number
+  category?: string
+}
+
+// API response types
+export interface ApiResponse<T = unknown> {
+  success: boolean
+  data?: T
+  error?: string
+  message?: string
+}
+
+export interface PaginatedResponse<T = unknown> {
+  data: T[]
+  total: number
+  page: number
+  limit: number
+  hasMore: boolean
+}
+
+// Form types
+export interface FormField {
+  name: string
+  label: string
+  type: 'text' | 'email' | 'password' | 'number' | 'select' | 'textarea' | 'checkbox' | 'radio'
+  placeholder?: string
+  required?: boolean
+  validation?: ValidationRule[]
+  options?: SelectOption[]
+}
+
+export interface ValidationRule {
+  type: 'required' | 'min' | 'max' | 'pattern' | 'custom'
+  value?: number | string | RegExp
+  message: string
+}
+
+export interface SelectOption {
+  value: string | number
+  label: string
+  disabled?: boolean
+}
+
+// Navigation types
+export interface NavigationItem {
+  id: string
+  label: string
+  href: string
+  icon?: string
+  badge?: string | number
+  children?: NavigationItem[]
+  isActive?: boolean
+  disabled?: boolean
+}
+
+// Utility types
+export type Status = 'idle' | 'loading' | 'success' | 'error'
+export type Theme = 'light' | 'dark' | 'auto'
+export type Currency = 'USD' | 'EUR' | 'GBP' | 'SAR' | 'AED' | 'QAR'
+export type Language = 'en' | 'ar' | 'es' | 'de' | 'fr' | 'it'
