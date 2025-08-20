@@ -81,7 +81,7 @@ export function WelcomeHeader({
             <div className="flex items-center text-primary-trust-blue-light">
               <BellIcon className="h-5 w-5 mr-2" />
               <span className="text-sm">
-                {t('dashboard:insights.newAvailable', { count: 3 })}
+                {String(t('dashboard:insights.newAvailable', { count: 3 } as any))}
               </span>
             </div>
           </div>
@@ -119,12 +119,12 @@ export function WelcomeHeader({
           </div>
           <div className="ml-3">
             <p className="text-sm font-medium">
-              {t('dashboard:achievements.monthlySaving', { 
+              {String(t('dashboard:achievements.monthlySaving', { 
                 amount: formatCurrency(500, i18n.language) 
-              })}
+              } as any))}
             </p>
             <p className="text-xs text-primary-trust-blue-light mt-1">
-              {t('dashboard:achievements.goalProgress', { percentage: 83 })}
+              {String(t('dashboard:achievements.goalProgress', { percentage: 83 } as any))}
             </p>
           </div>
         </div>
