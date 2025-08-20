@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
+import { useTranslation } from 'react-i18next'
 import {
   HomeIcon,
   ChartBarIcon,
@@ -23,40 +24,40 @@ import {
 import { cn } from '@/lib/utils'
 import type { NavigationItem } from '@/types'
 
-const navigationItems: NavigationItem[] = [
+const getNavigationItems = (t: any): NavigationItem[] => [
   {
     id: 'dashboard',
-    label: 'Dashboard',
+    label: t('navigation.dashboard'),
     href: '/dashboard',
     icon: 'home',
   },
   {
     id: 'budget',
-    label: 'Budget Planner',
+    label: t('navigation.budget'),
     href: '/budget',
     icon: 'chart-bar',
   },
   {
     id: 'goals',
-    label: 'Savings Goals',
+    label: t('navigation.goals'),
     href: '/goals',
     icon: 'banknotes',
   },
   {
     id: 'transactions',
-    label: 'Transactions',
+    label: t('navigation.transactions'),
     href: '/transactions',
     icon: 'credit-card',
   },
   {
     id: 'learn',
-    label: 'Financial Education',
+    label: t('navigation.education'),
     href: '/learn',
     icon: 'academic-cap',
   },
   {
     id: 'settings',
-    label: 'Settings',
+    label: t('navigation.settings'),
     href: '/settings',
     icon: 'cog',
   },
@@ -78,7 +79,11 @@ interface NavigationProps {
 
 export function Navigation({ isOpen = false, onClose }: NavigationProps) {
   const pathname = usePathname()
+  const { t } = useTranslation('common')
   const [hoveredItem, setHoveredItem] = useState<string | null>(null)
+  
+  // Get navigation items with translations
+  const navigationItems = getNavigationItems(t)
 
   const isActiveRoute = (href: string) => {
     if (href === '/dashboard') {

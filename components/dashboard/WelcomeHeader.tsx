@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { 
   PlusIcon, 
   BanknotesIcon, 
@@ -10,6 +11,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { Button } from '@/components/ui/Button'
 import { getTimeBasedGreeting, formatDate } from '@/lib/utils'
+import { formatCurrency } from '@/lib/i18n'
 
 interface WelcomeHeaderProps {
   showGreeting?: boolean
@@ -22,25 +24,26 @@ export function WelcomeHeader({
   showDate = true, 
   showQuickActions = true 
 }: WelcomeHeaderProps) {
+  const { t, i18n } = useTranslation(['common', 'dashboard'])
   const [userName] = useState('Alex') // This would come from user context
   const greeting = getTimeBasedGreeting()
   const today = new Date()
 
   const quickActions = [
     {
-      label: 'Add Transaction',
+      label: t('dashboard:quickActions.addTransaction'),
       icon: PlusIcon,
       action: () => console.log('Add transaction'),
       variant: 'primary' as const,
     },
     {
-      label: 'Quick Save',
+      label: t('dashboard:quickActions.quickSave'),
       icon: BanknotesIcon,
       action: () => console.log('Quick save'),
       variant: 'secondary' as const,
     },
     {
-      label: 'View Budget',
+      label: t('dashboard:quickActions.viewBudget'),
       icon: ChartBarIcon,
       action: () => console.log('View budget'),
       variant: 'outline' as const,
@@ -53,7 +56,7 @@ export function WelcomeHeader({
         <div className="flex-1">
           {showGreeting && (
             <h1 className="text-2xl sm:text-3xl font-bold mb-2">
-              {greeting}, {userName}! 👋
+              {t(`common:app.greeting.${greeting}`)}, {userName}! 👋
             </h1>
           )}
           
@@ -70,7 +73,7 @@ export function WelcomeHeader({
             <div className="flex items-center text-primary-trust-blue-light">
               <BellIcon className="h-5 w-5 mr-2" />
               <span className="text-sm">
-                3 new insights available
+                {t('dashboard:insights.newAvailable', { count: 3 })}
               </span>
             </div>
           </div>
@@ -108,10 +111,12 @@ export function WelcomeHeader({
           </div>
           <div className="ml-3">
             <p className="text-sm font-medium">
-              Congratulations! You've saved $500 this month
+              {t('dashboard:achievements.monthlySaving', { 
+                amount: formatCurrency(500, i18n.language) 
+              })}
             </p>
             <p className="text-xs text-primary-trust-blue-light mt-1">
-              You're 83% closer to your emergency fund goal
+              {t('dashboard:achievements.goalProgress', { percentage: 83 })}
             </p>
           </div>
         </div>

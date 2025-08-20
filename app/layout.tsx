@@ -3,6 +3,8 @@ import './globals.css'
 import { Metadata } from 'next'
 import { Navigation } from '@/components/layout/Navigation'
 import { Header } from '@/components/layout/Header'
+import ClientLayout from './ClientLayout'
+import { headers } from 'next/headers'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -34,8 +36,7 @@ export const metadata: Metadata = {
   creator: 'SmartSave',
   publisher: 'SmartSave',
   robots: 'index, follow',
-  viewport: 'width=device-width, initial-scale=1, maximum-scale=5',
-  themeColor: '#1E5A8D',
+  metadataBase: new URL('https://smartsave.finance'),
   openGraph: {
     type: 'website',
     siteName: 'SmartSave',
@@ -51,36 +52,51 @@ export const metadata: Metadata = {
   },
 }
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: '#1E5A8D',
+}
+
 interface RootLayoutProps {
   children: React.ReactNode
 }
 
 export default function RootLayout({ children }: RootLayoutProps) {
+  // Get the locale from headers (set by middleware)
+  const headersList = headers();
+  const textDirection = headersList.get('x-text-direction') || 'ltr';
+  const locale = headersList.get('x-locale') || 'en';
+
   return (
     <html 
-      lang="en" 
+      lang={locale}
+      dir={textDirection}
       className={`${inter.variable} ${roboto.variable} ${robotoMono.variable}`}
     >
       <body className="font-primary antialiased">
-        <div className="min-h-screen bg-neutral-light-gray">
-          <Header />
-          <div className="flex">
-            <Navigation />
-            <main className="flex-1 lg:ml-0">
-              <div className="container-responsive py-6">
-                {children}
-              </div>
-            </main>
+        <ClientLayout locale={locale}>
+          <div className="min-h-screen bg-neutral-light-gray">
+            <Header />
+            <div className="flex">
+              <Navigation />
+              <main className="flex-1 lg:ml-0" id="main-content">
+                <div className="container-responsive py-6">
+                  {children}
+                </div>
+              </main>
+            </div>
           </div>
-        </div>
-        
-        {/* Accessibility skip link */}
-        <a 
-          href="#main-content" 
-          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-primary-trust-blue text-white px-4 py-2 rounded-md z-50"
-        >
-          Skip to main content
-        </a>
+          
+          {/* Accessibility skip link */}
+          <a 
+            href="#main-content" 
+            className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-primary-trust-blue text-white px-4 py-2 rounded-md z-50"
+          >
+            Skip to main content
+          </a>
+        </ClientLayout>
       </body>
     </html>
   )

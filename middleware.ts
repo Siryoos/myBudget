@@ -1,0 +1,90 @@
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+
+const locales = ['en', 'fa', 'ar'];
+const defaultLocale = 'en';
+
+// RTL locales
+const rtlLocales = ['fa', 'ar'];
+
+function getLocale(request: NextRequest): string {
+  // Check if there's a locale in the pathname
+  const pathname = request.nextUrl.pathname;
+  const pathnameHasLocale = locales.some(
+    (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
+  );
+
+  if (pathnameHasLocale) {
+    const locale = pathname.split('/')[1];
+    return locale;
+  }
+
+  // Check Accept-Language header
+  const acceptLanguage = request.headers.get('Accept-Language');
+  if (acceptLanguage) {
+    const detectedLocale = acceptLanguage
+      .split(',')
+      .map((lang) => lang.split(';')[0].trim().split('-')[0])
+      .find((lang) => locales.includes(lang));
+    
+    if (detectedLocale) {
+      return detectedLocale;
+    }
+  }
+
+  // Check cookie
+  const localeCookie = request.cookies.get('NEXT_LOCALE');
+  if (localeCookie && locales.includes(localeCookie.value)) {
+    return localeCookie.value;
+  }
+
+  return defaultLocale;
+}
+
+export function middleware(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
+  
+  // Check if the pathname is missing a locale
+  const pathnameIsMissingLocale = locales.every(
+    (locale) => !pathname.startsWith(`/${locale}/`) && pathname !== `/${locale}`
+  );
+
+  // Redirect if pathname is missing a locale
+  if (pathnameIsMissingLocale) {
+    const locale = getLocale(request);
+    
+    // e.g. incoming request is /products
+    // The new URL is now /en/products
+    return NextResponse.redirect(
+      new URL(`/${locale}${pathname}`, request.url)
+    );
+  }
+
+  // Set the locale cookie and direction
+  const response = NextResponse.next();
+  const locale = pathname.split('/')[1];
+  
+  response.cookies.set('NEXT_LOCALE', locale, {
+    maxAge: 60 * 60 * 24 * 365, // 1 year
+    path: '/',
+  });
+
+  // Set RTL header for RTL locales
+  if (rtlLocales.includes(locale)) {
+    response.headers.set('x-text-direction', 'rtl');
+  } else {
+    response.headers.set('x-text-direction', 'ltr');
+  }
+  
+  // Set locale header
+  response.headers.set('x-locale', locale);
+
+  return response;
+}
+
+export const config = {
+  matcher: [
+    // Skip all internal paths (_next, api, static files)
+    '/((?!_next|api|favicon.ico|fonts|images|sw.js|manifest.json|.*\\..*).*)/',
+  ],
+};

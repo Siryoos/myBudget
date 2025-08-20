@@ -11,6 +11,7 @@ import {
 import { Menu, Transition } from '@headlessui/react'
 import { Fragment } from 'react'
 import { cn, getTimeBasedGreeting } from '@/lib/utils'
+import LanguageSwitcher from './LanguageSwitcher'
 
 interface HeaderProps {
   onMenuToggle?: () => void
@@ -85,6 +86,9 @@ export function Header({ onMenuToggle }: HeaderProps) {
             >
               <MagnifyingGlassIcon className="h-5 w-5" />
             </button>
+
+            {/* Language Switcher */}
+            <LanguageSwitcher />
 
             {/* Notifications */}
             <button
