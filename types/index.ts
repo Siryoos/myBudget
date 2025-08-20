@@ -47,6 +47,13 @@ export interface SavingsGoal {
   isActive: boolean
   milestones?: Milestone[]
   automationRules?: AutomationRule[]
+  // Behavioral enhancement fields
+  photoUrl?: string
+  framingType: 'achievement' | 'loss-avoidance'
+  lossAvoidanceDescription?: string
+  achievementDescription?: string
+  createdAt: Date
+  updatedAt: Date
 }
 
 export type GoalCategory = 'emergency' | 'vacation' | 'home' | 'car' | 'wedding' | 'education' | 'retirement' | 'custom'
@@ -73,6 +80,76 @@ export interface RuleCondition {
   field: string
   operator: 'equals' | 'greater_than' | 'less_than' | 'contains'
   value: string | number
+}
+
+// Behavioral enhancement types
+export interface Achievement {
+  id: string
+  name: string
+  description: string
+  category: AchievementCategory
+  icon: string
+  requirement: string
+  points: number
+  isUnlocked: boolean
+  unlockedDate?: Date
+  progress?: number
+  maxProgress?: number
+}
+
+export type AchievementCategory = 'savings-streak' | 'goal-achievement' | 'financial-education' | 'milestone' | 'social'
+
+export interface UserAchievement {
+  id: string
+  achievementId: string
+  userId: string
+  isUnlocked: boolean
+  unlockedDate?: Date
+  progress: number
+  maxProgress: number
+}
+
+export interface SocialProof {
+  id: string
+  type: 'peer-comparison' | 'trend-data' | 'risk-awareness'
+  title: string
+  message: string
+  data?: any
+  displayFrequency: number
+  lastShown?: Date
+}
+
+export interface QuickSaveData {
+  id: string
+  amount: number
+  goalId?: string
+  timestamp: Date
+  source: 'manual' | 'round-up' | 'automated'
+  socialProofMessage?: string
+}
+
+export interface GoalPhoto {
+  id: string
+  goalId: string
+  photoUrl: string
+  thumbnailUrl: string
+  uploadedAt: Date
+  fileSize: number
+  mimeType: string
+}
+
+export interface FutureProjection {
+  goalId: string
+  currentSavings: number
+  projectedValue: {
+    oneYear: number
+    fiveYears: number
+    tenYears: number
+    twentyYears: number
+  }
+  interestRate: number
+  inflationRate: number
+  lastCalculated: Date
 }
 
 // User and profile types
@@ -293,3 +370,124 @@ export type Status = 'idle' | 'loading' | 'success' | 'error'
 export type Theme = 'light' | 'dark' | 'auto'
 export type Currency = 'USD' | 'EUR' | 'GBP' | 'SAR' | 'AED' | 'QAR'
 export type Language = 'en' | 'ar' | 'es' | 'de' | 'fr' | 'it'
+
+// Enhanced Goal types with behavioral nudges
+export interface EnhancedSavingsGoal extends SavingsGoal {
+  imageUrl?: string
+  lossAversionFrame?: string
+  positiveFrame?: string
+  behavioralNudges?: BehavioralNudge[]
+  achievementProgress?: AchievementProgress
+}
+
+export interface BehavioralNudge {
+  id: string
+  type: 'loss-aversion' | 'future-self' | 'social-proof' | 'anchoring'
+  title: string
+  description: string
+  isActive: boolean
+  lastShown?: Date
+  shownCount: number
+}
+
+export interface GoalImage {
+  id: string
+  goalId: string
+  url: string
+  thumbnailUrl: string
+  uploadedAt: Date
+  fileSize: number
+  mimeType: string
+}
+
+// Achievement System Types
+export interface Achievement {
+  id: string
+  name: string
+  description: string
+  icon: string
+  category: AchievementCategory
+  requirement: AchievementRequirement
+  points: number
+  isUnlocked: boolean
+  unlockedAt?: Date
+  progress?: number
+  maxProgress?: number
+}
+
+export type AchievementCategory = 'savings-streaks' | 'goal-achievement' | 'financial-education' | 'behavioral-milestones'
+
+export interface AchievementRequirement {
+  type: 'consecutive-days' | 'total-amount' | 'goal-completion' | 'education-modules' | 'custom'
+  value: number
+  timeframe?: 'daily' | 'weekly' | 'monthly' | 'yearly' | 'all-time'
+  description: string
+}
+
+export interface AchievementProgress {
+  totalPoints: number
+  level: number
+  achievements: Achievement[]
+  recentUnlocks: Achievement[]
+  nextMilestone?: Achievement
+}
+
+export interface UserBehavior {
+  id: string
+  userId: string
+  action: 'quick-save' | 'goal-creation' | 'goal-completion' | 'education-completion'
+  amount?: number
+  metadata?: Record<string, any>
+  timestamp: Date
+  sessionId: string
+}
+
+// Enhanced Quick Save Types
+export interface QuickSaveDefaults {
+  amounts: number[]
+  source: 'user-history' | 'peer-data' | 'goal-alignment' | 'ab-test'
+  lastUpdated: Date
+  conversionRate: number
+}
+
+export interface SocialProofMessage {
+  id: string
+  type: 'peer-comparison' | 'trend-data' | 'achievement-highlight'
+  message: string
+  data?: Record<string, any>
+  displayFrequency: number
+  lastShown?: Date
+}
+
+// Future Self Projection Types
+export interface FutureProjection {
+  timeHorizon: number // months
+  projectedAmount: number
+  interestEarned: number
+  inflationAdjusted: number
+  monthlyContribution: number
+  interestRate: number
+}
+
+export interface ProjectionScenario {
+  currentSavings: number
+  monthlyContribution: number
+  projections: FutureProjection[]
+  recommendations: string[]
+}
+
+// Enhanced Progress Tracking Types
+export interface ProgressAnimation {
+  type: 'thermometer' | 'jar' | 'progress-ring' | 'particle-effect'
+  intensity: 'low' | 'medium' | 'high'
+  duration: number
+  easing: 'linear' | 'ease-in' | 'ease-out' | 'ease-in-out'
+}
+
+export interface MilestoneCelebration {
+  milestoneId: string
+  type: 'percentage' | 'amount' | 'streak'
+  value: number
+  animation: ProgressAnimation
+  message: string
+}
