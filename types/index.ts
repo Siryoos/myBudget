@@ -49,11 +49,11 @@ export interface SavingsGoal {
   automationRules?: AutomationRule[]
   // Behavioral enhancement fields
   photoUrl?: string
-  framingType: 'achievement' | 'loss-avoidance'
+  framingType?: 'achievement' | 'loss-avoidance'
   lossAvoidanceDescription?: string
   achievementDescription?: string
-  createdAt: Date
-  updatedAt: Date
+  createdAt?: Date
+  updatedAt?: Date
 }
 
 export type GoalCategory = 'emergency' | 'vacation' | 'home' | 'car' | 'wedding' | 'education' | 'retirement' | 'custom'

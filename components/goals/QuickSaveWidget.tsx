@@ -5,7 +5,7 @@ import {
   PlusIcon,
   FireIcon,
   UsersIcon,
-  TrendingUpIcon,
+  ArrowTrendingUpIcon,
   SparklesIcon,
   ExclamationTriangleIcon
 } from '@heroicons/react/24/outline'
@@ -304,7 +304,7 @@ export function QuickSaveWidget({
               <div className="flex items-center space-x-3">
                 <div className="flex-shrink-0">
                   {currentSocialProof.type === 'peer-comparison' && <UsersIcon className="w-5 h-5 text-blue-600" />}
-                  {currentSocialProof.type === 'trend-data' && <TrendingUpIcon className="w-5 h-5 text-purple-600" />}
+                  {currentSocialProof.type === 'trend-data' && <ArrowTrendingUpIcon className="w-5 h-5 text-purple-600" />}
                   {currentSocialProof.type === 'risk-awareness' && <ExclamationTriangleIcon className="w-5 h-5 text-red-600" />}
                 </div>
                 <div className="flex-1">

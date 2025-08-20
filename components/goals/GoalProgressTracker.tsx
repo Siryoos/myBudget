@@ -25,6 +25,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import type { SavingsGoal, FutureProjection } from '@/types'
 
 interface GoalProgressTrackerProps {
+  goals?: SavingsGoal[]
   visualStyles?: ('progressBar' | 'thermometer' | 'jar')[]
   showTimeRemaining?: boolean
   showProjectedCompletion?: boolean
@@ -33,6 +34,7 @@ interface GoalProgressTrackerProps {
 }
 
 export function GoalProgressTracker({
+  goals = [],
   visualStyles = ['progressBar', 'thermometer', 'jar'],
   showTimeRemaining = true,
   showProjectedCompletion = true,
@@ -46,87 +48,7 @@ export function GoalProgressTracker({
   const [showProjections, setShowProjections] = useState(false)
   const [celebrationTrigger, setCelebrationTrigger] = useState<string | null>(null)
 
-  if (!isReady) {
-    return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-trust-blue mx-auto mb-4"></div>
-            <p className="text-neutral-gray">{t('common:status.loading', { defaultValue: 'Loading...' })}</p>
-          </div>
-        </CardContent>
-      </Card>
-    )
-  }
-
-  // Mock goals data with enhanced behavioral features
-  const goals: SavingsGoal[] = [
-    {
-      id: '1',
-      name: t('goals:examples.emergency.name', { defaultValue: 'High Emergency Fund' }),
-      description: t('goals:examples.emergency.description', { defaultValue: 'Build a safety net for unexpected expenses' }),
-      targetAmount: 10000,
-      currentAmount: 6800,
-      targetDate: new Date(Date.now() + 4 * 30 * 24 * 60 * 60 * 1000), // 4 months from now
-      category: 'emergency',
-      priority: 'high',
-      isActive: true,
-      framingType: 'loss-avoidance',
-      lossAvoidanceDescription: 'Avoid financial crisis and high-interest debt',
-      photoUrl: '/images/emergency-fund.jpg',
-      createdAt: new Date('2024-01-01'),
-      updatedAt: new Date('2024-01-01'),
-      milestones: [
-        { id: '1', amount: 2500, description: t('goals:examples.emergency.milestones.first', { defaultValue: 'First milestone' }), isCompleted: true, completedDate: new Date('2024-01-15') },
-        { id: '2', amount: 5000, description: t('goals:examples.emergency.milestones.halfway', { defaultValue: 'Halfway there' }), isCompleted: true, completedDate: new Date('2024-02-20') },
-        { id: '3', amount: 7500, description: t('goals:examples.emergency.milestones.almost', { defaultValue: 'Almost done' }), isCompleted: false },
-        { id: '4', amount: 10000, description: t('goals:examples.emergency.milestones.complete', { defaultValue: 'Goal complete!' }), isCompleted: false },
-      ],
-    },
-    {
-      id: '2',
-      name: t('goals:examples.vacation.name', { defaultValue: 'Dream Vacation' }),
-      description: t('goals:examples.vacation.description', { defaultValue: 'Two weeks in Japan' }),
-      targetAmount: 5000,
-      currentAmount: 1200,
-      targetDate: new Date(Date.now() + 8 * 30 * 24 * 60 * 60 * 1000), // 8 months from now
-      category: 'vacation',
-      priority: 'medium',
-      isActive: true,
-      framingType: 'achievement',
-      achievementDescription: 'Create unforgettable memories without financial stress',
-      photoUrl: '/images/japan-vacation.jpg',
-      createdAt: new Date('2024-01-01'),
-      updatedAt: new Date('2024-01-01'),
-      milestones: [
-        { id: '1', amount: 1250, description: t('goals:examples.vacation.milestones.flight', { defaultValue: 'Flight booking' }), isCompleted: false },
-        { id: '2', amount: 2500, description: t('goals:examples.vacation.milestones.accommodation', { defaultValue: 'Accommodation' }), isCompleted: false },
-        { id: '3', amount: 3750, description: t('goals:examples.vacation.milestones.activities', { defaultValue: 'Activities & food' }), isCompleted: false },
-        { id: '4', amount: 5000, description: t('goals:examples.vacation.milestones.fullBudget', { defaultValue: 'Full budget ready' }), isCompleted: false },
-      ],
-    },
-    {
-      id: '3',
-      name: t('goals:examples.car.name', { defaultValue: 'New Car Fund' }),
-      description: t('goals:examples.car.description', { defaultValue: 'Replace my old car' }),
-      targetAmount: 25000,
-      currentAmount: 25000,
-      targetDate: new Date('2024-03-01'),
-      category: 'car',
-      priority: 'medium',
-      isActive: false,
-      framingType: 'loss-avoidance',
-      lossAvoidanceDescription: 'Avoid auto loan interest and negative equity',
-      createdAt: new Date('2023-01-01'),
-      updatedAt: new Date('2024-03-01'),
-      milestones: [
-        { id: '1', amount: 6250, description: t('goals:examples.car.milestones.quarter', { defaultValue: 'Quarter saved' }), isCompleted: true, completedDate: new Date('2023-09-15') },
-        { id: '2', amount: 12500, description: t('goals:examples.car.milestones.half', { defaultValue: 'Halfway there' }), isCompleted: true, completedDate: new Date('2023-12-01') },
-        { id: '3', amount: 18750, description: t('goals:examples.car.milestones.threeQuarters', { defaultValue: 'Almost there' }), isCompleted: true, completedDate: new Date('2024-01-15') },
-        { id: '4', amount: 25000, description: t('goals:examples.car.milestones.complete', { defaultValue: 'Goal complete!' }), isCompleted: true, completedDate: new Date('2024-03-01') },
-      ],
-    },
-  ]
+  // Use goals passed as prop, with fallback to empty array
 
   // Future projections data
   const futureProjections: FutureProjection[] = goals.map(goal => ({
@@ -466,7 +388,18 @@ export function GoalProgressTracker({
   }
 
   return (
-    <div className="space-y-6">
+    <>
+      {!isReady ? (
+        <Card>
+          <CardContent className="p-6">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-trust-blue mx-auto mb-4"></div>
+              <p className="text-neutral-gray">{t('common:status.loading', { defaultValue: 'Loading...' })}</p>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-6">
       {/* Header with Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <div>
@@ -534,7 +467,9 @@ export function GoalProgressTracker({
             {t('goals:progress.empty.description', { defaultValue: 'Create your first savings goal to get started' })}
           </p>
         </motion.div>
+        )}
+      </div>
       )}
-    </div>
+    </>
   )
 }

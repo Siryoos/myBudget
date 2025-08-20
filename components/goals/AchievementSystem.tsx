@@ -17,6 +17,149 @@ import { Button } from '@/components/ui/Button'
 import { useTranslation } from '@/lib/useTranslation'
 import type { Achievement, UserAchievement, SavingsGoal } from '@/types'
 
+// Base achievements data - moved outside component to prevent recreation on each render
+const baseAchievements: Achievement[] = [
+  // Savings Streaks
+  {
+    id: 'streak-7',
+    name: 'Week Warrior',
+    description: 'Save money for 7 consecutive days',
+    category: 'savings-streak',
+    icon: '🔥',
+    requirement: '7 days consecutive saving',
+    points: 50,
+    isUnlocked: false,
+    progress: 5,
+    maxProgress: 7,
+  },
+  {
+    id: 'streak-30',
+    name: 'Month Master',
+    description: 'Maintain a savings streak for 30 days',
+    category: 'savings-streak',
+    icon: '⭐',
+    requirement: '30 days consecutive saving',
+    points: 200,
+    isUnlocked: false,
+    progress: 5,
+    maxProgress: 30,
+  },
+  {
+    id: 'streak-90',
+    name: 'Quarter Champion',
+    description: 'Save consistently for 90 days',
+    category: 'savings-streak',
+    icon: '🏆',
+    requirement: '90 days consecutive saving',
+    points: 500,
+    isUnlocked: false,
+    progress: 5,
+    maxProgress: 90,
+  },
+
+  // Goal Achievement
+  {
+    id: 'first-goal',
+    name: 'First Goal',
+    description: 'Complete your first savings goal',
+    category: 'goal-achievement',
+    icon: '🎯',
+    requirement: 'Complete first savings goal',
+    points: 100,
+    isUnlocked: false,
+    progress: 0,
+    maxProgress: 1,
+  },
+  {
+    id: 'goal-crusher',
+    name: 'Goal Crusher',
+    description: 'Complete 5 savings goals',
+    category: 'goal-achievement',
+    icon: '💪',
+    requirement: 'Complete 5 goals',
+    points: 300,
+    isUnlocked: false,
+    progress: 0,
+    maxProgress: 5,
+  },
+  {
+    id: 'emergency-master',
+    name: 'Emergency Fund Master',
+    description: 'Build a 6-month emergency fund',
+    category: 'goal-achievement',
+    icon: '🛡️',
+    requirement: 'Save 6 months expenses',
+    points: 400,
+    isUnlocked: false,
+    progress: 0,
+    maxProgress: 1,
+  },
+
+  // Financial Education
+  {
+    id: 'knowledge-seeker',
+    name: 'Knowledge Seeker',
+    description: 'Complete 3 financial education modules',
+    category: 'financial-education',
+    icon: '📚',
+    requirement: 'Complete 3 education modules',
+    points: 150,
+    isUnlocked: false,
+    progress: 1,
+    maxProgress: 3,
+  },
+  {
+    id: 'financial-guru',
+    name: 'Financial Guru',
+    description: 'Complete all financial education modules',
+    category: 'financial-education',
+    icon: '🧠',
+    requirement: 'Complete all education modules',
+    points: 500,
+    isUnlocked: false,
+    progress: 1,
+    maxProgress: 10,
+  },
+  {
+    id: 'tip-collector',
+    name: 'Tip Collector',
+    description: 'Read 50 financial tips',
+    category: 'financial-education',
+    icon: '💡',
+    requirement: 'Read 50 financial tips',
+    points: 100,
+    isUnlocked: false,
+    progress: 12,
+    maxProgress: 50,
+  },
+
+  // Social Achievements
+  {
+    id: 'social-saver',
+    name: 'Social Saver',
+    description: 'Share your savings journey with friends',
+    category: 'social',
+    icon: '🤝',
+    requirement: 'Share 3 savings milestones',
+    points: 75,
+    isUnlocked: false,
+    progress: 1,
+    maxProgress: 3,
+  },
+  {
+    id: 'community-leader',
+    name: 'Community Leader',
+    description: 'Help 5 other users with financial advice',
+    category: 'social',
+    icon: '👑',
+    requirement: 'Help 5 other users',
+    points: 200,
+    isUnlocked: false,
+    progress: 0,
+    maxProgress: 5,
+  },
+]
+
 interface AchievementSystemProps {
   goals?: SavingsGoal[]
   showLeaderboard?: boolean
@@ -35,164 +178,10 @@ export function AchievementSystem({
   const [showUnlockedOnly, setShowUnlockedOnly] = useState(false)
   const [unlockAnimation, setUnlockAnimation] = useState<string | null>(null)
 
-  if (!isReady) {
-    return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-trust-blue mx-auto mb-4"></div>
-            <p className="text-neutral-gray">{t('common:status.loading', { defaultValue: 'Loading...' })}</p>
-          </div>
-        </CardContent>
-      </Card>
-    )
-  }
+  // Keep achievements in state and update immutably
+  const [achievements, setAchievements] = useState<Achievement[]>(baseAchievements)
 
-  // Mock achievements data
-  const achievements: Achievement[] = [
-    // Savings Streaks
-    {
-      id: 'streak-7',
-      name: 'Week Warrior',
-      description: 'Save money for 7 consecutive days',
-      category: 'savings-streak',
-      icon: '🔥',
-      requirement: '7 days consecutive saving',
-      points: 50,
-      isUnlocked: false,
-      progress: 5,
-      maxProgress: 7,
-    },
-    {
-      id: 'streak-30',
-      name: 'Month Master',
-      description: 'Maintain a savings streak for 30 days',
-      category: 'savings-streak',
-      icon: '⭐',
-      requirement: '30 days consecutive saving',
-      points: 200,
-      isUnlocked: false,
-      progress: 5,
-      maxProgress: 30,
-    },
-    {
-      id: 'streak-90',
-      name: 'Quarter Champion',
-      description: 'Save consistently for 90 days',
-      category: 'savings-streak',
-      icon: '🏆',
-      requirement: '90 days consecutive saving',
-      points: 500,
-      isUnlocked: false,
-      progress: 5,
-      maxProgress: 90,
-    },
-
-    // Goal Achievement
-    {
-      id: 'first-goal',
-      name: 'First Goal',
-      description: 'Complete your first savings goal',
-      category: 'goal-achievement',
-      icon: '🎯',
-      requirement: 'Complete first savings goal',
-      points: 100,
-      isUnlocked: true,
-      unlockedDate: new Date('2024-01-15'),
-      progress: 1,
-      maxProgress: 1,
-    },
-    {
-      id: 'goal-crusher',
-      name: 'Goal Crusher',
-      description: 'Complete 5 savings goals',
-      category: 'goal-achievement',
-      icon: '💪',
-      requirement: 'Complete 5 goals',
-      points: 300,
-      isUnlocked: false,
-      progress: 1,
-      maxProgress: 5,
-    },
-    {
-      id: 'emergency-master',
-      name: 'Emergency Fund Master',
-      description: 'Build a 6-month emergency fund',
-      category: 'goal-achievement',
-      icon: '🛡️',
-      requirement: 'Save 6 months expenses',
-      points: 400,
-      isUnlocked: false,
-      progress: 0,
-      maxProgress: 1,
-    },
-
-    // Financial Education
-    {
-      id: 'knowledge-seeker',
-      name: 'Knowledge Seeker',
-      description: 'Complete 3 financial education modules',
-      category: 'financial-education',
-      icon: '📚',
-      requirement: 'Complete 3 education modules',
-      points: 150,
-      isUnlocked: false,
-      progress: 1,
-      maxProgress: 3,
-    },
-    {
-      id: 'financial-guru',
-      name: 'Financial Guru',
-      description: 'Complete all financial education modules',
-      category: 'financial-education',
-      icon: '🧠',
-      requirement: 'Complete all education modules',
-      points: 500,
-      isUnlocked: false,
-      progress: 1,
-      maxProgress: 10,
-    },
-    {
-      id: 'tip-collector',
-      name: 'Tip Collector',
-      description: 'Read 50 financial tips',
-      category: 'financial-education',
-      icon: '💡',
-      requirement: 'Read 50 financial tips',
-      points: 100,
-      isUnlocked: false,
-      progress: 12,
-      maxProgress: 50,
-    },
-
-    // Social Achievements
-    {
-      id: 'social-saver',
-      name: 'Social Saver',
-      description: 'Share your savings journey with friends',
-      category: 'social',
-      icon: '🤝',
-      requirement: 'Share 3 savings milestones',
-      points: 75,
-      isUnlocked: false,
-      progress: 1,
-      maxProgress: 3,
-    },
-    {
-      id: 'community-leader',
-      name: 'Community Leader',
-      description: 'Help 5 other users with financial advice',
-      category: 'social',
-      icon: '👑',
-      requirement: 'Help 5 other users',
-      points: 200,
-      isUnlocked: false,
-      progress: 0,
-      maxProgress: 5,
-    },
-  ]
-
-  // Mock user achievements
+  // Mock user achievements (derived from current state)
   const userAchievements: UserAchievement[] = achievements.map(achievement => ({
     id: `user-${achievement.id}`,
     achievementId: achievement.id,
@@ -203,44 +192,41 @@ export function AchievementSystem({
     maxProgress: achievement.maxProgress || 1,
   }))
 
-  // Calculate total points
+  // Calculate total points - derived from achievements state
   const totalPoints = achievements
     .filter(a => a.isUnlocked)
     .reduce((sum, a) => sum + a.points, 0)
 
-  // Calculate progress for each achievement based on goals
+  // Calculate progress for each achievement based on goals - using immutable updates
   useEffect(() => {
-    achievements.forEach(achievement => {
-      switch (achievement.id) {
-        case 'first-goal': {
-          if (goals.some(g => !g.isActive)) {
-            achievement.isUnlocked = true
-            achievement.progress = 1
+    setAchievements(prev =>
+      prev.map(a => {
+        switch (a.id) {
+          case 'first-goal': {
+            const unlocked = goals.some(g => !g.isActive)
+            return unlocked ? { ...a, isUnlocked: true, progress: 1 } : a
           }
-          break
-        }
-        case 'goal-crusher': {
-          const completedGoals = goals.filter(g => !g.isActive).length
-          achievement.progress = Math.min(completedGoals, 5)
-          if (completedGoals >= 5) {
-            achievement.isUnlocked = true
+          case 'goal-crusher': {
+            const completedGoals = goals.filter(g => !g.isActive).length
+            const progress = Math.min(completedGoals, a.maxProgress ?? 5)
+            const isUnlocked = completedGoals >= (a.maxProgress ?? 5)
+            return { ...a, progress, isUnlocked: a.isUnlocked || isUnlocked }
           }
-          break
-        }
-        case 'emergency-master': {
-          const emergencyGoal = goals.find(g => g.category === 'emergency' && g.isActive)
-          if (emergencyGoal) {
-            const progress = emergencyGoal.currentAmount / emergencyGoal.targetAmount
-            achievement.progress = progress >= 1 ? 1 : 0
-            if (progress >= 1) {
-              achievement.isUnlocked = true
-            }
+          case 'emergency-master': {
+            const emergencyGoal = goals.find(g => g.category === 'emergency' && g.isActive)
+            if (!emergencyGoal) return a
+            const ratio = emergencyGoal.targetAmount > 0
+              ? emergencyGoal.currentAmount / emergencyGoal.targetAmount
+              : 0
+            const isUnlocked = ratio >= 1
+            return { ...a, progress: isUnlocked ? 1 : 0, isUnlocked: a.isUnlocked || isUnlocked }
           }
-          break
+          default:
+            return a
         }
-      }
-    })
-  }, [goals, achievements])
+      })
+    )
+  }, [goals]) // Only depend on goals, not achievements
 
   // Trigger unlock animation
   const triggerUnlock = (achievementId: string) => {
@@ -276,7 +262,18 @@ export function AchievementSystem({
 
   const renderAchievementCard = (achievement: Achievement) => {
     const userAchievement = userAchievements.find(ua => ua.achievementId === achievement.id)
-    const progress = userAchievement ? (userAchievement.progress / userAchievement.maxProgress) * 100 : 0
+    
+    // Safely calculate progress percentage with proper bounds checking
+    const progressValue = userAchievement?.progress ?? 0
+    const maxValue = userAchievement?.maxProgress ?? 0
+    let percent = 0
+    
+    if (maxValue > 0) {
+      percent = (progressValue / maxValue) * 100
+      // Clamp percentage between 0 and 100
+      percent = Math.max(0, Math.min(100, percent))
+    }
+    
     const isUnlocked = achievement.isUnlocked
 
     return (
@@ -355,7 +352,7 @@ export function AchievementSystem({
                     isUnlocked ? 'bg-green-500' : 'bg-blue-500'
                   }`}
                   initial={{ width: 0 }}
-                  animate={{ width: `${progress}%` }}
+                  animate={{ width: `${percent}%` }}
                   transition={{ duration: 1, ease: "easeOut" }}
                 />
               </div>
@@ -363,7 +360,11 @@ export function AchievementSystem({
 
             {/* Requirement */}
             <div className="text-sm text-gray-600 mb-4">
-              <strong>{t('achievements:requirement', { defaultValue: 'Requirement' })}:</strong> {achievement.requirement}
+              <strong>{t('achievements:requirement', { defaultValue: 'Requirement' })}:</strong> {
+                typeof achievement.requirement === 'string' 
+                  ? achievement.requirement 
+                  : achievement.requirement.description
+              }
             </div>
 
             {/* Unlock Date */}
@@ -406,7 +407,18 @@ export function AchievementSystem({
   }
 
   return (
-    <div className="space-y-6">
+    <>
+      {!isReady ? (
+        <Card>
+          <CardContent className="p-6">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-trust-blue mx-auto mb-4"></div>
+              <p className="text-neutral-gray">{t('common:status.loading', { defaultValue: 'Loading...' })}</p>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-6">
       {/* Header with Points */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <div>
@@ -547,6 +559,8 @@ export function AchievementSystem({
           </CardContent>
         </Card>
       )}
-    </div>
+        </div>
+      )}
+    </>
   )
 }

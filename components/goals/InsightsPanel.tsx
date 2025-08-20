@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { 
   ChartBarIcon,
   UsersIcon,
-  TrendingUpIcon,
+  ArrowTrendingUpIcon,
   ExclamationTriangleIcon,
   ShieldCheckIcon,
   LightBulbIcon,
@@ -324,7 +324,7 @@ export function InsightsPanel({
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
-              <TrendingUpIcon className="w-5 h-5 text-blue-600" />
+              <ArrowTrendingUpIcon className="w-5 h-5 text-blue-600" />
               <div>
                 <div className="font-medium text-gray-900">
                   {t('insights:peer.insights.popularTime', { defaultValue: 'Most Popular Save Time' })}
@@ -441,7 +441,7 @@ export function InsightsPanel({
                 <ArrowUpIcon className="w-5 h-5 text-green-600" />
                 <div>
                   <div className="font-medium text-gray-900">
-                    {t('insights:trends.insights.improving', { defaultValue: 'Improving' })
+                    {t('insights:trends.insights.improving', { defaultValue: 'Improving' })}
                   </div>
                   <div className="text-sm text-gray-600">
                     {t('insights:trends.insights.improvingDesc', { defaultValue: 'Your savings consistency is improving month over month' })}
@@ -453,7 +453,7 @@ export function InsightsPanel({
                 <LightBulbIcon className="w-5 h-5 text-blue-600" />
                 <div>
                   <div className="font-medium text-gray-900">
-                    {t('insights:trends.insights.opportunity', { defaultValue: 'Opportunity' })
+                    {t('insights:trends.insights.opportunity', { defaultValue: 'Opportunity' })}
                   </div>
                   <div className="text-sm text-gray-600">
                     {t('insights:trends.insights.opportunityDesc', { defaultValue: 'Consider increasing your monthly savings target' })}
@@ -474,7 +474,7 @@ export function InsightsPanel({
             <div className="space-y-3">
               <div className="p-3 bg-blue-50 rounded-lg">
                 <div className="font-medium text-blue-900">
-                  {t('insights:trends.recommendations.consistency', { defaultValue: 'Maintain Consistency' })
+                  {t('insights:trends.recommendations.consistency', { defaultValue: 'Maintain Consistency' })}
                 </div>
                 <div className="text-sm text-blue-700">
                   {t('insights:trends.recommendations.consistencyDesc', { defaultValue: 'Your weekly saving pattern is strong. Keep it up!' })}
@@ -483,7 +483,7 @@ export function InsightsPanel({
               
               <div className="p-3 bg-green-50 rounded-lg">
                 <div className="font-medium text-green-900">
-                  {t('insights:trends.recommendations.increase', { defaultValue: 'Consider Increase' })
+                  {t('insights:trends.recommendations.increase', { defaultValue: 'Consider Increase' })}
                 </div>
                 <div className="text-sm text-green-700">
                   {t('insights:trends.recommendations.increaseDesc', { defaultValue: 'You could increase your monthly savings by 15%' })}
@@ -518,19 +518,19 @@ export function InsightsPanel({
             <div className="text-center p-3 bg-white rounded-lg">
               <div className="text-2xl font-bold text-red-600">1</div>
               <div className="text-sm text-red-800">
-                {t('insights:risks.summary.highRisk', { defaultValue: 'High Risk' })
+                {t('insights:risks.summary.highRisk', { defaultValue: 'High Risk' })}
               </div>
             </div>
             <div className="text-center p-3 bg-white rounded-lg">
               <div className="text-2xl font-bold text-yellow-600">1</div>
               <div className="text-sm text-yellow-800">
-                {t('insights:risks.summary.mediumRisk', { defaultValue: 'Medium Risk' })
+                {t('insights:risks.summary.mediumRisk', { defaultValue: 'Medium Risk' })}
               </div>
             </div>
             <div className="text-center p-3 bg-white rounded-lg">
               <div className="text-2xl font-bold text-green-600">1</div>
               <div className="text-sm text-green-800">
-                {t('insights:risks.summary.lowRisk', { defaultValue: 'Low Risk' })
+                {t('insights:risks.summary.lowRisk', { defaultValue: 'Low Risk' })}
               </div>
             </div>
           </div>
@@ -618,7 +618,7 @@ export function InsightsPanel({
           {[
             { id: 'overview', label: t('insights:tabs.overview', { defaultValue: 'Overview' }), icon: ChartBarIcon },
             { id: 'peer', label: t('insights:tabs.peer', { defaultValue: 'Peer Comparison' }), icon: UsersIcon },
-            { id: 'trends', label: t('insights:tabs.trends', { defaultValue: 'Trends' }), icon: TrendingUpIcon },
+            { id: 'trends', label: t('insights:tabs.trends', { defaultValue: 'Trends' }), icon: ArrowTrendingUpIcon },
             { id: 'risks', label: t('insights:tabs.risks', { defaultValue: 'Risk Assessment' }), icon: ExclamationTriangleIcon },
           ].map((tab) => (
             <button
