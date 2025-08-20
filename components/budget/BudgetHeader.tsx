@@ -1,6 +1,6 @@
 'use client'
 
-import { useTranslation } from 'react-i18next'
+import { useTranslation } from '@/lib/useTranslation'
 
 export function BudgetHeader() {
   const { t } = useTranslation('budget')
