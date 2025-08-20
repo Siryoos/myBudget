@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { 
   ChartBarIcon,
   FireIcon,
@@ -9,395 +9,467 @@ import {
   CalendarIcon,
   CurrencyDollarIcon,
   PlusIcon,
-  MinusIcon
+  MinusIcon,
+  PhotoIcon,
+  ExclamationTriangleIcon,
+  SparklesIcon
 } from '@heroicons/react/24/outline'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Card, CardContent, CardHeader } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { ProgressBar } from '@/components/ui/ProgressBar'
 import { formatDate, calculateProgress } from '@/lib/utils'
 import { useTranslation } from '@/lib/useTranslation'
 import { useCurrency } from '@/lib/useCurrency'
-import type { SavingsGoal } from '@/types'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import type { SavingsGoal, FutureProjection } from '@/types'
 
 interface GoalProgressTrackerProps {
+  goals?: SavingsGoal[]
   visualStyles?: ('progressBar' | 'thermometer' | 'jar')[]
   showTimeRemaining?: boolean
   showProjectedCompletion?: boolean
   celebrationAnimations?: boolean
+  showFutureProjections?: boolean
 }
 
 export function GoalProgressTracker({
+  goals = [],
   visualStyles = ['progressBar', 'thermometer', 'jar'],
   showTimeRemaining = true,
   showProjectedCompletion = true,
   celebrationAnimations = true,
+  showFutureProjections = true,
 }: GoalProgressTrackerProps) {
   const { t, isReady } = useTranslation(['goals', 'common'])
   const { formatCurrency } = useCurrency()
   const [selectedVisual, setSelectedVisual] = useState<'progressBar' | 'thermometer' | 'jar'>('progressBar')
   const [showCompleted, setShowCompleted] = useState(false)
+  const [showProjections, setShowProjections] = useState(false)
+  const [celebrationTrigger, setCelebrationTrigger] = useState<string | null>(null)
 
-  if (!isReady) {
-    return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-trust-blue mx-auto mb-4"></div>
-            <p className="text-neutral-gray">{t('common:status.loading', { defaultValue: 'Loading...' })}</p>
-          </div>
-        </CardContent>
-      </Card>
-    )
+  // Use goals passed as prop, with fallback to empty array
+
+  // Future projections data
+  const futureProjections: FutureProjection[] = goals.map(goal => ({
+    goalId: goal.id,
+    currentSavings: goal.currentAmount,
+    projectedValue: {
+      oneYear: goal.currentAmount * Math.pow(1.05, 1), // 5% annual return
+      fiveYears: goal.currentAmount * Math.pow(1.05, 5),
+      tenYears: goal.currentAmount * Math.pow(1.05, 10),
+      twentyYears: goal.currentAmount * Math.pow(1.05, 20),
+    },
+    interestRate: 0.05,
+    inflationRate: 0.02,
+    lastCalculated: new Date(),
+  }))
+
+  // Enhanced progress calculation with acceleration effect
+  const calculateEnhancedProgress = (goal: SavingsGoal) => {
+    const progress = (goal.currentAmount / goal.targetAmount) * 100
+    // Add acceleration effect as progress approaches 100%
+    if (progress > 80) {
+      return progress + (progress - 80) * 0.2 // 20% boost in final stretch
+    }
+    return progress
   }
 
-  // Mock goals data
-  const goals: SavingsGoal[] = [
-    {
-      id: '1',
-      name: t('goals:examples.emergency.name', { defaultValue: 'High Emergency Fund' }),
-      description: t('goals:examples.emergency.description', { defaultValue: 'Build a safety net for unexpected expenses' }),
-      targetAmount: 10000,
-      currentAmount: 6800,
-      targetDate: new Date(Date.now() + 4 * 30 * 24 * 60 * 60 * 1000), // 4 months from now
-      category: 'emergency',
-      priority: 'high',
-      isActive: true,
-      milestones: [
-        { id: '1', amount: 2500, description: t('goals:examples.emergency.milestones.first', { defaultValue: 'First milestone' }), isCompleted: true, completedDate: new Date('2024-01-15') },
-        { id: '2', amount: 5000, description: t('goals:examples.emergency.milestones.halfway', { defaultValue: 'Halfway there' }), isCompleted: true, completedDate: new Date('2024-02-20') },
-        { id: '3', amount: 7500, description: t('goals:examples.emergency.milestones.almost', { defaultValue: 'Almost done' }), isCompleted: false },
-        { id: '4', amount: 10000, description: t('goals:examples.emergency.milestones.complete', { defaultValue: 'Goal complete!' }), isCompleted: false },
-      ],
-    },
-    {
-      id: '2',
-      name: t('goals:examples.vacation.name', { defaultValue: 'Dream Vacation' }),
-      description: t('goals:examples.vacation.description', { defaultValue: 'Two weeks in Japan' }),
-      targetAmount: 5000,
-      currentAmount: 1200,
-      targetDate: new Date(Date.now() + 8 * 30 * 24 * 60 * 60 * 1000), // 8 months from now
-      category: 'vacation',
-      priority: 'medium',
-      isActive: true,
-      milestones: [
-        { id: '1', amount: 1250, description: t('goals:examples.vacation.milestones.flight', { defaultValue: 'Flight booking' }), isCompleted: false },
-        { id: '2', amount: 2500, description: t('goals:examples.vacation.milestones.accommodation', { defaultValue: 'Accommodation' }), isCompleted: false },
-        { id: '3', amount: 3750, description: t('goals:examples.vacation.milestones.activities', { defaultValue: 'Activities & food' }), isCompleted: false },
-        { id: '4', amount: 5000, description: t('goals:examples.vacation.milestones.fullBudget', { defaultValue: 'Full budget ready' }), isCompleted: false },
-      ],
-    },
-    {
-      id: '3',
-      name: t('goals:examples.car.name', { defaultValue: 'New Car Fund' }),
-      description: t('goals:examples.car.description', { defaultValue: 'Replace my old car' }),
-      targetAmount: 25000,
-      currentAmount: 25000,
-      targetDate: new Date('2024-03-01'),
-      category: 'car',
-      priority: 'medium',
-      isActive: false,
-      milestones: [
-        { id: '1', amount: 6250, description: t('goals:examples.car.milestones.quarter', { defaultValue: 'Quarter saved' }), isCompleted: true, completedDate: new Date('2023-09-15') },
-        { id: '2', amount: 12500, description: t('goals:examples.car.milestones.halfway', { defaultValue: 'Halfway point' }), isCompleted: true, completedDate: new Date('2023-11-20') },
-        { id: '3', amount: 18750, description: t('goals:examples.car.milestones.threeQuarters', { defaultValue: 'Three quarters' }), isCompleted: true, completedDate: new Date('2024-01-10') },
-        { id: '4', amount: 25000, description: t('goals:examples.car.milestones.complete', { defaultValue: 'Car purchase ready!' }), isCompleted: true, completedDate: new Date('2024-03-01') },
-      ],
-    },
-  ]
+  // Trigger celebration animation when milestone is reached
+  useEffect(() => {
+    goals.forEach(goal => {
+      goal.milestones?.forEach(milestone => {
+        if (goal.currentAmount >= milestone.amount && !milestone.isCompleted) {
+          setCelebrationTrigger(`${goal.id}-${milestone.id}`)
+          setTimeout(() => setCelebrationTrigger(null), 3000)
+        }
+      })
+    })
+  }, [goals])
 
-  const activeGoals = goals.filter(goal => goal.isActive)
-  const completedGoals = goals.filter(goal => !goal.isActive && calculateProgress(goal.currentAmount, goal.targetAmount).isComplete)
-  
-  const displayGoals = showCompleted ? completedGoals : activeGoals
-
-  const ProgressBarVisual = ({ goal }: { goal: SavingsGoal }) => {
-    const progress = calculateProgress(goal.currentAmount, goal.targetAmount)
-    const monthsRemaining = Math.ceil((goal.targetDate.getTime() - new Date().getTime()) / (30 * 24 * 60 * 60 * 1000))
+  const renderProgressVisual = (goal: SavingsGoal, progress: number) => {
+    const enhancedProgress = calculateEnhancedProgress(goal)
     
-    return (
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h4 className="font-semibold text-neutral-dark-gray">{goal.name}</h4>
-            <p className="text-sm text-neutral-gray">{goal.description}</p>
+    switch (selectedVisual) {
+      case 'thermometer':
+        return (
+          <motion.div className="relative w-8 h-32 bg-gray-200 rounded-full overflow-hidden">
+            <motion.div
+              className="absolute bottom-0 w-full bg-gradient-to-t from-red-500 via-yellow-500 to-green-500"
+              initial={{ height: 0 }}
+              animate={{ height: `${enhancedProgress}%` }}
+              transition={{ duration: 1, ease: "easeOut" }}
+            />
+            {/* Bubbles effect */}
+            {enhancedProgress > 50 && (
+              <motion.div
+                className="absolute top-2 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-white rounded-full opacity-70"
+                animate={{ y: [-2, 2, -2] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              />
+            )}
+          </motion.div>
+        )
+      
+      case 'jar':
+        return (
+          <motion.div className="relative w-16 h-20 bg-yellow-100 border-2 border-yellow-300 rounded-lg overflow-hidden">
+            {/* Jar outline */}
+            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-8 h-2 bg-yellow-300 rounded-t-full" />
+            
+            {/* Coins filling the jar */}
+            <motion.div
+              className="absolute bottom-0 w-full bg-gradient-to-t from-yellow-400 to-yellow-600"
+              initial={{ height: 0 }}
+              animate={{ height: `${enhancedProgress}%` }}
+              transition={{ duration: 1, ease: "easeOut" }}
+            />
+            
+            {/* Coin dropping effect */}
+            {enhancedProgress > 0 && (
+              <motion.div
+                className="absolute top-0 left-1/2 transform -translate-x-1/2 w-3 h-3 bg-yellow-500 rounded-full"
+                animate={{ y: [0, 20], opacity: [1, 0] }}
+                transition={{ duration: 0.5, repeat: 3, repeatDelay: 1 }}
+              />
+            )}
+          </motion.div>
+        )
+      
+      default:
+        return (
+          <div className="w-full">
+            <ProgressBar 
+              value={enhancedProgress} 
+              max={100}
+              className="h-3"
+            />
           </div>
-          <div className="text-right">
-            <div className="text-sm text-neutral-gray">
-              {t('goals:progress.remaining', { 
-                amount: formatCurrency(progress.remaining),
-                defaultValue: `${formatCurrency(progress.remaining)} remaining`
-              })}
-            </div>
-            <div className="text-xs text-neutral-gray">
-              {t('goals:progress.monthsLeft', { 
-                months: monthsRemaining,
-                defaultValue: `${monthsRemaining} months left`
-              })}
-            </div>
-          </div>
-        </div>
-        
-        <ProgressBar
-          value={goal.currentAmount}
-          max={goal.targetAmount}
-          color="secondary"
-          className="h-3"
-        />
-        
-        <div className="grid grid-cols-4 gap-4 text-center text-sm">
-          <div>
-            <div className="text-neutral-gray">{t('goals:progress.remaining', { defaultValue: 'Remaining' })}</div>
-            <div className="font-semibold text-neutral-dark-gray">{formatCurrency(progress.remaining)}</div>
-          </div>
-          <div>
-            <div className="text-neutral-gray">{t('goals:progress.target', { defaultValue: 'Target' })}</div>
-            <div className="font-semibold text-neutral-dark-gray">{formatCurrency(goal.targetAmount)}</div>
-          </div>
-          <div>
-            <div className="text-neutral-gray">{t('goals:progress.saved', { defaultValue: 'Saved' })}</div>
-            <div className="font-semibold text-secondary-growth-green">{formatCurrency(goal.currentAmount)}</div>
-          </div>
-          <div>
-            <div className="text-neutral-gray">{t('goals:progress.percentage', { defaultValue: 'Progress' })}</div>
-            <div className="font-semibold text-primary-trust-blue">{progress.percentage}%</div>
-          </div>
-        </div>
-
-        {/* Milestones */}
-        {goal.milestones && goal.milestones.length > 0 && (
-          <div className="space-y-3">
-            <h5 className="font-medium text-neutral-dark-gray">{t('goals:progress.milestones.title', { defaultValue: 'Milestones' })}</h5>
-            <div className="space-y-2">
-              {goal.milestones.map((milestone) => (
-                <div key={milestone.id} className="flex items-center justify-between p-3 bg-neutral-light-gray/50 rounded-lg">
-                  <div className="flex items-center">
-                    {milestone.isCompleted ? (
-                      <CheckCircleIcon className="h-5 w-5 text-secondary-growth-green mr-2" />
-                    ) : (
-                      <div className="h-5 w-5 rounded-full border-2 border-neutral-gray mr-2" />
-                    )}
-                    <div>
-                      <div className="font-medium text-neutral-dark-gray">
-                        {formatCurrency(milestone.amount)}
-                      </div>
-                      <div className="text-sm text-neutral-gray">{milestone.description}</div>
-                    </div>
-                  </div>
-                  {milestone.isCompleted && milestone.completedDate && (
-                    <div className="text-xs text-secondary-growth-green">
-                      {formatDate(milestone.completedDate, 'MMM dd')} ✓
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" className="flex-1">
-            {t('goals:actions.adjustGoal', { defaultValue: 'Adjust Goal' })}
-          </Button>
-          <Button variant="secondary" size="sm" className="flex-1">
-            {t('goals:actions.addMoney', { defaultValue: 'Add Money' })}
-          </Button>
-        </div>
-      </div>
-    )
+        )
+    }
   }
 
-  const ThermometerVisual = ({ goal }: { goal: SavingsGoal }) => {
-    const progress = calculateProgress(goal.currentAmount, goal.targetAmount)
-    const height = 200
-    const fillHeight = (goal.currentAmount / goal.targetAmount) * height
-    
+  const renderFutureProjection = (goal: SavingsGoal) => {
+    const projection = futureProjections.find(p => p.goalId === goal.id)
+    if (!projection) return null
+
+    const chartData = [
+      { year: 'Now', value: projection.currentSavings },
+      { year: '1 Year', value: Math.round(projection.projectedValue.oneYear) },
+      { year: '5 Years', value: Math.round(projection.projectedValue.fiveYears) },
+      { year: '10 Years', value: Math.round(projection.projectedValue.tenYears) },
+      { year: '20 Years', value: Math.round(projection.projectedValue.twentyYears) },
+    ]
+
     return (
-      <div className="text-center space-y-4">
-        <div className="relative mx-auto w-16 h-52">
-          {/* Thermometer outline */}
-          <div className="absolute inset-0 border-4 border-neutral-gray/30 rounded-full"></div>
-          
-          {/* Fill */}
-          <div 
-            className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-secondary-growth-green to-secondary-growth-green/80 rounded-full transition-all duration-1000"
-            style={{ height: `${fillHeight}px` }}
-          ></div>
-          
-          {/* Bulb */}
-          <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-20 h-20 border-4 border-neutral-gray/30 rounded-full bg-white"></div>
-          <div 
-            className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-20 h-20 rounded-full bg-gradient-to-t from-secondary-growth-green to-secondary-growth-green/80 transition-all duration-1000"
-            style={{ 
-              height: `${Math.min(fillHeight, 80)}px`,
-              bottom: '-8px'
-            }}
-          ></div>
-          
-          {/* Progress text */}
-          <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 text-lg font-bold text-neutral-dark-gray">
-            {progress.percentage}%
-          </div>
-        </div>
+      <motion.div
+        initial={{ opacity: 0, height: 0 }}
+        animate={{ opacity: 1, height: 'auto' }}
+        exit={{ opacity: 0, height: 0 }}
+        className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg"
+      >
+        <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+          <SparklesIcon className="w-5 h-5 text-purple-600 mr-2" />
+          {t('goals:projections.title', { defaultValue: 'Future Self Projection' })}
+        </h4>
+        <p className="text-sm text-gray-600 mb-4">
+          {t('goals:projections.description', { defaultValue: 'See how your savings could grow over time with compound interest' })}
+        </p>
         
-        <div>
-          <h4 className="font-semibold text-neutral-dark-gray">{goal.name}</h4>
-          <p className="text-sm text-neutral-gray">{goal.description}</p>
+        <div className="h-48 mb-4">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="year" />
+              <YAxis tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`} />
+              <Tooltip 
+                formatter={(value: number) => [`$${value.toLocaleString()}`, 'Projected Value']}
+                labelFormatter={(label) => `${label}`}
+              />
+              <Line 
+                type="monotone" 
+                dataKey="value" 
+                stroke="#3b82f6" 
+                strokeWidth={3}
+                dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
         </div>
         
         <div className="grid grid-cols-2 gap-4 text-sm">
-          <div>
-            <div className="text-neutral-gray">{t('goals:progress.saved', { defaultValue: 'Saved' })}</div>
-            <div className="font-semibold text-secondary-growth-green">{formatCurrency(goal.currentAmount)}</div>
+          <div className="text-center p-3 bg-white rounded-lg">
+            <div className="text-2xl font-bold text-green-600">
+              {formatCurrency(projection.projectedValue.fiveYears)}
+            </div>
+            <div className="text-gray-600">5 Years</div>
           </div>
-          <div>
-            <div className="text-neutral-gray">{t('goals:progress.target', { defaultValue: 'Target' })}</div>
-            <div className="font-semibold text-neutral-dark-gray">{formatCurrency(goal.targetAmount)}</div>
+          <div className="text-center p-3 bg-white rounded-lg">
+            <div className="text-2xl font-bold text-purple-600">
+              {formatCurrency(projection.projectedValue.tenYears)}
+            </div>
+            <div className="text-gray-600">10 Years</div>
           </div>
         </div>
-      </div>
+      </motion.div>
     )
   }
 
-  const JarVisual = ({ goal }: { goal: SavingsGoal }) => {
-    const progress = calculateProgress(goal.currentAmount, goal.targetAmount)
-    const coins = Math.floor((goal.currentAmount / goal.targetAmount) * 50) // Show up to 50 coins
-    
+  const renderGoalCard = (goal: SavingsGoal) => {
+    const progress = (goal.currentAmount / goal.targetAmount) * 100
+    const isCompleted = progress >= 100
+    const timeRemaining = goal.targetDate.getTime() - Date.now()
+    const monthsRemaining = Math.ceil(timeRemaining / (30 * 24 * 60 * 60 * 1000))
+
     return (
-      <div className="text-center space-y-4">
-        <div className="relative mx-auto w-32 h-40">
-          {/* Jar outline */}
-          <div className="absolute inset-0 border-4 border-neutral-gray/30 rounded-full"></div>
-          
-          {/* Coins */}
-          <div className="absolute inset-2 overflow-hidden">
-            {Array.from({ length: coins }, (_, i) => (
-              <div
-                key={i}
-                className="absolute w-3 h-3 bg-yellow-400 rounded-full animate-bounce"
-                style={{
-                  left: `${Math.random() * 80}%`,
-                  top: `${Math.random() * 80}%`,
-                  animationDelay: `${Math.random() * 2}s`,
-                  animationDuration: `${1 + Math.random()}s`
-                }}
-              />
-            ))}
-          </div>
-          
-          {/* Progress text */}
-          <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 text-lg font-bold text-neutral-dark-gray">
-            {progress.percentage}%
-          </div>
-        </div>
-        
-        <div>
-          <h4 className="font-semibold text-neutral-dark-gray">{goal.name}</h4>
-          <p className="text-sm text-neutral-gray">{goal.description}</p>
-        </div>
-        
-        <div className="text-sm">
-          <div className="text-neutral-gray">{t('goals:progress.coinsCollected', { defaultValue: 'Coins collected' })}</div>
-          <div className="font-semibold text-yellow-500">{coins} / 50</div>
-        </div>
-      </div>
+      <motion.div
+        key={goal.id}
+        layout
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        className="relative"
+      >
+        <Card className={`h-full transition-all duration-300 ${isCompleted ? 'bg-green-50 border-green-200' : ''}`}>
+          <CardContent className="p-6">
+            {/* Goal Header with Photo */}
+            <div className="flex items-start space-x-4 mb-4">
+              {goal.photoUrl && (
+                <img
+                  src={goal.photoUrl}
+                  alt={goal.name}
+                  className="w-16 h-16 object-cover rounded-lg"
+                />
+              )}
+              <div className="flex-1">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-lg font-semibold text-gray-900">{goal.name}</h3>
+                  <div className="flex items-center space-x-2">
+                    {goal.framingType === 'loss-avoidance' && (
+                      <ExclamationTriangleIcon className="w-5 h-5 text-red-600" />
+                    )}
+                    {goal.framingType === 'achievement' && (
+                      <SparklesIcon className="w-5 h-5 text-green-600" />
+                    )}
+                  </div>
+                </div>
+                <p className="text-sm text-gray-600 mb-2">{goal.description}</p>
+                
+                {/* Framing Type Display */}
+                <div className="text-xs">
+                  {goal.framingType === 'loss-avoidance' && goal.lossAvoidanceDescription && (
+                    <span className="inline-block bg-red-100 text-red-800 px-2 py-1 rounded-full">
+                      {goal.lossAvoidanceDescription}
+                    </span>
+                  )}
+                  {goal.framingType === 'achievement' && goal.achievementDescription && (
+                    <span className="inline-block bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                      {goal.achievementDescription}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Progress Section */}
+            <div className="mb-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-gray-700">
+                  {t('goals:progress.current', { defaultValue: 'Current' })}: {formatCurrency(goal.currentAmount)}
+                </span>
+                <span className="text-sm font-medium text-gray-700">
+                  {t('goals:progress.target', { defaultValue: 'Target' })}: {formatCurrency(goal.targetAmount)}
+                </span>
+              </div>
+              
+              <div className="flex items-center space-x-4">
+                {renderProgressVisual(goal, progress)}
+                <div className="flex-1">
+                  <div className="text-right">
+                    <div className="text-2xl font-bold text-gray-900">
+                      {Math.round(progress)}%
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      {isCompleted 
+                        ? t('goals:progress.completed', { defaultValue: 'Completed!' })
+                        : `${formatCurrency(goal.targetAmount - goal.currentAmount)} ${t('goals:progress.remaining', { defaultValue: 'remaining' })}`
+                      }
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Time and Projections */}
+            {showTimeRemaining && !isCompleted && (
+              <div className="flex items-center justify-between mb-4 text-sm text-gray-600">
+                <div className="flex items-center space-x-1">
+                  <CalendarIcon className="w-4 h-4" />
+                  <span>
+                    {monthsRemaining > 0 
+                      ? t('goals:time.monthsRemaining', { defaultValue: '{{months}} months remaining', months: monthsRemaining })
+                      : t('goals:time.overdue', { defaultValue: 'Overdue' })
+                    }
+                  </span>
+                </div>
+                
+                {showFutureProjections && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowProjections(!showProjections)}
+                    className="text-blue-600 hover:text-blue-800"
+                  >
+                    {showProjections 
+                      ? t('goals:projections.hide', { defaultValue: 'Hide Projections' })
+                      : t('goals:projections.show', { defaultValue: 'Show Future Value' })
+                    }
+                  </Button>
+                )}
+              </div>
+            )}
+
+            {/* Future Projections */}
+            {showProjections && showFutureProjections && renderFutureProjection(goal)}
+
+            {/* Milestones */}
+            {goal.milestones && goal.milestones.length > 0 && (
+              <div className="mt-4">
+                <h4 className="text-sm font-medium text-gray-700 mb-2">
+                  {t('goals:milestones.title', { defaultValue: 'Milestones' })}
+                </h4>
+                <div className="space-y-2">
+                  {goal.milestones.map((milestone) => {
+                    const isMilestoneCompleted = goal.currentAmount >= milestone.amount
+                    return (
+                      <motion.div
+                        key={milestone.id}
+                        className={`flex items-center justify-between p-2 rounded-lg text-sm ${
+                          isMilestoneCompleted 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-gray-100 text-gray-600'
+                        }`}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                      >
+                        <span>{milestone.description}</span>
+                        <div className="flex items-center space-x-2">
+                          <span className="font-medium">
+                            {formatCurrency(milestone.amount)}
+                          </span>
+                          {isMilestoneCompleted && (
+                            <CheckCircleIcon className="w-4 h-4 text-green-600" />
+                          )}
+                        </div>
+                      </motion.div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Celebration Animation */}
+            <AnimatePresence>
+              {celebrationTrigger && celebrationTrigger.startsWith(goal.id) && (
+                <motion.div
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0, opacity: 0 }}
+                  className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                >
+                  <div className="text-6xl">🎉</div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </CardContent>
+        </Card>
+      </motion.div>
     )
   }
-
-  const visualComponents = {
-    progressBar: ProgressBarVisual,
-    thermometer: ThermometerVisual,
-    jar: JarVisual,
-  }
-
-  const visualLabels = {
-    progressBar: t('goals:visuals.progressBar', { defaultValue: 'ProgressBar' }),
-    thermometer: t('goals:visuals.thermometer', { defaultValue: 'Thermometer' }),
-    jar: t('goals:visuals.jar', { defaultValue: 'Jar' }),
-  }
-
-  const ActiveVisualComponent = visualComponents[selectedVisual]
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <div className="bg-secondary-growth-green/10 rounded-lg p-2 mr-3">
-              <ChartBarIcon className="h-6 w-6 text-secondary-growth-green" />
+    <>
+      {!isReady ? (
+        <Card>
+          <CardContent className="p-6">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-trust-blue mx-auto mb-4"></div>
+              <p className="text-neutral-gray">{t('common:status.loading', { defaultValue: 'Loading...' })}</p>
             </div>
-            <div>
-              <h3 className="text-lg font-semibold text-neutral-dark-gray">
-                {t('goals:progress.title', { defaultValue: 'Goal Progress' })}
-              </h3>
-              <p className="text-sm text-neutral-gray">
-                {t('goals:progress.subtitle', { defaultValue: 'Track your progress towards financial freedom' })}
-              </p>
-            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-6">
+      {/* Header with Controls */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">
+            {t('goals:progress.title', { defaultValue: 'Goal Progress Tracker' })}
+          </h2>
+          <p className="text-gray-600">
+            {t('goals:progress.subtitle', { defaultValue: 'Track your savings goals and see your progress' })}
+          </p>
+        </div>
+        
+        <div className="flex items-center space-x-4">
+          {/* Visual Style Selector */}
+          <div className="flex items-center space-x-2">
+            <span className="text-sm text-gray-600">
+              {t('goals:progress.visualStyle', { defaultValue: 'Style:' })}
+            </span>
+            <select
+              value={selectedVisual}
+              onChange={(e) => setSelectedVisual(e.target.value as 'progressBar' | 'thermometer' | 'jar')}
+              className="text-sm border border-gray-300 rounded-md px-2 py-1 focus:outline-none focus:ring-2 focus:ring-primary-trust-blue"
+            >
+              <option value="progressBar">{t('goals:progress.styles.progressBar', { defaultValue: 'Progress Bar' })}</option>
+              <option value="thermometer">{t('goals:progress.styles.thermometer', { defaultValue: 'Thermometer' })}</option>
+              <option value="jar">{t('goals:progress.styles.jar', { defaultValue: 'Jar' })}</option>
+            </select>
           </div>
           
+          {/* Show/Hide Completed Toggle */}
           <Button
             variant="outline"
             size="sm"
             onClick={() => setShowCompleted(!showCompleted)}
           >
             {showCompleted 
-              ? t('goals:progress.showActive', { defaultValue: 'Show Active' })
+              ? t('goals:progress.hideCompleted', { defaultValue: 'Hide Completed' })
               : t('goals:progress.showCompleted', { defaultValue: 'Show Completed' })
             }
           </Button>
         </div>
+      </div>
 
-        {/* Visual Style Tabs */}
-        <div className="flex space-x-2 mt-4">
-          {visualStyles.map((style) => (
-            <button
-              key={style}
-              onClick={() => setSelectedVisual(style)}
-              className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
-                selectedVisual === style
-                  ? 'bg-primary-trust-blue text-white'
-                  : 'text-neutral-gray hover:text-neutral-dark-gray hover:bg-neutral-light-gray'
-              }`}
-            >
-              {visualLabels[style]}
-            </button>
-          ))}
-        </div>
-      </CardHeader>
+      {/* Goals Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <AnimatePresence>
+          {goals
+            .filter(goal => showCompleted || !goal.isActive)
+            .map(goal => renderGoalCard(goal))
+          }
+        </AnimatePresence>
+      </div>
 
-      <CardContent>
-        {displayGoals.length === 0 ? (
-          <div className="text-center py-8">
-            <ChartBarIcon className="h-16 w-16 text-neutral-gray mx-auto mb-4" />
-            <h4 className="text-lg font-medium text-neutral-dark-gray mb-2">
-              {showCompleted 
-                ? t('goals:progress.noCompleted', { defaultValue: 'No completed goals yet' })
-                : t('goals:progress.noActive', { defaultValue: 'No active goals yet' })
-              }
-            </h4>
-            <p className="text-neutral-gray mb-4">
-              {showCompleted 
-                ? t('goals:progress.noCompletedSubtitle', { defaultValue: 'Complete your first goal to see it here!' })
-                : t('goals:progress.noActiveSubtitle', { defaultValue: 'Create your first savings goal to get started!' })
-              }
-            </p>
-            {!showCompleted && (
-              <Button variant="primary">
-                <PlusIcon className="h-4 w-4 mr-2" />
-                {t('goals:actions.createGoal', { defaultValue: 'Create Goal' })}
-              </Button>
-            )}
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {displayGoals.map((goal) => (
-              <div key={goal.id} className="border border-neutral-gray/20 rounded-lg p-6">
-                <ActiveVisualComponent goal={goal} />
-              </div>
-            ))}
-          </div>
+      {/* Empty State */}
+      {goals.filter(goal => showCompleted || !goal.isActive).length === 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center py-12"
+        >
+          <div className="text-6xl mb-4">🎯</div>
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">
+            {t('goals:progress.empty.title', { defaultValue: 'No goals yet' })}
+          </h3>
+          <p className="text-gray-600 mb-6">
+            {t('goals:progress.empty.description', { defaultValue: 'Create your first savings goal to get started' })}
+          </p>
+        </motion.div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+      )}
+    </>
   )
 }
