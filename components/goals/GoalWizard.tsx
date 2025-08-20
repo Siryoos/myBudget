@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import Image from 'next/image'
 import { 
   PlusIcon,
   SparklesIcon,
@@ -475,9 +476,11 @@ export function GoalWizard({
                           </Button>
                         ) : (
                           <div className="flex items-center space-x-3">
-                            <img
+                            <Image
                               src={uploadedPhoto.thumbnailUrl}
                               alt="Goal photo"
+                              width={64}
+                              height={64}
                               className="w-16 h-16 object-cover rounded-lg"
                             />
                             <Button

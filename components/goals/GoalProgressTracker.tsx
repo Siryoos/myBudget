@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 import { 
   ChartBarIcon,
   FireIcon,
@@ -235,9 +236,11 @@ export function GoalProgressTracker({
             {/* Goal Header with Photo */}
             <div className="flex items-start space-x-4 mb-4">
               {goal.photoUrl && (
-                <img
+                <Image
                   src={goal.photoUrl}
                   alt={goal.name}
+                  width={64}
+                  height={64}
                   className="w-16 h-16 object-cover rounded-lg"
                 />
               )}
