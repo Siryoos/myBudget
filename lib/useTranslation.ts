@@ -30,10 +30,18 @@ export function useTranslation(namespace?: string | string[]) {
     };
   }, [namespace]);
 
+  const t: (key: string, options?: Record<string, any>) => string = (key, options) => {
+    if (!isReady) {
+      if (options && typeof options.defaultValue === 'string') return options.defaultValue;
+      return key;
+    }
+    // Cast to a broadly compatible signature
+    return (translation.t as unknown as (k: string, o?: any) => string)(key, options);
+  };
+
   return {
     ...translation,
     isReady,
-    // Safe translation function that returns key if not ready
-    t: isReady ? translation.t : (key: string, defaultValue?: string) => defaultValue || key,
+    t,
   };
 }

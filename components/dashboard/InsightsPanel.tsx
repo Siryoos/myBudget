@@ -332,7 +332,7 @@ export function InsightsPanel({
 
             <div className="bg-primary-trust-blue/5 rounded-lg p-3 text-center">
               <p className="text-sm text-primary-trust-blue font-medium">
-                🎉 You're doing great! Keep up the good work!
+                🎉 You&apos;re doing great! Keep up the good work!
               </p>
             </div>
           </div>

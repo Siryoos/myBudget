@@ -504,7 +504,7 @@ export function AutomationSettings({
               </h5>
               <div className="text-sm text-neutral-gray space-y-1">
                 <div>• Your current rules save approximately {formatCurrency(680)} per month</div>
-                <div>• You're on track to save {formatCurrency(8160)} this year through automation</div>
+                <div>• You&apos;re on track to save {formatCurrency(8160)} this year through automation</div>
                 <div>• Consider adding a percentage-based rule for bonus income</div>
               </div>
             </div>

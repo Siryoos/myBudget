@@ -23,7 +23,8 @@ const initI18n = async () => {
           escapeValue: false,
         },
         backend: {
-          loadPath: '/locales/{{lng}}/{{ns}}.json',
+          // Match Next.js App Route at app/locales/[lng]/[ns]/route.ts
+          loadPath: '/locales/{{lng}}/{{ns}}',
           requestOptions: {
             cache: 'default',
           },

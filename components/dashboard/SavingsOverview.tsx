@@ -102,7 +102,7 @@ export function SavingsOverview({
                 <div className="flex items-center">
                   <CalendarIcon className="h-5 w-5 text-neutral-gray mr-2" />
                   <h4 className="font-semibold text-neutral-dark-gray">
-                    This Month's Goal
+                    This Month&apos;s Goal
                   </h4>
                 </div>
                 <div className="text-right">

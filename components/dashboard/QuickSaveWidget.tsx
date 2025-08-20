@@ -94,7 +94,7 @@ export function QuickSaveWidget({
                 Great job! 🎉
               </div>
               <div className="text-sm text-neutral-gray">
-                You've successfully saved {formatCurrency(getSelectedAmount())}
+                You&apos;ve successfully saved {formatCurrency(getSelectedAmount())}
               </div>
             </div>
           </div>

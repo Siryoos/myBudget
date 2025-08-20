@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { ChevronDownIcon, GlobeAltIcon } from '@heroicons/react/24/outline';
 import { getDirection } from '@/lib/i18n';
 
@@ -27,6 +27,7 @@ interface LanguageSwitcherProps {
 export default function LanguageSwitcher({ currentLocale = 'en' }: LanguageSwitcherProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -60,6 +61,16 @@ export default function LanguageSwitcher({ currentLocale = 'en' }: LanguageSwitc
       newPath = segments.join('/');
     } else {
       newPath = `/${newLocale}${pathname}`;
+    }
+
+    // Preserve existing query parameters and hash
+    const queryString = searchParams?.toString();
+    if (queryString && queryString.length > 0) {
+      newPath += `?${queryString}`;
+    }
+    const hash = typeof window !== 'undefined' ? window.location.hash : '';
+    if (hash) {
+      newPath += hash;
     }
 
     // Set cookie for persistence

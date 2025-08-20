@@ -35,10 +35,10 @@ export function Header({ onMenuToggle }: HeaderProps) {
   const greeting = t(greetingKey)
 
   const userMenuItems = [
-    { name: t('navigation.profile'), href: '/profile' },
-    { name: t('navigation.settings'), href: '/settings' },
-    { name: t('support.help'), href: '/support' },
-    { name: t('navigation.logout'), href: '/logout' },
+    { name: t('navigation.profile'), href: `/${locale}/profile` },
+    { name: t('navigation.settings'), href: `/${locale}/settings` },
+    { name: t('support.help'), href: `/${locale}/support` },
+    { name: t('navigation.logout'), href: `/${locale}/logout` },
   ]
 
   return (

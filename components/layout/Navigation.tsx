@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { useTranslation } from '@/lib/useTranslation'
+import { useI18n } from '@/lib/i18n-provider'
 import {
   HomeIcon,
   ChartBarIcon,
@@ -24,41 +25,41 @@ import {
 import { cn } from '@/lib/utils'
 import type { NavigationItem } from '@/types'
 
-const getNavigationItems = (t: any): NavigationItem[] => [
+const getNavigationItems = (t: any, locale: string): NavigationItem[] => [
   {
     id: 'dashboard',
     label: t('navigation.dashboard'),
-    href: '/dashboard',
+    href: `/${locale}/dashboard`,
     icon: 'home',
   },
   {
     id: 'budget',
     label: t('navigation.budget'),
-    href: '/budget',
+    href: `/${locale}/budget`,
     icon: 'chart-bar',
   },
   {
     id: 'goals',
     label: t('navigation.goals'),
-    href: '/goals',
+    href: `/${locale}/goals`,
     icon: 'banknotes',
   },
   {
     id: 'transactions',
     label: t('navigation.transactions'),
-    href: '/transactions',
+    href: `/${locale}/transactions`,
     icon: 'credit-card',
   },
   {
     id: 'learn',
     label: t('navigation.education'),
-    href: '/learn',
+    href: `/${locale}/learn`,
     icon: 'academic-cap',
   },
   {
     id: 'settings',
     label: t('navigation.settings'),
-    href: '/settings',
+    href: `/${locale}/settings`,
     icon: 'cog',
   },
 ]
@@ -80,14 +81,17 @@ interface NavigationProps {
 export function Navigation({ isOpen = false, onClose }: NavigationProps) {
   const pathname = usePathname()
   const { t } = useTranslation('common')
+  const { locale } = useI18n()
   const [hoveredItem, setHoveredItem] = useState<string | null>(null)
   
   // Get navigation items with translations
-  const navigationItems = getNavigationItems(t)
+  const navigationItems = getNavigationItems(t, locale)
 
   const isActiveRoute = (href: string) => {
-    if (href === '/dashboard') {
-      return pathname === '/' || pathname === '/dashboard'
+    // hrefs are already localized (e.g., /en/dashboard)
+    if (href.endsWith('/dashboard')) {
+      const homePath = `/${locale}`
+      return pathname === homePath || pathname === href
     }
     return pathname.startsWith(href)
   }
