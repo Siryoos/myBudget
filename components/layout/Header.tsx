@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { 
   Bars3Icon, 
   BellIcon, 
@@ -10,7 +10,9 @@ import {
 } from '@heroicons/react/24/outline'
 import { Menu, Transition } from '@headlessui/react'
 import { Fragment } from 'react'
-import { cn, getTimeBasedGreeting } from '@/lib/utils'
+import { cn } from '@/lib/utils'
+import { useTranslation } from '@/lib/useTranslation'
+import { useI18n } from '@/lib/i18n-provider'
 import LanguageSwitcher from './LanguageSwitcher'
 
 interface HeaderProps {
@@ -19,13 +21,24 @@ interface HeaderProps {
 
 export function Header({ onMenuToggle }: HeaderProps) {
   const [searchQuery, setSearchQuery] = useState('')
-  const greeting = getTimeBasedGreeting()
+  const [greetingKey, setGreetingKey] = useState('app.greeting.morning') // Default to morning
+  const { t, isReady } = useTranslation('common')
+  const { locale } = useI18n()
+  
+  // Set greeting based on current time (client-side only to avoid hydration mismatch)
+  useEffect(() => {
+    const hour = new Date().getHours()
+    const timeBasedKey = hour < 12 ? 'app.greeting.morning' : hour < 17 ? 'app.greeting.afternoon' : 'app.greeting.evening'
+    setGreetingKey(timeBasedKey)
+  }, [])
+  
+  const greeting = t(greetingKey)
 
   const userMenuItems = [
-    { name: 'Profile', href: '/profile' },
-    { name: 'Settings', href: '/settings' },
-    { name: 'Help & Support', href: '/support' },
-    { name: 'Sign Out', href: '/logout' },
+    { name: t('navigation.profile'), href: '/profile' },
+    { name: t('navigation.settings'), href: '/settings' },
+    { name: t('support.help'), href: '/support' },
+    { name: t('navigation.logout'), href: '/logout' },
   ]
 
   return (
@@ -46,7 +59,7 @@ export function Header({ onMenuToggle }: HeaderProps) {
             <div className="flex items-center ml-4 lg:ml-0">
               <div className="flex-shrink-0">
                 <h1 className="text-xl font-bold text-primary-trust-blue">
-                  SmartSave
+                  {t('app.name')}
                 </h1>
               </div>
               
@@ -67,7 +80,7 @@ export function Header({ onMenuToggle }: HeaderProps) {
               </div>
               <input
                 type="search"
-                placeholder="Search transactions, goals, insights..."
+                placeholder={t('actions.searchPlaceholder')}
                 className="block w-full pl-10 pr-3 py-2 border border-neutral-gray/30 rounded-lg bg-neutral-light-gray/50 text-sm placeholder-neutral-gray focus:outline-none focus:ring-2 focus:ring-primary-trust-blue focus:border-primary-trust-blue focus:bg-white"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -88,7 +101,7 @@ export function Header({ onMenuToggle }: HeaderProps) {
             </button>
 
             {/* Language Switcher */}
-            <LanguageSwitcher />
+            <LanguageSwitcher currentLocale={locale} />
 
             {/* Notifications */}
             <button

@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { useTranslation } from 'react-i18next'
+import { useState, useEffect } from 'react'
+import { useTranslation } from '@/lib/useTranslation'
 import { 
   PlusIcon, 
   BanknotesIcon, 
@@ -10,7 +10,7 @@ import {
   CalendarIcon 
 } from '@heroicons/react/24/outline'
 import { Button } from '@/components/ui/Button'
-import { getTimeBasedGreeting, formatDate } from '@/lib/utils'
+import { formatDate } from '@/lib/utils'
 import { formatCurrency } from '@/lib/i18n'
 
 interface WelcomeHeaderProps {
@@ -24,10 +24,18 @@ export function WelcomeHeader({
   showDate = true, 
   showQuickActions = true 
 }: WelcomeHeaderProps) {
-  const { t, i18n } = useTranslation(['common', 'dashboard'])
+  const { t, i18n, isReady } = useTranslation(['common', 'dashboard'])
   const [userName] = useState('Alex') // This would come from user context
-  const greeting = getTimeBasedGreeting()
-  const today = new Date()
+  const [greeting, setGreeting] = useState('morning') // Default to morning
+  const [today, setToday] = useState(new Date())
+  
+  // Set greeting and date on client side to avoid hydration mismatch
+  useEffect(() => {
+    const hour = new Date().getHours()
+    const timeBasedGreeting = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening'
+    setGreeting(timeBasedGreeting)
+    setToday(new Date())
+  }, [])
 
   const quickActions = [
     {

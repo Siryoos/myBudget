@@ -20,19 +20,22 @@ const languages: Language[] = [
   { code: 'ar', name: 'Arabic', nativeName: 'العربية', flag: '🇸🇦' },
 ];
 
-export default function LanguageSwitcher() {
+interface LanguageSwitcherProps {
+  currentLocale?: string;
+}
+
+export default function LanguageSwitcher({ currentLocale = 'en' }: LanguageSwitcherProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  
-  // Extract current locale from pathname
-  const pathSegments = pathname.split('/');
-  const currentLocale = (pathSegments[1] && languages.find(lang => lang.code === pathSegments[1])) 
-    ? pathSegments[1] as Locale
+
+  // Use the passed locale prop, fallback to extracting from pathname if not provided
+  const locale = (currentLocale && languages.find(lang => lang.code === currentLocale))
+    ? currentLocale as Locale
     : 'en';
-  
-  const currentLanguage = languages.find(lang => lang.code === currentLocale) || languages[0];
+
+  const currentLanguage = languages.find(lang => lang.code === locale) || languages[0];
 
   // Handle click outside to close dropdown
   useEffect(() => {
@@ -46,26 +49,26 @@ export default function LanguageSwitcher() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleLanguageChange = (locale: Locale) => {
+  const handleLanguageChange = (newLocale: Locale) => {
     // Update the pathname with the new locale
     const segments = pathname.split('/');
     const hasLocale = languages.some(lang => lang.code === segments[1]);
-    
+
     let newPath: string;
     if (hasLocale) {
-      segments[1] = locale;
+      segments[1] = newLocale;
       newPath = segments.join('/');
     } else {
-      newPath = `/${locale}${pathname}`;
+      newPath = `/${newLocale}${pathname}`;
     }
-    
+
     // Set cookie for persistence
-    document.cookie = `NEXT_LOCALE=${locale};path=/;max-age=${60 * 60 * 24 * 365}`;
-    
+    document.cookie = `NEXT_LOCALE=${newLocale};path=/;max-age=${60 * 60 * 24 * 365}`;
+
     // Update HTML dir attribute
-    document.documentElement.dir = getDirection(locale);
-    document.documentElement.lang = locale;
-    
+    document.documentElement.dir = getDirection(newLocale);
+    document.documentElement.lang = newLocale;
+
     // Navigate to new locale
     router.push(newPath);
     setIsOpen(false);
@@ -95,7 +98,7 @@ export default function LanguageSwitcher() {
                 onClick={() => handleLanguageChange(language.code)}
                 className={`
                   w-full text-left px-4 py-2 text-sm flex items-center gap-3 hover:bg-neutral-light-gray transition-colors
-                  ${currentLocale === language.code ? 'bg-primary-trust-blue/10 text-primary-trust-blue' : 'text-neutral-gray'}
+                  ${locale === language.code ? 'bg-primary-trust-blue/10 text-primary-trust-blue' : 'text-neutral-gray'}
                 `}
                 role="menuitem"
               >
@@ -104,7 +107,7 @@ export default function LanguageSwitcher() {
                   <div className="font-medium">{language.nativeName}</div>
                   <div className="text-xs text-neutral-gray">{language.name}</div>
                 </div>
-                {currentLocale === language.code && (
+                {locale === language.code && (
                   <svg className="w-4 h-4 text-primary-trust-blue" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>

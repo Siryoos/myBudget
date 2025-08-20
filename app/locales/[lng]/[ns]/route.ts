@@ -1,0 +1,89 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { readFileSync, existsSync } from 'fs';
+import { join } from 'path';
+
+const ALLOWED_LOCALES = ['en', 'fa', 'ar'] as const;
+const ALLOWED_NAMESPACES = [
+  'common', 'dashboard', 'budget', 'goals', 
+  'transactions', 'education', 'settings', 'auth', 'errors'
+] as const;
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { lng: string; ns: string } }
+) {
+  const { lng, ns } = params;
+  
+  // Validate locale and namespace
+  if (!ALLOWED_LOCALES.includes(lng as any) || !ALLOWED_NAMESPACES.includes(ns as any)) {
+    return NextResponse.json(
+      { error: 'Invalid locale or namespace' }, 
+      { 
+        status: 404,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET',
+          'Access-Control-Allow-Headers': 'Content-Type',
+        }
+      }
+    );
+  }
+  
+  try {
+    const filePath = join(process.cwd(), 'public', 'locales', lng, `${ns}.json`);
+    
+    // Check if file exists before trying to read it
+    if (!existsSync(filePath)) {
+      console.warn(`Translation file not found: ${lng}/${ns}.json`);
+      return NextResponse.json(
+        { error: 'Translation file not found' }, 
+        { 
+          status: 404,
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET',
+            'Access-Control-Allow-Headers': 'Content-Type',
+          }
+        }
+      );
+    }
+    
+    const fileContent = readFileSync(filePath, 'utf8');
+    const translations = JSON.parse(fileContent);
+    
+    return NextResponse.json(translations, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'public, max-age=3600, stale-while-revalidate=86400', // Cache for 1 hour, stale for 24 hours
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET',
+        'Access-Control-Allow-Headers': 'Content-Type',
+      },
+    });
+  } catch (error) {
+    console.error(`Failed to load translation file: ${lng}/${ns}.json`, error);
+    return NextResponse.json(
+      { error: 'Failed to parse translation file' }, 
+      { 
+        status: 500,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET',
+          'Access-Control-Allow-Headers': 'Content-Type',
+        }
+      }
+    );
+  }
+}
+
+// Handle preflight requests
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    },
+  });
+}

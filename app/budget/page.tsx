@@ -3,6 +3,7 @@ import { BudgetMethodSelector } from '@/components/budget/BudgetMethodSelector'
 import { IncomeManager } from '@/components/budget/IncomeManager'
 import { BudgetAllocator } from '@/components/budget/BudgetAllocator'
 import { BudgetVisualization } from '@/components/budget/BudgetVisualization'
+import BudgetHeader from '@/components/budget/BudgetHeader'
 
 export const metadata: Metadata = {
   title: 'Budget Planner',
@@ -13,12 +14,7 @@ export default function BudgetPage() {
   return (
     <div className="space-y-6" id="main-content">
       {/* Page Header */}
-      <div className="bg-gradient-to-r from-primary-trust-blue to-primary-trust-blue-light rounded-lg p-6 text-white">
-        <h1 className="text-3xl font-bold mb-2">Budget Planner</h1>
-        <p className="text-primary-trust-blue-light">
-          Take control of your finances with proven budgeting methods
-        </p>
-      </div>
+      <BudgetHeader />
 
       {/* Budget Method Selection */}
       <BudgetMethodSelector />
