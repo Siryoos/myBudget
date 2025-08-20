@@ -14,8 +14,9 @@ import {
 import { Card, CardContent, CardHeader } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { ProgressBar } from '@/components/ui/ProgressBar'
-import { formatCurrency, formatDate, calculateProgress } from '@/lib/utils'
+import { formatDate, calculateProgress } from '@/lib/utils'
 import { useTranslation } from '@/lib/useTranslation'
+import { useCurrency } from '@/lib/useCurrency'
 import type { SavingsGoal } from '@/types'
 
 interface GoalProgressTrackerProps {
@@ -32,6 +33,7 @@ export function GoalProgressTracker({
   celebrationAnimations = true,
 }: GoalProgressTrackerProps) {
   const { t, isReady } = useTranslation(['goals', 'common'])
+  const { formatCurrency } = useCurrency()
   const [selectedVisual, setSelectedVisual] = useState<'progressBar' | 'thermometer' | 'jar'>('progressBar')
   const [showCompleted, setShowCompleted] = useState(false)
 

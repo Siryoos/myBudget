@@ -15,8 +15,9 @@ import {
 } from '@heroicons/react/24/outline'
 import { Card, CardContent, CardHeader } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
-import { formatCurrency, sanitizeNumberInput, formatDate } from '@/lib/utils'
+import { sanitizeNumberInput, formatDate } from '@/lib/utils'
 import { useTranslation } from '@/lib/useTranslation'
+import { useCurrency } from '@/lib/useCurrency'
 import type { SavingsGoal, GoalCategory } from '@/types'
 
 interface GoalTemplate {
@@ -41,6 +42,7 @@ export function GoalWizard({
   milestoneBreakdown = true,
 }: GoalWizardProps) {
   const { t, isReady } = useTranslation(['goals', 'common'])
+  const { formatCurrency } = useCurrency()
   const [showWizard, setShowWizard] = useState(false)
   const [currentStep, setCurrentStep] = useState(1)
   const [selectedTemplate, setSelectedTemplate] = useState<GoalTemplate | null>(null)
