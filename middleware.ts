@@ -85,6 +85,6 @@ export function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     // Skip all internal paths (_next, api, static files)
-    '/((?!_next|api|favicon.ico|fonts|images|sw.js|manifest.json|.*\\..*).*)/',
+    '/((?!_next|api|favicon.ico|fonts|images|sw.js|manifest.json|.*\\..*|locales).*)',
   ],
 };
