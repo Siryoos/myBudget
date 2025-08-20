@@ -37,7 +37,7 @@ export function InsightsPanel({
 }: InsightsPanelProps) {
   const { t, isReady } = useTranslation(['goals', 'insights', 'common'])
   const { formatCurrency } = useCurrency()
-  const [selectedTimeframe, setSelectedTimeframe] = useState<'week' | 'month' | 'quarter'>('month')
+  const [selectedTimeframe, setSelectedTimeframe] = useState<'weekly' | 'monthly' | 'quarterly'>('monthly')
   const [activeTab, setActiveTab] = useState<'overview' | 'peer' | 'trends' | 'risks'>('overview')
 
   if (!isReady) {
@@ -386,15 +386,15 @@ export function InsightsPanel({
     <div className="space-y-6">
       {/* Timeframe Selector */}
       <div className="flex space-x-2">
-        {(['week', 'month', 'quarter'] as const).map((timeframe) => (
+        {(['weekly', 'monthly', 'quarterly'] as const).map((timeframe) => (
           <Button
             key={timeframe}
-            variant={selectedTimeframe === timeframe ? 'default' : 'outline'}
+            variant={selectedTimeframe === timeframe ? 'primary' : 'outline'}
             size="sm"
             onClick={() => setSelectedTimeframe(timeframe)}
           >
             {t(`insights:trends.timeframes.${timeframe}`, { 
-              defaultValue: timeframe === 'week' ? 'Week' : timeframe === 'month' ? 'Month' : 'Quarter' 
+              defaultValue: timeframe === 'weekly' ? 'Week' : timeframe === 'monthly' ? 'Month' : 'Quarter' 
             })}
           </Button>
         ))}
@@ -412,15 +412,15 @@ export function InsightsPanel({
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={trendData[selectedTimeframe]}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey={selectedTimeframe === 'week' ? 'day' : selectedTimeframe === 'month' ? 'month' : 'quarter'} />
-                <YAxis tickFormatter={(value) => selectedTimeframe === 'week' ? value.toString() : `$${(value / 1000).toFixed(0)}k`} />
+                <XAxis dataKey={selectedTimeframe === 'weekly' ? 'day' : selectedTimeframe === 'monthly' ? 'month' : 'quarter'} />
+                <YAxis tickFormatter={(value) => selectedTimeframe === 'weekly' ? value.toString() : `$${(value / 1000).toFixed(0)}k`} />
                 <Tooltip 
                   formatter={(value: number) => [
-                    selectedTimeframe === 'week' ? value.toString() : `$${value.toLocaleString()}`,
-                    selectedTimeframe === 'week' ? 'Saves' : 'Amount'
+                    selectedTimeframe === 'weekly' ? value.toString() : `$${value.toLocaleString()}`,
+                    selectedTimeframe === 'weekly' ? 'Saves' : 'Amount'
                   ]}
                 />
-                <Bar dataKey={selectedTimeframe === 'week' ? 'saves' : 'amount'} fill="#10b981" />
+                <Bar dataKey={selectedTimeframe === 'weekly' ? 'saves' : 'amount'} fill="#10b981" />
               </BarChart>
             </ResponsiveContainer>
           </div>
