@@ -37,15 +37,35 @@ export function QuickSaveWidget({
   const [showSocialMessage, setShowSocialMessage] = useState(false)
   const [saveCount, setSaveCount] = useState(0)
 
-  // A/B testing for default amounts
-  const [abTestGroup] = useState<'control' | 'test'>(
-    Math.random() > 0.5 ? 'test' : 'control'
-  )
+  // A/B testing for default amounts - persistent assignment
+  const [abTestGroup] = useState<'control' | 'test'>(() => {
+    // Check if user already has an A/B test group assigned
+    const stored = localStorage.getItem('quickSave_abTestGroup')
+    if (stored === 'control' || stored === 'test') {
+      return stored
+    }
+    
+    // Assign new user to a random group and persist it with timestamp
+    const newGroup = Math.random() > 0.5 ? 'test' : 'control'
+    const timestamp = new Date().toISOString()
+    localStorage.setItem('quickSave_abTestGroup', newGroup)
+    localStorage.setItem('quickSave_abTestGroup_assignedAt', timestamp)
+    return newGroup
+  })
 
   // Anchoring optimization - different default amounts based on A/B test
   const defaultAmounts = {
     control: [10, 25, 50, 100],
     test: [20, 50, 75, 150]
+  }
+
+  // A/B testing metadata for analytics
+  const abTestMetadata = {
+    experimentName: 'quickSave_defaultAmounts',
+    version: 'v1',
+    group: abTestGroup,
+    assignedAt: localStorage.getItem('quickSave_abTestGroup_assignedAt') || new Date().toISOString(),
+    defaultAmounts: defaultAmounts[abTestGroup]
   }
 
   // Social proof messages
@@ -123,6 +143,21 @@ export function QuickSaveWidget({
         timestamp: new Date(),
         source: 'manual',
         socialProofMessage: showSocialProof ? socialProofMessages[saveCount % socialProofMessages.length].message : undefined,
+      }
+
+      // Track A/B test data for analytics
+      const abTestData = {
+        experimentName: abTestMetadata.experimentName,
+        version: abTestMetadata.version,
+        group: abTestMetadata.group,
+        selectedAmount,
+        defaultAmounts: abTestMetadata.defaultAmounts,
+        timestamp: new Date().toISOString()
+      }
+      
+      // In production, you would send this to your analytics service
+      if (process.env.NODE_ENV === 'development') {
+        console.log('A/B Test Data:', abTestData)
       }
 
       if (onQuickSave) {
@@ -338,16 +373,28 @@ export function QuickSaveWidget({
               <div className="flex-shrink-0">
                 <FireIcon className="w-6 h-6 text-orange-600" />
               </div>
-              <div>
+              <div className="flex-1">
                 <h4 className="font-medium text-orange-900 mb-1">
                   {t('goals:quickSave.insights.title', { defaultValue: 'Smart Defaults' })}
                 </h4>
-                <p className="text-sm text-orange-800">
+                <p className="text-sm text-orange-800 mb-3">
                   {t('goals:quickSave.insights.description', { 
                     defaultValue: 'We\'ve optimized the default amounts based on what works best for people like you. The most popular save amounts are pre-selected to make saving easier.',
                     group: abTestGroup === 'test' ? 'optimized' : 'standard'
                   })}
                 </p>
+                
+                {/* A/B Testing Information (for development/debugging) */}
+                {process.env.NODE_ENV === 'development' && (
+                  <div className="mt-3 p-2 bg-white rounded border border-orange-200">
+                    <div className="text-xs text-orange-700">
+                      <div className="font-medium mb-1">A/B Test Info (Dev Only):</div>
+                      <div>Group: <span className="font-mono">{abTestGroup}</span></div>
+                      <div>Default Amounts: <span className="font-mono">{defaultAmounts[abTestGroup].join(', ')}</span></div>
+                      <div>Assigned: <span className="font-mono">{new Date(abTestMetadata.assignedAt).toLocaleDateString()}</span></div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </CardContent>

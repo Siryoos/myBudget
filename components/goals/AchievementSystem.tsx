@@ -212,20 +212,22 @@ export function AchievementSystem({
   useEffect(() => {
     achievements.forEach(achievement => {
       switch (achievement.id) {
-        case 'first-goal':
+        case 'first-goal': {
           if (goals.some(g => !g.isActive)) {
             achievement.isUnlocked = true
             achievement.progress = 1
           }
           break
-        case 'goal-crusher':
+        }
+        case 'goal-crusher': {
           const completedGoals = goals.filter(g => !g.isActive).length
           achievement.progress = Math.min(completedGoals, 5)
           if (completedGoals >= 5) {
             achievement.isUnlocked = true
           }
           break
-        case 'emergency-master':
+        }
+        case 'emergency-master': {
           const emergencyGoal = goals.find(g => g.category === 'emergency' && g.isActive)
           if (emergencyGoal) {
             const progress = emergencyGoal.currentAmount / emergencyGoal.targetAmount
@@ -235,6 +237,7 @@ export function AchievementSystem({
             }
           }
           break
+        }
       }
     })
   }, [goals, achievements])

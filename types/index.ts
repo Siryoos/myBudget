@@ -89,7 +89,7 @@ export interface Achievement {
   description: string
   category: AchievementCategory
   icon: string
-  requirement: string
+  requirement: string | AchievementRequirement
   points: number
   isUnlocked: boolean
   unlockedDate?: Date
@@ -98,6 +98,13 @@ export interface Achievement {
 }
 
 export type AchievementCategory = 'savings-streak' | 'goal-achievement' | 'financial-education' | 'milestone' | 'social'
+
+export interface AchievementRequirement {
+  type: 'consecutive-days' | 'total-amount' | 'goal-completion' | 'education-modules' | 'custom'
+  value: number
+  timeframe?: 'daily' | 'weekly' | 'monthly' | 'yearly' | 'all-time'
+  description: string
+}
 
 export interface UserAchievement {
   id: string
@@ -248,21 +255,6 @@ export interface InsightAction {
 }
 
 // Gamification types
-export interface Achievement {
-  id: string
-  name: string
-  description: string
-  icon: string
-  category: AchievementCategory
-  points: number
-  isUnlocked: boolean
-  unlockedAt?: Date
-  progress?: number
-  maxProgress?: number
-}
-
-export type AchievementCategory = 'saving' | 'budgeting' | 'goals' | 'streaks' | 'milestones'
-
 export interface Challenge {
   id: string
   name: string
@@ -400,30 +392,6 @@ export interface GoalImage {
   mimeType: string
 }
 
-// Achievement System Types
-export interface Achievement {
-  id: string
-  name: string
-  description: string
-  icon: string
-  category: AchievementCategory
-  requirement: AchievementRequirement
-  points: number
-  isUnlocked: boolean
-  unlockedAt?: Date
-  progress?: number
-  maxProgress?: number
-}
-
-export type AchievementCategory = 'savings-streaks' | 'goal-achievement' | 'financial-education' | 'behavioral-milestones'
-
-export interface AchievementRequirement {
-  type: 'consecutive-days' | 'total-amount' | 'goal-completion' | 'education-modules' | 'custom'
-  value: number
-  timeframe?: 'daily' | 'weekly' | 'monthly' | 'yearly' | 'all-time'
-  description: string
-}
-
 export interface AchievementProgress {
   totalPoints: number
   level: number
@@ -460,7 +428,7 @@ export interface SocialProofMessage {
 }
 
 // Future Self Projection Types
-export interface FutureProjection {
+export interface FutureProjectionDetail {
   timeHorizon: number // months
   projectedAmount: number
   interestEarned: number
@@ -472,7 +440,7 @@ export interface FutureProjection {
 export interface ProjectionScenario {
   currentSavings: number
   monthlyContribution: number
-  projections: FutureProjection[]
+  projections: FutureProjectionDetail[]
   recommendations: string[]
 }
 

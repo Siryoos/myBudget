@@ -40,55 +40,7 @@ export function BehavioralDashboard({
   const [showGoalWizard, setShowGoalWizard] = useState(false)
   const [recentAchievement, setRecentAchievement] = useState<Achievement | null>(null)
 
-  if (!isReady) {
-    return (
-      <div className="flex items-center justify-center min-h-64">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-trust-blue mx-auto mb-4"></div>
-          <p className="text-neutral-gray">{t('common:status.loading', { defaultValue: 'Loading...' })}</p>
-        </div>
-      </div>
-    )
-  }
-
-  // Handle goal creation
-  const handleGoalCreated = (newGoal: Partial<SavingsGoal>) => {
-    const goal: SavingsGoal = {
-      ...newGoal,
-      id: Date.now().toString(),
-      currentAmount: 0,
-      isActive: true,
-      milestones: [],
-      automationRules: [],
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    } as SavingsGoal
-
-    setGoals(prev => [...prev, goal])
-    setShowGoalWizard(false)
-  }
-
-  // Handle quick save
-  const handleQuickSave = (saveData: QuickSaveData) => {
-    setQuickSaveHistory(prev => [saveData, ...prev])
-    
-    // Update goal progress if saving towards a specific goal
-    if (saveData.goalId) {
-      setGoals(prev => prev.map(goal => 
-        goal.id === saveData.goalId 
-          ? { ...goal, currentAmount: goal.currentAmount + saveData.amount }
-          : goal
-      ))
-    }
-  }
-
-  // Handle achievement unlocked
-  const handleAchievementUnlocked = (achievement: Achievement) => {
-    setRecentAchievement(achievement)
-    setTimeout(() => setRecentAchievement(null), 5000)
-  }
-
-  // Mock initial goals data
+  // Mock initial goals data - MUST be before any early returns
   useEffect(() => {
     const mockGoals: SavingsGoal[] = [
       {
@@ -138,6 +90,54 @@ export function BehavioralDashboard({
     ]
     setGoals(mockGoals)
   }, [])
+
+  if (!isReady) {
+    return (
+      <div className="flex items-center justify-center min-h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-trust-blue mx-auto mb-4"></div>
+          <p className="text-neutral-gray">{t('common:status.loading', { defaultValue: 'Loading...' })}</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Handle goal creation
+  const handleGoalCreated = (newGoal: Partial<SavingsGoal>) => {
+    const goal: SavingsGoal = {
+      ...newGoal,
+      id: Date.now().toString(),
+      currentAmount: 0,
+      isActive: true,
+      milestones: [],
+      automationRules: [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as SavingsGoal
+
+    setGoals(prev => [...prev, goal])
+    setShowGoalWizard(false)
+  }
+
+  // Handle quick save
+  const handleQuickSave = (saveData: QuickSaveData) => {
+    setQuickSaveHistory(prev => [saveData, ...prev])
+    
+    // Update goal progress if saving towards a specific goal
+    if (saveData.goalId) {
+      setGoals(prev => prev.map(goal => 
+        goal.id === saveData.goalId 
+          ? { ...goal, currentAmount: goal.currentAmount + saveData.amount }
+          : goal
+      ))
+    }
+  }
+
+  // Handle achievement unlocked
+  const handleAchievementUnlocked = (achievement: Achievement) => {
+    setRecentAchievement(achievement)
+    setTimeout(() => setRecentAchievement(null), 5000)
+  }
 
   const tabs = [
     {
