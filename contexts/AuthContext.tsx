@@ -1,31 +1,20 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { useApp } from './AppContext';
-import type { AuthenticatedUser } from '@/types/auth';
+import type { 
+  User, 
+  UserRole, 
+  Permission, 
+  AuthContextType, 
+  RegisterData,
+  rolePermissions 
+} from '@/types/auth';
 
-interface AuthContextValue {
-  user: AuthenticatedUser | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (data: RegisterData) => Promise<void>;
-  logout: () => Promise<void>;
-  updateProfile: (data: Partial<AuthenticatedUser>) => Promise<void>;
-  refreshAuth: () => Promise<void>;
-}
-
-interface RegisterData {
-  email: string;
-  password: string;
-  name: string;
-  dateOfBirth: string;
-  monthlyIncome: number;
-  currency?: string;
-  language?: string;
-}
+// Re-export AuthContextType for backward compatibility
+type AuthContextValue = AuthContextType;
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
@@ -33,7 +22,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const { dispatch, clearUserData, syncData } = useApp();
   const [isLoading, setIsLoading] = useState(true);
-  const [user, setUser] = useState<AuthenticatedUser | null>(null);
+  const [user, setUser] = useState<User | null>(null);
 
   // Centralized function to clear auth tokens and headers
   const clearAuthTokens = () => {
@@ -143,7 +132,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const updateProfile = async (data: Partial<AuthenticatedUser>) => {
+  const updateProfile = async (data: Partial<User>) => {
     try {
       const response = await api.auth.updateProfile(data);
       if (!response.success) {
@@ -178,6 +167,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // RBAC helper functions
+  const hasPermission = useCallback((permission: Permission): boolean => {
+    if (!user) return false;
+    const userPermissions = rolePermissions[user.role] || [];
+    return userPermissions.includes(permission);
+  }, [user]);
+
+  const hasRole = useCallback((role: UserRole): boolean => {
+    if (!user) return false;
+    return user.role === role;
+  }, [user]);
+
+  const canAccess = useCallback(
+    (requiredRoles?: UserRole[], requiredPermissions?: Permission[]): boolean => {
+      if (!user) return false;
+      
+      // Check roles
+      if (requiredRoles && requiredRoles.length > 0) {
+        const hasRequiredRole = requiredRoles.includes(user.role);
+        if (!hasRequiredRole) return false;
+      }
+      
+      // Check permissions
+      if (requiredPermissions && requiredPermissions.length > 0) {
+        const hasAllPermissions = requiredPermissions.every(permission => 
+          hasPermission(permission)
+        );
+        if (!hasAllPermissions) return false;
+      }
+      
+      return true;
+    },
+    [user, hasPermission]
+  );
+
   const value: AuthContextValue = {
     user,
     isAuthenticated: !!user,
@@ -187,6 +211,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     logout,
     updateProfile,
     refreshAuth,
+    hasPermission,
+    hasRole,
+    canAccess,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -200,13 +227,18 @@ export function useAuth() {
   return context;
 }
 
-// HOC for protecting routes
+// HOC for protecting routes with RBAC
 export function withAuth<P extends object>(
   Component: React.ComponentType<P>,
-  options: { redirectTo?: string; allowedRoles?: string[] } = {}
+  options: { 
+    redirectTo?: string; 
+    requiredRoles?: UserRole[];
+    requiredPermissions?: Permission[];
+    fallback?: React.ReactNode;
+  } = {}
 ) {
   return function AuthenticatedComponent(props: P) {
-    const { isAuthenticated, isLoading, user } = useAuth();
+    const { isAuthenticated, isLoading, canAccess } = useAuth();
     const router = useRouter();
 
     useEffect(() => {
@@ -214,11 +246,13 @@ export function withAuth<P extends object>(
         router.push(options.redirectTo || '/login');
       }
 
-      if (!isLoading && isAuthenticated && options.allowedRoles) {
-        // Check role-based access if needed
-        // This is a placeholder - implement based on your user roles structure
+      if (!isLoading && isAuthenticated) {
+        const hasAccess = canAccess(options.requiredRoles, options.requiredPermissions);
+        if (!hasAccess) {
+          router.push(options.redirectTo || '/unauthorized');
+        }
       }
-    }, [isLoading, isAuthenticated, user]);
+    }, [isLoading, isAuthenticated, canAccess]);
 
     if (isLoading) {
       return (
@@ -230,6 +264,11 @@ export function withAuth<P extends object>(
 
     if (!isAuthenticated) {
       return null;
+    }
+
+    const hasAccess = canAccess(options.requiredRoles, options.requiredPermissions);
+    if (!hasAccess) {
+      return options.fallback || null;
     }
 
     return <Component {...props} />;

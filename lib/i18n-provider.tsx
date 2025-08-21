@@ -143,9 +143,18 @@ export function I18nProvider({ children, locale = 'en' }: I18nProviderProps) {
     return () => {
       if (i18n.isInitialized) {
         i18n.off('languageChanged', handleLanguageChanged);
+        
+        // Clean up loaded namespaces on unmount to prevent memory leaks
+        const loadedNamespaces = i18n.reportNamespaces?.getUsedNamespaces() || [];
+        loadedNamespaces.forEach(ns => {
+          // Only remove non-critical namespaces
+          if (!['common', 'errors'].includes(ns)) {
+            i18n.removeResourceBundle(currentLocale, ns);
+          }
+        });
       }
     };
-  }, []);
+  }, [currentLocale]);
 
   // Show loading state while i18n is initializing
   if (isLoading) {
