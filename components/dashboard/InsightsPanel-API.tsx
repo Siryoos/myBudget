@@ -14,6 +14,8 @@ import { formatCurrency } from '@/lib/utils'
 import { useTranslation } from '@/lib/useTranslation'
 import { useInsights, useDashboardData } from '@/lib/api-hooks'
 import { useRouter } from 'next/navigation'
+import { useAuth } from '@/contexts/AuthContext'
+import { actionHandler } from '@/lib/action-handler'
 import type { FinancialInsight } from '@/types'
 import { getMockInsights, getMockSavingTips, getMockPeerComparisons } from './insights-data'
 
@@ -33,6 +35,7 @@ export function InsightsPanel({
   const [activeTab, setActiveTab] = useState<TabType>('tips')
   const { t, isReady } = useTranslation(['dashboard', 'common'])
   const router = useRouter()
+  const { user } = useAuth()
   
   // Use API hooks with fallback data
   const mockInsights = useMemo(() => getMockInsights(t), [t])
@@ -101,20 +104,26 @@ export function InsightsPanel({
     ]
   }, [dashboardData, t])
   
-  const handleInsightAction = useCallback((action: any) => {
+  const handleInsightAction = useCallback(async (action: any) => {
     switch (action.type) {
       case 'navigate':
         router.push(action.target)
         break
       case 'execute':
-        // Handle custom actions
-        console.log('Executing action:', action.target)
+        // Handle custom actions via action handler
+        const result = await actionHandler.executeAction(action, {
+          userId: user?.id,
+          data: action.data
+        })
+        if (!result.success && result.message) {
+          console.error('Action failed:', result.message)
+        }
         break
       case 'external':
         window.open(action.target, '_blank', 'noopener,noreferrer')
         break
     }
-  }, [router])
+  }, [router, user])
   
   const renderContent = () => {
     if (!isReady || insightsLoading || dashboardLoading) {
