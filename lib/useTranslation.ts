@@ -54,8 +54,8 @@ export function useTranslation(namespace?: string | string[]) {
         const result = (translation.t as unknown as (k: string, o?: any) => string)(key, options);
         // If translation returns the key, it might not be loaded yet
         if (result === key && !isReady) {
-          // Return a fallback or the key
-          return options?.defaultValue || key;
+          // Return loading placeholder or default value
+          return options?.defaultValue || options?.loadingPlaceholder || '...';
         }
         return result;
       }

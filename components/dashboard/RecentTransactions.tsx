@@ -8,8 +8,10 @@ import {
 } from '@heroicons/react/24/outline'
 import { Card, CardContent, CardHeader } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
+import { Skeleton } from '@/components/ui/Skeleton'
 import { formatCurrency, formatRelativeTime } from '@/lib/utils'
 import { useTranslation } from '@/lib/useTranslation'
+import { useTransactions } from '@/hooks/use-api'
 import type { Transaction } from '@/types'
 
 interface RecentTransactionsProps {
@@ -26,57 +28,13 @@ export function RecentTransactions({
   const [filterType, setFilterType] = useState<'all' | 'income' | 'expense'>('all')
   const { t } = useTranslation(['dashboard', 'transactions', 'common'])
   
-  // Mock transaction data
-  const allTransactions: Transaction[] = [
-    {
-      id: '1',
-      amount: -85.50,
-      description: t('transactions:examples.groceryStore', { defaultValue: 'Grocery Store' }),
-      category: t('budget:categories.food'),
-      date: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-      type: 'expense',
-    },
-    {
-      id: '2',
-      amount: 2500.00,
-      description: t('transactions:examples.salaryDeposit', { defaultValue: 'Salary Deposit' }),
-      category: t('transactions:categories.income'),
-      date: new Date(Date.now() - 24 * 60 * 60 * 1000), // 1 day ago
-      type: 'income',
-    },
-    {
-      id: '3',
-      amount: -12.99,
-      description: t('transactions:examples.netflixSubscription', { defaultValue: 'Netflix Subscription' }),
-      category: t('budget:categories.entertainment'),
-      date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
-      type: 'expense',
-    },
-    {
-      id: '4',
-      amount: -45.00,
-      description: t('transactions:examples.gasStation', { defaultValue: 'Gas Station' }),
-      category: t('budget:categories.transportation'),
-      date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
-      type: 'expense',
-    },
-    {
-      id: '5',
-      amount: -120.00,
-      description: t('transactions:examples.electricBill', { defaultValue: 'Electric Bill' }),
-      category: t('budget:categories.utilities'),
-      date: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000), // 4 days ago
-      type: 'expense',
-    },
-    {
-      id: '6',
-      amount: 50.00,
-      description: t('transactions:examples.freelancePayment', { defaultValue: 'Freelance Payment' }),
-      category: t('transactions:categories.income'),
-      date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
-      type: 'income',
-    },
-  ]
+  // Fetch transactions from API
+  const { data, loading, error } = useTransactions({
+    limit: limit * 2, // Fetch more to account for filtering
+    type: filterType === 'all' ? undefined : filterType,
+  })
+  
+  const allTransactions = data?.transactions || []
 
   const filteredTransactions = allTransactions
     .filter(transaction => filterType === 'all' || transaction.type === filterType)

@@ -9,8 +9,10 @@ import {
 import { Card, CardContent, CardHeader } from '@/components/ui/Card'
 import { ProgressBar } from '@/components/ui/ProgressBar'
 import { Button } from '@/components/ui/Button'
+import { Skeleton } from '@/components/ui/Skeleton'
 import { formatCurrency, formatPercentage, getBudgetCategoryColor } from '@/lib/utils'
 import { useTranslation } from '@/lib/useTranslation'
+import { useBudgets } from '@/hooks/use-api'
 import type { BudgetCategory } from '@/types'
 
 interface BudgetSummaryProps {
@@ -26,16 +28,11 @@ export function BudgetSummary({
 }: BudgetSummaryProps) {
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month'>('month')
   const { t } = useTranslation(['dashboard', 'budget'])
+  const { data: budgets, loading, error } = useBudgets()
 
-  // Mock budget data
-  const budgetData: BudgetCategory[] = [
-    { id: '1', name: t('budget:categories.housing'), allocated: 1200, spent: 1200, remaining: 0, color: '#1E5A8D', isEssential: true },
-    { id: '2', name: t('budget:categories.food'), allocated: 400, spent: 320, remaining: 80, color: '#27AE60', isEssential: true },
-    { id: '3', name: t('budget:categories.transportation'), allocated: 300, spent: 280, remaining: 20, color: '#FF6B35', isEssential: true },
-    { id: '4', name: t('budget:categories.entertainment'), allocated: 200, spent: 250, remaining: -50, color: '#DC3545', isEssential: false },
-    { id: '5', name: t('budget:categories.shopping'), allocated: 150, spent: 90, remaining: 60, color: '#10B981', isEssential: false },
-    { id: '6', name: t('budget:categories.healthcare'), allocated: 100, spent: 45, remaining: 55, color: '#4A8BC2', isEssential: true },
-  ]
+  // Get the active budget (first one for now, or the current period budget)
+  const activeBudget = budgets?.[0]
+  const budgetData = activeBudget?.categories || []
 
   const totalAllocated = budgetData.reduce((sum, cat) => sum + cat.allocated, 0)
   const totalSpent = budgetData.reduce((sum, cat) => sum + cat.spent, 0)
@@ -109,6 +106,57 @@ export function BudgetSummary({
           </text>
         </svg>
       </div>
+    )
+  }
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <Skeleton className="h-10 w-10 rounded-lg mr-3" />
+              <div>
+                <Skeleton className="h-6 w-32 mb-2" />
+                <Skeleton className="h-4 w-48" />
+              </div>
+            </div>
+            <Skeleton className="h-9 w-32" />
+          </div>
+          <Skeleton className="h-10 w-full mt-4" />
+        </CardHeader>
+        <CardContent className="p-6 pt-0">
+          <div className="flex justify-center mb-6">
+            <Skeleton className="h-40 w-40 rounded-full" />
+          </div>
+          <div className="space-y-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="flex items-center justify-between">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-6 w-full mx-4" />
+                <Skeleton className="h-4 w-16" />
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (error || !activeBudget) {
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <div className="text-center text-neutral-gray">
+            <ChartPieIcon className="h-12 w-12 mx-auto mb-4 text-neutral-gray/50" />
+            <p className="mb-2">{t('budget:noActiveBudget', { defaultValue: 'No active budget found' })}</p>
+            <p className="text-sm mb-4">{error?.message || t('budget:createBudgetPrompt', { defaultValue: 'Create a budget to start tracking your expenses' })}</p>
+            <Button>
+              {t('budget:createBudget', { defaultValue: 'Create Budget' })}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     )
   }
 

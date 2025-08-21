@@ -203,9 +203,17 @@ function InsightsPanelContent({
           if (target.trim().length === 0) {
             throw new Error('Execute target cannot be empty')
           }
-          // Simulate async operation
-          await new Promise(resolve => setTimeout(resolve, 1000))
-          // Custom action not implemented - this would be handled by the application
+          // Execute action via action handler service
+          const { actionHandler } = await import('@/lib/action-handler')
+          const result = await actionHandler.executeAction(action, {
+            data: action.data
+          })
+          if (!result.success) {
+            throw new Error(result.message || 'Action execution failed')
+          }
+          if (result.redirectUrl) {
+            setAnnouncement(`Navigating to ${result.redirectUrl}`)
+          }
           break
         case 'external':
           // Validate external URL

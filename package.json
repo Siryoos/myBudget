@@ -8,14 +8,29 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "db:setup": "tsx scripts/setup-database.ts",
+    "db:migrate": "tsx scripts/migrate-database.ts",
+    "db:security-migrate": "tsx scripts/run-migrations.ts",
+    "dev:backend": "nodemon --exec tsx scripts/start-backend.ts",
+    "build:backend": "tsc -p tsconfig.server.json",
+    "quick-start": "./scripts/quick-start.sh",
+    "test:api": "node scripts/test-api.js",
+    "test:api:watch": "nodemon --exec 'node scripts/test-api.js'",
+    "docker:setup": "./scripts/docker-setup.sh",
+    "docker:start": "./scripts/docker-setup.sh start",
+    "docker:stop": "./scripts/docker-setup.sh stop",
+    "docker:restart": "./scripts/docker-setup.sh restart",
+    "docker:logs": "./scripts/docker-setup.sh logs",
+    "docker:status": "./scripts/docker-setup.sh status",
+    "docker:cleanup": "./scripts/docker-setup.sh cleanup",
+    "docker:dev": "docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d"
   },
   "dependencies": {
     "@headlessui/react": "^1.7.0",
     "@heroicons/react": "^2.0.0",
     "@hookform/resolvers": "^3.3.0",
     "@tailwindcss/forms": "^0.5.0",
-    "@types/node": "^20.0.0",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "autoprefixer": "^10.4.0",
@@ -38,15 +53,29 @@
     "recharts": "^2.8.0",
     "tailwindcss": "^3.3.0",
     "typescript": "^5.0.0",
-    "zod": "^3.22.0"
+    "zod": "^3.22.0",
+    "pg": "^8.11.3",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0",
+    "express-rate-limit": "^7.1.5",
+    "dotenv": "^16.3.1"
   },
   "devDependencies": {
+    "@types/node": "^20.0.0",
     "@types/react-i18next": "^7.8.3",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
     "eslint": "^8.0.0",
     "eslint-config-next": "^14.0.0",
     "prettier": "^3.0.0",
-    "prettier-plugin-tailwindcss": "^0.5.0"
+    "prettier-plugin-tailwindcss": "^0.5.0",
+    "@types/pg": "^8.10.7",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.5",
+    "@types/cors": "^2.8.17",
+    "nodemon": "^3.0.2",
+    "tsx": "^3.14.0"
   }
 }
