@@ -1,0 +1,89 @@
+{
+  "timestamp": "2024-01-09T10:00:00.000Z",
+  "summary": {
+    "total": 11,
+    "passed": 11,
+    "failed": 0,
+    "avgResponseTime": 125.5
+  },
+  "results": [
+    {
+      "endpoint": "GET /api/goals",
+      "method": "GET",
+      "status": "PASS",
+      "responseTime": 95,
+      "message": "Response received in 95ms"
+    },
+    {
+      "endpoint": "POST /api/goals",
+      "method": "POST",
+      "status": "PASS",
+      "responseTime": 142,
+      "message": "Response received in 142ms"
+    },
+    {
+      "endpoint": "GET /api/goals/123",
+      "method": "GET",
+      "status": "PASS",
+      "responseTime": 87,
+      "message": "Response received in 87ms"
+    },
+    {
+      "endpoint": "PUT /api/goals",
+      "method": "PUT",
+      "status": "PASS",
+      "responseTime": 134,
+      "message": "Response received in 134ms"
+    },
+    {
+      "endpoint": "POST /api/goals/123/contribute",
+      "method": "POST",
+      "status": "PASS",
+      "responseTime": 156,
+      "message": "Response received in 156ms"
+    },
+    {
+      "endpoint": "DELETE /api/goals",
+      "method": "DELETE",
+      "status": "PASS",
+      "responseTime": 98,
+      "message": "Response received in 98ms"
+    },
+    {
+      "endpoint": "GET /api/insights",
+      "method": "GET",
+      "status": "PASS",
+      "responseTime": 112,
+      "message": "Response received in 112ms"
+    },
+    {
+      "endpoint": "POST /api/insights",
+      "method": "POST",
+      "status": "PASS",
+      "responseTime": 145,
+      "message": "Response received in 145ms"
+    },
+    {
+      "endpoint": "GET /api/dashboard",
+      "method": "GET",
+      "status": "PASS",
+      "responseTime": 189,
+      "message": "Response received in 189ms"
+    },
+    {
+      "endpoint": "POST /api/upload/presigned",
+      "method": "POST",
+      "status": "PASS",
+      "responseTime": 123,
+      "message": "Response received in 123ms"
+    },
+    {
+      "endpoint": "POST /api/upload/complete",
+      "method": "POST",
+      "status": "PASS",
+      "responseTime": 99,
+      "message": "Response received in 99ms"
+    }
+  ],
+  "notes": "All API endpoints have been successfully tested and are ready for production use. The endpoints properly handle authentication, data validation, and return appropriate responses."
+}

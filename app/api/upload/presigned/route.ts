@@ -1,83 +1,92 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
-import { requireAuth } from '@/lib/auth-middleware';
-import { FileValidator } from '@/lib/file-validation';
+import { getStorageProvider, validateFileType, validateFileSize } from '@/lib/cloud-storage';
+import { validateUser } from '@/lib/auth-utils';
 
-// Validation schema for presigned URL request
-const presignedUrlSchema = z.object({
-  fileName: z.string().min(1, 'File name is required').max(255, 'File name too long'),
-  mimeType: z.string().min(1, 'MIME type is required'),
-  fileSize: z.number().positive('File size must be positive'),
-  folder: z.string().optional().default('uploads'),
-});
+// File upload limits and allowed types
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const ALLOWED_FILE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await requireAuth(request);
-    const body = await request.json();
-    
-    // Validate request body
-    const validatedData = presignedUrlSchema.parse(body);
-    
-    // Validate file type and size
-    const validationResult = await FileValidator.validateFile(
-      new File([''], validatedData.fileName, { type: validatedData.mimeType }),
-      'images' // Default to images, could be made configurable
-    );
-    
-    if (!validationResult.valid) {
+    // Validate user authentication
+    const user = await validateUser(request);
+    if (!user) {
       return NextResponse.json(
-        { success: false, error: validationResult.error },
-        { status: 400 }
-      );
-    }
-    
-    // Generate unique file ID
-    const fileId = crypto.randomUUID();
-    const sanitizedFileName = FileValidator.sanitizeFilename(validatedData.fileName);
-    const fileKey = `${validatedData.folder}/${user.id}/${fileId}/${sanitizedFileName}`;
-    
-    // In a real implementation, this would integrate with cloud storage (S3, Cloudinary, etc.)
-    // For now, we'll return a mock presigned URL structure
-    const mockPresignedUrl = `https://storage.example.com/upload?key=${encodeURIComponent(fileKey)}&expires=${Date.now() + 3600000}`;
-    const mockPublicUrl = `https://storage.example.com/public/${fileKey}`;
-    
-    // Store upload metadata in database (optional, for tracking)
-    // await query(`
-    //   INSERT INTO file_uploads (id, user_id, file_name, file_key, mime_type, file_size, status)
-    //   VALUES ($1, $2, $3, $4, $5, $6, 'pending')
-    // `, [fileId, user.id, validatedData.fileName, fileKey, validatedData.mimeType, validatedData.fileSize]);
-    
-    return NextResponse.json({
-      success: true,
-      data: {
-        uploadUrl: mockPresignedUrl,
-        publicUrl: mockPublicUrl,
-        publicId: fileId,
-        fileKey,
-        expiresAt: new Date(Date.now() + 3600000).toISOString(),
-      }
-    });
-    
-  } catch (error) {
-    console.error('Failed to generate presigned URL:', error);
-    
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { success: false, error: 'Validation failed', details: error.errors },
-        { status: 400 }
-      );
-    }
-    
-    if (error instanceof Error && error.message.includes('Unauthorized')) {
-      return NextResponse.json(
-        { success: false, error: 'Authentication required' },
+        { error: 'Unauthorized' },
         { status: 401 }
       );
     }
-    
+
+    // Parse request body
+    const body = await request.json();
+    const { fileName, mimeType, fileSize, folder } = body;
+
+    // Validate required fields
+    if (!fileName || !mimeType || !fileSize) {
+      return NextResponse.json(
+        { error: 'Missing required fields: fileName, mimeType, fileSize' },
+        { status: 400 }
+      );
+    }
+
+    // Validate file type
+    if (!validateFileType(mimeType, ALLOWED_FILE_TYPES)) {
+      return NextResponse.json(
+        { error: 'Invalid file type. Allowed types: JPEG, PNG, GIF, WebP' },
+        { status: 400 }
+      );
+    }
+
+    // Validate file size
+    if (!validateFileSize(fileSize, MAX_FILE_SIZE)) {
+      return NextResponse.json(
+        { error: `File size must be between 1 byte and ${MAX_FILE_SIZE / 1024 / 1024}MB` },
+        { status: 400 }
+      );
+    }
+
+    // Generate presigned URL using cloud storage provider
+    const storageProvider = getStorageProvider();
+    const presignedData = await storageProvider.generatePresignedUrl({
+      fileName,
+      mimeType,
+      fileSize,
+      folder: folder || 'goals',
+      metadata: {
+        userId: user.id,
+        uploadedAt: new Date().toISOString()
+      }
+    });
+
+    // Log upload request (in production, save to database)
+    console.log('[Upload] Presigned URL generated:', {
+      userId: user.id,
+      fileName,
+      mimeType,
+      fileSize,
+      publicId: presignedData.publicId
+    });
+
+    // Return presigned URL data
+    return NextResponse.json({
+      success: true,
+      data: {
+        uploadUrl: presignedData.uploadUrl,
+        publicUrl: presignedData.publicUrl,
+        publicId: presignedData.publicId,
+        fileKey: presignedData.fileKey,
+        expiresAt: presignedData.expiresAt,
+        headers: presignedData.headers
+      }
+    });
+
+  } catch (error) {
+    console.error('[Upload] Error generating presigned URL:', error);
     return NextResponse.json(
-      { success: false, error: 'Failed to generate presigned URL' },
+      { 
+        error: 'Failed to generate upload URL',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     );
   }
