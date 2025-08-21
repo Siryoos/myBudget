@@ -65,6 +65,7 @@ module.exports = {
         'slide-up': 'slideUp 0.3s ease-out',
         'celebrate': 'celebrate 0.6s ease-in-out',
         'pulse-gentle': 'pulseGentle 2s ease-in-out infinite',
+        'shimmer': 'shimmer 1.5s infinite',
       },
       keyframes: {
         fadeIn: {
@@ -82,6 +83,14 @@ module.exports = {
         pulseGentle: {
           '0%, 100%': { opacity: '1' },
           '50%': { opacity: '0.7' },
+        },
+        shimmer: {
+          '0%': {
+            backgroundPosition: '-200% 0',
+          },
+          '100%': {
+            backgroundPosition: '200% 0',
+          },
         },
       },
     },
