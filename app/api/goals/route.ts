@@ -34,25 +34,27 @@ export const GET = requireAuth(async (request: NextRequest) => {
     const category = searchParams.get('category');
     const priority = searchParams.get('priority');
     
-    const whereClause = 'WHERE g.user_id = $1';
+    const conditions = ['g.user_id = $1'];
     const params = [user.id];
-    const paramIndex = 2;
+    let paramIndex = 2;
 
     if (!includeInactive) {
-      whereClause += ' AND g.is_active = true';
+      conditions.push('g.is_active = true');
     }
 
     if (category) {
-      whereClause += ` AND g.category = $${paramIndex}`;
+      conditions.push(`g.category = $${paramIndex}`);
       params.push(category);
       paramIndex++;
     }
 
     if (priority) {
-      whereClause += ` AND g.priority = $${paramIndex}`;
+      conditions.push(`g.priority = $${paramIndex}`);
       params.push(priority);
       paramIndex++;
     }
+
+    const whereClause = `WHERE ${conditions.join(' AND ')}`;
     
     const result = await query(
       `SELECT g.*, 
@@ -291,7 +293,7 @@ export const DELETE = requireAuth(async (request: NextRequest) => {
 // Add milestone to a goal
 export const PATCH = requireAuth(async (request: NextRequest) => {
   try {
-    const body = await request.json();
+    const body = await request.json() as { goalId: string; milestone: any };
     const { goalId, milestone } = body;
     
     if (!goalId || !milestone) {

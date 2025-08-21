@@ -39,7 +39,7 @@ COPY --from=base --chown=nextjs:nodejs /app/package*.json ./
 COPY --from=base --chown=nextjs:nodejs /app/node_modules ./node_modules
 COPY --from=base --chown=nextjs:nodejs /app/next.config.js ./
 COPY --from=base --chown=nextjs:nodejs /app/tsconfig.json ./
-COPY --from=base --chown=nextjs:nodejs /app/locales ./locales
+COPY --from=base --chown=nextjs:nodejs /app/app/locales ./locales
 
 # Create necessary directories
 RUN mkdir -p logs && chown -R nextjs:nodejs logs

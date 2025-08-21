@@ -34,39 +34,41 @@ export const GET = requireAuth(async (request: NextRequest) => {
     const endDate = searchParams.get('endDate');
     const budgetCategoryId = searchParams.get('budgetCategoryId');
 
-    const whereClause = 'WHERE t.user_id = $1';
+    const conditions = ['t.user_id = $1'];
     const params = [user.id];
-    const paramIndex = 2;
+    let paramIndex = 2;
 
     if (category) {
-      whereClause += ` AND t.category = $${paramIndex}`;
+      conditions.push(`t.category = $${paramIndex}`);
       params.push(category);
       paramIndex++;
     }
 
     if (type) {
-      whereClause += ` AND t.type = $${paramIndex}`;
+      conditions.push(`t.type = $${paramIndex}`);
       params.push(type);
       paramIndex++;
     }
 
     if (startDate) {
-      whereClause += ` AND t.date >= $${paramIndex}`;
+      conditions.push(`t.date >= $${paramIndex}`);
       params.push(startDate);
       paramIndex++;
     }
 
     if (endDate) {
-      whereClause += ` AND t.date <= $${paramIndex}`;
+      conditions.push(`t.date <= $${paramIndex}`);
       params.push(endDate);
       paramIndex++;
     }
 
     if (budgetCategoryId) {
-      whereClause += ` AND t.budget_category_id = $${paramIndex}`;
+      conditions.push(`t.budget_category_id = $${paramIndex}`);
       params.push(budgetCategoryId);
       paramIndex++;
     }
+
+    const whereClause = `WHERE ${conditions.join(' AND ')}`;
 
     // Get total count
     const countResult = await query(

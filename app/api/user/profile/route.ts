@@ -162,7 +162,7 @@ export const PUT = requireAuth(async (request: NextRequest) => {
 
 export const PATCH = requireAuth(async (request: NextRequest) => {
   try {
-    const body = await request.json();
+    const body = await request.json() as { avatar: string };
     const { avatar } = body;
     const user = (request as any).user;
 
