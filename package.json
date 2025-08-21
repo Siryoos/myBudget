@@ -11,6 +11,7 @@
     "type-check": "tsc --noEmit",
     "db:setup": "tsx scripts/setup-database.ts",
     "db:migrate": "tsx scripts/migrate-database.ts",
+    "db:security-migrate": "tsx scripts/run-migrations.ts",
     "dev:backend": "nodemon --exec tsx scripts/start-backend.ts",
     "build:backend": "tsc -p tsconfig.server.json",
     "quick-start": "./scripts/quick-start.sh",

@@ -48,7 +48,7 @@ export function useApi<T>(
   const opts = { ...defaultOptions, ...options };
   const [state, setState] = useState<UseApiState<T>>({
     data: opts.fallbackData || null,
-    loading: opts.enabled && !!key,
+    loading: (opts.enabled ?? true) && !!key,
     error: null,
     isValidating: false,
   });
@@ -124,7 +124,13 @@ export function useApi<T>(
       }
     })();
 
-    cache.set(key, { ...cached, timestamp: now, promise });
+    // Safe fallback to prevent spreading undefined
+    const cachedData = cached || {};
+    cache.set(key, { 
+      data: 'data' in cachedData ? cachedData.data : null, 
+      timestamp: now, 
+      promise 
+    });
     return promise;
   }, [key, opts.enabled, opts.dedupingInterval, opts.errorRetryCount, opts.errorRetryInterval, state.data]);
 
@@ -143,7 +149,7 @@ export function useApi<T>(
   // Initial fetch
   useEffect(() => {
     fetchData();
-  }, [key]);
+  }, [key, fetchData]);
 
   // Refetch interval
   useEffect(() => {

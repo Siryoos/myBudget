@@ -22,8 +22,8 @@ export async function authenticateRequest(request: NextRequest): Promise<{
       return { error: 'Invalid authorization header format' };
     }
 
-    const payload = verifyToken(token);
-    const result = await query('SELECT id, email, name FROM users WHERE id = $1', [payload.userId]);
+    const payload = await verifyToken(token);
+    const result = await query('SELECT id, email, name, token_version, password_changed_at FROM users WHERE id = $1', [payload.userId]);
     
     if (result.rows.length === 0) {
       return { error: 'Invalid token' };

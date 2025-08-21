@@ -265,30 +265,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [state.savingsGoals]);
 
-  // Monitor online status
-  useEffect(() => {
-    const handleOnline = () => {
-      dispatch({ type: 'SET_ONLINE_STATUS', payload: true });
-      // Sync data when coming back online
-      syncData();
-    };
-
-    const handleOffline = () => {
-      dispatch({ type: 'SET_ONLINE_STATUS', payload: false });
-    };
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    // Set initial online status
-    dispatch({ type: 'SET_ONLINE_STATUS', payload: navigator.onLine });
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
-
   // Apply theme
   useEffect(() => {
     const applyTheme = (theme: 'light' | 'dark' | 'system') => {
@@ -350,6 +326,30 @@ export function AppProvider({ children }: { children: ReactNode }) {
       dispatch({ type: 'SET_SYNC_STATUS', payload: { isSyncing: false, error: error as Error } });
     }
   };
+
+  // Monitor online status - moved after syncData function to avoid stale closure
+  useEffect(() => {
+    const handleOnline = () => {
+      dispatch({ type: 'SET_ONLINE_STATUS', payload: true });
+      // Sync data when coming back online
+      syncData();
+    };
+
+    const handleOffline = () => {
+      dispatch({ type: 'SET_ONLINE_STATUS', payload: false });
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    // Set initial online status
+    dispatch({ type: 'SET_ONLINE_STATUS', payload: navigator.onLine });
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, [syncData, state.isOnline, state.isAuthenticated, dispatch]);
 
   // Clear user data on logout
   const clearUserData = () => {

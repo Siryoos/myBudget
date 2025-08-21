@@ -1,4 +1,5 @@
 import { BehavioralDashboard } from '@/components/goals/BehavioralDashboard'
+import { SkeletonDemo } from '@/components/ui/SkeletonDemo'
 
 export default function DemoPage() {
   return (
@@ -20,6 +21,19 @@ export default function DemoPage() {
           showSocialProof={true}
           enableNotifications={true}
         />
+
+        {/* Skeleton Component Demo */}
+        <div className="mt-16">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              Enhanced Skeleton Components
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Showcasing improved wave animation with gradient backgrounds and accessibility features.
+            </p>
+          </div>
+          <SkeletonDemo />
+        </div>
       </div>
     </div>
   )

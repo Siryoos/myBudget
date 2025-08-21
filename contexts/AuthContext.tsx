@@ -4,16 +4,16 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { useApp } from './AppContext';
-import type { User } from '@/types';
+import type { AuthenticatedUser } from '@/types/auth';
 
 interface AuthContextValue {
-  user: User | null;
+  user: AuthenticatedUser | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   logout: () => Promise<void>;
-  updateProfile: (data: Partial<User>) => Promise<void>;
+  updateProfile: (data: Partial<AuthenticatedUser>) => Promise<void>;
   refreshAuth: () => Promise<void>;
 }
 
@@ -33,7 +33,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const { dispatch, clearUserData, syncData } = useApp();
   const [isLoading, setIsLoading] = useState(true);
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthenticatedUser | null>(null);
+
+  // Centralized function to clear auth tokens and headers
+  const clearAuthTokens = () => {
+    localStorage.removeItem('authToken');
+    api.utils.setToken(null);
+  };
 
   // Initialize auth state
   useEffect(() => {
@@ -49,14 +55,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             // Sync data after successful auth
             await syncData();
           } else {
-            localStorage.removeItem('authToken');
-            api.utils.setToken(null);
+            clearAuthTokens();
           }
         }
       } catch (error) {
         console.error('Auth initialization error:', error);
-        localStorage.removeItem('authToken');
-        api.utils.setToken(null);
+        clearAuthTokens();
       } finally {
         setIsLoading(false);
       }
@@ -89,8 +93,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       router.push('/dashboard');
     } catch (error) {
       // Clear any partial state
-      localStorage.removeItem('authToken');
-      api.utils.setToken(null);
+      clearAuthTokens();
       throw error;
     }
   };
@@ -116,8 +119,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       router.push('/onboarding');
     } catch (error) {
       // Clear any partial state
-      localStorage.removeItem('authToken');
-      api.utils.setToken(null);
+      clearAuthTokens();
       throw error;
     }
   };
@@ -128,16 +130,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
+      // Explicitly remove the stored JWT token first
+      localStorage.removeItem('authToken');
+      
       // Clear all user data
       setUser(null);
       clearUserData();
+      clearAuthTokens();
       
       // Redirect to login
       router.push('/login');
     }
   };
 
-  const updateProfile = async (data: Partial<User>) => {
+  const updateProfile = async (data: Partial<AuthenticatedUser>) => {
     try {
       const response = await api.auth.updateProfile(data);
       if (!response.success) {
@@ -162,11 +168,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error('Failed to refresh auth');
       }
     } catch (error) {
-      // If refresh fails, clear auth state
+      // If refresh fails, clear auth state completely
       setUser(null);
-      clearUserData();
+      clearUserData(); // This already clears localStorage and API client token
+      clearAuthTokens();
       router.push('/login');
-      throw error;
+      // Don't rethrow error to prevent unwanted loops
+      console.error('Auth refresh failed:', error);
     }
   };
 

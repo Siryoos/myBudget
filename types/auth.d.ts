@@ -5,6 +5,8 @@ export interface AuthenticatedUser {
   id: string;
   email: string;
   name: string;
+  tokenVersion?: number;
+  passwordChangedAt?: string;
 }
 
 // Extended request type with authenticated user
@@ -16,6 +18,8 @@ export interface AuthenticatedRequest extends NextRequest {
 export interface JWTPayload {
   userId: string;
   email: string;
+  tokenVersion: number;
+  passwordChangedAt: string;
 }
 
 // Helper type for request handlers that require authentication

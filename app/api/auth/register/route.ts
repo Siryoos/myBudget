@@ -24,8 +24,8 @@ export async function POST(request: NextRequest) {
     // Create normalized email for consistent database operations
     const normalizedEmail = email.trim().toLowerCase();
 
-    // Check if user already exists using normalized email
-    const existingUser = await query('SELECT id FROM users WHERE email = $1', [normalizedEmail]);
+    // Check if user already exists using case-insensitive email comparison
+    const existingUser = await query('SELECT id FROM users WHERE lower(email) = lower($1)', [normalizedEmail]);
     if (existingUser.rows.length > 0) {
       return NextResponse.json(
         { error: 'User already exists' },
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     const user = result.rows[0];
     // Ensure the returned user object has the normalized email
     const userWithNormalizedEmail = { ...user, email: normalizedEmail };
-    const token = generateToken({ userId: user.id, email: normalizedEmail });
+    const token = await generateToken({ userId: user.id, email: normalizedEmail });
 
     return NextResponse.json({
       success: true,

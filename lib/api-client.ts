@@ -6,15 +6,9 @@ import {
   Milestone,
   DashboardData,
   Notification,
-  Achievement
+  Achievement,
+  ApiResponse
 } from '@/types';
-
-interface ApiResponse<T> {
-  success: boolean;
-  data?: T;
-  error?: string;
-  details?: any;
-}
 
 interface RequestOptions {
   cache?: boolean;
@@ -93,13 +87,64 @@ export class ApiClient {
           }
         });
 
-        if (!response.ok) {
-          throw new ApiError('Failed to refresh token', response.status);
+        let data: any;
+        try {
+          data = await response.json();
+        } catch (parseError) {
+          throw new ApiError(
+            'Failed to parse refresh token response',
+            response.status,
+            { parseError: parseError instanceof Error ? parseError.message : 'Unknown parse error' }
+          );
         }
 
-        const data = await response.json();
+        if (!response.ok) {
+          throw new ApiError(
+            'Token refresh failed',
+            response.status,
+            data
+          );
+        }
+
+        // Validate response structure
+        if (!data || typeof data !== 'object') {
+          throw new ApiError(
+            'Invalid refresh token response format',
+            response.status,
+            data
+          );
+        }
+
+        if (!data.data || typeof data.data !== 'object') {
+          throw new ApiError(
+            'Missing or invalid data property in refresh response',
+            response.status,
+            data
+          );
+        }
+
+        if (!data.data.token || typeof data.data.token !== 'string' || data.data.token.trim() === '') {
+          throw new ApiError(
+            'Missing or invalid token in refresh response',
+            response.status,
+            data
+          );
+        }
+
         this.token = data.data.token;
         return this.token;
+      } catch (error) {
+        // Re-throw ApiError instances, wrap others
+        if (error instanceof ApiError) {
+          throw error;
+        }
+        
+        // Wrap unexpected errors
+        throw new ApiError(
+          'Token refresh failed with unexpected error',
+          undefined,
+          { originalError: error instanceof Error ? error.message : 'Unknown error' }
+        );
       } finally {
         this.refreshPromise = null;
       }

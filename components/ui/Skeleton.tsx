@@ -14,7 +14,7 @@ export function Skeleton({
 }: SkeletonProps) {
   const animationClasses = {
     pulse: 'animate-pulse',
-    wave: 'animate-shimmer',
+    wave: 'animate-shimmer bg-gradient-to-r from-neutral-gray/20 via-neutral-light-gray/40 to-neutral-gray/20 bg-[length:200%_100%]',
     none: ''
   }
 
@@ -27,11 +27,13 @@ export function Skeleton({
   return (
     <div
       className={cn(
-        'bg-neutral-gray/20',
+        animation === 'wave' ? '' : 'bg-neutral-gray/20',
         animationClasses[animation],
         variantClasses[variant],
         className
       )}
+      aria-hidden="true"
+      tabIndex={-1}
       {...props}
     />
   )

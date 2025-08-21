@@ -44,15 +44,22 @@ export const PUT = requireAuth(async (request: AuthenticatedRequest) => {
     // Hash new password
     const hashedNewPassword = await hashPassword(newPassword);
 
-    // Update password
+    // Update password and increment token version for security
     await query(
-      'UPDATE users SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
+      'UPDATE users SET password_hash = $1, token_version = token_version + 1, password_changed_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
       [hashedNewPassword, user.id]
     );
 
     return NextResponse.json({
       success: true,
-      data: { message: 'Password changed successfully' }
+      data: { 
+        message: 'Password changed successfully',
+        requiresReauth: true // Signal to client that re-authentication is required
+      }
+    }, {
+      headers: {
+        'Set-Cookie': 'auth=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0' // Clear auth cookie
+      }
     });
 
   } catch (error) {

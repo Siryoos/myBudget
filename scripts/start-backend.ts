@@ -3,6 +3,10 @@
 import { createServer } from 'http';
 import { parse } from 'url';
 import next from 'next';
+import { validateJWTSecret } from '@/lib/auth';
+
+// Validate JWT_SECRET before starting the server
+validateJWTSecret();
 
 const dev = process.env.NODE_ENV !== 'production';
 const hostname = '0.0.0.0';
