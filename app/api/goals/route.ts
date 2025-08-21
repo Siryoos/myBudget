@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { requireAuth } from '@/lib/auth-middleware';
 import { z } from 'zod';
+import type { AuthenticatedRequest } from '@/types/auth';
 
 const goalSchema = z.object({
   name: z.string().min(1, 'Goal name is required'),
@@ -25,9 +26,9 @@ const milestoneSchema = z.object({
   description: z.string().min(1, 'Milestone description is required'),
 });
 
-export const GET = requireAuth(async (request: NextRequest) => {
+export const GET = requireAuth(async (request: AuthenticatedRequest) => {
   try {
-    const user = (request as any).user;
+    const user = request.user;
     const { searchParams } = new URL(request.url);
     
     const includeInactive = searchParams.get('includeInactive') === 'true';
@@ -74,7 +75,12 @@ export const GET = requireAuth(async (request: NextRequest) => {
       LEFT JOIN milestones m ON g.id = m.goal_id
       ${whereClause}
       GROUP BY g.id
-      ORDER BY g.priority DESC, g.created_at DESC`,
+      ORDER BY CASE g.priority 
+        WHEN 'high' THEN 3 
+        WHEN 'medium' THEN 2 
+        WHEN 'low' THEN 1 
+        ELSE 0 
+      END DESC, g.created_at DESC`,
       params
     );
 
@@ -92,11 +98,11 @@ export const GET = requireAuth(async (request: NextRequest) => {
   }
 });
 
-export const POST = requireAuth(async (request: NextRequest) => {
+export const POST = requireAuth(async (request: AuthenticatedRequest) => {
   try {
     const body = await request.json();
     const goalData = goalSchema.parse(body);
-    const user = (request as any).user;
+    const user = request.user;
 
     // Validate target date is in the future
     const targetDate = new Date(goalData.targetDate);
@@ -141,11 +147,11 @@ export const POST = requireAuth(async (request: NextRequest) => {
   }
 });
 
-export const PUT = requireAuth(async (request: NextRequest) => {
+export const PUT = requireAuth(async (request: AuthenticatedRequest) => {
   try {
     const body = await request.json();
     const updateData = updateGoalSchema.parse(body);
-    const user = (request as any).user;
+    const user = request.user;
 
     // Check if goal exists and belongs to user
     const existingGoal = await query(
@@ -252,11 +258,11 @@ export const PUT = requireAuth(async (request: NextRequest) => {
   }
 });
 
-export const DELETE = requireAuth(async (request: NextRequest) => {
+export const DELETE = requireAuth(async (request: AuthenticatedRequest) => {
   try {
     const { searchParams } = new URL(request.url);
     const goalId = searchParams.get('id');
-    const user = (request as any).user;
+    const user = request.user;
 
     if (!goalId) {
       return NextResponse.json(
@@ -299,7 +305,7 @@ export const DELETE = requireAuth(async (request: NextRequest) => {
 });
 
 // Add milestone to a goal
-export const PATCH = requireAuth(async (request: NextRequest) => {
+export const PATCH = requireAuth(async (request: AuthenticatedRequest) => {
   try {
     const body = await request.json() as { goalId: string; milestone: any };
     const { goalId, milestone } = body;
@@ -311,7 +317,7 @@ export const PATCH = requireAuth(async (request: NextRequest) => {
       );
     }
 
-    const user = (request as any).user;
+    const user = request.user;
 
     // Validate milestone data
     const milestoneData = milestoneSchema.parse(milestone);

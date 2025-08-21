@@ -20,7 +20,10 @@ export const generateToken = (payload: JWTPayload): string => {
   
   const expiresIn = process.env.JWT_EXPIRES_IN || '7d';
   
-  return jwt.sign(payload, secret, { expiresIn: expiresIn as jwt.SignOptions['expiresIn'] });
+  return jwt.sign(payload, secret, { 
+    algorithm: 'HS256', 
+    expiresIn: expiresIn as jwt.SignOptions['expiresIn'] 
+  });
 };
 
 export const verifyToken = (token: string): JWTPayload => {
@@ -30,14 +33,14 @@ export const verifyToken = (token: string): JWTPayload => {
   }
   
   try {
-    return jwt.verify(token, secret) as JWTPayload;
+    return jwt.verify(token, secret, { algorithms: ['HS256'] }) as JWTPayload;
   } catch (error) {
-    if (error instanceof jwt.JsonWebTokenError) {
-      throw new Error('Invalid or malformed JWT token');
-    } else if (error instanceof jwt.TokenExpiredError) {
+    if (error instanceof jwt.TokenExpiredError) {
       throw new Error('JWT token has expired');
     } else if (error instanceof jwt.NotBeforeError) {
       throw new Error('JWT token not yet valid');
+    } else if (error instanceof jwt.JsonWebTokenError) {
+      throw new Error('Invalid or malformed JWT token');
     } else {
       throw new Error('JWT verification failed');
     }

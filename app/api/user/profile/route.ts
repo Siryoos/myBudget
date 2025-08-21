@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { requireAuth } from '@/lib/auth-middleware';
 import { z } from 'zod';
+import type { AuthenticatedRequest } from '@/types/auth';
 
 const profileUpdateSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters').optional(),
@@ -17,9 +18,9 @@ const profileUpdateSchema = z.object({
   dependents: z.number().min(0, 'Dependents must be non-negative').optional(),
 });
 
-export const GET = requireAuth(async (request: NextRequest) => {
+export const GET = requireAuth(async (request: AuthenticatedRequest) => {
   try {
-    const user = (request as any).user;
+    const user = request.user;
     
     const result = await query(
       `SELECT 
@@ -52,11 +53,11 @@ export const GET = requireAuth(async (request: NextRequest) => {
   }
 });
 
-export const PUT = requireAuth(async (request: NextRequest) => {
+export const PUT = requireAuth(async (request: AuthenticatedRequest) => {
   try {
     const body = await request.json();
     const updateData = profileUpdateSchema.parse(body);
-    const user = (request as any).user;
+    const user = request.user;
 
     // Build update query dynamically
     const updateFields = [];
@@ -160,11 +161,11 @@ export const PUT = requireAuth(async (request: NextRequest) => {
   }
 });
 
-export const PATCH = requireAuth(async (request: NextRequest) => {
+export const PATCH = requireAuth(async (request: AuthenticatedRequest) => {
   try {
     const body = await request.json() as { avatar: string };
     const { avatar } = body;
-    const user = (request as any).user;
+    const user = request.user;
 
     if (!avatar) {
       return NextResponse.json(
