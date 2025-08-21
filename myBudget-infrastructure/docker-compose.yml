@@ -1,0 +1,209 @@
+# Docker Compose v2 configuration
+
+services:
+  # Database Service
+  postgres:
+    image: postgres:15-alpine
+    container_name: mybudget-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+      - ./scripts/postgres-init.sql:/docker-entrypoint-initdb.d/init.sql
+    environment:
+      POSTGRES_DB: mybudget
+      POSTGRES_USER: ${POSTGRES_USER:-mybudget}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-mybudget} -d mybudget"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - mybudget-network
+
+  # Cache Service
+  redis:
+    image: redis:7-alpine
+    container_name: mybudget-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./data/redis:/data
+      - ./config/redis/redis.conf:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - mybudget-network
+
+  # Storage Service (MinIO)
+  minio:
+    image: minio/minio:latest
+    container_name: mybudget-storage
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - ./data/storage:/data
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-admin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      MINIO_DOMAIN: ${MINIO_DOMAIN:-minio.local}
+      MINIO_SERVER_URL: ${MINIO_SERVER_URL:-http://localhost:9000}
+      MINIO_BROWSER_REDIRECT_URL: ${MINIO_BROWSER_REDIRECT_URL:-http://localhost:9001}
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    networks:
+      - mybudget-network
+
+  # Authentication Service (Keycloak)
+  keycloak:
+    image: quay.io/keycloak/keycloak:23.0
+    container_name: mybudget-auth
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+      - "8443:8443"
+    volumes:
+      - ./data/keycloak:/opt/keycloak/data
+      - ./config/keycloak/themes:/opt/keycloak/themes
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: ${KEYCLOAK_DB_USER:-keycloak}
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      KC_HOSTNAME: ${KC_HOSTNAME:-localhost}
+      KC_PROXY: edge
+      KC_HTTP_ENABLED: "true"
+    command: start-dev
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - mybudget-network
+
+  # SMTP Service (Postfix)
+  postfix:
+    image: catatnight/postfix
+    container_name: mybudget-smtp
+    restart: unless-stopped
+    ports:
+      - "25:25"
+      - "587:587"
+    volumes:
+      - ./data/postfix:/var/mail
+      - ./config/postfix:/etc/postfix
+    environment:
+      mailname: ${POSTAL_HOSTNAME:-mail.mybudget.local}
+      smtp_user: ${POSTAL_EMAIL:-admin@mybudget.local}:${POSTAL_PASSWORD}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - mybudget-network
+
+  # Reverse Proxy (Nginx)
+  nginx:
+    image: nginx:alpine
+    container_name: mybudget-proxy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./config/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./config/nginx/conf.d:/etc/nginx/conf.d
+      - ./ssl:/etc/nginx/ssl
+      - ./logs/nginx:/var/log/nginx
+    depends_on:
+      - keycloak
+      - minio
+    networks:
+      - mybudget-network
+
+  # Monitoring - Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: mybudget-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./data/prometheus:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    networks:
+      - mybudget-network
+
+  # Monitoring - Grafana
+  grafana:
+    image: grafana/grafana:latest
+    container_name: mybudget-grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data/grafana:/var/lib/grafana
+      - ./config/grafana/provisioning:/etc/grafana/provisioning
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GF_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GF_ADMIN_PASSWORD}
+      GF_INSTALL_PLUGINS: ${GF_PLUGINS:-grafana-clock-panel,grafana-simple-json-datasource}
+    depends_on:
+      - prometheus
+    networks:
+      - mybudget-network
+
+  # Backup Service
+  backup:
+    image: offen/docker-volume-backup:latest
+    container_name: mybudget-backup
+    restart: unless-stopped
+    volumes:
+      - ./data:/backup/data:ro
+      - ./config:/backup/config:ro
+      - ./data/backups:/archive
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      BACKUP_CRON_EXPRESSION: "0 2 * * *"
+      BACKUP_FILENAME: "mybudget-backup-%Y-%m-%d_%H-%M-%S.tar.gz"
+      BACKUP_ARCHIVE: "/archive"
+      BACKUP_RETENTION_DAYS: "7"
+      BACKUP_PRUNING_PREFIX: "mybudget-backup-"
+    networks:
+      - mybudget-network
+
+networks:
+  mybudget-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  postgres_data:
+  redis_data:
+  storage_data:
+  keycloak_data:
+  postfix_data:
+  prometheus_data:
+  grafana_data:

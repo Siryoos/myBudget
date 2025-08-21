@@ -1,0 +1,56 @@
+# Postal Configuration
+
+general:
+  # The host that the management interface will be available on
+  host: postal.mybudget.local
+  # The protocol that requests to the management interface should happen on
+  protocol: https
+  # Enable SMTP
+  smtp_server_enabled: true
+  # Specify the port for the SMTP server to listen on
+  smtp_server_port: 25
+  # Specify the hostname for SMTP HELO
+  smtp_server_hostname: mail.mybudget.local
+  # Enable STARTTLS
+  smtp_server_tls_enabled: true
+  # SSL certificate config
+  smtp_server_tls_certificate: /etc/postal/ssl/cert.pem
+  smtp_server_tls_key: /etc/postal/ssl/key.pem
+
+main_db:
+  host: postgres
+  port: 5432
+  database: postal
+  username: postal
+  password: postal_password
+  
+redis:
+  host: redis
+  port: 6379
+  db: 1
+
+logging:
+  # Log SMTP transactions
+  smtp_server_log_transactions: true
+  # Where to log
+  log_directory: /var/log/postal
+
+dns:
+  # SPF record
+  spf_include: spf.postal.mybudget.local
+  # Return path domain
+  return_path_domain: rp.postal.mybudget.local
+  # Tracking domain
+  track_domain: track.postal.mybudget.local
+  # MX records
+  mx_records:
+    - 10 mail.mybudget.local
+
+smtp:
+  # Relay settings
+  relay_enabled: false
+  # Authentication
+  authentication_enabled: true
+  # Rate limiting
+  max_message_size: 50 # MB
+  max_recipients: 100
