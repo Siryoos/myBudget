@@ -4,11 +4,11 @@ import {
   BudgetCategory, 
   SavingsGoal, 
   Milestone,
-  DashboardData,
-  Notification,
   Achievement,
+  FinancialInsight,
   ApiResponse
 } from '@/types';
+import type { DashboardData, Notification } from '@/types/api';
 
 interface RequestOptions {
   cache?: boolean;
@@ -566,6 +566,74 @@ export class ApiClient {
       if (key.includes(pattern)) {
         this.requestCache.delete(key);
       }
+    });
+  }
+
+  // Insights API
+  async getInsights(params?: {
+    type?: 'insight' | 'budget_alert' | 'achievement' | 'all';
+    category?: string;
+    priority?: 'low' | 'medium' | 'high';
+    isRead?: boolean;
+    limit?: number;
+    offset?: number;
+  }): Promise<ApiResponse<FinancialInsight[]>> {
+    const searchParams = new URLSearchParams();
+    if (params?.type) searchParams.append('type', params.type);
+    if (params?.category) searchParams.append('category', params.category);
+    if (params?.priority) searchParams.append('priority', params.priority);
+    if (params?.isRead !== undefined) searchParams.append('isRead', params.isRead.toString());
+    if (params?.limit) searchParams.append('limit', params.limit.toString());
+    if (params?.offset) searchParams.append('offset', params.offset.toString());
+    
+    return this.request(`/api/insights?${searchParams.toString()}`);
+  }
+
+  async createInsight(insightData: {
+    type: 'insight' | 'budget_alert' | 'achievement';
+    title: string;
+    message: string;
+    category?: string;
+    priority?: 'low' | 'medium' | 'high';
+    actionUrl?: string;
+    actionData?: Record<string, any>;
+  }): Promise<ApiResponse<any>> {
+    return this.request('/api/insights', {
+      method: 'POST',
+      body: JSON.stringify(insightData)
+    });
+  }
+
+  // File Upload API
+  async getPresignedUrl(data: {
+    fileName: string;
+    mimeType: string;
+    fileSize: number;
+    folder?: string;
+  }): Promise<ApiResponse<{
+    uploadUrl: string;
+    publicUrl: string;
+    publicId: string;
+    fileKey: string;
+    expiresAt: string;
+  }>> {
+    return this.request('/api/upload/presigned', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async completeUpload(data: {
+    publicId: string;
+    url: string;
+    thumbnailUrl?: string;
+    size: number;
+    mimeType: string;
+    originalName: string;
+  }): Promise<ApiResponse<any>> {
+    return this.request('/api/upload/complete', {
+      method: 'POST',
+      body: JSON.stringify(data)
     });
   }
 }

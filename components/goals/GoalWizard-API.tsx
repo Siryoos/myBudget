@@ -1,9 +1,9 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useTranslation } from '@/lib/useTranslation'
 import { apiClient } from '@/lib/api-client'
-import type { SavingsGoal, GoalPhoto } from '@/types'
+import type { SavingsGoal, GoalPhoto, GoalCategory } from '@/types'
 import { 
   CameraIcon, 
   XMarkIcon,
@@ -83,13 +83,22 @@ export function GoalWizard({
     description: '',
     targetAmount: 0,
     targetDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year from now
-    category: 'other',
+    category: 'custom',
     priority: 'medium'
   })
   const [uploadedPhoto, setUploadedPhoto] = useState<GoalPhoto | null>(null)
   const [isUploading, setIsUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState<UploadProgress | null>(null)
   const [uploadError, setUploadError] = useState<string | null>(null)
+
+  // Handle automatic navigation when steps are disabled
+  useEffect(() => {
+    if (step === 2 && !enableLossAversion) {
+      handleNext()
+    } else if (step === 4 && !showPhotoUpload) {
+      handleNext()
+    }
+  }, [step, enableLossAversion, showPhotoUpload])
 
   const handlePhotoUpload = async (file: File) => {
     // Validate file
@@ -179,28 +188,65 @@ export function GoalWizard({
     }
   }
 
-  const handleNext = () => {
+  // BEGIN: Navigation and Goal Creation Handler
+  // This function manages step progression and final goal creation
+  // It handles both manual navigation (user clicks next) and automatic step skipping
+  const handleNext = useCallback(() => {
     if (step < 4) {
-      setStep(step + 1)
+      // Skip framing (step 2) when loss aversion is disabled
+      // This prevents users from getting stuck on a disabled step
+      const skipFraming = !enableLossAversion && step === 1
+      
+      // Skip photo upload (step 4) when photo upload is disabled
+      // This applies when we're on step 3 (before photo upload)
+      const skipPhoto = !showPhotoUpload && step === 3
+      
+      // Calculate step increment: skip 2 steps if we're bypassing a disabled step
+      const increment = skipFraming || skipPhoto ? 2 : 1
+      
+      // Ensure we don't exceed the maximum step (4)
+      setStep(Math.min(4, step + increment))
+      return
     } else {
-      // Create goal
+      // BEGIN: Final Goal Creation (Step 4)
+      // When reaching the final step, create the complete goal object
+      // This consolidates all user inputs and template data into a single goal
       const finalGoalData: Partial<SavingsGoal> = {
+        // Spread existing goal data (name, description, targetAmount, etc.)
         ...goalData,
+        
+        // Set framing type based on user preference or default to achievement
+        // Loss aversion framing is only available when the feature is enabled
         framingType: enableLossAversion ? framingType : 'achievement',
+        
+        // Add loss avoidance description if user chose that framing
+        // Only include when both loss aversion is enabled and user selected it
         lossAvoidanceDescription: framingType === 'loss-avoidance' && selectedTemplate 
           ? selectedTemplate.lossAversionFraming 
           : undefined,
+        
+        // Add achievement description if user chose that framing
+        // This provides positive motivation messaging for the goal
         achievementDescription: framingType === 'achievement' && selectedTemplate
           ? selectedTemplate.achievementFraming
           : undefined,
+        
+        // Include photo URL if user uploaded an image
+        // This adds visual motivation and personalization to the goal
         photoUrl: uploadedPhoto?.photoUrl,
-        icon: selectedTemplate?.icon,
+        
+        // Generate milestone targets for progress tracking
+        // Creates 25%, 50%, 75%, and 100% completion checkpoints
         milestones: generateMilestones(goalData.targetAmount || 0)
       }
       
+      // Call the parent callback to handle goal creation
+      // This allows the parent component to save the goal and close the wizard
       onGoalCreated(finalGoalData)
+      // END: Final Goal Creation
     }
-  }
+  }, [step, goalData, enableLossAversion, framingType, selectedTemplate, uploadedPhoto, onGoalCreated])
+  // END: Navigation and Goal Creation Handler
 
   const generateMilestones = (targetAmount: number) => {
     const milestones = []
@@ -233,7 +279,7 @@ export function GoalWizard({
                     setGoalData(prev => ({
                       ...prev,
                       name: template.name,
-                      category: template.category,
+                      category: template.category as GoalCategory,
                       targetAmount: template.suggestedAmount
                     }))
                   }}
@@ -254,11 +300,18 @@ export function GoalWizard({
           </div>
         )
         
+      // BEGIN: Goal Framing Step (Case 2)
+      // This step allows users to choose between loss-avoidance and achievement framing
+      // for their savings goal, applying behavioral psychology principles to motivation
       case 2:
+        // Conditional rendering: Only show framing step if loss aversion is enabled
+        // When disabled, this step is automatically skipped via useEffect hook
         return enableLossAversion ? (
           <div>
             <h3 className="text-xl font-semibold mb-6">{t('goalWizard.chooseFraming')}</h3>
             <div className="space-y-4">
+              {/* Loss Avoidance Framing Option */}
+              {/* Uses coral-red styling to emphasize risk and potential losses */}
               <label
                 className={`block p-4 rounded-lg border-2 cursor-pointer transition-all ${
                   framingType === 'loss-avoidance'
@@ -266,24 +319,28 @@ export function GoalWizard({
                     : 'border-neutral-gray/30 hover:border-neutral-gray/50'
                 }`}
               >
+                {/* Hidden radio input for accessibility - label provides clickable area */}
                 <input
                   type="radio"
                   name="framing"
                   value="loss-avoidance"
                   checked={framingType === 'loss-avoidance'}
                   onChange={(e) => setFramingType(e.target.value as any)}
-                  className="sr-only"
+                  className="sr-only" // Screen reader only - visual styling handled by label
                 />
                 <div>
                   <h4 className="font-medium text-neutral-charcoal mb-2">
                     {t('goalWizard.avoidLoss')}
                   </h4>
+                  {/* Dynamic content from selected template's loss aversion framing */}
                   <p className="text-sm text-neutral-gray">
                     {selectedTemplate?.lossAversionFraming}
                   </p>
                 </div>
               </label>
               
+              {/* Achievement Framing Option */}
+              {/* Uses growth-green styling to emphasize positive outcomes and success */}
               <label
                 className={`block p-4 rounded-lg border-2 cursor-pointer transition-all ${
                   framingType === 'achievement'
@@ -291,18 +348,20 @@ export function GoalWizard({
                     : 'border-neutral-gray/30 hover:border-neutral-gray/50'
                 }`}
               >
+                {/* Hidden radio input for accessibility - label provides clickable area */}
                 <input
                   type="radio"
                   name="framing"
                   value="achievement"
                   checked={framingType === 'achievement'}
                   onChange={(e) => setFramingType(e.target.value as any)}
-                  className="sr-only"
+                  className="sr-only" // Screen reader only - visual styling handled by label
                 />
                 <div>
                   <h4 className="font-medium text-neutral-charcoal mb-2">
                     {t('goalWizard.achieveGoal')}
                   </h4>
+                  {/* Dynamic content from selected template's achievement framing */}
                   <p className="text-sm text-neutral-gray">
                     {selectedTemplate?.achievementFraming}
                   </p>
@@ -311,8 +370,11 @@ export function GoalWizard({
             </div>
           </div>
         ) : (
-          handleNext() // Skip this step if loss aversion is disabled
+          // When loss aversion is disabled, this step is skipped
+          // The useEffect hook will automatically advance to the next step
+          null // Loss aversion step is skipped when enableLossAversion is false
         )
+        // END: Goal Framing Step
         
       case 3:
         return (
@@ -448,7 +510,7 @@ export function GoalWizard({
             </div>
           </div>
         ) : (
-          handleNext() // Skip this step if photo upload is disabled
+          null // Photo upload step is skipped when showPhotoUpload is false
         )
     }
   }

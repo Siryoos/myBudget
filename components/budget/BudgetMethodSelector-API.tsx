@@ -129,6 +129,43 @@ export function BudgetMethodSelector({
     }
   }
 
+  // Helper function to determine which categories require percentage validation
+  // Some methods like "Pay Yourself First" only require percentages for specific categories
+  const getRequiredPercentageCategories = (methodId: string): string[] => {
+    const method = BUDGET_METHODS.find(m => m.id === methodId)
+    if (!method) return []
+    
+    // Return categories that have predefined percentages (these require validation)
+    return method.categories
+      .filter(cat => cat.percentage !== undefined)
+      .map(cat => cat.name)
+  }
+
+  // Helper function to validate percentages with partial coverage support
+  const validatePercentages = (methodId: string, customizations: Record<string, number>): boolean => {
+    const requiredCategories = getRequiredPercentageCategories(methodId)
+    
+    // If no categories require percentages, validation passes
+    if (requiredCategories.length === 0) return true
+    
+    // Check if all required categories have provided percentages
+    const allRequiredProvided = requiredCategories.every(cat => 
+      customizations[cat] !== undefined && customizations[cat] > 0
+    )
+    
+    // If not all required categories are provided, skip 100% validation
+    if (!allRequiredProvided) return true
+    
+    // Validate numeric ranges for provided percentages
+    const providedValues = Object.values(customizations)
+    const hasInvalidRange = providedValues.some(val => val < 0 || val > 100)
+    if (hasInvalidRange) return false
+    
+    // Only enforce 100% total when all required categories have percentages
+    const total = providedValues.reduce((sum, val) => sum + val, 0)
+    return Math.abs(total - 100) <= 0.01
+  }
+
   const handleConfirmMethod = async () => {
     if (!selectedMethod) return
     
@@ -141,8 +178,7 @@ export function BudgetMethodSelector({
       
       // Validate percentages if applicable
       if (allowCustomization && Object.keys(customizations).length > 0) {
-        const total = Object.values(customizations).reduce((sum, val) => sum + val, 0)
-        if (Math.abs(total - 100) > 0.01) {
+        if (!validatePercentages(selectedMethod, customizations)) {
           throw new Error(t('errors.percentagesMustEqual100'))
         }
       }
@@ -340,7 +376,7 @@ export function BudgetMethodSelector({
               <div className="flex items-center justify-between">
                 <span className="font-medium text-neutral-charcoal">Total:</span>
                 <span className={`font-bold ${
-                  Math.abs(Object.values(customizations).reduce((sum, val) => sum + val, 0) - 100) < 0.01
+                  validatePercentages(selectedMethod!, customizations)
                     ? 'text-secondary-growth-green'
                     : 'text-accent-coral-red'
                 }`}>
@@ -364,7 +400,7 @@ export function BudgetMethodSelector({
             <button
               onClick={handleConfirmMethod}
               disabled={isCreating || (Object.keys(customizations).length > 0 && 
-                Math.abs(Object.values(customizations).reduce((sum, val) => sum + val, 0) - 100) > 0.01)}
+                !validatePercentages(selectedMethod!, customizations))}
               className="px-4 py-2 bg-primary-trust-blue text-white rounded-lg hover:bg-primary-trust-blue/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isCreating ? t('common:status.creating') : t('common:actions.createBudget')}

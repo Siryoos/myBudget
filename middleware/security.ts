@@ -51,10 +51,26 @@ export function securityMiddleware(request: NextRequest) {
   
   // Handle preflight requests
   if (request.method === 'OPTIONS') {
-    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
-    response.headers.set('Access-Control-Max-Age', '86400'); // 24 hours
-    return response;
+    // Create a new 204 response for preflight requests
+    // This ensures proper caching behavior and follows CORS standards
+    const preflightResponse = new NextResponse(null, { status: 204 });
+    
+    // Set CORS preflight headers
+    preflightResponse.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    preflightResponse.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+    preflightResponse.headers.set('Access-Control-Max-Age', '86400'); // 24 hours
+    
+    // Add Vary header to prevent incorrect caching by intermediaries
+    // This ensures the response varies based on the Origin header
+    preflightResponse.headers.set('Vary', 'Origin');
+    
+    // Set origin-specific CORS headers if origin is allowed
+    if (origin && ALLOWED_ORIGINS.includes(origin)) {
+      preflightResponse.headers.set('Access-Control-Allow-Origin', origin);
+      preflightResponse.headers.set('Access-Control-Allow-Credentials', 'true');
+    }
+    
+    return preflightResponse;
   }
   
   // Apply security headers
@@ -64,7 +80,20 @@ export function securityMiddleware(request: NextRequest) {
   
   // Add nonce for inline scripts if needed
   if (process.env.NODE_ENV === 'production') {
-    const nonce = Buffer.from(crypto.randomUUID()).toString('base64');
+    // Generate cryptographically secure random bytes using Web Crypto API
+    // This ensures Edge runtime compatibility (no Node.js Buffer dependency)
+    const randomBytes = globalThis.crypto.getRandomValues(new Uint8Array(32));
+    
+    // Convert byte array to binary string for base64 encoding
+    // For large arrays, we use a loop to avoid potential stack overflow
+    let binaryString = '';
+    for (let i = 0; i < randomBytes.length; i++) {
+      binaryString += String.fromCharCode(randomBytes[i]);
+    }
+    
+    // Encode binary string to base64 using btoa (Web API)
+    const nonce = btoa(binaryString);
+    
     response.headers.set('X-Nonce', nonce);
     
     // Update CSP with nonce
@@ -179,6 +208,11 @@ export function middleware(request: NextRequest) {
   // Apply security headers
   let response = securityMiddleware(request);
   
+  // Skip rate limiting for preflight and HEAD requests
+  if (request.method === 'OPTIONS' || request.method === 'HEAD') {
+    return response;
+  }
+  
   // Apply rate limiting for API routes
   if (request.nextUrl.pathname.startsWith('/api')) {
     const path = request.nextUrl.pathname;
@@ -193,10 +227,30 @@ export function middleware(request: NextRequest) {
       const rateLimitResponse = rateLimitHandler(request);
       
       if (rateLimitResponse.status === 429) {
-        return rateLimitResponse;
+        // Create a new response with merged headers to ensure CORS/security headers are included
+        const mergedResponse = new NextResponse(
+          rateLimitResponse.body,
+          {
+            status: 429,
+            statusText: rateLimitResponse.statusText,
+            headers: new Headers()
+          }
+        );
+        
+        // Copy rate limit headers
+        rateLimitResponse.headers.forEach((value, key) => {
+          mergedResponse.headers.set(key, value);
+        });
+        
+        // Merge security/CORS headers from the security middleware
+        response.headers.forEach((value, key) => {
+          mergedResponse.headers.set(key, value);
+        });
+        
+        return mergedResponse;
       }
       
-      // Merge headers
+      // Merge headers for successful rate limit responses
       rateLimitResponse.headers.forEach((value, key) => {
         response.headers.set(key, value);
       });

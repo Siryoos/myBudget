@@ -220,7 +220,7 @@ export class UploadService {
       }
       
       // Notify backend of successful upload
-      await apiClient.request('/api/upload/complete', {
+      const completeResponse = await apiClient.request('/api/upload/complete', {
         method: 'POST',
         body: JSON.stringify({
           publicId,
@@ -231,6 +231,13 @@ export class UploadService {
           originalName: file.name
         })
       });
+      
+      // Check if the backend successfully processed the upload completion
+      // This prevents callers from assuming success when the backend actually failed
+      if (!completeResponse.success) {
+        const errorMessage = completeResponse.error || 'Backend failed to complete upload';
+        throw new Error(`Upload completion failed: ${errorMessage}`);
+      }
       
       return {
         url: publicUrl,

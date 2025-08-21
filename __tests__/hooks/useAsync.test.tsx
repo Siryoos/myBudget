@@ -104,10 +104,19 @@ describe('useAsync', () => {
       useAsync(mockAsyncFn, { retries: 3, retryDelay: 10 })
     );
 
-    await act(async () => {
-      await result.current.execute();
+    // Execute the async operation (this will start the retry process)
+    act(() => {
+      result.current.execute();
     });
 
+    // Wait for the hook to reach its final state after retries complete
+    // Use a timeout slightly larger than total retry time: retries * retryDelay
+    // 3 retries * 10ms delay = 30ms, so use 100ms timeout for safety
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true);
+    }, { timeout: 100 });
+
+    // Now verify the final state
     expect(mockAsyncFn).toHaveBeenCalledTimes(3);
     expect(result.current.data).toBe('Success');
     expect(result.current.isSuccess).toBe(true);

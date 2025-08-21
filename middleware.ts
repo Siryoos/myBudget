@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { middleware as securityMiddleware, config as securityConfig } from './middleware/security';
 
 const locales = ['en', 'fa', 'ar'];
 const defaultLocale = 'en';
@@ -41,7 +42,8 @@ function getLocale(request: NextRequest): string {
   return defaultLocale;
 }
 
-export function middleware(request: NextRequest) {
+// Locale middleware function
+function localeMiddleware(request: NextRequest): NextResponse {
   const pathname = request.nextUrl.pathname;
   
   // Check if the pathname is missing a locale
@@ -82,9 +84,35 @@ export function middleware(request: NextRequest) {
   return response;
 }
 
+export function middleware(request: NextRequest) {
+  // First apply locale middleware
+  let response = localeMiddleware(request);
+  
+  // If locale middleware redirected, return early
+  if (response.status === 302) {
+    return response;
+  }
+  
+  // Then apply security middleware
+  const securityResponse = securityMiddleware(request);
+  
+  // Merge security headers into the locale response
+  securityResponse.headers.forEach((value, key) => {
+    response.headers.set(key, value);
+  });
+  
+  return response;
+}
+
 export const config = {
   matcher: [
-    // Skip all internal paths (_next, api, static files)
+    // Combine both locale and security matchers
+    // Locale matcher: Skip internal paths but include locale-specific routes
     '/((?!_next|api|favicon.ico|fonts|images|sw.js|manifest.json|.*\\..*|locales).*)',
-  ],
+    // Security matcher: Include all routes except static files
+    '/((?!_next/static|_next/image|favicon.ico|public).*)',
+  ].filter((pattern, index, array) => {
+    // Remove duplicates and ensure proper ordering
+    return array.indexOf(pattern) === index;
+  }),
 };

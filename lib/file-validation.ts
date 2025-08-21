@@ -97,20 +97,29 @@ export class FileValidator {
     // Remove special characters except dots and hyphens
     filename = filename.replace(/[^a-zA-Z0-9._-]/g, '_');
     
-    // Limit length
+    // Extract extension and base name
+    const lastDotIndex = filename.lastIndexOf('.');
+    const hasExtension = lastDotIndex !== -1;
+    const extension = hasExtension ? filename.substring(lastDotIndex) : '';
+    const baseName = hasExtension ? filename.substring(0, lastDotIndex) : filename;
+    
+    // Calculate timestamp length (Date.now() returns a number, toString() converts to string)
+    const timestamp = Date.now().toString();
+    const timestampLength = timestamp.length;
+    
+    // Calculate allowed base name length to ensure final filename <= 255 characters
+    // Final format: trimmedBase + '_' + timestamp + extension
     const maxLength = 255;
-    if (filename.length > maxLength) {
-      const ext = filename.substring(filename.lastIndexOf('.'));
-      const nameWithoutExt = filename.substring(0, filename.lastIndexOf('.'));
-      filename = nameWithoutExt.substring(0, maxLength - ext.length) + ext;
-    }
+    const underscoreLength = 1;
+    const allowedBaseLength = maxLength - underscoreLength - timestampLength - extension.length;
     
-    // Add timestamp to ensure uniqueness
-    const timestamp = Date.now();
-    const ext = filename.substring(filename.lastIndexOf('.'));
-    const nameWithoutExt = filename.substring(0, filename.lastIndexOf('.'));
+    // Trim base name to allowed length (ensure it's not negative)
+    const trimmedBase = allowedBaseLength > 0 
+      ? baseName.substring(0, allowedBaseLength)
+      : baseName.substring(0, Math.max(0, maxLength - timestampLength - extension.length));
     
-    return `${nameWithoutExt}_${timestamp}${ext}`;
+    // Rebuild filename with timestamp
+    return `${trimmedBase}_${timestamp}${extension}`;
   }
 
   /**

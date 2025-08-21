@@ -1,176 +1,230 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { requireAuth } from '@/lib/auth-middleware';
-import type { AuthenticatedRequest } from '@/types/auth';
+import type { DashboardData } from '@/types';
 
-export const GET = requireAuth(async (request: AuthenticatedRequest) => {
+export async function GET(request: NextRequest) {
   try {
-    const user = request.user;
-    const { searchParams } = new URL(request.url);
+    const user = await requireAuth(request);
     
-    // Get date range from query params or default to current month
-    const startDate = searchParams.get('startDate') || new Date().toISOString().slice(0, 7) + '-01';
-    const endDate = searchParams.get('endDate') || new Date().toISOString().slice(0, 10);
+    // Fetch comprehensive dashboard data in parallel
+    const [
+      goalsResult,
+      budgetsResult,
+      achievementsResult,
+      insightsResult,
+      quickSaveResult
+    ] = await Promise.all([
+      // Get active goals with progress
+      query(`
+        SELECT 
+          id, name, target_amount as "targetAmount", current_amount as "currentAmount",
+          target_date as "targetDate", category, priority, is_active as "isActive"
+        FROM savings_goals 
+        WHERE user_id = $1 AND is_active = true
+        ORDER BY priority DESC, created_at DESC
+        LIMIT 5
+      `, [user.id]),
+      
+      // Get budget summary
+      query(`
+        SELECT 
+          id, name, total_income as "totalIncome", period,
+          start_date as "startDate", end_date as "endDate"
+        FROM budgets 
+        WHERE user_id = $1 AND is_active = true
+        ORDER BY created_at DESC
+        LIMIT 1
+      `, [user.id]),
+      
+      // Get recent achievements
+      query(`
+        SELECT 
+          id, name, description, category, points, unlocked_date as "unlockedDate"
+        FROM achievements 
+        WHERE user_id = $1 AND is_unlocked = true
+        ORDER BY unlocked_date DESC
+        LIMIT 3
+      `, [user.id]),
+      
+      // Get unread insights
+      query(`
+        SELECT 
+          id, type, title, message, category, priority, created_at as "createdAt"
+        FROM notifications 
+        WHERE user_id = $1 AND is_read = false
+        ORDER BY 
+          CASE priority 
+            WHEN 'high' THEN 3 
+            WHEN 'medium' THEN 2 
+            WHEN 'low' THEN 1 
+            ELSE 0 
+          END DESC, 
+          created_at DESC
+        LIMIT 5
+      `, [user.id]),
+      
+      // Get recent quick saves
+      query(`
+        SELECT 
+          id, amount, source, timestamp, goal_id as "goalId"
+        FROM quick_saves 
+        WHERE user_id = $1
+        ORDER BY timestamp DESC
+        LIMIT 10
+      `, [user.id])
+    ]);
     
-    // Get current month's data
-    const currentDate = new Date();
-    const monthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-    const monthEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
-
-    // Get budget summary for current month
-    const budgetResult = await query(
-      `SELECT 
-        COALESCE(SUM(bc.allocated), 0) as total_allocated,
-        COALESCE(SUM(bc.spent), 0) as total_spent,
-        COALESCE(SUM(bc.allocated - bc.spent), 0) as total_remaining,
-        COUNT(DISTINCT b.id) as active_budgets
-      FROM budgets b
-      LEFT JOIN budget_categories bc ON b.id = bc.budget_id
-      WHERE b.user_id = $1 AND b.start_date <= $2 AND b.end_date >= $3`,
-      [user.id, monthEnd.toISOString().split('T')[0], monthStart.toISOString().split('T')[0]]
-    );
-
-    // Get monthly transactions summary
-    const transactionsResult = await query(
-      `SELECT 
-        type,
-        SUM(amount) as total_amount,
-        COUNT(*) as count
-      FROM transactions 
-      WHERE user_id = $1 AND date >= $2 AND date <= $3
-      GROUP BY type`,
-      [user.id, monthStart.toISOString().split('T')[0], monthEnd.toISOString().split('T')[0]]
-    );
-
-    // Get active goals summary
-    const goalsResult = await query(
-      `SELECT 
-        COUNT(*) as total_goals,
-        SUM(CASE WHEN current_amount >= target_amount THEN 1 ELSE 0 END) as completed_goals,
-        SUM(target_amount - current_amount) as remaining_amount,
-        AVG(CASE WHEN is_active THEN (current_amount / target_amount) * 100 ELSE 0 END) as avg_progress
-      FROM savings_goals 
-      WHERE user_id = $1 AND is_active = true`,
-      [user.id]
-    );
-
-    // Get recent transactions
-    const recentTransactionsResult = await query(
-      `SELECT t.*, bc.name as budget_category_name, bc.color as budget_category_color
-       FROM transactions t
-       LEFT JOIN budget_categories bc ON t.budget_category_id = bc.id
-       WHERE t.user_id = $1
-       ORDER BY t.date DESC, t.created_at DESC
-       LIMIT 5`,
-      [user.id]
-    );
-
-    // Get spending by category for current month
-    const categorySpendingResult = await query(
-      `SELECT 
-        category,
-        SUM(amount) as total_amount,
-        COUNT(*) as count,
-        AVG(amount) as avg_amount
-      FROM transactions 
-      WHERE user_id = $1 AND type = 'expense' AND date >= $2 AND date <= $3
-      GROUP BY category
-      ORDER BY total_amount DESC
-      LIMIT 10`,
-      [user.id, monthStart.toISOString().split('T')[0], monthEnd.toISOString().split('T')[0]]
-    );
-
-    // Get budget vs actual spending
-    const budgetVsActualResult = await query(
-      `SELECT 
-        bc.name as category_name,
-        bc.allocated,
-        bc.spent,
-        bc.allocated - bc.spent as remaining,
-        CASE 
-          WHEN bc.allocated > 0 THEN (bc.spent / bc.allocated) * 100 
-          ELSE 0 
-        END as percentage_used,
-        bc.color
-      FROM budget_categories bc
-      JOIN budgets b ON bc.budget_id = b.id
-      WHERE b.user_id = $1 AND b.start_date <= $2 AND b.end_date >= $3
-      ORDER BY bc.allocated DESC`,
-      [user.id, monthEnd.toISOString().split('T')[0], monthStart.toISOString().split('T')[0]]
-    );
-
-    // Get savings trend (last 6 months)
-    const savingsTrendResult = await query(
-      `SELECT 
-        DATE_TRUNC('month', date) as month,
-        SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END) as income,
-        SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END) as expenses,
-        SUM(CASE WHEN type = 'income' THEN amount ELSE -amount END) as savings
-      FROM transactions 
-      WHERE user_id = $1 AND date >= $2
-      GROUP BY DATE_TRUNC('month', date)
-      ORDER BY month DESC
-      LIMIT 6`,
-      [user.id, new Date(currentDate.getFullYear(), currentDate.getMonth() - 5, 1).toISOString().split('T')[0]]
-    );
-
-    // Get upcoming goals (target date within next 3 months)
-    const upcomingGoalsResult = await query(
-      `SELECT 
-        name,
-        target_amount,
-        current_amount,
-        target_date,
-        (target_amount - current_amount) as remaining,
-        CASE 
-          WHEN target_amount > 0 THEN (current_amount / target_amount) * 100 
-          ELSE 0 
-        END as progress
-      FROM savings_goals 
-      WHERE user_id = $1 AND is_active = true AND target_date <= $2
-      ORDER BY target_date ASC
-      LIMIT 5`,
-      [user.id, new Date(currentDate.getFullYear(), currentDate.getMonth() + 3, 0).toISOString().split('T')[0]]
-    );
-
-    const dashboardData = {
-      budget: budgetResult.rows[0] || { 
-        total_allocated: 0, 
-        total_spent: 0, 
-        total_remaining: 0, 
-        active_budgets: 0 
+    // Calculate goal progress and statistics
+    const goals = goalsResult.rows.map(goal => ({
+      ...goal,
+      targetDate: new Date(goal.targetDate),
+      progress: goal.targetAmount > 0 ? (goal.currentAmount / goal.targetAmount) * 100 : 0,
+      remaining: Math.max(0, goal.targetAmount - goal.currentAmount),
+      daysRemaining: Math.ceil((new Date(goal.targetDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)),
+    }));
+    
+    // Calculate overall savings statistics
+    const totalTargetAmount = goals.reduce((sum, goal) => sum + goal.targetAmount, 0);
+    const totalCurrentAmount = goals.reduce((sum, goal) => sum + goal.currentAmount, 0);
+    const overallProgress = totalTargetAmount > 0 ? (totalCurrentAmount / totalTargetAmount) * 100 : 0;
+    
+    // Transform insights
+    const insights = insightsResult.rows.map(insight => ({
+      ...insight,
+      createdAt: new Date(insight.createdAt),
+      type: insight.type === 'budget_alert' ? 'budget-warning' : 'saving-opportunity',
+      impact: (insight.priority || 'medium') as 'low' | 'medium' | 'high',
+    }));
+    
+    // Transform achievements
+    const achievements = achievementsResult.rows.map(achievement => ({
+      ...achievement,
+      unlockedDate: new Date(achievement.unlockedDate),
+    }));
+    
+    // Transform quick saves
+    const quickSaves = quickSaveResult.rows.map(quickSave => ({
+      ...quickSave,
+      timestamp: new Date(quickSave.timestamp),
+    }));
+    
+    // Calculate quick save statistics
+    const totalQuickSaved = quickSaves.reduce((sum, qs) => sum + qs.amount, 0);
+    const averageQuickSave = quickSaves.length > 0 ? totalQuickSaved / quickSaves.length : 0;
+    
+    // Get budget categories if budget exists
+    let budgetCategories: any[] = [];
+    if (budgetsResult.rows.length > 0) {
+      const budget = budgetsResult.rows[0];
+      const categoriesResult = await query(`
+        SELECT 
+          name, allocated, spent, color, icon
+        FROM budget_categories 
+        WHERE budget_id = $1
+        ORDER BY allocated DESC
+      `, [budget.id]);
+      
+      budgetCategories = categoriesResult.rows.map(cat => ({
+        ...cat,
+        remaining: cat.allocated - cat.spent,
+        utilization: cat.allocated > 0 ? (cat.spent / cat.allocated) * 100 : 0,
+      }));
+    }
+    
+    // Build dashboard data object
+    const dashboardData: DashboardData = {
+      goals: {
+        active: goals.length,
+        total: goals.length, // Could add inactive count if needed
+        progress: overallProgress,
+        totalTarget: totalTargetAmount,
+        totalCurrent: totalCurrentAmount,
+        recent: goals.slice(0, 3),
+        byPriority: {
+          high: goals.filter(g => g.priority === 'high').length,
+          medium: goals.filter(g => g.priority === 'medium').length,
+          low: goals.filter(g => g.priority === 'low').length,
+        },
+        byCategory: goals.reduce((acc, goal) => {
+          acc[goal.category] = (acc[goal.category] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>),
       },
-      transactions: {
-        income: transactionsResult.rows.find(r => r.type === 'income') || { total_amount: 0, count: 0 },
-        expense: transactionsResult.rows.find(r => r.type === 'expense') || { total_amount: 0, count: 0 }
+      budget: budgetsResult.rows.length > 0 ? {
+        ...budgetsResult.rows[0],
+        startDate: new Date(budgetsResult.rows[0].startDate),
+        endDate: new Date(budgetsResult.rows[0].endDate),
+        categories: budgetCategories,
+        totalAllocated: budgetCategories.reduce((sum, cat) => sum + cat.allocated, 0),
+        totalSpent: budgetCategories.reduce((sum, cat) => sum + cat.spent, 0),
+        totalRemaining: budgetCategories.reduce((sum, cat) => sum + cat.remaining, 0),
+      } : null,
+      achievements: {
+        total: achievements.length,
+        recent: achievements.slice(0, 3),
+        totalPoints: achievements.reduce((sum, ach) => sum + ach.points, 0),
+        byCategory: achievements.reduce((acc, achievement) => {
+          acc[achievement.category] = (acc[achievement.category] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>),
       },
-      goals: goalsResult.rows[0] || { 
-        total_goals: 0, 
-        completed_goals: 0, 
-        remaining_amount: 0, 
-        avg_progress: 0 
+      insights: {
+        unread: insights.length,
+        recent: insights.slice(0, 3),
+        byPriority: {
+          high: insights.filter(i => i.priority === 'high').length,
+          medium: insights.filter(i => i.priority === 'medium').length,
+          low: insights.filter(i => i.priority === 'low').length,
+        },
+        byCategory: insights.reduce((acc, insight) => {
+          acc[insight.category || 'General'] = (acc[insight.category || 'General'] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>),
       },
-      recentTransactions: recentTransactionsResult.rows,
-      categorySpending: categorySpendingResult.rows,
-      budgetVsActual: budgetVsActualResult.rows,
-      savingsTrend: savingsTrendResult.rows,
-      upcomingGoals: upcomingGoalsResult.rows,
-      dateRange: {
-        start: monthStart.toISOString().split('T')[0],
-        end: monthEnd.toISOString().split('T')[0]
+      quickSave: {
+        total: totalQuickSaved,
+        average: averageQuickSave,
+        recent: quickSaves.slice(0, 5),
+        bySource: quickSaves.reduce((acc, qs) => {
+          acc[qs.source] = (acc[qs.source] || 0) + qs.amount;
+          return acc;
+        }, {} as Record<string, number>),
+        byGoal: quickSaves.reduce((acc, qs) => {
+          if (qs.goalId) {
+            acc[qs.goalId] = (acc[qs.goalId] || 0) + qs.amount;
+          }
+          return acc;
+        }, {} as Record<string, number>),
+      },
+      summary: {
+        totalSavings: totalCurrentAmount,
+        monthlyProgress: overallProgress,
+        activeGoals: goals.length,
+        unreadInsights: insights.length,
+        recentAchievements: achievements.length,
+        quickSaveTotal: totalQuickSaved,
       }
     };
-
+    
     return NextResponse.json({
       success: true,
       data: dashboardData
     });
-
+    
   } catch (error) {
-    console.error('Dashboard error:', error);
+    console.error('Failed to fetch dashboard data:', error);
+    
+    if (error instanceof Error && error.message.includes('Unauthorized')) {
+      return NextResponse.json(
+        { success: false, error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+    
     return NextResponse.json(
-      { error: 'Failed to fetch dashboard data' },
+      { success: false, error: 'Failed to fetch dashboard data' },
       { status: 500 }
     );
   }
-});
+}

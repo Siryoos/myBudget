@@ -17,14 +17,21 @@ export function ProtectedRoute({
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      router.push('/login');
+      // Check if we're already on the login page to prevent redirect loops
+      if (window.location.pathname !== '/login') {
+        router.replace('/login');
+      }
       return;
     }
 
     if (!isLoading && isAuthenticated) {
       const hasAccess = canAccess(requiredRoles, requiredPermissions);
       if (!hasAccess) {
-        router.push(redirectTo);
+        // Check if we're already on the redirect target to prevent loops
+        if (window.location.pathname !== redirectTo) {
+          router.replace(redirectTo);
+        }
+        return;
       }
     }
   }, [isLoading, isAuthenticated, canAccess, requiredRoles, requiredPermissions, redirectTo, router]);
