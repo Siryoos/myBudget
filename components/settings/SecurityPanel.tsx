@@ -11,6 +11,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { Card, CardContent, CardHeader } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
+import { useChangePassword } from '@/hooks/useChangePassword'
 
 interface SecurityPanelProps {
   twoFactor?: boolean
@@ -27,6 +28,14 @@ export function SecurityPanel({
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false)
   const [biometricEnabled, setBiometricEnabled] = useState(true)
+  
+  // Password change form state
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  
+  // Password change hook
+  const { changePassword, isLoading, error, success, resetState } = useChangePassword()
 
   // Mock active sessions
   const activeSessions = [
@@ -56,6 +65,42 @@ export function SecurityPanel({
     },
   ]
 
+  // Handle password change form submission
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    // Clear any existing errors
+    resetState()
+    
+    // Basic validation
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      return
+    }
+    
+    if (newPassword !== confirmPassword) {
+      // This validation is handled by the form, but we can add a custom error here if needed
+      return
+    }
+    
+    if (newPassword.length < 8) {
+      return
+    }
+    
+    await changePassword({
+      currentPassword,
+      newPassword,
+      confirmPassword,
+    })
+  }
+
+  // Reset form after successful password change
+  const handleSuccessReset = () => {
+    setCurrentPassword('')
+    setNewPassword('')
+    setConfirmPassword('')
+    resetState()
+  }
+
   return (
     <div className="space-y-6">
       {/* Password Change */}
@@ -77,7 +122,29 @@ export function SecurityPanel({
         </CardHeader>
 
         <CardContent>
-          <div className="space-y-4">
+          <form onSubmit={handlePasswordChange} className="space-y-4">
+            {/* Error and Success Messages */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                <p className="text-sm text-red-600">{error}</p>
+              </div>
+            )}
+            
+            {success && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-green-600">{success}</p>
+                  <button
+                    type="button"
+                    onClick={handleSuccessReset}
+                    className="text-green-500 hover:text-green-700 text-sm font-medium"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              </div>
+            )}
+
             <div>
               <label className="block text-sm font-medium text-neutral-dark-gray mb-1">
                 Current Password
@@ -87,6 +154,9 @@ export function SecurityPanel({
                   type={showCurrentPassword ? 'text' : 'password'}
                   className="input-field pr-10"
                   placeholder="Enter current password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  required
                 />
                 <button
                   type="button"
@@ -109,8 +179,16 @@ export function SecurityPanel({
               <div className="relative">
                 <input
                   type={showNewPassword ? 'text' : 'password'}
-                  className="input-field pr-10"
+                  className={`input-field pr-10 ${
+                    newPassword && newPassword.length < 8 
+                      ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
+                      : ''
+                  }`}
                   placeholder="Enter new password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  minLength={8}
+                  required
                 />
                 <button
                   type="button"
@@ -124,6 +202,9 @@ export function SecurityPanel({
                   )}
                 </button>
               </div>
+              {newPassword && newPassword.length < 8 && (
+                <p className="text-sm text-red-600 mt-1">Password must be at least 8 characters long</p>
+              )}
             </div>
             
             <div>
@@ -132,15 +213,37 @@ export function SecurityPanel({
               </label>
               <input
                 type="password"
-                className="input-field"
+                className={`input-field ${
+                  confirmPassword && newPassword !== confirmPassword 
+                    ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
+                    : ''
+                }`}
                 placeholder="Confirm new password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
               />
+              {confirmPassword && newPassword !== confirmPassword && (
+                <p className="text-sm text-red-600 mt-1">Passwords do not match</p>
+              )}
             </div>
             
-            <Button variant="primary" size="sm">
-              Update Password
+            <Button 
+              type="submit" 
+              variant="primary" 
+              size="sm"
+              disabled={
+                isLoading || 
+                !currentPassword || 
+                !newPassword || 
+                !confirmPassword || 
+                newPassword.length < 8 || 
+                newPassword !== confirmPassword
+              }
+            >
+              {isLoading ? 'Updating Password...' : 'Update Password'}
             </Button>
-          </div>
+          </form>
         </CardContent>
       </Card>
 

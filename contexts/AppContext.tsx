@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useCallback, ReactNode } from 'react';
 import { api } from '@/lib/api';
 import type { User, Transaction, Budget, SavingsGoal, Notification } from '@/types';
 
@@ -288,8 +288,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [state.theme]);
 
-  // Sync data function
-  const syncData = async () => {
+  // Sync data function - memoized to prevent unnecessary re-renders
+  const syncData = useCallback(async () => {
     if (!state.isOnline || !state.isAuthenticated) return;
 
     dispatch({ type: 'SET_SYNC_STATUS', payload: { isSyncing: true } });
@@ -325,13 +325,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       dispatch({ type: 'SET_SYNC_STATUS', payload: { isSyncing: false, error: error as Error } });
     }
-  };
+  }, [state.isOnline, state.isAuthenticated, dispatch]);
 
   // Monitor online status - moved after syncData function to avoid stale closure
   useEffect(() => {
     const handleOnline = () => {
       dispatch({ type: 'SET_ONLINE_STATUS', payload: true });
-      // Sync data when coming back online
+      // Sync data when coming back online (checks are inside syncData)
       syncData();
     };
 
@@ -349,7 +349,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
-  }, [syncData, state.isOnline, state.isAuthenticated, dispatch]);
+  }, [syncData, dispatch]);
 
   // Clear user data on logout
   const clearUserData = () => {
@@ -384,7 +384,7 @@ export function useApp() {
 }
 
 // Convenience hooks for specific state slices
-export function useAuth() {
+export function useAppAuth() {
   const { user, isAuthenticated } = useApp();
   return { user, isAuthenticated };
 }

@@ -76,7 +76,7 @@ shimmer: {
 ### Visual Accessibility:
 - Enhanced wave animation provides better visual feedback
 - Gradient contrast ensures visibility across different color schemes
-- Smooth animation respects `prefers-reduced-motion` settings
+- Smooth animation respects motion utilities (motion-safe/motion-reduce) for accessibility
 
 ## Usage Examples
 
@@ -120,17 +120,25 @@ The demo is available at `/demo` route in the application.
 
 ## Browser Compatibility
 
-The enhanced skeleton component uses:
-- CSS Grid (modern browsers)
-- CSS Custom Properties (modern browsers)
-- Tailwind CSS utilities (IE11+ with proper configuration)
+The enhanced skeleton component requires modern browsers and is not compatible with Internet Explorer 11:
+
+**Modern Browser Support:**
+- CSS Grid (Chrome 57+, Firefox 52+, Safari 10.1+, Edge 16+)
+- CSS Custom Properties (Chrome 49+, Firefox 31+, Safari 9.1+, Edge 15+)
+- Tailwind CSS v3+ utilities (targets evergreen browsers)
+
+**Not Supported:**
+- Internet Explorer 11 and below
+- Legacy browsers without CSS Grid or CSS Custom Properties support
+
+**Note:** Tailwind CSS v3+ and modern Next.js applications target evergreen browsers by default. The enhanced skeleton component leverages modern CSS features for optimal performance and visual effects.
 
 ## Performance Considerations
 
 - **Gradient Rendering**: Minimal performance impact
-- **Animation**: Uses CSS transforms for optimal performance
+- **Animation**: Uses CSS background-position animation for optimal performance
 - **Background Size**: 200% width is standard and well-optimized
-- **Reduced Motion**: Respects user preferences for accessibility
+- **Reduced Motion**: Motion utilities (motion-safe/motion-reduce) must be applied to respect user preferences for accessibility
 
 ## Future Enhancements
 
@@ -155,9 +163,10 @@ The enhanced skeleton component uses:
 - `bg-[length:200%_100%]`: Custom background size
 
 ### Tailwind Utilities:
-- All classes are standard Tailwind utilities
-- No custom CSS required
-- Maintains design system consistency
+- **Custom Animation**: `animate-shimmer` is a custom utility defined in `tailwind.config.js` that provides the background-position-based shimmer effect
+- **Standard Utilities**: All other classes (`bg-gradient-to-r`, `from-neutral-gray/20`, `via-neutral-light-gray/40`, `to-neutral-gray/20`, `bg-[length:200%_100%]`) are standard Tailwind utilities
+- **No Additional CSS**: No custom CSS files required beyond the Tailwind config
+- **Design System**: Maintains consistency with the existing design system
 
 ## Conclusion
 

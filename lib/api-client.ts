@@ -169,13 +169,15 @@ export class ApiClient {
       }
     }
 
-    const controller = new AbortController();
-    const timeout = setTimeout(
-      () => controller.abort(),
-      requestOptions.timeout || this.requestTimeout
-    );
-
     const makeRequest = async (attempt: number = 0): Promise<T> => {
+      // Create new AbortController and timeout for each attempt to ensure
+      // retries don't reuse already-aborted signals or expired timers
+      const controller = new AbortController();
+      const timeoutId = setTimeout(
+        () => controller.abort(),
+        requestOptions.timeout ?? this.requestTimeout
+      );
+      
       try {
         const headers: HeadersInit = {
           'Content-Type': 'application/json',
@@ -222,7 +224,7 @@ export class ApiClient {
 
         throw error;
       } finally {
-        clearTimeout(timeout);
+        clearTimeout(timeoutId);
       }
     };
 

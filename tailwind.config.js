@@ -65,7 +65,7 @@ module.exports = {
         'slide-up': 'slideUp 0.3s ease-out',
         'celebrate': 'celebrate 0.6s ease-in-out',
         'pulse-gentle': 'pulseGentle 2s ease-in-out infinite',
-        'shimmer': 'shimmer 1.5s infinite',
+        'shimmer': 'shimmer 1.5s infinite linear',
       },
       keyframes: {
         fadeIn: {

@@ -33,9 +33,10 @@ This document outlines the security enhancements implemented to improve the appl
 - Database-level token versioning for enhanced security
 
 ### Database changes:
-- New fields: `token_version` (INTEGER), `password_changed_at` (TIMESTAMP)
+- New fields: `token_version` (INTEGER), `password_changed_at` (TIMESTAMPTZ - timezone-aware)
 - Indexes on both fields for performance
 - Migration script: `database/migrations/add_token_security.sql`
+- Uses TIMESTAMPTZ for reliable JWT time comparisons across timezones
 
 ### Files modified:
 - `types/auth.d.ts` - Updated JWT payload interface
@@ -69,6 +70,8 @@ This document outlines the security enhancements implemented to improve the appl
 ```bash
 npm run tsx scripts/run-migrations.ts
 ```
+
+**Note:** The `add_token_security.sql` migration automatically converts existing `TIMESTAMP` columns to `TIMESTAMPTZ` (timezone-aware) to ensure reliable JWT time comparisons across different timezones. Existing data is preserved and converted to UTC.
 
 ### 2. Restart the backend server:
 ```bash
