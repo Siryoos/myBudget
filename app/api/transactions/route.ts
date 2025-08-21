@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { requireAuth } from '@/lib/auth-middleware';
 import { z } from 'zod';
+import type { AuthenticatedRequest } from '@/types/auth';
 
 const transactionSchema = z.object({
   amount: z.number().positive('Amount must be positive'),
@@ -19,9 +20,9 @@ const updateTransactionSchema = transactionSchema.partial().extend({
   id: z.string().uuid('Invalid transaction ID'),
 });
 
-export const GET = requireAuth(async (request: NextRequest) => {
+export const GET = requireAuth(async (request: AuthenticatedRequest) => {
   try {
-    const user = (request as any).user;
+    const user = request.user;
     const { searchParams } = new URL(request.url);
     
     const page = parseInt(searchParams.get('page') || '1');
@@ -110,11 +111,11 @@ export const GET = requireAuth(async (request: NextRequest) => {
   }
 });
 
-export const POST = requireAuth(async (request: NextRequest) => {
+export const POST = requireAuth(async (request: AuthenticatedRequest) => {
   try {
     const body = await request.json();
     const transactionData = transactionSchema.parse(body);
-    const user = (request as any).user;
+    const user = request.user;
 
     // Validate date is not in the future
     const transactionDate = new Date(transactionData.date);
@@ -197,11 +198,11 @@ export const POST = requireAuth(async (request: NextRequest) => {
   }
 });
 
-export const PUT = requireAuth(async (request: NextRequest) => {
+export const PUT = requireAuth(async (request: AuthenticatedRequest) => {
   try {
     const body = await request.json();
     const updateData = updateTransactionSchema.parse(body);
-    const user = (request as any).user;
+    const user = request.user;
 
     // Check if transaction exists and belongs to user
     const existingTransaction = await query(

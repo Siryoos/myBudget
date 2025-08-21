@@ -3,6 +3,7 @@ import { query } from '@/lib/database';
 import { requireAuth } from '@/lib/auth-middleware';
 import { comparePassword, hashPassword } from '@/lib/auth';
 import { z } from 'zod';
+import type { AuthenticatedRequest } from '@/types/auth';
 
 const changePasswordSchema = z.object({
   currentPassword: z.string().min(1, 'Current password is required'),
@@ -13,11 +14,11 @@ const changePasswordSchema = z.object({
   path: ["confirmPassword"],
 });
 
-export const PUT = requireAuth(async (request: NextRequest) => {
+export const PUT = requireAuth(async (request: AuthenticatedRequest) => {
   try {
     const body = await request.json();
     const { currentPassword, newPassword, confirmPassword } = changePasswordSchema.parse(body);
-    const user = (request as any).user;
+    const user = request.user;
 
     // Verify current password
     const userResult = await query(

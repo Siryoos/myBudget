@@ -13,7 +13,11 @@ export async function authenticateRequest(request: NextRequest): Promise<{
       return { error: 'Access token required' };
     }
 
-    const token = authHeader.split(' ')[1];
+    // Enforce strict Bearer token format
+    if (!authHeader.startsWith('Bearer ')) {
+      return { error: 'Invalid authorization header format' };
+    }
+    const token = authHeader.slice('Bearer '.length).trim();
     if (!token) {
       return { error: 'Invalid authorization header format' };
     }
@@ -31,8 +35,8 @@ export async function authenticateRequest(request: NextRequest): Promise<{
   }
 }
 
-export function requireAuth<T extends AuthenticatedRequest>(
-  handler: (request: T) => Promise<Response>
+export function requireAuth(
+  handler: (request: AuthenticatedRequest) => Promise<Response>
 ): (request: NextRequest) => Promise<Response> {
   return async (request: NextRequest) => {
     const auth = await authenticateRequest(request);
@@ -45,7 +49,7 @@ export function requireAuth<T extends AuthenticatedRequest>(
     }
 
     // Create a properly typed request with user
-    const authenticatedRequest = request as T;
+    const authenticatedRequest = request as AuthenticatedRequest;
     authenticatedRequest.user = auth.user!;
     
     return handler(authenticatedRequest);

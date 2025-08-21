@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { requireAuth } from '@/lib/auth-middleware';
 import { z } from 'zod';
+import type { AuthenticatedRequest } from '@/types/auth';
 
 const budgetSchema = z.object({
   name: z.string().min(1, 'Budget name is required'),
@@ -23,9 +24,9 @@ const updateBudgetSchema = budgetSchema.partial().extend({
   id: z.string().uuid('Invalid budget ID'),
 });
 
-export const GET = requireAuth(async (request: NextRequest) => {
+export const GET = requireAuth(async (request: AuthenticatedRequest) => {
   try {
-    const user = (request as any).user;
+    const user = request.user;
     
     const result = await query(
       `SELECT b.*, 
@@ -63,11 +64,11 @@ export const GET = requireAuth(async (request: NextRequest) => {
   }
 });
 
-export const POST = requireAuth(async (request: NextRequest) => {
+export const POST = requireAuth(async (request: AuthenticatedRequest) => {
   try {
     const body = await request.json();
     const budgetData = budgetSchema.parse(body);
-    const user = (request as any).user;
+    const user = request.user;
 
     // Validate date range
     const startDate = new Date(budgetData.startDate);
@@ -142,11 +143,11 @@ export const POST = requireAuth(async (request: NextRequest) => {
   }
 });
 
-export const PUT = requireAuth(async (request: NextRequest) => {
+export const PUT = requireAuth(async (request: AuthenticatedRequest) => {
   try {
     const body = await request.json();
     const updateData = updateBudgetSchema.parse(body);
-    const user = (request as any).user;
+    const user = request.user;
 
     // Check if budget exists and belongs to user
     const existingBudget = await query(
