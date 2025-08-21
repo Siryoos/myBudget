@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { requireAuth } from '@/lib/auth-middleware';
 import type { DashboardData } from '@/types';
+import type { AuthenticatedRequest } from '@/types/auth';
 
-export async function GET(request: NextRequest) {
+export const GET = requireAuth(async (request: AuthenticatedRequest) => {
   try {
-    const user = await requireAuth(request);
+    const user = request.user;
     
     // Fetch comprehensive dashboard data in parallel
     const [
@@ -173,9 +174,9 @@ export async function GET(request: NextRequest) {
         unread: insights.length,
         recent: insights.slice(0, 3),
         byPriority: {
-          high: insights.filter(i => i.priority === 'high').length,
-          medium: insights.filter(i => i.priority === 'medium').length,
-          low: insights.filter(i => i.priority === 'low').length,
+          high: insights.filter(i => i.impact === 'high').length,
+          medium: insights.filter(i => i.impact === 'medium').length,
+          low: insights.filter(i => i.impact === 'low').length,
         },
         byCategory: insights.reduce((acc, insight) => {
           acc[insight.category || 'General'] = (acc[insight.category || 'General'] || 0) + 1;
@@ -227,4 +228,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

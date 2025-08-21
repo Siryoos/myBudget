@@ -148,7 +148,7 @@ export class ApiClient {
       } finally {
         this.refreshPromise = null;
       }
-    })();
+    })() as Promise<string>;
 
     return this.refreshPromise;
   }
@@ -185,7 +185,7 @@ export class ApiClient {
         };
 
         if (this.token) {
-          headers['Authorization'] = `Bearer ${this.token}`;
+          (headers as Record<string, string>)['Authorization'] = `Bearer ${this.token}`;
         }
 
         const response = await fetch(fullUrl, {
@@ -197,7 +197,7 @@ export class ApiClient {
         // Handle 401 Unauthorized - try to refresh token once
         if (response.status === 401 && this.token && attempt === 0) {
           await this.refreshToken();
-          return this.makeRequest(attempt + 1);
+          return makeRequest(attempt + 1);
         }
 
         const data = await response.json();

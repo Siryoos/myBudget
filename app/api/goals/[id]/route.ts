@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { query, withTransaction } from '@/lib/database';
 import { requireAuth } from '@/lib/auth-middleware';
 import type { SavingsGoal } from '@/types';
+import type { AuthenticatedRequest } from '@/types/auth';
 
 // Validation schema for updates
 const updateGoalSchema = z.object({
@@ -21,12 +22,9 @@ const updateGoalSchema = z.object({
   isActive: z.boolean().optional(),
 });
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export const GET = requireAuth(async (request: AuthenticatedRequest, { params }: { params: { id: string } }) => {
   try {
-    const user = await requireAuth(request);
+    const user = request.user;
     const { id } = params;
     
     // Validate goal ID
@@ -94,19 +92,12 @@ export async function GET(
   } catch (error) {
     console.error('Failed to fetch goal:', error);
     
-    if (error instanceof Error && error.message.includes('Unauthorized')) {
-      return NextResponse.json(
-        { success: false, error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
-    
     return NextResponse.json(
       { success: false, error: 'Failed to fetch goal' },
       { status: 500 }
     );
   }
-}
+});
 
 export async function PUT(
   request: NextRequest,

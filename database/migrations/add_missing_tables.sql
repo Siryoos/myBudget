@@ -1,6 +1,9 @@
 -- Migration: Add missing tables for achievements, notifications, quick_saves, and file_uploads
 -- This migration adds the tables needed to support the new API endpoints
 
+-- Ensure pgcrypto extension exists for gen_random_uuid() function
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 -- Create achievements table
 CREATE TABLE IF NOT EXISTS achievements (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

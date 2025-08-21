@@ -12,6 +12,26 @@ import {
   CheckCircleIcon
 } from '@heroicons/react/24/outline'
 
+// Date handling helper functions
+function isValidDate(date: any): date is Date {
+  return date instanceof Date && !isNaN(date.getTime())
+}
+
+function formatDateInput(date: Date | undefined): string {
+  if (!isValidDate(date)) return ''
+  // Format date as YYYY-MM-DD for input[type="date"] without UTC shifting
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+function parseDateInput(value: string): Date | undefined {
+  if (!value) return undefined
+  const date = new Date(value)
+  return isValidDate(date) ? date : undefined
+}
+
 interface GoalWizardProps {
   onGoalCreated: (goal: Partial<SavingsGoal>) => void
   onClose: () => void
@@ -428,10 +448,10 @@ export function GoalWizard({
                   </label>
                   <input
                     type="date"
-                    value={goalData.targetDate?.toISOString().split('T')[0]}
-                    onChange={(e) => setGoalData(prev => ({ ...prev, targetDate: new Date(e.target.value) }))}
+                    value={formatDateInput(goalData.targetDate)}
+                    onChange={(e) => setGoalData(prev => ({ ...prev, targetDate: parseDateInput(e.target.value) }))}
                     className="w-full px-3 py-2 border border-neutral-gray/30 rounded-lg focus:ring-2 focus:ring-primary-trust-blue focus:border-transparent"
-                    min={new Date().toISOString().split('T')[0]}
+                    min={formatDateInput(new Date())}
                   />
                 </div>
               </div>

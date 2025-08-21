@@ -59,13 +59,15 @@ export class UploadService {
   private async getPresignedUrl(
     fileName: string, 
     mimeType: string, 
+    fileSize: number,
     folder?: string
   ): Promise<{ uploadUrl: string; publicUrl: string; publicId: string }> {
-    const response = await apiClient.request('/api/upload/presigned-url', {
+    const response = await apiClient.request('/api/upload/presigned', {
       method: 'POST',
       body: JSON.stringify({
         fileName,
         mimeType,
+        fileSize,
         folder: folder || 'goals'
       })
     });
@@ -192,6 +194,7 @@ export class UploadService {
       const { uploadUrl, publicUrl, publicId } = await this.getPresignedUrl(
         file.name,
         file.type,
+        file.size,
         options.folder
       );
       
@@ -208,6 +211,7 @@ export class UploadService {
           const { uploadUrl: thumbUploadUrl, publicUrl: thumbPublicUrl } = await this.getPresignedUrl(
             thumbnailFile.name,
             thumbnailFile.type,
+            thumbnailFile.size,
             `${options.folder}/thumbnails`
           );
           

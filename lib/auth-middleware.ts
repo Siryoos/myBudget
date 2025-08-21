@@ -35,7 +35,7 @@ export async function authenticateRequest(request: NextRequest): Promise<{
   }
 }
 
-export function requireAuth(
+export function withAuth(
   handler: (request: AuthenticatedRequest) => Promise<Response>
 ): (request: NextRequest) => Promise<Response> {
   return async (request: NextRequest) => {
@@ -54,6 +54,17 @@ export function requireAuth(
     
     return handler(authenticatedRequest);
   };
+}
+
+// Direct authentication function that returns user or throws
+export async function requireAuth(request: NextRequest): Promise<AuthenticatedUser> {
+  const auth = await authenticateRequest(request);
+  
+  if (auth.error) {
+    throw new Error('Unauthorized');
+  }
+  
+  return auth.user!;
 }
 
 // Helper function for optional authentication (useful for endpoints that work with or without auth)

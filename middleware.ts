@@ -96,7 +96,13 @@ export function middleware(request: NextRequest) {
   // Then apply security middleware
   const securityResponse = securityMiddleware(request);
   
-  // Merge security headers into the locale response
+  // Check if securityResponse is a terminal response (status !== 200 and !== 302)
+  // Terminal responses include 204 (preflight), 429 (rate limit), etc.
+  if (securityResponse.status !== 200 && securityResponse.status !== 302) {
+    return securityResponse;
+  }
+  
+  // Merge security headers into the locale response for non-terminal responses
   securityResponse.headers.forEach((value, key) => {
     response.headers.set(key, value);
   });
