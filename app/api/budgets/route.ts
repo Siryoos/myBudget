@@ -90,7 +90,7 @@ export const POST = requireAuth(async (request: NextRequest) => {
     }
 
     // Start transaction
-    const client = await query('BEGIN');
+    await query('BEGIN');
 
     try {
       // Create budget
@@ -205,16 +205,47 @@ export const PUT = requireAuth(async (request: NextRequest) => {
 
       // Update categories if provided
       if (updateData.categories) {
-        // Delete existing categories
-        await query('DELETE FROM budget_categories WHERE budget_id = $1', [updateData.id]);
+        // Get existing categories to preserve spent amounts
+        const existingCategories = await query(
+          'SELECT id, name, spent FROM budget_categories WHERE budget_id = $1',
+          [updateData.id]
+        );
         
-        // Insert new categories
+        const existingByName = existingCategories.rows.reduce((acc, cat) => {
+          acc[cat.name] = cat;
+          return acc;
+        }, {} as Record<string, { id: string; name: string; spent: number }>);
+        
+        // Update or insert categories
         for (const category of updateData.categories) {
+          const existing = existingByName[category.name];
+          if (existing) {
+            // Update existing category, preserving spent amount
+            await query(
+              `UPDATE budget_categories 
+               SET allocated = $1, color = $2, icon = $3, is_essential = $4
+               WHERE id = $5`,
+              [category.allocated, category.color, 
+               category.icon || null, category.isEssential || false, existing.id]
+            );
+            delete existingByName[category.name];
+          } else {
+            // Insert new category
+            await query(
+              `INSERT INTO budget_categories (budget_id, name, allocated, color, icon, is_essential)
+               VALUES ($1, $2, $3, $4, $5, $6)`,
+              [updateData.id, category.name, category.allocated, category.color, 
+               category.icon || null, category.isEssential || false]
+            );
+          }
+        }
+        
+        // Delete categories that are no longer in the update
+        const remainingIds = Object.values(existingByName).map(cat => cat.id);
+        if (remainingIds.length > 0) {
           await query(
-            `INSERT INTO budget_categories (budget_id, name, allocated, color, icon, is_essential)
-             VALUES ($1, $2, $3, $4, $5, $6)`,
-            [updateData.id, category.name, category.allocated, category.color, 
-             category.icon || null, category.isEssential || false]
+            `DELETE FROM budget_categories WHERE id = ANY($1::uuid[])`,
+            [remainingIds]
           );
         }
       }

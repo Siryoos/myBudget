@@ -58,14 +58,17 @@ export const GET = requireAuth(async (request: NextRequest) => {
     
     const result = await query(
       `SELECT g.*, 
-        json_agg(
-          json_build_object(
-            'id', m.id,
-            'amount', m.amount,
-            'description', m.description,
-            'isCompleted', m.is_completed,
-            'completedDate', m.completed_date
-          )
+        COALESCE(
+          json_agg(
+            json_build_object(
+              'id', m.id,
+              'amount', m.amount,
+              'description', m.description,
+              'isCompleted', m.is_completed,
+              'completedDate', m.completed_date
+            ) ORDER BY m.amount ASC, m.created_at ASC
+          ) FILTER (WHERE m.id IS NOT NULL),
+          '[]'::json
         ) as milestones
       FROM savings_goals g
       LEFT JOIN milestones m ON g.id = m.goal_id
@@ -218,9 +221,11 @@ export const PUT = requireAuth(async (request: NextRequest) => {
     }
 
     if (updateFields.length > 0) {
-      updateValues.push(updateData.id);
+      updateValues.push(updateData.id, user.id);
       await query(
-        `UPDATE savings_goals SET ${updateFields.join(', ')}, updated_at = CURRENT_TIMESTAMP WHERE id = $${paramIndex}`,
+        `UPDATE savings_goals 
+         SET ${updateFields.join(', ')}, updated_at = CURRENT_TIMESTAMP 
+         WHERE id = $${paramIndex} AND user_id = $${paramIndex + 1}`,
         updateValues
       );
     }
@@ -274,7 +279,10 @@ export const DELETE = requireAuth(async (request: NextRequest) => {
     }
 
     // Soft delete by setting is_active to false
-    await query('UPDATE savings_goals SET is_active = false, updated_at = CURRENT_TIMESTAMP WHERE id = $1', [goalId]);
+    await query(
+      'UPDATE savings_goals SET is_active = false, updated_at = CURRENT_TIMESTAMP WHERE id = $1 AND user_id = $2',
+      [goalId, user.id]
+    );
 
     return NextResponse.json({
       success: true,
@@ -305,43 +313,33 @@ export const PATCH = requireAuth(async (request: NextRequest) => {
 
     const user = (request as any).user;
 
-    // Check if goal exists and belongs to user
-    const existingGoal = await query(
-      'SELECT id, target_amount, current_amount FROM savings_goals WHERE id = $1 AND user_id = $2',
-      [goalId, user.id]
-    );
-
-    if (existingGoal.rows.length === 0) {
-      return NextResponse.json(
-        { error: 'Goal not found' },
-        { status: 404 }
-      );
-    }
-
-    const goal = existingGoal.rows[0];
-
     // Validate milestone data
     const milestoneData = milestoneSchema.parse(milestone);
 
-    // Check if milestone amount doesn't exceed target amount
-    if (goal.current_amount + milestoneData.amount > goal.target_amount) {
+    // Atomically: (1) cap-check + update goal; (2) insert milestone only if (1) succeeded.
+    const result = await query(
+      `WITH updated AS (
+         UPDATE savings_goals
+            SET current_amount = current_amount + $2,
+                updated_at = CURRENT_TIMESTAMP
+          WHERE id = $1
+            AND user_id = $3
+            AND (current_amount + $2) <= target_amount
+          RETURNING id
+       )
+       INSERT INTO milestones (goal_id, amount, description)
+       SELECT $1, $2, $4
+         FROM updated
+       RETURNING *`,
+      [goalId, milestoneData.amount, user.id, milestoneData.description]
+    );
+
+    if (result.rows.length === 0) {
       return NextResponse.json(
-        { error: 'Milestone amount would exceed target amount' },
+        { error: 'Goal not found or milestone amount would exceed target amount' },
         { status: 400 }
       );
     }
-
-    // Insert milestone
-    const result = await query(
-      'INSERT INTO milestones (goal_id, amount, description) VALUES ($1, $2, $3) RETURNING *',
-      [goalId, milestoneData.amount, milestoneData.description]
-    );
-
-    // Update goal current amount
-    await query(
-      'UPDATE savings_goals SET current_amount = current_amount + $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
-      [milestoneData.amount, goalId]
-    );
 
     return NextResponse.json({
       success: true,

@@ -1,11 +1,7 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { query } from './database';
 
-export interface JWTPayload {
-  userId: string;
-  email: string;
-}
+import type { JWTPayload } from '@/types/auth';
 
 export const hashPassword = async (password: string): Promise<string> => {
   const saltRounds = 12;
@@ -17,36 +13,50 @@ export const comparePassword = async (password: string, hash: string): Promise<b
 };
 
 export const generateToken = (payload: JWTPayload): string => {
-  const secret = process.env.JWT_SECRET || 'fallback_secret';
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error('JWT_SECRET environment variable is required but not set');
+  }
+  
   const expiresIn = process.env.JWT_EXPIRES_IN || '7d';
   
   return jwt.sign(payload, secret, { expiresIn: expiresIn as jwt.SignOptions['expiresIn'] });
 };
 
 export const verifyToken = (token: string): JWTPayload => {
-  const secret = process.env.JWT_SECRET || 'fallback_secret';
-  return jwt.verify(token, secret) as JWTPayload;
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error('JWT_SECRET environment variable is required but not set');
+  }
+  
+  try {
+    return jwt.verify(token, secret) as JWTPayload;
+  } catch (error) {
+    if (error instanceof jwt.JsonWebTokenError) {
+      throw new Error('Invalid or malformed JWT token');
+    } else if (error instanceof jwt.TokenExpiredError) {
+      throw new Error('JWT token has expired');
+    } else if (error instanceof jwt.NotBeforeError) {
+      throw new Error('JWT token not yet valid');
+    } else {
+      throw new Error('JWT verification failed');
+    }
+  }
 };
 
-export const authenticateToken = async (req: any, res: any, next: any) => {
-  try {
-    const authHeader = req.headers.authorization;
-    const token = authHeader && authHeader.split(' ')[1];
-
-    if (!token) {
-      return res.status(401).json({ error: 'Access token required' });
-    }
-
-    const payload = verifyToken(token);
-    const result = await query('SELECT id, email, name FROM users WHERE id = $1', [payload.userId]);
-    
-    if (result.rows.length === 0) {
-      return res.status(401).json({ error: 'Invalid token' });
-    }
-
-    req.user = result.rows[0];
-    next();
-  } catch (error) {
-    return res.status(403).json({ error: 'Invalid token' });
+// Validate JWT_SECRET on startup
+export const validateJWTSecret = (): void => {
+  if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET environment variable is required but not set. Please set this environment variable before starting the application.');
+  }
+  
+  // Validate that the secret is not the default example value
+  if (process.env.JWT_SECRET === 'your_super_secret_jwt_key_here_change_this_in_production') {
+    throw new Error('JWT_SECRET is set to the default example value. Please set a unique, secure secret before starting the application.');
+  }
+  
+  // Validate minimum secret length for security
+  if (process.env.JWT_SECRET.length < 32) {
+    throw new Error('JWT_SECRET must be at least 32 characters long for security. Current length: ' + process.env.JWT_SECRET.length);
   }
 };

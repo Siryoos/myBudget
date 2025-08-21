@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
+import { validateJWTSecret } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
   try {
+    // Validate JWT_SECRET on startup
+    validateJWTSecret();
+    
     // Check database connection
     const dbResult = await query('SELECT 1 as status');
     const dbStatus = dbResult.rows.length > 0 ? 'healthy' : 'unhealthy';
@@ -17,7 +21,8 @@ export async function GET(request: NextRequest) {
       services: {
         api: 'healthy',
         database: dbStatus,
-        health_check: healthStatus
+        health_check: healthStatus,
+        jwt: 'healthy'
       },
       version: process.env.npm_package_version || '1.0.0',
       environment: process.env.NODE_ENV || 'development'
@@ -43,7 +48,8 @@ export async function GET(request: NextRequest) {
       services: {
         api: 'healthy',
         database: 'unhealthy',
-        health_check: 'unhealthy'
+        health_check: 'unhealthy',
+        jwt: 'unhealthy'
       },
       error: error instanceof Error ? error.message : 'Unknown error',
       version: process.env.npm_package_version || '1.0.0',

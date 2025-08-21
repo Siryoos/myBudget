@@ -5,8 +5,17 @@ CREATE TABLE users (
   name VARCHAR(255) NOT NULL,
   avatar VARCHAR(500),
   password_hash VARCHAR(255) NOT NULL,
-  currency VARCHAR(3) DEFAULT 'USD',
-  language VARCHAR(5) DEFAULT 'en',
+  currency VARCHAR(3) DEFAULT 'USD' CHECK (currency IN (
+    'USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'CHF', 'CNY', 'INR', 'BRL',
+    'KRW', 'MXN', 'SGD', 'HKD', 'NOK', 'SEK', 'DKK', 'PLN', 'CZK', 'HUF',
+    'RUB', 'TRY', 'ZAR', 'THB', 'MYR', 'IDR', 'PHP', 'VND', 'BDT', 'PKR'
+  )),
+  language VARCHAR(5) DEFAULT 'en' CHECK (language IN (
+    'en', 'es', 'fr', 'de', 'it', 'pt', 'ru', 'ja', 'ko', 'zh',
+    'ar', 'hi', 'bn', 'ur', 'fa', 'tr', 'nl', 'sv', 'da', 'no',
+    'fi', 'pl', 'cs', 'hu', 'ro', 'bg', 'hr', 'sk', 'sl', 'et',
+    'lv', 'lt', 'mt', 'el', 'he', 'th', 'vi', 'id', 'ms', 'tl'
+  )),
   timezone VARCHAR(50) DEFAULT 'UTC',
   date_format VARCHAR(20) DEFAULT 'MM/DD/YYYY',
   monthly_income DECIMAL(12,2),
@@ -30,7 +39,8 @@ CREATE TABLE budgets (
   start_date DATE NOT NULL,
   end_date DATE NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(user_id, name)
 );
 
 -- Budget categories table
@@ -81,7 +91,8 @@ CREATE TABLE savings_goals (
   loss_avoidance_description TEXT,
   achievement_description TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(user_id, name)
 );
 
 -- Milestones table
@@ -141,6 +152,9 @@ CREATE INDEX idx_transactions_category ON transactions(category);
 CREATE INDEX idx_budgets_user_id ON budgets(user_id);
 CREATE INDEX idx_goals_user_id ON savings_goals(user_id);
 CREATE INDEX idx_budget_categories_budget_id ON budget_categories(budget_id);
+
+-- Case-insensitive email index for login performance
+CREATE INDEX idx_users_email_lower ON users(lower(email));
 
 -- Triggers for updated_at
 CREATE OR REPLACE FUNCTION update_updated_at_column()

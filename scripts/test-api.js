@@ -7,7 +7,10 @@
  * Make sure your development server is running (npm run dev)
  */
 
-const BASE_URL = 'http://localhost:3000/api';
+// API base URL - can be overridden with TEST_API_PORT environment variable
+const BASE_URL = process.env.TEST_API_PORT 
+  ? `http://localhost:${process.env.TEST_API_PORT}/api`
+  : 'http://localhost:3001/api';
 
 // Colors for console output
 const colors = {
@@ -74,9 +77,22 @@ async function makeRequest(endpoint, options = {}) {
     finalOptions.body = JSON.stringify(options.body);
   }
 
+  // Create AbortController for timeout handling
+  const controller = new AbortController();
+  const timeout = options.timeout || 5000; // Default 5 seconds, allow override
+  
+  // Set timeout timer
+  const timeoutId = setTimeout(() => {
+    controller.abort();
+  }, timeout);
+
   try {
-    const response = await fetch(url, finalOptions);
+    // Add signal to fetch options
+    const response = await fetch(url, { ...finalOptions, signal: controller.signal });
     const data = await response.json();
+    
+    // Clear timeout timer after successful fetch
+    clearTimeout(timeoutId);
     
     return {
       status: response.status,
@@ -84,6 +100,19 @@ async function makeRequest(endpoint, options = {}) {
       success: response.ok
     };
   } catch (error) {
+    // Clear timeout timer
+    clearTimeout(timeoutId);
+    
+    // Check if it's an abort error (timeout)
+    if (error.name === 'AbortError') {
+      return {
+        status: 0,
+        data: { error: `Request timed out after ${timeout}ms` },
+        success: false
+      };
+    }
+    
+    // Return other errors as before
     return {
       status: 0,
       data: { error: error.message },
@@ -214,6 +243,12 @@ async function testGetBudgets() {
 
 async function testCreateTransaction() {
   logInfo('Testing transaction creation...');
+  
+  // Guard against undefined categoryId
+  if (!categoryId) {
+    logWarning('Skipping transaction creation: no category ID available. Ensure budgets exist with categories first.');
+    return false;
+  }
   
   const transactionData = {
     amount: 50.00,

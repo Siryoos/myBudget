@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { requireAuth } from '@/lib/auth-middleware';
+import type { AuthenticatedRequest } from '@/types/auth';
 
-export const GET = requireAuth(async (request: NextRequest) => {
+export const GET = requireAuth(async (request: AuthenticatedRequest) => {
   try {
-    const user = (request as any).user;
+    const user = request.user;
     const { searchParams } = new URL(request.url);
     
     // Get date range from query params or default to current month

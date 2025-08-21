@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { comparePassword, generateToken } from '@/lib/auth';
-import { z } from 'zod';
+import { z, ZodError } from 'zod';
 
 const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string(),
+  email: z.string().email().transform(s => s.trim().toLowerCase()),
+  password: z.string().min(1),
 });
 
 export async function POST(request: NextRequest) {
@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
 
     // Find user
     const result = await query(
-      'SELECT id, email, name, password_hash FROM users WHERE email = $1',
+      'SELECT id, email, name, password_hash FROM users WHERE lower(email) = lower($1)',
       [email]
     );
 
@@ -49,6 +49,18 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
+    if (error instanceof ZodError) {
+      // Handle Zod validation errors
+      return NextResponse.json(
+        { 
+          error: 'Validation failed',
+          details: error.flatten()
+        },
+        { status: 400 }
+      );
+    }
+    
+    // Handle other errors
     console.error('Login error:', error);
     return NextResponse.json(
       { error: 'Login failed' },

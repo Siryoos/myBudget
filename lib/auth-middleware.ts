@@ -1,17 +1,10 @@
 import { NextRequest } from 'next/server';
 import { verifyToken } from './auth';
 import { query } from './database';
-
-export interface AuthenticatedRequest extends NextRequest {
-  user?: {
-    id: string;
-    email: string;
-    name: string;
-  };
-}
+import type { AuthenticatedUser, AuthenticatedRequest, AuthenticatedHandler } from '@/types/auth';
 
 export async function authenticateRequest(request: NextRequest): Promise<{
-  user?: { id: string; email: string; name: string };
+  user?: AuthenticatedUser;
   error?: string;
 }> {
   try {
@@ -38,7 +31,9 @@ export async function authenticateRequest(request: NextRequest): Promise<{
   }
 }
 
-export function requireAuth(handler: Function) {
+export function requireAuth<T extends AuthenticatedRequest>(
+  handler: (request: T) => Promise<Response>
+): (request: NextRequest) => Promise<Response> {
   return async (request: NextRequest) => {
     const auth = await authenticateRequest(request);
     
@@ -49,9 +44,29 @@ export function requireAuth(handler: Function) {
       );
     }
 
-    // Add user to request context
-    (request as any).user = auth.user;
+    // Create a properly typed request with user
+    const authenticatedRequest = request as T;
+    authenticatedRequest.user = auth.user!;
     
-    return handler(request);
+    return handler(authenticatedRequest);
+  };
+}
+
+// Helper function for optional authentication (useful for endpoints that work with or without auth)
+export function optionalAuth<T extends NextRequest | AuthenticatedRequest>(
+  handler: (request: T) => Promise<Response>
+): (request: NextRequest) => Promise<Response> {
+  return async (request: NextRequest) => {
+    const auth = await authenticateRequest(request);
+    
+    if (auth.user) {
+      // User is authenticated, create typed request
+      const authenticatedRequest = request as AuthenticatedRequest;
+      authenticatedRequest.user = auth.user;
+      return handler(authenticatedRequest as T);
+    } else {
+      // No authentication, use original request
+      return handler(request as T);
+    }
   };
 }

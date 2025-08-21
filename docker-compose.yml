@@ -1,15 +1,21 @@
 # Docker Compose specification (no version needed for newer Docker)
 
+# Load environment variables from docker.env file
+env_file:
+  - docker.env
+
 services:
   # PostgreSQL Database
   postgres:
     image: postgres:15-alpine
     container_name: mybudget-db
     restart: unless-stopped
+    env_file:
+      - docker.env
     environment:
-      POSTGRES_DB: mybudget
-      POSTGRES_USER: mybudget_user
-      POSTGRES_PASSWORD: MyBudget2024SecurePass123
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -151,10 +157,12 @@ services:
     image: postgres:15-alpine
     container_name: mybudget-backup
     restart: "no"
+    env_file:
+      - docker.env
     environment:
-      POSTGRES_DB: mybudget
-      POSTGRES_USER: mybudget_user
-      POSTGRES_PASSWORD: MyBudget2024SecurePass123
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
       - ./database/backups:/backups
       - ./scripts/backup.sh:/backup.sh:ro
