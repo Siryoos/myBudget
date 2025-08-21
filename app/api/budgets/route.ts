@@ -280,11 +280,11 @@ export const PUT = requireAuth(async (request: AuthenticatedRequest) => {
   }
 });
 
-export const DELETE = requireAuth(async (request: NextRequest) => {
+export const DELETE = requireAuth(async (request: AuthenticatedRequest) => {
   try {
     const { searchParams } = new URL(request.url);
     const budgetId = searchParams.get('id');
-    const user = (request as any).user;
+    const user = request.user;
 
     if (!budgetId) {
       return NextResponse.json(

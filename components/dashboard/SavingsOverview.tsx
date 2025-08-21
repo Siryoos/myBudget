@@ -10,8 +10,11 @@ import {
 } from '@heroicons/react/24/outline'
 import { Card, CardContent } from '@/components/ui/Card'
 import { ProgressBar } from '@/components/ui/ProgressBar'
+import { Skeleton } from '@/components/ui/Skeleton'
 import { formatCurrency, calculateProgress, formatPercentage } from '@/lib/utils'
 import { useTranslation } from '@/lib/useTranslation'
+import { useDashboard } from '@/hooks/use-api'
+import { format, startOfMonth, endOfMonth } from 'date-fns'
 
 interface SavingsOverviewProps {
   showTotalSavings?: boolean
@@ -28,15 +31,16 @@ export function SavingsOverview({
 }: SavingsOverviewProps) {
   const { t } = useTranslation(['dashboard'])
   const [isAnimated, setIsAnimated] = useState(!animateOnLoad)
+  const { data: dashboardData, loading, error } = useDashboard()
 
-  // Mock data - would come from API/context
+  // Calculate savings data from dashboard
   const savingsData = {
-    totalSavings: 12450,
-    monthlyGoal: 1000,
-    monthlySaved: 680,
-    previousMonth: 850,
-    annualGoal: 15000,
-    growthRate: 8.5,
+    totalSavings: dashboardData?.totalSavings || 0,
+    monthlyGoal: dashboardData?.monthlyBudget || 1000,
+    monthlySaved: dashboardData?.currentMonthSavings || 0,
+    previousMonth: dashboardData?.previousMonthSavings || 0,
+    annualGoal: dashboardData?.annualSavingsGoal || 15000,
+    growthRate: dashboardData?.savingsGrowthRate || 0,
   }
 
   const monthlyProgress = calculateProgress(savingsData.monthlySaved, savingsData.monthlyGoal)
@@ -45,11 +49,54 @@ export function SavingsOverview({
   const isPositiveChange = monthlyChange >= 0
 
   useEffect(() => {
-    if (animateOnLoad) {
+    if (animateOnLoad && !loading) {
       const timer = setTimeout(() => setIsAnimated(true), 100)
       return () => clearTimeout(timer)
     }
-  }, [animateOnLoad])
+  }, [animateOnLoad, loading])
+
+  if (loading) {
+    return (
+      <Card className="overflow-hidden">
+        <CardContent className="p-0">
+          <div className="bg-gradient-to-br from-secondary-growth-green to-secondary-growth-green-light p-6 text-white">
+            <Skeleton className="h-8 w-48 mb-4 bg-white/20" />
+            <Skeleton className="h-10 w-32 mb-2 bg-white/20" />
+            <Skeleton className="h-4 w-40 bg-white/20" />
+          </div>
+          <div className="p-6 space-y-6">
+            <div>
+              <Skeleton className="h-6 w-32 mb-3" />
+              <Skeleton className="h-4 w-full mb-2" />
+              <Skeleton className="h-3 w-full" />
+            </div>
+            <div>
+              <Skeleton className="h-6 w-40 mb-3" />
+              <Skeleton className="h-4 w-full mb-2" />
+              <div className="grid grid-cols-3 gap-4">
+                <Skeleton className="h-20 w-full" />
+                <Skeleton className="h-20 w-full" />
+                <Skeleton className="h-20 w-full" />
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (error) {
+    return (
+      <Card className="overflow-hidden">
+        <CardContent className="p-6">
+          <div className="text-center text-neutral-gray">
+            <p className="mb-2">{t('dashboard:savingsOverview.errorLoading', { defaultValue: 'Unable to load savings data' })}</p>
+            <p className="text-sm">{error.message}</p>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
 
   return (
     <Card className="overflow-hidden">
