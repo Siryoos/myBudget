@@ -30,6 +30,55 @@ if (typeof globalThis.EdgeRuntime === 'undefined') {
   }
 }
 
+// Origin validation function
+const validateOrigin = (origin: string): { valid: boolean; error?: string } => {
+  const trimmed = origin.trim();
+  
+  if (!trimmed) {
+    return { valid: false, error: 'Empty origin' };
+  }
+  
+  try {
+    const url = new URL(trimmed);
+    
+    // Check protocol
+    if (!['http:', 'https:'].includes(url.protocol)) {
+      return { valid: false, error: `Invalid protocol: ${url.protocol}` };
+    }
+    
+    // Check hostname
+    if (!url.hostname) {
+      return { valid: false, error: 'Missing hostname' };
+    }
+    
+    // Validate hostname format
+    const hostnameRegex = /^([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)*[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$/;
+    const ipRegex = /^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$/;
+    const ipv6Regex = /^(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))$/;
+    
+    if (!hostnameRegex.test(url.hostname) && !ipRegex.test(url.hostname) && !ipv6Regex.test(url.hostname)) {
+      return { valid: false, error: `Invalid hostname: ${url.hostname}` };
+    }
+    
+    // Check port
+    if (url.port) {
+      const port = parseInt(url.port);
+      if (isNaN(port) || port < 1 || port > 65535) {
+        return { valid: false, error: `Invalid port: ${url.port}` };
+      }
+    }
+    
+    // Warn about insecure origins in production
+    if (process.env.NODE_ENV === 'production' && url.protocol === 'http:' && url.hostname !== 'localhost') {
+      logger.warn('Insecure HTTP origin in production', { origin: trimmed });
+    }
+    
+    return { valid: true };
+  } catch (error) {
+    return { valid: false, error: `Invalid URL format: ${error}` };
+  }
+};
+
 // Enhanced environment validation with better error handling
 const validateEnvironment = () => {
   const requiredVars = [
@@ -48,17 +97,26 @@ const validateEnvironment = () => {
   
   // Validate ALLOWED_ORIGINS format
   if (process.env.ALLOWED_ORIGINS) {
-    const origins = process.env.ALLOWED_ORIGINS.split(',');
-    const invalidOrigins = origins.filter(origin => {
-      const trimmed = origin.trim();
-      return !trimmed || 
-             !trimmed.startsWith('http') || 
-             !trimmed.match(/^https?:\/\/[^\s\/]+(\/.*)?$/);
+    const origins = process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim());
+    const validationErrors: string[] = [];
+    
+    origins.forEach(origin => {
+      const result = validateOrigin(origin);
+      if (!result.valid) {
+        validationErrors.push(`${origin}: ${result.error}`);
+      }
     });
     
-    if (invalidOrigins.length > 0) {
-      logger.error('Invalid origins in ALLOWED_ORIGINS', undefined, { invalidOrigins });
-      throw new Error('ALLOWED_ORIGINS must contain valid HTTP/HTTPS URLs');
+    if (validationErrors.length > 0) {
+      logger.error('Invalid origins in ALLOWED_ORIGINS', undefined, { 
+        errors: validationErrors 
+      });
+      throw new Error(`ALLOWED_ORIGINS validation failed:\n${validationErrors.join('\n')}`);
+    }
+    
+    // Warn about wildcards
+    if (origins.includes('*')) {
+      logger.warn('Wildcard origin (*) detected in ALLOWED_ORIGINS - this is insecure');
     }
   }
   
