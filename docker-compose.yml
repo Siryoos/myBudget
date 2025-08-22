@@ -1,54 +1,170 @@
-# Docker Compose specification (no version needed for newer Docker)
+# Docker Compose v2 configuration for MyBudget
+# Unified configuration with security hardening
 
-# Load environment variables from docker.env file
-env_file:
-  - docker.env
+# Global logging configuration
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+# Global security configuration
+x-security: &default-security
+  security_opt:
+    - no-new-privileges:true
+    - seccomp:unconfined
+  read_only: false
+  tmpfs:
+    - /tmp
+    - /var/run
+    - /var/lock
+
+# Load environment variables
+# Note: Docker Compose v2 doesn't support env_file, use .env file in same directory
 
 services:
-  # PostgreSQL Database
+  # Database Service
   postgres:
     image: postgres:15-alpine
-    container_name: mybudget-db
+    container_name: mybudget-postgres
     restart: unless-stopped
-    env_file:
-      - docker.env
-    environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    logging: *default-logging
+    security_opt:
+      - no-new-privileges:true
+    ports:
+      - "127.0.0.1:5432:5432"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./database/init:/docker-entrypoint-initdb.d
       - ./database/backups:/backups
-    ports:
-      - "5432:5432"
-    networks:
-      - mybudget-network
+    environment:
+      POSTGRES_DB: ${DB_NAME:-mybudget}
+      POSTGRES_USER: ${DB_USER:-mybudget}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-mybudget} -d ${DB_NAME:-mybudget}"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
+    networks:
+      - mybudget-network
 
-  # Redis for caching (optional but recommended for production)
+  # Cache Service
   redis:
     image: redis:7-alpine
     container_name: mybudget-redis
     restart: unless-stopped
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    logging: *default-logging
+    security_opt:
+      - no-new-privileges:true
+    ports:
+      - "127.0.0.1:6379:6379"
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.25'
+        reservations:
+          memory: 128M
+          cpus: '0.1'
     volumes:
       - redis_data:/data
-    ports:
-      - "6379:6379"
-    networks:
-      - mybudget-network
+      - ./config/redis/redis.conf:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf --requirepass ${REDIS_PASSWORD}
     healthcheck:
       test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
       interval: 30s
       timeout: 10s
       retries: 3
+    networks:
+      - mybudget-network
+
+  # Storage Service (MinIO)
+  minio:
+    image: minio/minio:latest
+    container_name: mybudget-storage
+    restart: unless-stopped
+    logging: *default-logging
+    security_opt:
+      - no-new-privileges:true
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+    volumes:
+      - storage_data:/data
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      MINIO_BROWSER_REDIRECT_URL: ${MINIO_BROWSER_REDIRECT_URL:-http://localhost:9001}
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+      start_period: 40s
+    networks:
+      - mybudget-network
+
+  # Authentication Service (Keycloak)
+  keycloak:
+    image: quay.io/keycloak/keycloak:23.0
+    container_name: mybudget-auth
+    restart: unless-stopped
+    logging: *default-logging
+    security_opt:
+      - no-new-privileges:true
+    ports:
+      - "127.0.0.1:8080:8080"
+      - "127.0.0.1:8443:8443"
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
+    volumes:
+      - keycloak_data:/opt/keycloak/data
+      - ./config/keycloak/themes:/opt/keycloak/themes
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: ${KEYCLOAK_DB_USER:-keycloak}
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      KC_HOSTNAME: ${KC_HOSTNAME:-0.0.0.0}
+      KC_HOSTNAME_ADMIN: ${KC_HOSTNAME_ADMIN:-0.0.0.0}
+      KC_PROXY: edge
+      KC_HTTP_ENABLED: "true"
+      KC_HOSTNAME_STRICT: "false"
+      KC_HOSTNAME_STRICT_HTTPS: "false"
+    command: start-dev
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - mybudget-network
 
   # Backend API Service
   backend:
@@ -57,30 +173,45 @@ services:
       dockerfile: Dockerfile.backend
     container_name: mybudget-backend
     restart: unless-stopped
-    env_file:
-      - docker.env
+    logging: *default-logging
+    security_opt:
+      - no-new-privileges:true
+    ports:
+      - "127.0.0.1:3001:3001"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
     environment:
-      - NODE_ENV=${NODE_ENV:-development}
+      - NODE_ENV=${NODE_ENV:-production}
       - DB_HOST=postgres
       - DB_PORT=5432
-      - DB_NAME=${DB_NAME}
-      - DB_USER=${DB_USER}
+      - DB_NAME=${DB_NAME:-mybudget}
+      - DB_USER=${DB_USER:-mybudget}
       - DB_PASSWORD=${DB_PASSWORD}
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - JWT_SECRET=${JWT_SECRET}
-      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-7d}
       - CORS_ORIGIN=${CORS_ORIGIN}
       - PORT=3001
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
       - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
-    ports:
-      - "3001:3001"
+      - MINIO_ENDPOINT=minio
+      - MINIO_PORT=9000
+      - MINIO_ACCESS_KEY=${MINIO_ROOT_USER:-minioadmin}
+      - MINIO_SECRET_KEY=${MINIO_ROOT_PASSWORD}
     depends_on:
       postgres:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      minio:
         condition: service_healthy
     networks:
       - mybudget-network
@@ -101,19 +232,24 @@ services:
       dockerfile: Dockerfile.frontend
     container_name: mybudget-frontend
     restart: unless-stopped
+    logging: *default-logging
+    security_opt:
+      - no-new-privileges:true
+    ports:
+      - "127.0.0.1:3000:3000"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
     environment:
-      - NODE_ENV=${NODE_ENV:-development}
+      - NODE_ENV=${NODE_ENV:-production}
       - PORT=3000
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_NAME=${DB_NAME}
-      - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - DB_SSL=false
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
       - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
-    ports:
-      - "3000:3000"
     depends_on:
       backend:
         condition: service_healthy
@@ -129,54 +265,141 @@ services:
       retries: 3
       start_period: 40s
 
-  # Nginx Reverse Proxy (optional but recommended)
+  # Reverse Proxy (Nginx)
   nginx:
     image: nginx:alpine
-    container_name: mybudget-nginx
+    container_name: mybudget-proxy
     restart: unless-stopped
+    logging: *default-logging
+    security_opt:
+      - no-new-privileges:true
     ports:
       - "80:80"
       - "443:443"
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.25'
+        reservations:
+          memory: 128M
+          cpus: '0.1'
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
       - ./nginx/ssl:/etc/nginx/ssl:ro
-      - ./nginx/logs:/var/log/nginx
+      - ./logs/nginx:/var/log/nginx
     depends_on:
-      - frontend
-      - backend
-    networks:
-      - mybudget-network
-    healthcheck:
-      test: ["CMD", "nginx", "-t"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # Database Backup Service (optional)
-  backup:
-    image: postgres:15-alpine
-    container_name: mybudget-backup
-    restart: "no"
-    env_file:
-      - docker.env
-    environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-    volumes:
-      - ./database/backups:/backups
-      - ./scripts/backup.sh:/backup.sh:ro
-    depends_on:
-      postgres:
+      frontend:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+      minio:
         condition: service_healthy
     networks:
       - mybudget-network
-    command: ["/bin/sh", "-c", "chmod +x /backup.sh && /backup.sh"]
+
+  # Monitoring - Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: mybudget-prometheus
+    restart: unless-stopped
+    logging: *default-logging
+    security_opt:
+      - no-new-privileges:true
+    ports:
+      - "127.0.0.1:9090:9090"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+    volumes:
+      - ./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--query-log-file=/dev/null'
+      - '--enable-feature=agent'
+    user: "65534:65534"
+    networks:
+      - mybudget-network
+
+  # Monitoring - Grafana
+  grafana:
+    image: grafana/grafana:latest
+    container_name: mybudget-grafana
+    restart: unless-stopped
+    logging: *default-logging
+    security_opt:
+      - no-new-privileges:true
+    ports:
+      - "127.0.0.1:3000:3000"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./config/grafana/provisioning:/etc/grafana/provisioning:ro
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GF_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GF_ADMIN_PASSWORD}
+      GF_SERVER_ROOT_URL: ${GF_SERVER_ROOT_URL:-http://localhost:3000}
+    depends_on:
+      - prometheus
+    networks:
+      - mybudget-network
+
+  # Backup Service
+  backup:
+    image: offen/docker-volume-backup:latest
+    container_name: mybudget-backup
+    restart: unless-stopped
+    logging: *default-logging
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - ./data:/backup/data:ro
+      - ./config:/backup/config:ro
+      - backup_archive:/archive
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      BACKUP_CRON_EXPRESSION: ${BACKUP_CRON_EXPRESSION:-"0 2 * * *"}
+      BACKUP_FILENAME: ${BACKUP_FILENAME:-"mybudget-backup-%Y-%m-%d_%H-%M-%S.tar.gz"}
+      BACKUP_ARCHIVE: "/archive"
+      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-7}
+      BACKUP_PRUNING_PREFIX: ${BACKUP_PRUNING_PREFIX:-"mybudget-backup-"}
+    networks:
+      - mybudget-network
 
 volumes:
   postgres_data:
     driver: local
   redis_data:
+    driver: local
+  storage_data:
+    driver: local
+  keycloak_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+  backup_archive:
     driver: local
 
 networks:
@@ -185,3 +408,5 @@ networks:
     ipam:
       config:
         - subnet: 172.20.0.0/16
+    driver_opts:
+      com.docker.network.bridge.name: mybudget-br0

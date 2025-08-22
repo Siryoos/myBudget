@@ -2,6 +2,58 @@
 
 A comprehensive personal finance website designed to encourage saving behavior through psychological nudges and intuitive UI/UX.
 
+## 📚 Documentation
+
+This project maintains comprehensive documentation organized in the `docs/` directory:
+
+### 🚀 [Getting Started](docs/getting-started.md)
+- Installation and setup instructions
+- Prerequisites and requirements
+- Quick start guide
+- Development environment setup
+
+### 🏗️ [Architecture Overview](docs/architecture.md)
+- System architecture and design
+- Technology stack details
+- Database schema
+- Component structure
+
+### 🔧 [Backend Development](docs/backend-development.md)
+- API development guide
+- Database setup and management
+- Authentication and security
+- Testing and deployment
+
+### 🎨 [Frontend Development](docs/frontend-development.md)
+- Component development
+- State management
+- Styling and design system
+- Internationalization
+
+### 🐳 [Docker & Deployment](docs/docker-deployment.md)
+- Docker setup and configuration
+- Production deployment
+- Environment configuration
+- Monitoring and logging
+
+### 📡 [API Reference](docs/api-reference.md)
+- Complete API documentation
+- Authentication methods
+- Request/response examples
+- Error handling
+
+### 🧠 [Implementation Guides](docs/implementation-guides.md)
+- Behavioral psychology features
+- Translation system
+- Security implementations
+- Performance optimization
+
+### 🔒 [Security & Best Practices](docs/security-best-practices.md)
+- Security features
+- Best practices
+- Compliance requirements
+- Testing strategies
+
 ## 🌟 Features
 
 ### Core Functionality
@@ -24,11 +76,12 @@ A comprehensive personal finance website designed to encourage saving behavior t
 - **Internationalization**: Multi-language and regional customization support
 - **Modern UI**: Beautiful design system with smooth animations
 
-## 🚀 Getting Started
+## 🚀 Quick Start
 
 ### Prerequisites
 - Node.js 18.0 or higher
 - npm or yarn package manager
+- Docker (for containerized deployment)
 
 ### Installation
 
@@ -188,3 +241,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 **SmartSave** - Empowering users to build better financial habits through intelligent design and behavioral psychology.
+
+> 📖 **Need more details?** Check out our comprehensive [documentation](docs/) for in-depth guides on every aspect of the project.

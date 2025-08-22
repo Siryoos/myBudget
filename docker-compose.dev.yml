@@ -1,6 +1,4 @@
 # Docker Compose development overrides
-
-# Development overrides for docker-compose.yml
 # Use with: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
 
 services:
@@ -14,16 +12,20 @@ services:
       - NODE_ENV=development
       - DB_HOST=postgres
       - DB_PORT=5432
-      - DB_NAME=${DB_NAME}
-      - DB_USER=${DB_USER}
+      - DB_NAME=${DB_NAME:-mybudget}
+      - DB_USER=${DB_USER:-mybudget}
       - DB_PASSWORD=${DB_PASSWORD}
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - JWT_SECRET=${JWT_SECRET}
-      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN}
-      - CORS_ORIGIN=${CORS_ORIGIN}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-7d}
+      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:3000}
       - PORT=3001
+      - MINIO_ENDPOINT=minio
+      - MINIO_PORT=9000
+      - MINIO_ACCESS_KEY=${MINIO_ROOT_USER:-minioadmin}
+      - MINIO_SECRET_KEY=${MINIO_ROOT_PASSWORD}
     volumes:
       - .:/app
       - /app/node_modules
@@ -31,11 +33,13 @@ services:
       - ./uploads:/app/uploads
     command: ["npm", "run", "dev"]
     ports:
-      - "3001:3001"
+      - "127.0.0.1:3001:3001"
     depends_on:
       postgres:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      minio:
         condition: service_healthy
 
   # Frontend with development settings
@@ -46,8 +50,8 @@ services:
       target: base  # Use base stage for development
     environment:
       - NODE_ENV=development
-      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
-      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:3001}
+      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
     volumes:
       - .:/app
       - /app/node_modules
@@ -55,7 +59,7 @@ services:
       - ./locales:/app/locales
     command: ["npm", "run", "dev"]
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     depends_on:
       backend:
         condition: service_healthy
@@ -63,8 +67,8 @@ services:
   # Database with development settings
   postgres:
     environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
+      POSTGRES_DB: ${DB_NAME:-mybudget}
+      POSTGRES_USER: ${DB_USER:-mybudget}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
     volumes:
@@ -73,15 +77,44 @@ services:
       - ./database/backups:/backups
       - ./database/dev-data:/docker-entrypoint-initdb.d/dev-data
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
 
   # Redis with development settings
   redis:
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    command: redis-server /usr/local/etc/redis/redis.conf --requirepass ${REDIS_PASSWORD}
     volumes:
       - redis_data:/data
+      - ./config/redis/redis.conf:/usr/local/etc/redis/redis.conf
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
+
+  # MinIO with development settings
+  minio:
+    environment:
+      MINIO_BROWSER_REDIRECT_URL: ${MINIO_BROWSER_REDIRECT_URL:-http://localhost:9001}
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+
+  # Keycloak with development settings
+  keycloak:
+    environment:
+      KC_HOSTNAME: ${KC_HOSTNAME:-localhost}
+      KC_HOSTNAME_ADMIN: ${KC_HOSTNAME_ADMIN:-localhost}
+    ports:
+      - "127.0.0.1:8080:8080"
+      - "127.0.0.1:8443:8443"
+
+  # Nginx with development settings
+  nginx:
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.dev.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./logs/nginx:/var/log/nginx
 
   # Development tools (optional)
   # Uncomment to enable additional development services
@@ -95,7 +128,7 @@ services:
   #     PGADMIN_DEFAULT_EMAIL: admin@mybudget.com
   #     PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin123}
   #   ports:
-  #     - "5050:80"
+  #     - "127.0.0.1:5050:80"
   #   depends_on:
   #     - postgres
   #   networks:
@@ -110,7 +143,7 @@ services:
   #     REDIS_HOSTS: local:redis:6379
   #     REDIS_PASSWORD: ${REDIS_PASSWORD}
   #   ports:
-  #     - "8081:8081"
+  #     - "127.0.0.1:8081:8081"
   #   depends_on:
   #     - redis
   #   networks:
@@ -122,8 +155,8 @@ services:
   #   container_name: mybudget-mailhog
   #   restart: unless-stopped
   #   ports:
-  #     - "1025:1025"  # SMTP
-  #     - "8025:8025"  # Web UI
+  #     - "127.0.0.1:1025:1025"  # SMTP
+  #     - "127.0.0.1:8025:8025"  # Web UI
   #   networks:
   #     - mybudget-network
 
@@ -139,3 +172,5 @@ networks:
     ipam:
       config:
         - subnet: 172.20.0.0/16
+    driver_opts:
+      com.docker.network.bridge.name: mybudget-br0
