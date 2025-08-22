@@ -10,6 +10,8 @@ import Backend from 'i18next-http-backend';
 // Initialize i18next with optimized configuration
 const initI18n = async () => {
   if (!i18n.isInitialized) {
+    console.log('🌐 Initializing i18n...');
+    
     await i18n
       .use(Backend)
       .use(LanguageDetector)
@@ -23,10 +25,19 @@ const initI18n = async () => {
           escapeValue: false,
         },
         backend: {
-          // Match Next.js App Route at app/locales/[lng]/[ns]/route.ts
-          loadPath: '/locales/{{lng}}/{{ns}}',
+          // Match Next.js API Route at app/api/locales/[lng]/[ns]/route.ts
+          loadPath: '/api/locales/{{lng}}/{{ns}}',
           requestOptions: {
             cache: 'no-store', // Disable caching for instant language switching
+          },
+          // Add error handling for failed requests
+          parse: (data: string) => {
+            try {
+              return JSON.parse(data);
+            } catch (error) {
+              console.error('Failed to parse translation data:', error);
+              return {};
+            }
           },
         },
         detection: {
@@ -37,7 +48,7 @@ const initI18n = async () => {
         react: {
           useSuspense: false,
         },
-        // Preload common namespace to avoid initial loading issues
+        // Preload common namespaces to avoid initial loading issues
         preload: ['en', 'ar', 'fa'],
         // Wait for translations to load before rendering
         initImmediate: false,
@@ -45,7 +56,13 @@ const initI18n = async () => {
         load: 'languageOnly',
         // Clear cache on language change
         cleanCode: true,
+        // Add retry logic for failed requests
+        saveMissing: false,
+        returnEmptyString: false,
+        returnNull: false,
       });
+      
+    console.log('✅ i18n initialized successfully');
   }
   return i18n;
 };
@@ -72,30 +89,24 @@ export function I18nProvider({ children, locale = 'en' }: I18nProviderProps) {
   const changeLanguage = async (newLocale: string) => {
     try {
       setIsLoading(true);
+      console.log(`Changing language from ${currentLocale} to ${newLocale}`);
       
-      // Clear all cached translations
-      if (i18n.isInitialized && i18n.reportNamespaces) {
-        // Remove all loaded namespaces for the current locale
-        const loadedNamespaces = i18n.reportNamespaces.getUsedNamespaces();
-        loadedNamespaces.forEach(ns => {
-          i18n.removeResourceBundle(currentLocale, ns);
-        });
-        
-        // Change language
+      // Simply change language - let i18next handle resource management
+      if (i18n.isInitialized) {
         await i18n.changeLanguage(newLocale);
         
-        // Reload all required namespaces for the new locale
-        const requiredNamespaces = ['common', 'dashboard', 'budget', 'goals', 'transactions', 'education', 'settings', 'auth', 'errors'];
+        // Ensure critical namespaces are loaded for the new locale
+        const criticalNamespaces = ['common', 'dashboard'];
         await Promise.all(
-          requiredNamespaces.map(ns => 
-            i18n.loadNamespaces(ns)
-          )
+          criticalNamespaces.map(ns => i18n.loadNamespaces(ns))
         );
       }
       
       setCurrentLocale(newLocale);
+      console.log(`Language successfully changed to ${newLocale}`);
     } catch (error) {
       console.error('Failed to change language:', error);
+      throw error; // Re-throw to let callers handle the error
     } finally {
       setIsLoading(false);
     }

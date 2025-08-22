@@ -36,6 +36,7 @@ export interface PeerComparison {
 
 export interface InsightAction {
   id: string
+  label: string
   type: 'navigate' | 'execute' | 'external'
   target: string
   data?: Record<string, unknown>

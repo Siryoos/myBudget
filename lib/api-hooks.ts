@@ -88,7 +88,19 @@ export function useDashboardData() {
       const response = await apiClient.getDashboard();
       
       if (response.success && response.data) {
-        setData(response.data);
+        setData({
+          ...response.data,
+          totalSavings: response.data.totalSavings || 0,
+          monthlyBudget: response.data.monthlyBudget || 0,
+          currentMonthSavings: response.data.currentMonthSavings || 0,
+          previousMonthSavings: response.data.previousMonthSavings || 0,
+          annualSavingsGoal: response.data.annualSavingsGoal || 0,
+          savingsGrowthRate: response.data.savingsGrowthRate || 0,
+          recentTransactions: response.data.recentTransactions || [],
+          budgetProgress: response.data.budgetProgress || [],
+          goals: response.data.goals || [],
+          insights: response.data.insights || []
+        });
       } else {
         throw new Error('Failed to load dashboard data');
       }
@@ -143,7 +155,7 @@ export function useGoals(priority?: 'low' | 'medium' | 'high') {
         name: goalData.name || '',
         description: goalData.description,
         targetAmount: goalData.targetAmount || 0,
-        targetDate: goalData.targetDate?.toISOString() || new Date().toISOString(),
+        targetDate: goalData.targetDate instanceof Date ? goalData.targetDate.toISOString() : goalData.targetDate || new Date().toISOString(),
         priority: goalData.priority || 'medium',
         category: goalData.category || 'other',
         icon: goalData.icon,

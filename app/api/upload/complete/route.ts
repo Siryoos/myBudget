@@ -1,17 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getStorageProvider } from '@/lib/cloud-storage';
-import { validateUser } from '@/lib/auth-utils';
+import { getAuthenticatedUser } from '@/lib/auth-middleware';
 
 export async function POST(request: NextRequest) {
   try {
     // Validate user authentication
-    const user = await validateUser(request);
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+    const user = await getAuthenticatedUser(request);
 
     // Parse request body
     const body = await request.json();
@@ -98,13 +92,7 @@ export async function POST(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     // Validate user authentication
-    const user = await validateUser(request);
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+    const user = await getAuthenticatedUser(request);
 
     // Get file key from query params
     const { searchParams } = new URL(request.url);

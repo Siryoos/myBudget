@@ -145,3 +145,26 @@ export interface ProtectedRouteProps {
   fallback?: React.ReactNode;
   redirectTo?: string;
 }
+
+// JWT token payload
+export interface JWTPayload {
+  userId: string;
+  id: string; // Alias for userId for compatibility
+  email: string;
+  tokenVersion: number;
+  passwordChangedAt: string;
+  iat?: number;
+  exp?: number;
+}
+
+// Authenticated request type for API routes
+export interface AuthenticatedRequest extends Request {
+  user: AuthenticatedUser;
+  userId: string;
+}
+
+// Authenticated handler type
+export type AuthenticatedHandler = (
+  request: AuthenticatedRequest,
+  context?: any
+) => Promise<Response> | Response;

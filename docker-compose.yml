@@ -31,8 +31,10 @@ services:
     logging: *default-logging
     security_opt:
       - no-new-privileges:true
-    ports:
-      - "127.0.0.1:5432:5432"
+    # SECURITY: Ports are exposed for development only
+    # In production, use internal networking only
+    # ports:
+    #   - "127.0.0.1:5432:5432"
     deploy:
       resources:
         limits:
@@ -67,8 +69,10 @@ services:
     logging: *default-logging
     security_opt:
       - no-new-privileges:true
-    ports:
-      - "127.0.0.1:6379:6379"
+    # SECURITY: Ports are exposed for development only
+    # In production, use internal networking only
+    # ports:
+    #   - "127.0.0.1:6379:6379"
     deploy:
       resources:
         limits:

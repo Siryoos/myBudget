@@ -466,8 +466,4 @@ export interface PresignedUrlResponse {
 }
 
 // Import UserRole from auth types
-<<<<<<< Current (Your changes)
-export type { UserRole } from './auth';
-=======
 import type { UserRole } from './auth';
->>>>>>> Incoming (Background Agent changes)

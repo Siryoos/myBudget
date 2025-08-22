@@ -115,97 +115,92 @@ export const GET = requireAuth(async (request: AuthenticatedRequest) => {
     const averageQuickSave = quickSaves.length > 0 ? totalQuickSaved / quickSaves.length : 0;
     
     // Get budget categories if budget exists
-    let budgetCategories: any[] = [];
+    interface BudgetCategory {
+      id: number;
+      name: string;
+      allocated: number;
+      spent: number;
+      color: string;
+      icon: string;
+      remaining: number;
+      utilization: number;
+    }
+    
+    let budgetCategories: BudgetCategory[] = [];
     if (budgetsResult.rows.length > 0) {
       const budget = budgetsResult.rows[0];
       const categoriesResult = await query(`
         SELECT 
-          name, allocated, spent, color, icon
+          id, name, allocated, spent, color, icon
         FROM budget_categories 
         WHERE budget_id = $1
         ORDER BY allocated DESC
       `, [budget.id]);
       
       budgetCategories = categoriesResult.rows.map(cat => ({
-        ...cat,
+        id: cat.id,
+        name: cat.name,
+        allocated: cat.allocated,
+        spent: cat.spent,
+        color: cat.color,
+        icon: cat.icon,
         remaining: cat.allocated - cat.spent,
         utilization: cat.allocated > 0 ? (cat.spent / cat.allocated) * 100 : 0,
       }));
     }
     
+    // Calculate monthly budget from current budget
+    const monthlyBudget = budgetsResult.rows.length > 0 ? 
+      budgetsResult.rows[0].totalAllocated || 0 : 0;
+    
+    // Calculate current month savings (from quick saves and goals)
+    const currentMonth = new Date();
+    const currentMonthStart = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+    const currentMonthQuickSaves = quickSaves.filter(qs => 
+      new Date(qs.timestamp) >= currentMonthStart
+    );
+    const currentMonthSavings = currentMonthQuickSaves.reduce((sum, qs) => sum + qs.amount, 0);
+    
+    // Calculate previous month savings
+    const previousMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1);
+    const previousMonthEnd = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 0);
+    const previousMonthQuickSaves = quickSaves.filter(qs => {
+      const qsDate = new Date(qs.timestamp);
+      return qsDate >= previousMonth && qsDate <= previousMonthEnd;
+    });
+    const previousMonthSavings = previousMonthQuickSaves.reduce((sum, qs) => sum + qs.amount, 0);
+    
+    // Calculate savings growth rate
+    const savingsGrowthRate = previousMonthSavings > 0 ? 
+      ((currentMonthSavings - previousMonthSavings) / previousMonthSavings) * 100 : 0;
+    
+    // Get recent transactions (last 5)
+    const recentTransactions = quickSaves.slice(0, 5).map(qs => ({
+      id: qs.id,
+      amount: qs.amount,
+      timestamp: qs.timestamp,
+      type: 'income' as const,
+      category: 'savings',
+      date: new Date(qs.timestamp)
+    }));
+    
     // Build dashboard data object
     const dashboardData: DashboardData = {
-      goals: {
-        active: goals.length,
-        total: goals.length, // Could add inactive count if needed
-        progress: overallProgress,
-        totalTarget: totalTargetAmount,
-        totalCurrent: totalCurrentAmount,
-        recent: goals.slice(0, 3),
-        byPriority: {
-          high: goals.filter(g => g.priority === 'high').length,
-          medium: goals.filter(g => g.priority === 'medium').length,
-          low: goals.filter(g => g.priority === 'low').length,
-        },
-        byCategory: goals.reduce((acc, goal) => {
-          acc[goal.category] = (acc[goal.category] || 0) + 1;
-          return acc;
-        }, {} as Record<string, number>),
-      },
-      budget: budgetsResult.rows.length > 0 ? {
-        ...budgetsResult.rows[0],
-        startDate: new Date(budgetsResult.rows[0].startDate),
-        endDate: new Date(budgetsResult.rows[0].endDate),
-        categories: budgetCategories,
-        totalAllocated: budgetCategories.reduce((sum, cat) => sum + cat.allocated, 0),
-        totalSpent: budgetCategories.reduce((sum, cat) => sum + cat.spent, 0),
-        totalRemaining: budgetCategories.reduce((sum, cat) => sum + cat.remaining, 0),
-      } : null,
-      achievements: {
-        total: achievements.length,
-        recent: achievements.slice(0, 3),
-        totalPoints: achievements.reduce((sum, ach) => sum + ach.points, 0),
-        byCategory: achievements.reduce((acc, achievement) => {
-          acc[achievement.category] = (acc[achievement.category] || 0) + 1;
-          return acc;
-        }, {} as Record<string, number>),
-      },
-      insights: {
-        unread: insights.length,
-        recent: insights.slice(0, 3),
-        byPriority: {
-          high: insights.filter(i => i.impact === 'high').length,
-          medium: insights.filter(i => i.impact === 'medium').length,
-          low: insights.filter(i => i.impact === 'low').length,
-        },
-        byCategory: insights.reduce((acc, insight) => {
-          acc[insight.category || 'General'] = (acc[insight.category || 'General'] || 0) + 1;
-          return acc;
-        }, {} as Record<string, number>),
-      },
-      quickSave: {
-        total: totalQuickSaved,
-        average: averageQuickSave,
-        recent: quickSaves.slice(0, 5),
-        bySource: quickSaves.reduce((acc, qs) => {
-          acc[qs.source] = (acc[qs.source] || 0) + qs.amount;
-          return acc;
-        }, {} as Record<string, number>),
-        byGoal: quickSaves.reduce((acc, qs) => {
-          if (qs.goalId) {
-            acc[qs.goalId] = (acc[qs.goalId] || 0) + qs.amount;
-          }
-          return acc;
-        }, {} as Record<string, number>),
-      },
-      summary: {
-        totalSavings: totalCurrentAmount,
-        monthlyProgress: overallProgress,
-        activeGoals: goals.length,
-        unreadInsights: insights.length,
-        recentAchievements: achievements.length,
-        quickSaveTotal: totalQuickSaved,
-      }
+      totalSavings: totalCurrentAmount,
+      monthlyBudget,
+      currentMonthSavings,
+      previousMonthSavings,
+      annualSavingsGoal: totalTargetAmount,
+      savingsGrowthRate: Math.round(savingsGrowthRate * 100) / 100, // Round to 2 decimal places
+      recentTransactions,
+      budgetProgress: budgetCategories.map(cat => ({
+        category: cat.name,
+        spent: cat.spent,
+        budget: cat.allocated,
+        percentage: cat.utilization
+      })),
+      goals: goals.slice(0, 3),
+      insights: insights.slice(0, 3)
     };
     
     return NextResponse.json({

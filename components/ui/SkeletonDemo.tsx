@@ -73,7 +73,7 @@ export function SkeletonDemo() {
       <div className="bg-neutral-light-gray p-4 rounded-lg">
         <h3 className="text-lg font-semibold mb-2">Accessibility Features</h3>
         <ul className="text-sm text-neutral-gray space-y-1">
-          <li>• All skeleton elements include <code>aria-hidden="true"</code></li>
+          <li>• All skeleton elements include <code>aria-hidden=&quot;true&quot;</code></li>
           <li>• Interactive elements include <code>tabIndex={-1}</code></li>
           <li>• Enhanced wave animation with wide gradient background</li>
           <li>• Proper background-size (200% width) for smooth animation</li>

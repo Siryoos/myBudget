@@ -261,4 +261,10 @@ export function validateFileSize(size: number, maxSize: number): boolean {
 }
 
 // Export types for use in other modules
-export type { CloudStorageConfig, PresignedUrlOptions, PresignedUrlResponse, UploadCompleteData };
+// Export types (avoiding conflicts with existing declarations)
+export type { 
+  CloudStorageConfig as CloudStorageConfigType, 
+  PresignedUrlOptions as PresignedUrlOptionsType, 
+  PresignedUrlResponse as PresignedUrlResponseType, 
+  UploadCompleteData as UploadCompleteDataType 
+};

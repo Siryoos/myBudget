@@ -2,7 +2,8 @@
 
 import { useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { errorReporter, ErrorBoundary } from '@/lib/error-reporting';
+import React from 'react';
+import { errorReporter } from '@/lib/error-reporting';
 
 interface ErrorProviderProps {
   children: React.ReactNode;
@@ -49,4 +50,57 @@ export function ErrorProvider({
   }, []);
   
   return <ErrorBoundary>{children}</ErrorBoundary>;
+}
+
+// Error Boundary component
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error?: Error;
+}
+
+class ErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  ErrorBoundaryState
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    errorReporter.captureException(error, {
+      extra: {
+        componentStack: errorInfo.componentStack,
+      },
+    });
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <div className="max-w-md mx-auto text-center">
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              Something went wrong
+            </h2>
+            <p className="text-gray-600 mb-4">
+              We've been notified about this error and will fix it soon.
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+            >
+              Reload page
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
 }

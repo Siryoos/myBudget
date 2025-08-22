@@ -2,7 +2,7 @@
 export interface Transaction {
   id: string
   amount: number
-  description: string
+  description?: string
   category: string
   date: Date
   type: 'income' | 'expense'
@@ -29,8 +29,8 @@ export interface Budget {
   totalIncome: number
   categories: BudgetCategory[]
   period: 'weekly' | 'monthly' | 'yearly'
-  startDate: Date
-  endDate: Date
+  startDate: Date | string
+  endDate: Date | string
 }
 
 export type BudgetMethod = '50-30-20' | 'pay-yourself-first' | 'envelope' | 'zero-based' | 'kakeibo'
@@ -41,8 +41,8 @@ export interface SavingsGoal {
   description?: string
   targetAmount: number
   currentAmount: number
-  targetDate: Date
-  category: GoalCategory
+  targetDate: Date | string
+  category: GoalCategory | string
   priority: 'low' | 'medium' | 'high'
   isActive: boolean
   milestones?: Milestone[]
@@ -52,8 +52,10 @@ export interface SavingsGoal {
   framingType?: 'achievement' | 'loss-avoidance'
   lossAvoidanceDescription?: string
   achievementDescription?: string
-  createdAt?: Date
-  updatedAt?: Date
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  icon?: string
+  color?: string
 }
 
 export type GoalCategory = 'emergency' | 'vacation' | 'home' | 'car' | 'wedding' | 'education' | 'retirement' | 'custom'
@@ -87,17 +89,18 @@ export interface Achievement {
   id: string
   name: string
   description: string
-  category: AchievementCategory
+  category: AchievementCategory | string
   icon: string
   requirement: string | AchievementRequirement
   points: number
   isUnlocked: boolean
-  unlockedDate?: Date
+  unlockedDate?: Date | string
+  unlockedAt?: Date | string
   progress?: number
   maxProgress?: number
 }
 
-export type AchievementCategory = 'savings-streak' | 'goal-achievement' | 'financial-education' | 'milestone' | 'social'
+export type AchievementCategory = 'savings-streak' | 'goal-achievement' | 'financial-education' | 'milestone' | 'social' | 'streak'
 
 export interface AchievementRequirement {
   type: 'consecutive-days' | 'total-amount' | 'goal-completion' | 'education-modules' | 'custom'
@@ -133,6 +136,7 @@ export interface QuickSaveData {
   timestamp: Date
   source: 'manual' | 'round-up' | 'automated'
   socialProofMessage?: string
+  isAboveAverage?: boolean
 }
 
 export interface GoalPhoto {
@@ -244,7 +248,7 @@ export interface FinancialInsight {
   isRead: boolean
 }
 
-export type InsightType = 'spending-pattern' | 'saving-opportunity' | 'budget-alert' | 'goal-progress' | 'market-trend'
+export type InsightType = 'spending-pattern' | 'saving-opportunity' | 'budget-alert' | 'goal-progress' | 'market-trend' | 'budget-warning'
 
 export interface InsightAction {
   id: string
@@ -285,7 +289,7 @@ export interface CardProps extends ComponentProps {
 
 export interface ButtonProps extends ComponentProps {
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost'
-  size?: 'sm' | 'md' | 'lg'
+  size?: 'sm' | 'md' | 'lg' | 'small'
   loading?: boolean
   disabled?: boolean
   onClick?: () => void
@@ -458,4 +462,51 @@ export interface MilestoneCelebration {
   value: number
   animation: ProgressAnimation
   message: string
+}
+
+// Export additional types that are missing
+export interface User {
+  id: string
+  email: string
+  name: string
+  role: UserRole
+  dateOfBirth?: string
+  monthlyIncome?: number
+  currency?: string
+  language?: string
+  profilePhotoUrl?: string
+  emailVerified?: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export type UserRole = 'user' | 'admin' | 'premium'
+
+export interface Notification {
+  id: string
+  userId: string
+  type: 'error' | 'insight' | 'budget_alert' | 'success' | 'warning' | 'info'
+  title: string
+  message: string
+  isRead: boolean
+  createdAt: string
+  data?: Record<string, any>
+}
+
+export interface DashboardData {
+  totalSavings: number
+  monthlyBudget: number
+  currentMonthSavings: number
+  previousMonthSavings: number
+  annualSavingsGoal: number
+  savingsGrowthRate: number
+  recentTransactions: Transaction[]
+  budgetProgress: {
+    category: string
+    spent: number
+    budget: number
+    percentage: number
+  }[]
+  goals: SavingsGoal[]
+  insights: FinancialInsight[]
 }

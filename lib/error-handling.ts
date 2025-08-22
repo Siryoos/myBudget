@@ -45,6 +45,28 @@ export class NetworkError extends Error {
   }
 }
 
+export class DatabaseError extends Error {
+  constructor(
+    message: string = 'Database operation failed',
+    public operation?: string,
+    public table?: string
+  ) {
+    super(message);
+    this.name = 'DatabaseError';
+  }
+}
+
+export class RateLimitError extends Error {
+  constructor(
+    message: string = 'Rate limit exceeded',
+    public retryAfter?: number,
+    public limit?: number
+  ) {
+    super(message);
+    this.name = 'RateLimitError';
+  }
+}
+
 // Error handler type
 export type ErrorHandler = (error: Error) => void | Promise<void>;
 
@@ -58,7 +80,22 @@ export const ERROR_MESSAGES = {
   NOT_FOUND: 'The requested resource was not found.',
   SERVER_ERROR: 'Server error. Please try again later.',
   RATE_LIMIT: 'Too many requests. Please slow down.',
+  DATABASE_ERROR: 'Database operation failed. Please try again.',
+  INVALID_TOKEN: 'Invalid or expired session. Please sign in again.',
 } as const;
+
+// Standardized error response format
+export interface ErrorResponse {
+  success: false;
+  error: {
+    message: string;
+    code: string;
+    status: number;
+    details?: any;
+    timestamp: string;
+    requestId?: string;
+  };
+}
 
 // Error handling utilities
 export function getErrorMessage(error: unknown): string {
@@ -99,6 +136,15 @@ export function getErrorMessage(error: unknown): string {
     return error.message || ERROR_MESSAGES.VALIDATION;
   }
   
+  if (error instanceof DatabaseError) {
+    return ERROR_MESSAGES.DATABASE_ERROR;
+  }
+  
+  if (error instanceof RateLimitError) {
+    return ERROR_MESSAGES.RATE_LIMIT;
+  }
+  
+  // Handle unknown errors
   if (error instanceof Error) {
     return error.message || ERROR_MESSAGES.GENERIC;
   }
@@ -106,116 +152,156 @@ export function getErrorMessage(error: unknown): string {
   return ERROR_MESSAGES.GENERIC;
 }
 
-// Error recovery strategies
-export interface ErrorRecoveryStrategy {
-  canRecover: (error: Error) => boolean;
-  recover: (error: Error) => Promise<void>;
-}
-
-export const defaultRecoveryStrategies: ErrorRecoveryStrategy[] = [
-  {
-    canRecover: (error) => error instanceof AuthenticationError,
-    recover: async () => {
-      // Redirect to login
-      if (typeof window !== 'undefined') {
-        window.location.href = '/login';
-      }
-    },
-  },
-  {
-    canRecover: (error) => error instanceof NetworkError,
-    recover: async () => {
-      // Wait and retry
-      await new Promise(resolve => setTimeout(resolve, 3000));
-    },
-  },
-];
-
-// Global error handler
-export async function handleError(
-  error: unknown,
-  context?: {
-    component?: string;
-    action?: string;
-    userId?: string;
-    [key: string]: any;
-  },
-  strategies: ErrorRecoveryStrategy[] = defaultRecoveryStrategies
-): Promise<{ recovered: boolean; message: string }> {
-  // Log error
-  errorReporter.captureError(
-    error instanceof Error ? error : new Error(String(error)),
-    context
-  );
-  
-  // Get user-friendly message
-  const message = getErrorMessage(error);
-  
-  // Try recovery strategies
-  if (error instanceof Error) {
-    for (const strategy of strategies) {
-      if (strategy.canRecover(error)) {
-        try {
-          await strategy.recover(error);
-          return { recovered: true, message };
-        } catch (recoveryError) {
-          errorReporter.captureError(
-            recoveryError instanceof Error ? recoveryError : new Error(String(recoveryError)),
-            { ...context, recoveryAttempt: true }
-          );
-        }
-      }
-    }
+export function getErrorCode(error: unknown): string {
+  if (error instanceof ApiError) {
+    return error.code || `HTTP_${error.status}`;
   }
   
-  return { recovered: false, message };
-}
-
-// React error boundary fallback component
-export interface ErrorFallbackProps {
-  error: Error;
-  resetError: () => void;
-  context?: any;
-}
-
-export function ErrorFallback({ error, resetError, context }: ErrorFallbackProps) {
-  const message = getErrorMessage(error);
+  if (error instanceof ValidationError) {
+    return 'VALIDATION_ERROR';
+  }
   
-  return (
-    <div className="min-h-[400px] flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-6 text-center">
-        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-accent-coral-red/10 flex items-center justify-center">
-          <svg className="w-8 h-8 text-accent-coral-red" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        </div>
-        
-        <h2 className="text-xl font-semibold text-neutral-charcoal mb-2">
-          Oops! Something went wrong
-        </h2>
-        
-        <p className="text-neutral-gray mb-6">{message}</p>
-        
-        <div className="space-y-3">
-          <button
-            onClick={resetError}
-            className="w-full px-4 py-2 bg-primary-trust-blue text-white rounded-lg hover:bg-primary-trust-blue/90 transition-colors"
-          >
-            Try Again
-          </button>
-          
-          {context?.showDetails && (
-            <details className="text-left">
-              <summary className="cursor-pointer text-sm text-neutral-gray hover:text-neutral-charcoal">
-                Show error details
-              </summary>
-              <pre className="mt-2 p-3 bg-neutral-light-gray rounded text-xs overflow-auto">
-                {error.stack || error.message}
-              </pre>
-            </details>
-          )}
-        </div>
-      </div>
-    </div>
+  if (error instanceof AuthenticationError) {
+    return 'AUTHENTICATION_ERROR';
+  }
+  
+  if (error instanceof AuthorizationError) {
+    return 'AUTHORIZATION_ERROR';
+  }
+  
+  if (error instanceof NetworkError) {
+    return 'NETWORK_ERROR';
+  }
+  
+  if (error instanceof DatabaseError) {
+    return 'DATABASE_ERROR';
+  }
+  
+  if (error instanceof RateLimitError) {
+    return 'RATE_LIMIT_ERROR';
+  }
+  
+  return 'UNKNOWN_ERROR';
+}
+
+export function getErrorStatus(error: unknown): number {
+  if (error instanceof ApiError) {
+    return error.status;
+  }
+  
+  if (error instanceof ValidationError) {
+    return 400;
+  }
+  
+  if (error instanceof AuthenticationError) {
+    return 401;
+  }
+  
+  if (error instanceof AuthorizationError) {
+    return 403;
+  }
+  
+  if (error instanceof NetworkError) {
+    return 503;
+  }
+  
+  if (error instanceof DatabaseError) {
+    return 500;
+  }
+  
+  if (error instanceof RateLimitError) {
+    return 429;
+  }
+  
+  return 500;
+}
+
+// Create standardized error response
+export function createErrorResponse(
+  error: unknown,
+  requestId?: string
+): ErrorResponse {
+  const message = getErrorMessage(error);
+  const code = getErrorCode(error);
+  const status = getErrorStatus(error);
+  
+  return {
+    success: false,
+    error: {
+      message,
+      code,
+      status,
+      details: error instanceof Error ? error.stack : undefined,
+      timestamp: new Date().toISOString(),
+      requestId,
+    },
+  };
+}
+
+// Error logging and reporting
+export async function handleError(
+  error: unknown,
+  context?: string,
+  requestId?: string
+): Promise<{ recovered: boolean; message: string }> {
+  const errorResponse = createErrorResponse(error, requestId);
+  
+  // Log error
+  console.error(`[${context || 'UNKNOWN'}] Error:`, {
+    ...errorResponse.error,
+    context,
+    requestId,
+  });
+  
+  // Report to error reporting service if available
+  try {
+    if (errorReporter && errorReporter.captureException) {
+      await errorReporter.captureException(error, {
+        tags: { context, requestId },
+        extra: { errorResponse },
+      });
+    }
+  } catch (reportingError) {
+    console.error('Failed to report error:', reportingError);
+  }
+  
+  return {
+    recovered: false,
+    message: errorResponse.error.message
+  };
+}
+
+// Validation error helpers
+export function createValidationError(
+  field: string,
+  message: string,
+  value?: any
+): ValidationError {
+  return new ValidationError(message, field, value);
+}
+
+export function createFieldValidationErrors(
+  errors: Array<{ field: string; message: string; value?: any }>
+): ValidationError[] {
+  return errors.map(({ field, message, value }) =>
+    createValidationError(field, message, value)
   );
+}
+
+// Database error helpers
+export function createDatabaseError(
+  message: string,
+  operation?: string,
+  table?: string
+): DatabaseError {
+  return new DatabaseError(message, operation, table);
+}
+
+// Rate limit error helpers
+export function createRateLimitError(
+  message: string,
+  retryAfter?: number,
+  limit?: number
+): RateLimitError {
+  return new RateLimitError(message, retryAfter, limit);
 }

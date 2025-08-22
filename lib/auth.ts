@@ -4,6 +4,24 @@ import { query } from '@/lib/database';
 
 import type { JWTPayload } from '@/types/auth';
 
+// Runtime JWT secret validation
+const validateJWTSecretRuntime = (): void => {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error('JWT_SECRET environment variable is required but not set');
+  }
+  
+  // Validate that the secret is not the default example value
+  if (secret === 'your_super_secret_jwt_key_here_change_this_in_production') {
+    throw new Error('JWT_SECRET is set to the default example value. Please set a unique, secure secret before starting the application.');
+  }
+  
+  // Validate minimum secret length for security
+  if (secret.length < 32) {
+    throw new Error('JWT_SECRET must be at least 32 characters long for security. Current length: ' + secret.length);
+  }
+};
+
 export const hashPassword = async (password: string): Promise<string> => {
   const saltRounds = 12;
   return bcrypt.hash(password, saltRounds);
@@ -14,10 +32,10 @@ export const comparePassword = async (password: string, hash: string): Promise<b
 };
 
 export const generateToken = async (payload: Omit<JWTPayload, 'tokenVersion' | 'passwordChangedAt'>): Promise<string> => {
-  const secret = process.env.JWT_SECRET;
-  if (!secret) {
-    throw new Error('JWT_SECRET environment variable is required but not set');
-  }
+  // Validate JWT secret at runtime before token generation
+  validateJWTSecretRuntime();
+  
+  const secret = process.env.JWT_SECRET!;
   
   // Fetch current user data for token versioning
   const userResult = await query(
@@ -45,10 +63,10 @@ export const generateToken = async (payload: Omit<JWTPayload, 'tokenVersion' | '
 };
 
 export const verifyToken = async (token: string): Promise<JWTPayload> => {
-  const secret = process.env.JWT_SECRET;
-  if (!secret) {
-    throw new Error('JWT_SECRET environment variable is required but not set');
-  }
+  // Validate JWT secret at runtime before token verification
+  validateJWTSecretRuntime();
+  
+  const secret = process.env.JWT_SECRET!;
   
   try {
     const decoded = jwt.verify(token, secret, { algorithms: ['HS256'] }) as JWTPayload;
@@ -96,17 +114,5 @@ export const verifyToken = async (token: string): Promise<JWTPayload> => {
 
 // Validate JWT_SECRET on startup
 export const validateJWTSecret = (): void => {
-  if (!process.env.JWT_SECRET) {
-    throw new Error('JWT_SECRET environment variable is required but not set. Please set this environment variable before starting the application.');
-  }
-  
-  // Validate that the secret is not the default example value
-  if (process.env.JWT_SECRET === 'your_super_secret_jwt_key_here_change_this_in_production') {
-    throw new Error('JWT_SECRET is set to the default example value. Please set a unique, secure secret before starting the application.');
-  }
-  
-  // Validate minimum secret length for security
-  if (process.env.JWT_SECRET.length < 32) {
-    throw new Error('JWT_SECRET must be at least 32 characters long for security. Current length: ' + process.env.JWT_SECRET.length);
-  }
+  validateJWTSecretRuntime();
 };

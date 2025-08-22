@@ -178,7 +178,17 @@ describe('API Hooks', () => {
     });
 
     it('should use fallback data when API fails', async () => {
-      const fallbackData = [{ id: 'fallback', title: 'Fallback' }];
+      const fallbackData = [{ 
+        id: 'fallback', 
+        title: 'Fallback',
+        type: 'saving-opportunity' as const,
+        description: 'Test fallback',
+        impact: 'low' as const,
+        category: 'test',
+        actionable: true,
+        createdAt: new Date(),
+        isRead: false
+      }];
 
       (apiClient.getNotifications as jest.Mock).mockResolvedValue({
         success: false,

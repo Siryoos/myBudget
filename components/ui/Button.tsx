@@ -33,7 +33,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         className={cn(
           baseStyles,
           variants[variant],
-          sizes[size],
+          sizes[size === 'small' ? 'sm' : size],
           loading && 'cursor-wait',
           className
         )}

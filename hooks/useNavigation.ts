@@ -20,7 +20,7 @@ export function useNavigation() {
     if (options?.replace) {
       router.replace(path, { scroll: options.scroll });
     } else {
-      router.push(path, { scroll: options.scroll });
+      router.push(path, { scroll: options?.scroll });
     }
   }, [router]);
   

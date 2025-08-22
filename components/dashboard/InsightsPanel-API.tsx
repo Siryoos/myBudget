@@ -44,65 +44,14 @@ export function InsightsPanel({
   
   // Generate dynamic tips and comparisons from dashboard data
   const savingTips = useMemo(() => {
-    if (!dashboardData?.analytics) return getMockSavingTips(t)
-    
-    const tips = []
-    const { topCategories, monthlyAverage } = dashboardData.analytics
-    
-    // Generate tips based on spending patterns
-    if (topCategories?.[0]?.percentage > 30) {
-      tips.push({
-        id: 'cat-1',
-        title: t('savingTips.reduceCategory', { 
-          category: topCategories[0].category,
-          defaultValue: `Reduce ${topCategories[0].category} Spending`
-        }),
-        description: t('savingTips.categoryHighSpending', { 
-          percentage: topCategories[0].percentage,
-          defaultValue: `${topCategories[0].percentage}% of your budget goes to ${topCategories[0].category}`
-        }),
-        icon: '📊',
-        difficulty: t('difficulty.medium', { defaultValue: 'Medium' })
-      })
-    }
-    
-    if (monthlyAverage && monthlyAverage < 500) {
-      tips.push({
-        id: 'save-more',
-        title: t('savingTips.increaseSavings', { defaultValue: 'Boost Your Savings' }),
-        description: t('savingTips.lowSavingsRate', { 
-          defaultValue: 'Try the 52-week challenge to build momentum'
-        }),
-        icon: '💰',
-        difficulty: t('difficulty.easy', { defaultValue: 'Easy' })
-      })
-    }
-    
-    return tips.length > 0 ? tips : getMockSavingTips(t)
-  }, [dashboardData, t])
+    // Analytics not available in current DashboardData, use mock data
+    return getMockSavingTips(t)
+  }, [t])
   
   const peerComparisons = useMemo(() => {
-    if (!dashboardData?.trends) return getMockPeerComparisons(t)
-    
-    const { savingsRate, budgetAdherence } = dashboardData.trends
-    
-    return [
-      {
-        metric: t('comparisons.savingsRate', { defaultValue: 'Savings Rate' }),
-        userValue: savingsRate?.current || 0,
-        peerAverage: 15, // This would come from backend
-        unit: '%',
-        better: (savingsRate?.current || 0) > 15
-      },
-      {
-        metric: t('comparisons.budgetAdherence', { defaultValue: 'Budget Adherence' }),
-        userValue: budgetAdherence?.current || 0,
-        peerAverage: 78, // This would come from backend
-        unit: '%',
-        better: (budgetAdherence?.current || 0) > 78
-      }
-    ]
-  }, [dashboardData, t])
+    // Trends not available in current DashboardData, use mock data
+    return getMockPeerComparisons(t)
+  }, [t])
   
   const handleInsightAction = useCallback(async (action: any) => {
     switch (action.type) {

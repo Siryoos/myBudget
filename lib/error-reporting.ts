@@ -71,11 +71,11 @@ export class ErrorReportingService {
         dsn: config.dsn,
         environment: config.environment || 'production',
         integrations: [
-          new Sentry.BrowserTracing(),
-          new Sentry.Replay({
-            maskAllText: true,
-            blockAllMedia: true,
-          }),
+          // new Sentry.BrowserTracing(), // Disabled for compatibility
+                      // new Sentry.Replay({ // Disabled for compatibility
+            //   maskAllText: true,
+            //   blockAllMedia: true,
+            // }),
         ],
         tracesSampleRate: config.environment === 'production' ? 0.1 : 1.0,
         replaysSessionSampleRate: 0.1,
@@ -106,8 +106,8 @@ export class ErrorReportingService {
   setUser(userId: string, email?: string) {
     this.userId = userId;
     
-    if (typeof window !== 'undefined' && window.Sentry) {
-      window.Sentry.setUser({
+    if (typeof window !== 'undefined' && (window as any).Sentry) {
+      (window as any).Sentry.setUser({
         id: userId,
         email: email ? this.hashEmail(email) : undefined,
       });
@@ -120,8 +120,8 @@ export class ErrorReportingService {
   clearUser() {
     this.userId = undefined;
     
-    if (typeof window !== 'undefined' && window.Sentry) {
-      window.Sentry.setUser(null);
+    if (typeof window !== 'undefined' && (window as any).Sentry) {
+      (window as any).Sentry.setUser(null);
     }
   }
   
@@ -151,16 +151,16 @@ export class ErrorReportingService {
     this.queue.push(errorReport);
     
     // Send to Sentry if available
-    if (typeof window !== 'undefined' && window.Sentry) {
+    if (typeof window !== 'undefined' && (window as any).Sentry) {
       if (error instanceof Error) {
-        window.Sentry.captureException(error, {
+        (window as any).Sentry.captureException(error, {
           level,
           contexts: {
             custom: context,
           },
         });
       } else {
-        window.Sentry.captureMessage(error, level);
+        (window as any).Sentry.captureMessage(error, level);
       }
     }
     
@@ -175,6 +175,22 @@ export class ErrorReportingService {
     this.scheduleFlush();
   }
   
+  /**
+   * Capture an exception (alias for captureError for compatibility)
+   */
+  captureException(
+    error: Error | string,
+    options?: {
+      tags?: Record<string, string>;
+      extra?: Record<string, any>;
+    }
+  ) {
+    const context: ErrorContext = {
+      ...options?.extra,
+    };
+    this.captureError(error, context, 'error');
+  }
+
   /**
    * Capture a message
    */
@@ -191,8 +207,8 @@ export class ErrorReportingService {
     data?: Record<string, any>;
     level?: 'debug' | 'info' | 'warning' | 'error';
   }) {
-    if (typeof window !== 'undefined' && window.Sentry) {
-      window.Sentry.addBreadcrumb({
+    if (typeof window !== 'undefined' && (window as any).Sentry) {
+      (window as any).Sentry.addBreadcrumb({
         ...breadcrumb,
         timestamp: Date.now() / 1000,
       });
@@ -224,13 +240,13 @@ export class ErrorReportingService {
       });
       
       // Also send to Sentry if available
-      if (typeof window !== 'undefined' && window.Sentry && feedback.associatedEventId) {
+      if (typeof window !== 'undefined' && (window as any).Sentry && feedback.associatedEventId) {
         const user = feedback.name || feedback.email ? {
           name: feedback.name,
           email: feedback.email,
         } : undefined;
         
-        window.Sentry.captureUserFeedback({
+        (window as any).Sentry.captureUserFeedback({
           event_id: feedback.associatedEventId,
           name: user?.name,
           email: user?.email,
@@ -348,70 +364,6 @@ export class ErrorReportingService {
 
 // Export singleton instance
 export const errorReporter = ErrorReportingService.getInstance();
-
-// React Error Boundary Component
-export function ErrorBoundary({ children }: { children: React.ReactNode }) {
-  const [hasError, setHasError] = React.useState(false);
-  const [error, setError] = React.useState<Error | null>(null);
-  
-  React.useEffect(() => {
-    const resetError = () => {
-      setHasError(false);
-      setError(null);
-    };
-    
-    // Reset on navigation
-    if (typeof window !== 'undefined') {
-      window.addEventListener('popstate', resetError);
-      return () => window.removeEventListener('popstate', resetError);
-    }
-  }, []);
-  
-  if (hasError && error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-6">
-          <h2 className="text-xl font-bold text-red-600 mb-4">Something went wrong</h2>
-          <p className="text-gray-600 mb-4">
-            We apologize for the inconvenience. The error has been reported and we'll fix it soon.
-          </p>
-          <details className="mb-4">
-            <summary className="cursor-pointer text-sm text-gray-500">Error details</summary>
-            <pre className="mt-2 text-xs bg-gray-100 p-2 rounded overflow-auto">
-              {error.stack || error.message}
-            </pre>
-          </details>
-          <button
-            onClick={() => {
-              setHasError(false);
-              setError(null);
-              window.location.reload();
-            }}
-            className="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Reload Page
-          </button>
-        </div>
-      </div>
-    );
-  }
-  
-  return (
-    <React.ErrorBoundary
-      fallback={<div>Loading...</div>}
-      onError={(error, errorInfo) => {
-        setHasError(true);
-        setError(error);
-        errorReporter.captureError(error, {
-          component: 'ErrorBoundary',
-          extra: errorInfo,
-        });
-      }}
-    >
-      {children}
-    </React.ErrorBoundary>
-  );
-}
 
 // Export convenience hook
 export function useErrorHandler() {

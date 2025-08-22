@@ -219,7 +219,7 @@ export function GoalProgressTracker({
   const renderGoalCard = (goal: SavingsGoal) => {
     const progress = (goal.currentAmount / goal.targetAmount) * 100
     const isCompleted = progress >= 100
-    const timeRemaining = goal.targetDate.getTime() - Date.now()
+    const timeRemaining = (goal.targetDate instanceof Date ? goal.targetDate : new Date(goal.targetDate)).getTime() - Date.now()
     const monthsRemaining = Math.ceil(timeRemaining / (30 * 24 * 60 * 60 * 1000))
 
     return (

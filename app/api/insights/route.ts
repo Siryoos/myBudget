@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { query } from '@/lib/database';
 import { requireAuth } from '@/lib/auth-middleware';
 import type { FinancialInsight, Notification } from '@/types';
+import type { AuthenticatedRequest } from '@/types/auth';
 
 // Validation schema for query parameters
 const insightsQuerySchema = z.object({
@@ -14,9 +15,9 @@ const insightsQuerySchema = z.object({
   offset: z.coerce.number().min(0).optional().default(0),
 });
 
-export async function GET(request: NextRequest) {
+export const GET = requireAuth(async (request: AuthenticatedRequest) => {
   try {
-    const user = await requireAuth(request);
+    const user = request.user;
     const { searchParams } = new URL(request.url);
     
     // Parse and validate query parameters
@@ -32,7 +33,7 @@ export async function GET(request: NextRequest) {
       WHERE user_id = $1
     `;
     
-    const params: any[] = [user.id];
+    const params: (string | boolean | number)[] = [user.id];
     let paramIndex = 2;
     
     // Add type filter
@@ -101,7 +102,7 @@ export async function GET(request: NextRequest) {
     }));
     
     // Get total count for pagination
-    const countSql = `
+    let countSql = `
       SELECT COUNT(*) as total
       FROM notifications 
       WHERE user_id = $1
@@ -126,7 +127,7 @@ export async function GET(request: NextRequest) {
     
     if (queryParams.isRead !== undefined) {
       countSql += ` AND is_read = $${countParams.length + 1}`;
-      countParams.push(queryParams.isRead);
+      countParams.push(queryParams.isRead.toString());
     }
     
     const countResult = await query(countSql, countParams);
@@ -167,11 +168,11 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
-export async function POST(request: NextRequest) {
+export const POST = requireAuth(async (request: AuthenticatedRequest) => {
   try {
-    const user = await requireAuth(request);
+    const user = request.user;
     const body = await request.json();
     
     // Validate request body
@@ -182,7 +183,7 @@ export async function POST(request: NextRequest) {
       category: z.string().max(100, 'Category too long').optional(),
       priority: z.enum(['low', 'medium', 'high']).default('medium'),
       actionUrl: z.string().url('Invalid action URL').optional(),
-      actionData: z.record(z.any()).optional(),
+      actionData: z.record(z.unknown()).optional(),
     });
     
     const validatedData = createInsightSchema.parse(body);
@@ -245,4 +246,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

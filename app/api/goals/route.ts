@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { query, withTransaction } from '@/lib/database';
 import { requireAuth } from '@/lib/auth-middleware';
 import type { SavingsGoal, GoalCategory } from '@/types';
+import type { AuthenticatedRequest } from '@/types/auth';
 
 // Validation schemas
 const createGoalSchema = z.object({
@@ -28,9 +29,9 @@ const goalQuerySchema = z.object({
   isActive: z.boolean().optional(),
 });
 
-export async function GET(request: NextRequest) {
+export const GET = requireAuth(async (request: AuthenticatedRequest) => {
   try {
-    const user = await requireAuth(request);
+    const user = request.user;
     const { searchParams } = new URL(request.url);
     
     // Parse and validate query parameters
@@ -48,7 +49,7 @@ export async function GET(request: NextRequest) {
       WHERE user_id = $1
     `;
     
-    const params: any[] = [user.id];
+    const params: (string | boolean | number)[] = [user.id];
     let paramIndex = 2;
     
     if (queryParams.priority) {
@@ -103,11 +104,11 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
-export async function POST(request: NextRequest) {
+export const POST = requireAuth(async (request: AuthenticatedRequest) => {
   try {
-    const user = await requireAuth(request);
+    const user = request.user;
     const body = await request.json();
     
     // Validate request body
@@ -153,7 +154,7 @@ export async function POST(request: NextRequest) {
       // Create default milestones
       const milestoneSql = `
         INSERT INTO milestones (goal_id, amount, description, is_completed)
-        VALUES ($1, $2, $3, false), ($1, $4, $5, false), ($1, $6, $7, false), ($1, $8, $8, false)
+        VALUES ($1, $2, $3, false), ($1, $4, $5, false), ($1, $6, $7, false), ($1, $8, $9, false)
       `;
       
       const milestoneValues = [
@@ -207,4 +208,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

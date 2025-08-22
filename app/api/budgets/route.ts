@@ -242,7 +242,7 @@ export const PUT = requireAuth(async (request: AuthenticatedRequest) => {
         }
         
         // Delete categories that are no longer in the update
-        const remainingIds = Object.values(existingByName).map(cat => cat.id);
+        const remainingIds = Object.values(existingByName).map((cat: any) => cat.id);
         if (remainingIds.length > 0) {
           await query(
             `DELETE FROM budget_categories WHERE id = ANY($1::uuid[])`,

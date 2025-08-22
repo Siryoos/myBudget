@@ -136,7 +136,7 @@ export function TransactionTable({
   const filteredTransactions = transactions
     .filter(transaction => {
       const matchesSearch = searchQuery === '' || 
-        transaction.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (transaction.description?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
         transaction.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
         transaction.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
       
@@ -158,7 +158,7 @@ export function TransactionTable({
           comparison = Math.abs(a.amount) - Math.abs(b.amount)
           break
         case 'description':
-          comparison = a.description.localeCompare(b.description)
+          comparison = (a.description || '').localeCompare(b.description || '')
           break
       }
       

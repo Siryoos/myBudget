@@ -113,14 +113,8 @@ export function ProfileManager({
             monthlyIncome: profileData.monthlyIncome,
           }
           
-          // Save additional financial data to user settings
-          await apiClient.updateSettings({
-            preferences: {
-              riskTolerance: profileData.riskTolerance,
-              savingsRate: profileData.savingsRate,
-              dependents: profileData.dependents,
-            }
-          })
+          // Note: savingsRate and dependents are part of FinancialProfile, not UserPreferences
+          // These would need to be saved to a separate financial profile endpoint
           break
           
         case 'preferences':
@@ -132,7 +126,7 @@ export function ProfileManager({
           // Save timezone to settings
           await apiClient.updateSettings({
             preferences: {
-              timezone: profileData.timezone,
+              // timezone: profileData.timezone, // Not supported in current preferences schema
             }
           })
           break

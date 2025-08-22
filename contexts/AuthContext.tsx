@@ -134,7 +134,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const updateProfile = async (data: Partial<User>) => {
     try {
-      const response = await api.auth.updateProfile(data);
+      const response = await api.auth.updateProfile({
+        ...data,
+        role: data.role as any // Type compatibility fix
+      });
       if (!response.success) {
         throw new Error(response.error || 'Profile update failed');
       }
@@ -170,7 +173,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // RBAC helper functions
   const hasPermission = useCallback((permission: Permission): boolean => {
     if (!user) return false;
-    const userPermissions = rolePermissions[user.role] || [];
+    const userPermissions = (rolePermissions as any)[user.role] || [];
     return userPermissions.includes(permission);
   }, [user]);
 

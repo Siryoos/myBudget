@@ -72,11 +72,15 @@ export class UploadService {
       })
     });
     
-    if (!response.success) {
-      throw new Error(response.error || 'Failed to get upload URL');
+        if (!response || typeof response !== 'object' || !('success' in response)) {
+      throw new Error('Invalid response format');
     }
     
-    return response.data;
+    if (!response.success) {
+      throw new Error((response as any).error || 'Failed to get upload URL');
+    }
+
+    return (response as any).data;
   }
   
   /**
@@ -238,8 +242,12 @@ export class UploadService {
       
       // Check if the backend successfully processed the upload completion
       // This prevents callers from assuming success when the backend actually failed
+      if (!completeResponse || typeof completeResponse !== 'object' || !('success' in completeResponse)) {
+        throw new Error('Invalid response format');
+      }
+      
       if (!completeResponse.success) {
-        const errorMessage = completeResponse.error || 'Backend failed to complete upload';
+        const errorMessage = (completeResponse as any).error || 'Backend failed to complete upload';
         throw new Error(`Upload completion failed: ${errorMessage}`);
       }
       
@@ -265,8 +273,12 @@ export class UploadService {
       body: JSON.stringify({ publicId })
     });
     
+    if (!response || typeof response !== 'object' || !('success' in response)) {
+      throw new Error('Invalid response format');
+    }
+    
     if (!response.success) {
-      throw new Error(response.error || 'Failed to delete file');
+      throw new Error((response as any).error || 'Failed to delete file');
     }
   }
 }

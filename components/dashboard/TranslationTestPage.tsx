@@ -54,10 +54,10 @@ export function TranslationTestPage() {
           <div className="flex flex-wrap gap-4 items-center">
             <div>
               <p className="text-sm text-neutral-gray mb-2">
-                {t('common:app.greeting.morning', { defaultValue: 'Current Language' })}: <strong>{locale}</strong>
+                Current Language: <strong>{locale}</strong>
               </p>
               <p className="text-sm text-neutral-gray">
-                {t('common:status.loading', { defaultValue: 'Force Update Count' })}: <strong>{forceUpdate}</strong>
+                Force Update Count: <strong>{forceUpdate}</strong>
               </p>
             </div>
             

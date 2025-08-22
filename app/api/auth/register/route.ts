@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     const user = result.rows[0];
     // Ensure the returned user object has the normalized email
     const userWithNormalizedEmail = { ...user, email: normalizedEmail };
-    const token = await generateToken({ userId: user.id, email: normalizedEmail });
+    const token = await generateToken({ id: user.id, userId: user.id, email: normalizedEmail });
 
     return NextResponse.json({
       success: true,

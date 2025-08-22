@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getStorageProvider, validateFileType, validateFileSize } from '@/lib/cloud-storage';
-import { validateUser } from '@/lib/auth-utils';
+import { verifyToken } from '@/lib/auth';
 
 // File upload limits and allowed types
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -9,7 +9,16 @@ const ALLOWED_FILE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'
 export async function POST(request: NextRequest) {
   try {
     // Validate user authentication
-    const user = await validateUser(request);
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    const token = authHeader.substring(7);
+    const user = await verifyToken(token);
     if (!user) {
       return NextResponse.json(
         { error: 'Unauthorized' },

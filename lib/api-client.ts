@@ -8,7 +8,8 @@ import {
   FinancialInsight,
   ApiResponse
 } from '@/types';
-import type { DashboardData, Notification } from '@/types/api';
+import type { Notification } from '@/types/api';
+import type { DashboardData } from '@/types';
 
 interface RequestOptions {
   cache?: boolean;
@@ -153,7 +154,7 @@ export class ApiClient {
     return this.refreshPromise;
   }
 
-  private async request<T>(
+  public async request<T>(
     url: string,
     options: RequestInit = {},
     requestOptions: RequestOptions = {}

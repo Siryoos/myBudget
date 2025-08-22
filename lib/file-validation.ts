@@ -234,6 +234,8 @@ export class FileValidator {
   }
 }
 
+import { useState } from 'react';
+
 // React hook for file validation
 export function useFileValidation(type: 'images' | 'documents' = 'images') {
   const [validating, setValidating] = useState(false);

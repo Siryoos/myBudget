@@ -191,7 +191,10 @@ export const api = {
     }) {
       const response = await apiClient.getTransactions(params);
       if (response.success && response.data) {
-        response.data.transactions = z.array(transactionSchema).parse(response.data.transactions);
+        response.data.transactions = z.array(transactionSchema).parse(response.data.transactions.map(t => ({
+          ...t,
+          date: new Date(t.date)
+        })));
       }
       return response;
     },
@@ -199,7 +202,10 @@ export const api = {
     async get(id: string) {
       const response = await apiClient.getTransaction(id);
       if (response.success && response.data) {
-        response.data = transactionSchema.parse(response.data);
+        response.data = transactionSchema.parse({
+          ...response.data,
+          date: new Date(response.data.date)
+        });
       }
       return response;
     },
@@ -228,7 +234,10 @@ export const api = {
 
       const response = await apiClient.createTransaction(validatedData);
       if (response.success && response.data) {
-        response.data = transactionSchema.parse(response.data);
+        response.data = transactionSchema.parse({
+          ...response.data,
+          date: new Date(response.data.date)
+        });
       }
       return response;
     },
@@ -236,7 +245,10 @@ export const api = {
     async update(id: string, data: Partial<Transaction>) {
       const response = await apiClient.updateTransaction(id, data);
       if (response.success && response.data) {
-        response.data = transactionSchema.parse(response.data);
+        response.data = transactionSchema.parse({
+          ...response.data,
+          date: new Date(response.data.date)
+        });
       }
       return response;
     },
@@ -249,7 +261,11 @@ export const api = {
     async list() {
       const response = await apiClient.getBudgets();
       if (response.success && response.data) {
-        response.data = z.array(budgetSchema).parse(response.data);
+        response.data = z.array(budgetSchema).parse(response.data.map(b => ({
+          ...b,
+          startDate: new Date(b.startDate),
+          endDate: new Date(b.endDate)
+        })));
       }
       return response;
     },
@@ -257,7 +273,11 @@ export const api = {
     async get(id: string) {
       const response = await apiClient.getBudget(id);
       if (response.success && response.data) {
-        response.data = budgetSchema.parse(response.data);
+        response.data = budgetSchema.parse({
+          ...response.data,
+          startDate: new Date(response.data.startDate),
+          endDate: new Date(response.data.endDate)
+        });
       }
       return response;
     },
@@ -306,7 +326,11 @@ export const api = {
     async list(priority?: 'low' | 'medium' | 'high') {
       const response = await apiClient.getGoals(priority);
       if (response.success && response.data) {
-        response.data = z.array(savingsGoalSchema).parse(response.data);
+        response.data = z.array(savingsGoalSchema).parse(response.data.map(goal => ({
+          ...goal,
+          targetDate: new Date(goal.targetDate),
+          isActive: goal.isActive ?? true
+        })));
       }
       return response;
     },
@@ -314,7 +338,11 @@ export const api = {
     async get(id: string) {
       const response = await apiClient.getGoal(id);
       if (response.success && response.data) {
-        response.data = savingsGoalSchema.parse(response.data);
+        response.data = savingsGoalSchema.parse({
+          ...response.data,
+          targetDate: new Date(response.data.targetDate),
+          isActive: response.data.isActive ?? true
+        });
       }
       return response;
     },
@@ -370,7 +398,10 @@ export const api = {
     async list(unreadOnly?: boolean) {
       const response = await apiClient.getNotifications(unreadOnly);
       if (response.success && response.data) {
-        response.data = z.array(notificationSchema).parse(response.data);
+        response.data = z.array(notificationSchema).parse(response.data.map(n => ({
+          ...n,
+          type: n.type as 'error' | 'insight' | 'budget_alert' | 'success' | 'warning' | 'info'
+        })));
       }
       return response;
     },
@@ -384,7 +415,11 @@ export const api = {
     async list() {
       const response = await apiClient.getAchievements();
       if (response.success && response.data) {
-        response.data = z.array(achievementSchema).parse(response.data);
+        response.data = z.array(achievementSchema).parse(response.data.map(a => ({
+          ...a,
+          requirement: a.requirement || 'Custom achievement',
+          isUnlocked: a.isUnlocked ?? false
+        })));
       }
       return response;
     }

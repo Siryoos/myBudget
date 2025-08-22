@@ -54,7 +54,9 @@ export async function GET(
     return NextResponse.json(translations, {
       headers: {
         'Content-Type': 'application/json',
-        'Cache-Control': 'public, max-age=3600, stale-while-revalidate=86400', // Cache for 1 hour, stale for 24 hours
+        'Cache-Control': 'no-cache, no-store, must-revalidate', // Disable caching for instant language switching
+        'Pragma': 'no-cache',
+        'Expires': '0',
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET',
         'Access-Control-Allow-Headers': 'Content-Type',

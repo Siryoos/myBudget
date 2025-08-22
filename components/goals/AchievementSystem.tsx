@@ -187,7 +187,7 @@ export function AchievementSystem({
     achievementId: achievement.id,
     userId: 'user-123',
     isUnlocked: achievement.isUnlocked,
-    unlockedDate: achievement.unlockedDate,
+    unlockedDate: achievement.unlockedDate instanceof Date ? achievement.unlockedDate : achievement.unlockedDate ? new Date(achievement.unlockedDate) : undefined,
     progress: achievement.progress || 0,
     maxProgress: achievement.maxProgress || 1,
   }))
@@ -371,7 +371,7 @@ export function AchievementSystem({
             {isUnlocked && achievement.unlockedDate && (
               <div className="text-sm text-green-600 mb-4">
                 <CheckCircleIcon className="w-4 h-4 inline mr-1" />
-                {t('achievements:unlocked', { defaultValue: 'Unlocked' })} {achievement.unlockedDate.toLocaleDateString()}
+                {t('achievements:unlocked', { defaultValue: 'Unlocked' })} {(achievement.unlockedDate instanceof Date ? achievement.unlockedDate : new Date(achievement.unlockedDate)).toLocaleDateString()}
               </div>
             )}
 

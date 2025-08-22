@@ -113,7 +113,7 @@ export function QuickSaveWidget({
       const activeGoal = goals.find(g => g.isActive)
       if (activeGoal) {
         const remaining = activeGoal.targetAmount - activeGoal.currentAmount
-        const monthlyTarget = remaining / Math.max(1, Math.ceil((activeGoal.targetDate.getTime() - Date.now()) / (30 * 24 * 60 * 60 * 1000)))
+        const monthlyTarget = remaining / Math.max(1, Math.ceil(((activeGoal.targetDate instanceof Date ? activeGoal.targetDate : new Date(activeGoal.targetDate)).getTime() - Date.now()) / (30 * 24 * 60 * 60 * 1000)))
         
         // Suggest amounts that help reach the goal
         const goalAlignedAmounts = [

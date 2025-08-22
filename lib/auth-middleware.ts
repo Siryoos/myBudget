@@ -35,10 +35,10 @@ export async function authenticateRequest(request: NextRequest): Promise<{
   }
 }
 
-export function withAuth(
-  handler: (request: AuthenticatedRequest) => Promise<Response>
-): (request: NextRequest) => Promise<Response> {
-  return async (request: NextRequest) => {
+export function withAuth<T = any>(
+  handler: (request: AuthenticatedRequest, context?: T) => Promise<Response>
+): (request: NextRequest, context?: T) => Promise<Response> {
+  return async (request: NextRequest, context?: T) => {
     const auth = await authenticateRequest(request);
     
     if (auth.error) {
@@ -49,15 +49,19 @@ export function withAuth(
     }
 
     // Create a properly typed request with user
-    const authenticatedRequest = request as AuthenticatedRequest;
+    const authenticatedRequest = request as unknown as AuthenticatedRequest;
     authenticatedRequest.user = auth.user!;
+    authenticatedRequest.userId = auth.user!.id;
     
     return handler(authenticatedRequest);
   };
 }
 
+// Alias for compatibility with existing code
+export const requireAuth = withAuth;
+
 // Direct authentication function that returns user or throws
-export async function requireAuth(request: NextRequest): Promise<AuthenticatedUser> {
+export async function getAuthenticatedUser(request: NextRequest): Promise<AuthenticatedUser> {
   const auth = await authenticateRequest(request);
   
   if (auth.error) {
@@ -76,7 +80,7 @@ export function optionalAuth<T extends NextRequest | AuthenticatedRequest>(
     
     if (auth.user) {
       // User is authenticated, create typed request
-      const authenticatedRequest = request as AuthenticatedRequest;
+      const authenticatedRequest = request as unknown as AuthenticatedRequest;
       authenticatedRequest.user = auth.user;
       return handler(authenticatedRequest as T);
     } else {

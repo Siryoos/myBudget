@@ -7,20 +7,13 @@ import { GoalWizard } from './GoalWizard'
 import { QuickSaveWidget } from './QuickSaveWidget'
 import { AchievementSystem } from './AchievementSystem'
 import { InsightsPanel } from './InsightsPanel'
-import type { SavingsGoal, Achievement } from '@/types'
+import type { SavingsGoal, Achievement, QuickSaveData } from '@/types'
 
 interface BehavioralDashboardProps {
   showAllFeatures?: boolean
   enableAbtesting?: boolean
   showSocialProof?: boolean
   enableNotifications?: boolean
-}
-
-interface QuickSaveData {
-  goalId: string
-  amount: number
-  timestamp: Date
-  isAboveAverage: boolean
 }
 
 export function BehavioralDashboard({
@@ -43,9 +36,11 @@ export function BehavioralDashboard({
       const saves = analytics.recentTransactions
         .filter((t: any) => t.category === 'savings')
         .map((t: any) => ({
+          id: t.id || `qs-${Date.now()}`,
           goalId: t.goalId || '1',
           amount: t.amount,
           timestamp: new Date(t.date),
+          source: 'manual' as const,
           isAboveAverage: t.amount > (analytics.averageSaveAmount || 50)
         }))
       setQuickSaveHistory(saves)
@@ -80,7 +75,8 @@ export function BehavioralDashboard({
           unlockedAt: new Date(),
           category: 'milestone',
           progress: 100,
-          isUnlocked: true
+          isUnlocked: true,
+          requirement: 'Create your first savings goal'
         })
         
         setTimeout(() => setRecentAchievement(null), 5000)
@@ -93,8 +89,10 @@ export function BehavioralDashboard({
   // Handle quick save
   const handleQuickSave = async (saveData: QuickSaveData) => {
     try {
-      // Add contribution to the goal
-      await addContribution(saveData.goalId, saveData.amount)
+      // Add contribution to the goal if goalId is provided
+      if (saveData.goalId) {
+        await addContribution(saveData.goalId, saveData.amount)
+      }
       
       // Update local history
       setQuickSaveHistory(prev => [saveData, ...prev].slice(0, 10))
@@ -112,7 +110,8 @@ export function BehavioralDashboard({
             unlockedAt: new Date(),
             category: 'streak',
             progress: 100,
-            isUnlocked: true
+            isUnlocked: true,
+            requirement: 'Save for 7 consecutive days'
           })
           
           setTimeout(() => setRecentAchievement(null), 5000)
@@ -247,7 +246,11 @@ export function BehavioralDashboard({
         {activeTab === 'insights' && (
           <InsightsPanel
             goals={goals}
-            quickSaveHistory={quickSaveHistory}
+            quickSaveHistory={quickSaveHistory.map(qs => ({
+              ...qs,
+              id: qs.id || `qs-${Date.now()}`,
+              source: qs.source || 'manual'
+            }))}
             showPeerComparison={showSocialProof}
           />
         )}
@@ -258,10 +261,10 @@ export function BehavioralDashboard({
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <GoalWizard
-              onGoalCreated={handleGoalCreated}
-              onClose={() => setShowGoalWizard(false)}
-              enableLossAversion={enableAbtesting}
-              showPhotoUpload={showAllFeatures}
+              onGoalCreated={(newGoal) => {
+                handleGoalCreated(newGoal);
+                setShowGoalWizard(false);
+              }}
             />
           </div>
         </div>

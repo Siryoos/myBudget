@@ -448,7 +448,7 @@ export function GoalWizard({
                   </label>
                   <input
                     type="date"
-                    value={formatDateInput(goalData.targetDate)}
+                    value={formatDateInput(goalData.targetDate instanceof Date ? goalData.targetDate : (goalData.targetDate ? new Date(goalData.targetDate) : new Date()))}
                     onChange={(e) => setGoalData(prev => ({ ...prev, targetDate: parseDateInput(e.target.value) }))}
                     className="w-full px-3 py-2 border border-neutral-gray/30 rounded-lg focus:ring-2 focus:ring-primary-trust-blue focus:border-transparent"
                     min={formatDateInput(new Date())}

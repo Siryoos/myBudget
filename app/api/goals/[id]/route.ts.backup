@@ -22,14 +22,7 @@ const updateGoalSchema = z.object({
   isActive: z.boolean().optional(),
 });
 
-export const GET = requireAuth(async (request: AuthenticatedRequest, context?: { params: { id: string } }) => {
-  if (!context?.params) {
-    return NextResponse.json(
-      { success: false, error: 'Missing goal ID' },
-      { status: 400 }
-    );
-  }
-  const { params } = context;
+export const GET = requireAuth(async (request: AuthenticatedRequest, { params }: { params: { id: string } }) => {
   try {
     const user = request.user;
     const { id } = params;
@@ -106,14 +99,7 @@ export const GET = requireAuth(async (request: AuthenticatedRequest, context?: {
   }
 });
 
-export const PUT = requireAuth(async (request: AuthenticatedRequest, context?: { params: { id: string } }) => {
-  if (!context?.params) {
-    return NextResponse.json(
-      { success: false, error: 'Missing goal ID' },
-      { status: 400 }
-    );
-  }
-  const { params } = context;
+export const PUT = requireAuth(async (request: AuthenticatedRequest, { params }: { params: { id: string } }) => {
   try {
     const user = request.user;
     const { id } = params;
@@ -145,7 +131,7 @@ export const PUT = requireAuth(async (request: AuthenticatedRequest, context?: {
     
     // Build update query dynamically
     const updateFields: string[] = [];
-    const updateValues: (string | number | boolean | null)[] = [];
+    const updateValues: any[] = [];
     let paramIndex = 1;
     
     Object.entries(validatedData).forEach(([key, value]) => {
@@ -223,16 +209,9 @@ export const PUT = requireAuth(async (request: AuthenticatedRequest, context?: {
       { status: 500 }
     );
   }
-});
+}
 
-export const DELETE = requireAuth(async (request: AuthenticatedRequest, context?: { params: { id: string } }) => {
-  if (!context?.params) {
-    return NextResponse.json(
-      { success: false, error: 'Missing goal ID' },
-      { status: 400 }
-    );
-  }
-  const { params } = context;
+export const DELETE = requireAuth(async (request: AuthenticatedRequest, { params }: { params: { id: string } }) => {
   try {
     const user = request.user;
     const { id } = params;
@@ -284,4 +263,4 @@ export const DELETE = requireAuth(async (request: AuthenticatedRequest, context?
       { status: 500 }
     );
   }
-});
+}

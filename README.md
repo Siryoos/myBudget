@@ -76,6 +76,39 @@ This project maintains comprehensive documentation organized in the `docs/` dire
 - **Internationalization**: Multi-language and regional customization support
 - **Modern UI**: Beautiful design system with smooth animations
 
+## 🔒 Security Setup (CRITICAL)
+
+**⚠️ IMPORTANT: Before running this application, you MUST configure security settings:**
+
+1. **Environment Configuration**
+   ```bash
+   # Copy the template and configure your secrets
+   cp env.template .env.local
+   
+   # Edit .env.local with your actual values
+   # NEVER commit .env.local to version control
+   ```
+
+2. **Required Security Variables**
+   - `JWT_SECRET`: Generate a secure random string (minimum 32 characters)
+   - `DB_PASSWORD`: Strong database password
+   - `REDIS_PASSWORD`: Strong Redis password
+   - `ALLOWED_ORIGINS`: Comma-separated list of allowed domains
+
+3. **Generate Secure Secrets**
+   ```bash
+   # Generate JWT secret
+   openssl rand -base64 32
+   
+   # Generate database password
+   openssl rand -base64 16
+   ```
+
+4. **Docker Security**
+   - In production, remove all port exposures from docker-compose.yml
+   - Use internal networking only
+   - Implement proper secrets management
+
 ## 🚀 Quick Start
 
 ### Prerequisites

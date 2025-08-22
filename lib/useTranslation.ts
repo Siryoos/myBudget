@@ -13,6 +13,13 @@ export function useTranslation(namespace?: string | string[]) {
     const namespaces = Array.isArray(namespace) ? namespace : [namespace || 'common'];
     const allLoaded = namespaces.every(ns => i18n.hasLoadedNamespace(ns));
     
+    console.log('🔍 useTranslation checkReady:', {
+      namespaces,
+      allLoaded,
+      isInitialized: i18n.isInitialized,
+      currentLanguage: i18n.language
+    });
+    
     if (allLoaded || i18n.isInitialized) {
       setIsReady(true);
     }
@@ -70,23 +77,20 @@ export function useTranslation(namespace?: string | string[]) {
   // Enhanced changeLanguage function that ensures all components are updated
   const enhancedChangeLanguage = useCallback(async (newLocale: string) => {
     try {
+      console.log(`useTranslation: Initiating language change to ${newLocale}`);
+      
       // Use the provider's changeLanguage function
       await changeLanguage(newLocale);
       
       // Force a re-render of all components using this hook
       setForceUpdate(prev => prev + 1);
       
-      // Clear any cached translations
-      if (i18n.isInitialized) {
-        const namespaces = Array.isArray(namespace) ? namespace : [namespace || 'common'];
-        namespaces.forEach(ns => {
-          i18n.removeResourceBundle(locale, ns);
-        });
-      }
+      console.log(`useTranslation: Language change to ${newLocale} completed`);
     } catch (error) {
-      console.error('Failed to change language:', error);
+      console.error('useTranslation: Failed to change language:', error);
+      throw error; // Re-throw for caller to handle
     }
-  }, [changeLanguage, locale, namespace]);
+  }, [changeLanguage]);
 
   return {
     ...translation,
