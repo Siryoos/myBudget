@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyBudget Infrastructure Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #fff;
+        }
+        .service-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .service-card {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .service-card h3 {
+            margin-top: 0;
+            color: #fff;
+        }
+        .service-card a {
+            color: #fff;
+            text-decoration: none;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 16px;
+            border-radius: 5px;
+            display: inline-block;
+            margin-top: 10px;
+            transition: background 0.3s;
+        }
+        .service-card a:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        .status {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .status.running {
+            background: #4CAF50;
+            color: white;
+        }
+        .status.stopped {
+            background: #f44336;
+            color: white;
+        }
+        .info-box {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        .next-steps {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        .next-steps h3 {
+            color: #fff;
+            margin-top: 0;
+        }
+        .next-steps ul {
+            color: #fff;
+        }
+        .next-steps li {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 MyBudget Infrastructure Dashboard</h1>
+        
+        <div class="info-box">
+            <h3>📋 Current Status</h3>
+            <p>Your infrastructure is running successfully! All backend services are operational and ready to support your MyBudget application.</p>
+        </div>
+
+        <div class="service-grid">
+            <div class="service-card">
+                <h3>🔐 Authentication (Keycloak)</h3>
+                <p>User management and SSO service</p>
+                <div class="status running">Running</div>
+                <a href="http://localhost:8080/admin" target="_blank">Access Admin Console</a>
+                <br>
+                <a href="http://localhost:8080" target="_blank">Access Public Realm</a>
+            </div>
+
+            <div class="service-card">
+                <h3>📦 Storage (MinIO)</h3>
+                <p>S3-compatible object storage</p>
+                <div class="status running">Running</div>
+                <a href="http://localhost:9000" target="_blank">Access Console</a>
+            </div>
+
+            <div class="service-card">
+                <h3>📊 Monitoring (Grafana)</h3>
+                <p>System metrics and dashboards</p>
+                <div class="status running">Running</div>
+                <a href="http://localhost:3000" target="_blank">Access Dashboard</a>
+            </div>
+
+            <div class="service-card">
+                <h3>📈 Metrics (Prometheus)</h3>
+                <p>Time-series data collection</p>
+                <div class="status running">Running</div>
+                <a href="http://localhost:9090" target="_blank">Access Metrics</a>
+            </div>
+
+            <div class="service-card">
+                <h3>🌐 Reverse Proxy (Nginx)</h3>
+                <p>Load balancing and routing</p>
+                <div class="status running">Running</div>
+                <a href="http://localhost:80" target="_blank">Access HTTP</a>
+                <br>
+                <a href="https://localhost:443" target="_blank">Access HTTPS</a>
+            </div>
+
+            <div class="service-card">
+                <h3>🗄️ Database (PostgreSQL)</h3>
+                <p>Primary data storage</p>
+                <div class="status running">Running</div>
+                <p>Port: 5432</p>
+            </div>
+        </div>
+
+        <div class="next-steps">
+            <h3>🎯 Next Steps - Build Your Application</h3>
+            <p>This infrastructure is ready to support your MyBudget application. Here's what you need to do next:</p>
+            <ul>
+                <li><strong>Frontend Application:</strong> Create a web app (React, Vue, Angular, etc.)</li>
+                <li><strong>Backend API:</strong> Build API endpoints that connect to these services</li>
+                <li><strong>Integration:</strong> Connect your app to Keycloak for authentication</li>
+                <li><strong>Storage:</strong> Use MinIO for file uploads and data storage</li>
+                <li><strong>Database:</strong> Store user data and application data in PostgreSQL</li>
+            </ul>
+        </div>
+
+        <div class="info-box">
+            <h3>🔧 Quick Test Commands</h3>
+            <p>Test your services from the command line:</p>
+            <code style="background: rgba(0,0,0,0.3); padding: 5px; border-radius: 3px;">
+                # Test Keycloak<br>
+                curl http://localhost:8080<br><br>
+                # Test MinIO<br>
+                curl http://localhost:9000<br><br>
+                # Test Grafana<br>
+                curl http://localhost:3000
+            </code>
+        </div>
+    </div>
+</body>
+</html>

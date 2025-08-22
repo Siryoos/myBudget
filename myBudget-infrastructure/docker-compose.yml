@@ -53,11 +53,8 @@ services:
     volumes:
       - ./data/storage:/data
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-admin}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
-      MINIO_DOMAIN: ${MINIO_DOMAIN:-minio.local}
-      MINIO_SERVER_URL: ${MINIO_SERVER_URL:-http://localhost:9000}
-      MINIO_BROWSER_REDIRECT_URL: ${MINIO_BROWSER_REDIRECT_URL:-http://localhost:9001}
     command: server /data --console-address ":9001"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
@@ -85,34 +82,15 @@ services:
       KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
       KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
-      KC_HOSTNAME: ${KC_HOSTNAME:-localhost}
+      KC_HOSTNAME: ${KC_HOSTNAME:-0.0.0.0}
+      KC_HOSTNAME_ADMIN: ${KC_HOSTNAME_ADMIN:-0.0.0.0}
       KC_PROXY: edge
       KC_HTTP_ENABLED: "true"
+      KC_HOSTNAME_STRICT: "false"
+      KC_HOSTNAME_STRICT_HTTPS: "false"
     command: start-dev
     depends_on:
       postgres:
-        condition: service_healthy
-    networks:
-      - mybudget-network
-
-  # SMTP Service (Postfix)
-  postfix:
-    image: catatnight/postfix
-    container_name: mybudget-smtp
-    restart: unless-stopped
-    ports:
-      - "25:25"
-      - "587:587"
-    volumes:
-      - ./data/postfix:/var/mail
-      - ./config/postfix:/etc/postfix
-    environment:
-      mailname: ${POSTAL_HOSTNAME:-mail.mybudget.local}
-      smtp_user: ${POSTAL_EMAIL:-admin@mybudget.local}:${POSTAL_PASSWORD}
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
         condition: service_healthy
     networks:
       - mybudget-network
@@ -151,6 +129,9 @@ services:
       - '--storage.tsdb.path=/prometheus'
       - '--web.console.libraries=/usr/share/prometheus/console_libraries'
       - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--query-log-file=/dev/null'
+      - '--enable-feature=agent'
+    user: "65534:65534"
     networks:
       - mybudget-network
 
@@ -167,7 +148,6 @@ services:
     environment:
       GF_SECURITY_ADMIN_USER: ${GF_ADMIN_USER:-admin}
       GF_SECURITY_ADMIN_PASSWORD: ${GF_ADMIN_PASSWORD}
-      GF_INSTALL_PLUGINS: ${GF_PLUGINS:-grafana-clock-panel,grafana-simple-json-datasource}
     depends_on:
       - prometheus
     networks:
@@ -198,12 +178,3 @@ networks:
     ipam:
       config:
         - subnet: 172.20.0.0/16
-
-volumes:
-  postgres_data:
-  redis_data:
-  storage_data:
-  keycloak_data:
-  postfix_data:
-  prometheus_data:
-  grafana_data:
