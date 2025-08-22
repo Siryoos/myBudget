@@ -1,6 +1,6 @@
 import { renderHook, waitFor } from '@testing-library/react';
-import { useGoals, useInsights, useDashboardData } from '@/lib/api-hooks';
-import { apiClient } from '@/lib/api-client';
+import { useGoals, useInsights, useDashboardData } from '../../lib/api-hooks';
+import { apiClient } from '../../lib/api-client';
 
 // Mock API client
 jest.mock('@/lib/api-client', () => ({

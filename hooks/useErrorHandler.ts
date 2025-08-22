@@ -1,11 +1,9 @@
 import { useState, useCallback, useRef } from 'react';
-import { handleError, getErrorMessage, ErrorRecoveryStrategy } from '@/lib/error-handling';
 import { useToast } from './useToast';
 
 export interface UseErrorHandlerOptions {
   showToast?: boolean;
   context?: Record<string, any>;
-  strategies?: ErrorRecoveryStrategy[];
   onError?: (error: Error, message: string) => void;
 }
 
@@ -31,10 +29,11 @@ export function useErrorHandler(options: UseErrorHandlerOptions = {}) {
     setError(errorObj);
     setIsError(true);
     
-    const { recovered, message } = await handleError(errorObj, options.context, options.strategies);
+    // Get error message
+    const message = errorObj.message || 'An unexpected error occurred';
     setErrorMessage(message);
     
-    if (!recovered && showToast) {
+    if (showToast) {
       toast({
         title: 'Error',
         description: message,

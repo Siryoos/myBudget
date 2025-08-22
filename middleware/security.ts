@@ -73,10 +73,21 @@ const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS?.split(',').map(o => o.trim(
 
 // Security headers configuration - configurable via environment variables
 const getSecurityHeaders = () => {
-  // Get external domains from environment variables for CSP
+  // Get external domains from environment variables for CSP with validation
   const externalDomains = process.env.EXTERNAL_DOMAINS?.split(',').map(d => d.trim()).filter(Boolean) || [];
   const sentryDomain = process.env.SENTRY_DSN ? 'https://sentry.io' : '';
   const apiDomain = process.env.API_DOMAIN || '';
+  
+  // Validate external domains format
+  const validatedExternalDomains = externalDomains.filter(domain => {
+    try {
+      const url = new URL(domain);
+      return url.protocol === 'https:' && url.hostname.includes('.');
+    } catch {
+      console.warn(`Invalid external domain in CSP: ${domain}`);
+      return false;
+    }
+  });
   
   // Build CSP dynamically based on configuration
   const cspDirectives = [
@@ -95,20 +106,20 @@ const getSecurityHeaders = () => {
     "upgrade-insecure-requests"
   ];
   
-  // Add external domains if configured
-  if (sentryDomain) {
+  // Add validated external domains if configured
+  if (sentryDomain && isValidDomain(sentryDomain)) {
     cspDirectives.push("script-src 'self' 'nonce-{NONCE}' " + sentryDomain);
     cspDirectives.push("img-src 'self' " + sentryDomain);
     cspDirectives.push("font-src 'self' " + sentryDomain);
     cspDirectives.push("connect-src 'self' " + sentryDomain);
   }
   
-  if (apiDomain) {
+  if (apiDomain && isValidDomain(apiDomain)) {
     cspDirectives.push("connect-src 'self' " + apiDomain);
   }
   
-  if (externalDomains.length > 0) {
-    cspDirectives.push("img-src 'self' " + externalDomains.join(' '));
+  if (validatedExternalDomains.length > 0) {
+    cspDirectives.push("img-src 'self' " + validatedExternalDomains.join(' '));
   }
   
   return {
@@ -121,12 +132,22 @@ const getSecurityHeaders = () => {
     'X-Frame-Options': 'DENY',
     'X-Content-Type-Options': 'nosniff',
     'Referrer-Policy': 'strict-origin-when-cross-origin',
-    'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=(), usb=(), clipboard-read=(), clipboard-write=()',
+    'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=(), usb=(), clipboard-read=(), clipboard-write=(), document-domain=(), encrypted-media=(), fullscreen=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), web-share=()',
     'X-XSS-Protection': '1; mode=block',
     'Cross-Origin-Embedder-Policy': 'require-corp',
     'Cross-Origin-Opener-Policy': 'same-origin',
     'Cross-Origin-Resource-Policy': 'same-origin'
   };
+};
+
+// Helper function to validate domain format
+const isValidDomain = (domain: string): boolean => {
+  try {
+    const url = new URL(domain);
+    return url.protocol === 'https:' && url.hostname.includes('.');
+  } catch {
+    return false;
+  }
 };
 
 // Enhanced security middleware with proper error boundaries

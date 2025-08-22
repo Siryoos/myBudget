@@ -1,17 +1,72 @@
-import { FileValidator } from '@/lib/file-validation';
+import { FileValidator } from '../../lib/file-validation';
+
+// Polyfill TextEncoder for Node.js environment
+if (typeof TextEncoder === 'undefined') {
+  (global as any).TextEncoder = class TextEncoder {
+    encode(input: string): Uint8Array {
+      return new Uint8Array(Buffer.from(input, 'utf8'));
+    }
+  };
+}
+
+// Polyfill crypto.subtle for Node.js environment
+if (typeof crypto !== 'undefined' && !crypto.subtle) {
+  (crypto as any).subtle = {
+    digest: async (algorithm: string, data: ArrayBuffer): Promise<ArrayBuffer> => {
+      // Simple mock implementation for testing that generates consistent hashes
+      const content = new Uint8Array(data);
+      const hash = new Uint8Array(32); // SHA-256 is 32 bytes
+      
+      // Generate a deterministic hash based on content
+      for (let i = 0; i < hash.length; i++) {
+        hash[i] = content[i % content.length] || i;
+      }
+      
+      return hash.buffer;
+    }
+  };
+}
+
+// Mock File object methods for Node.js environment
+const createMockFile = (content: string | Uint8Array, name: string, options: { type: string }, customSize?: number) => {
+  const file = new File([content], name, options) as any;
+  
+  // Set size (default 1MB or custom size)
+  const size = customSize || 1024 * 1024;
+  Object.defineProperty(file, 'size', { value: size, writable: true, configurable: true });
+  
+  // Mock text() method
+  file.text = jest.fn().mockResolvedValue(typeof content === 'string' ? content : '');
+  
+  // Mock arrayBuffer() method
+  file.arrayBuffer = jest.fn().mockResolvedValue(
+    typeof content === 'string' 
+      ? new TextEncoder().encode(content).buffer 
+      : content.buffer
+  );
+  
+  // Mock slice() method
+  file.slice = jest.fn().mockImplementation((start: number, end: number) => {
+    const slicedContent = typeof content === 'string' 
+      ? content.slice(start, end) 
+      : content.slice(start, end);
+    return createMockFile(slicedContent, name, options, size);
+  });
+  
+  return file;
+};
 
 describe('FileValidator', () => {
   describe('validateSize', () => {
     it('should accept files within size limit', () => {
-      const file = new File(['content'], 'test.jpg', { type: 'image/jpeg' });
+      const file = createMockFile('content', 'test.jpg', { type: 'image/jpeg' });
       Object.defineProperty(file, 'size', { value: 1024 * 1024 }); // 1MB
       
       expect(FileValidator.validateSize(file, 5 * 1024 * 1024)).toBe(true);
     });
 
     it('should reject files exceeding size limit', () => {
-      const file = new File(['content'], 'test.jpg', { type: 'image/jpeg' });
-      Object.defineProperty(file, 'size', { value: 10 * 1024 * 1024 }); // 10MB
+      const file = createMockFile('content', 'test.jpg', { type: 'image/jpeg' }, 10 * 1024 * 1024); // 10MB
       
       expect(FileValidator.validateSize(file, 5 * 1024 * 1024)).toBe(false);
     });
@@ -30,13 +85,13 @@ describe('FileValidator', () => {
 
   describe('validateMimeType', () => {
     it('should accept allowed MIME types', () => {
-      const file = new File(['content'], 'test.jpg', { type: 'image/jpeg' });
+      const file = createMockFile('content', 'test.jpg', { type: 'image/jpeg' });
       
       expect(FileValidator.validateMimeType(file, ['image/jpeg', 'image/png'])).toBe(true);
     });
 
     it('should reject disallowed MIME types', () => {
-      const file = new File(['content'], 'test.exe', { type: 'application/x-msdownload' });
+      const file = createMockFile('content', 'test.exe', { type: 'application/x-msdownload' });
       
       expect(FileValidator.validateMimeType(file, ['image/jpeg', 'image/png'])).toBe(false);
     });
@@ -77,7 +132,7 @@ describe('FileValidator', () => {
   describe('checkSVGSafety', () => {
     it('should accept safe SVG files', async () => {
       const safeSVG = '<svg><circle cx="50" cy="50" r="40" /></svg>';
-      const file = new File([safeSVG], 'safe.svg', { type: 'image/svg+xml' });
+      const file = createMockFile(safeSVG, 'safe.svg', { type: 'image/svg+xml' });
       
       const result = await FileValidator.checkSVGSafety(file);
       expect(result).toBe(true);
@@ -85,7 +140,7 @@ describe('FileValidator', () => {
 
     it('should reject SVG with script tags', async () => {
       const maliciousSVG = '<svg><script>alert("XSS")</script></svg>';
-      const file = new File([maliciousSVG], 'malicious.svg', { type: 'image/svg+xml' });
+      const file = createMockFile(maliciousSVG, 'malicious.svg', { type: 'image/svg+xml' });
       
       const result = await FileValidator.checkSVGSafety(file);
       expect(result).toBe(false);
@@ -93,14 +148,14 @@ describe('FileValidator', () => {
 
     it('should reject SVG with event handlers', async () => {
       const maliciousSVG = '<svg><circle onload="alert(\'XSS\')" /></svg>';
-      const file = new File([maliciousSVG], 'malicious.svg', { type: 'image/svg+xml' });
+      const file = createMockFile(maliciousSVG, 'malicious.svg', { type: 'image/svg+xml' });
       
       const result = await FileValidator.checkSVGSafety(file);
       expect(result).toBe(false);
     });
 
     it('should skip non-SVG files', async () => {
-      const file = new File(['content'], 'image.jpg', { type: 'image/jpeg' });
+      const file = createMockFile('content', 'image.jpg', { type: 'image/jpeg' });
       
       const result = await FileValidator.checkSVGSafety(file);
       expect(result).toBe(true);
@@ -111,7 +166,7 @@ describe('FileValidator', () => {
     it('should verify JPEG signature', async () => {
       // JPEG magic numbers: FF D8 FF
       const jpegData = new Uint8Array([0xFF, 0xD8, 0xFF, 0xE0]);
-      const file = new File([jpegData], 'test.jpg', { type: 'image/jpeg' });
+      const file = createMockFile(jpegData, 'test.jpg', { type: 'image/jpeg' });
       
       const signatures = { 'image/jpeg': [0xFF, 0xD8, 0xFF] };
       const result = await FileValidator.verifyFileSignature(file, signatures);
@@ -121,7 +176,7 @@ describe('FileValidator', () => {
     it('should reject files with wrong signature', async () => {
       // Wrong magic numbers
       const fakeData = new Uint8Array([0x00, 0x00, 0x00, 0x00]);
-      const file = new File([fakeData], 'fake.jpg', { type: 'image/jpeg' });
+      const file = createMockFile(fakeData, 'fake.jpg', { type: 'image/jpeg' });
       
       const signatures = { 'image/jpeg': [0xFF, 0xD8, 0xFF] };
       const result = await FileValidator.verifyFileSignature(file, signatures);
@@ -132,7 +187,7 @@ describe('FileValidator', () => {
   describe('validateFile', () => {
     it('should accept valid image files', async () => {
       const jpegData = new Uint8Array([0xFF, 0xD8, 0xFF, 0xE0]);
-      const file = new File([jpegData], 'test.jpg', { type: 'image/jpeg' });
+      const file = createMockFile(jpegData, 'test.jpg', { type: 'image/jpeg' });
       Object.defineProperty(file, 'size', { value: 1024 * 1024 }); // 1MB
       
       const result = await FileValidator.validateFile(file, 'images');
@@ -140,8 +195,7 @@ describe('FileValidator', () => {
     });
 
     it('should reject oversized files', async () => {
-      const file = new File(['content'], 'large.jpg', { type: 'image/jpeg' });
-      Object.defineProperty(file, 'size', { value: 10 * 1024 * 1024 }); // 10MB
+      const file = createMockFile('content', 'large.jpg', { type: 'image/jpeg' }, 10 * 1024 * 1024); // 10MB
       
       const result = await FileValidator.validateFile(file, 'images');
       expect(result.valid).toBe(false);
@@ -149,7 +203,7 @@ describe('FileValidator', () => {
     });
 
     it('should reject files with wrong extension', async () => {
-      const file = new File(['content'], 'script.exe', { type: 'image/jpeg' });
+      const file = createMockFile('content', 'script.exe', { type: 'image/jpeg' });
       
       const result = await FileValidator.validateFile(file, 'images');
       expect(result.valid).toBe(false);
@@ -157,7 +211,7 @@ describe('FileValidator', () => {
     });
 
     it('should reject files with wrong MIME type', async () => {
-      const file = new File(['content'], 'test.jpg', { type: 'application/x-msdownload' });
+      const file = createMockFile('content', 'test.jpg', { type: 'application/x-msdownload' });
       
       const result = await FileValidator.validateFile(file, 'images');
       expect(result.valid).toBe(false);
@@ -167,9 +221,11 @@ describe('FileValidator', () => {
 
   describe('validateFiles', () => {
     it('should validate multiple files', async () => {
+      const jpegData = new Uint8Array([0xFF, 0xD8, 0xFF, 0xE0]);
+      const pngData = new Uint8Array([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]);
       const files = [
-        new File(['content1'], 'test1.jpg', { type: 'image/jpeg' }),
-        new File(['content2'], 'test2.png', { type: 'image/png' })
+        createMockFile(jpegData, 'test1.jpg', { type: 'image/jpeg' }),
+        createMockFile(pngData, 'test2.png', { type: 'image/png' })
       ];
       
       const result = await FileValidator.validateFiles(files, 'images');
@@ -179,7 +235,7 @@ describe('FileValidator', () => {
 
     it('should reject when exceeding file count', async () => {
       const files = Array(11).fill(null).map((_, i) => 
-        new File(['content'], `test${i}.jpg`, { type: 'image/jpeg' })
+        createMockFile('content', `test${i}.jpg`, { type: 'image/jpeg' })
       );
       
       const result = await FileValidator.validateFiles(files, 'images', 10);
@@ -188,9 +244,10 @@ describe('FileValidator', () => {
     });
 
     it('should collect errors for invalid files', async () => {
+      const jpegData = new Uint8Array([0xFF, 0xD8, 0xFF, 0xE0]);
       const files = [
-        new File(['content'], 'valid.jpg', { type: 'image/jpeg' }),
-        new File(['content'], 'invalid.exe', { type: 'application/x-msdownload' })
+        createMockFile(jpegData, 'valid.jpg', { type: 'image/jpeg' }),
+        createMockFile('content', 'invalid.exe', { type: 'application/x-msdownload' })
       ];
       
       const result = await FileValidator.validateFiles(files, 'images');
@@ -203,8 +260,8 @@ describe('FileValidator', () => {
   describe('generateFileHash', () => {
     it('should generate consistent hash for same content', async () => {
       const content = 'test content';
-      const file1 = new File([content], 'test1.txt');
-      const file2 = new File([content], 'test2.txt');
+      const file1 = createMockFile(content, 'test1.txt', { type: 'text/plain' });
+      const file2 = createMockFile(content, 'test2.txt', { type: 'text/plain' });
       
       const hash1 = await FileValidator.generateFileHash(file1);
       const hash2 = await FileValidator.generateFileHash(file2);
@@ -214,8 +271,8 @@ describe('FileValidator', () => {
     });
 
     it('should generate different hash for different content', async () => {
-      const file1 = new File(['content1'], 'test1.txt');
-      const file2 = new File(['content2'], 'test2.txt');
+      const file1 = createMockFile('content1', 'test1.txt', { type: 'text/plain' });
+      const file2 = createMockFile('content2', 'test2.txt', { type: 'text/plain' });
       
       const hash1 = await FileValidator.generateFileHash(file1);
       const hash2 = await FileValidator.generateFileHash(file2);

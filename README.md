@@ -1,264 +1,419 @@
-# SmartSave - Personal Finance Management Platform
+# MyBudget - Personal Finance Management Application
 
-A comprehensive personal finance website designed to encourage saving behavior through psychological nudges and intuitive UI/UX.
+[![Security](https://img.shields.io/badge/Security-A%2B-brightgreen)](https://securityheaders.com)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Node.js](https://img.shields.io/badge/Node.js-18%2B-green.svg)](https://nodejs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0%2B-blue.svg)](https://www.typescriptlang.org)
 
-## 📚 Documentation
+> **Enterprise-grade personal finance management with advanced security, comprehensive validation, and production-ready architecture.**
 
-This project maintains comprehensive documentation organized in the `docs/` directory:
+## 🚀 Features
 
-### 🚀 [Getting Started](docs/getting-started.md)
-- Installation and setup instructions
-- Prerequisites and requirements
-- Quick start guide
-- Development environment setup
+### 💰 Financial Management
+- **Transaction Tracking**: Income and expense management with categorization
+- **Budget Planning**: Multiple budgeting methods (50-30-20, envelope, zero-based)
+- **Savings Goals**: Goal tracking with milestones and automation
+- **Financial Analytics**: Comprehensive reporting and insights
+- **Multi-Currency**: Support for various currencies and exchange rates
 
-### 🏗️ [Architecture Overview](docs/architecture.md)
-- System architecture and design
-- Technology stack details
-- Database schema
-- Component structure
+### 🔒 Security Features
+- **JWT Authentication**: Secure token-based authentication with refresh
+- **Rate Limiting**: Comprehensive API protection against abuse
+- **Input Validation**: XSS prevention and data sanitization
+- **Security Headers**: Complete OWASP security header implementation
+- **Role-Based Access**: Granular permission system
+- **Audit Logging**: Complete user action tracking
 
-### 🔧 [Backend Development](docs/backend-development.md)
-- API development guide
-- Database setup and management
-- Authentication and security
-- Testing and deployment
+### 🏗️ Architecture
+- **Next.js 14**: Modern React framework with App Router
+- **TypeScript**: Full type safety and compile-time validation
+- **PostgreSQL**: Robust relational database with encryption
+- **Redis**: High-performance caching and rate limiting
+- **Docker**: Containerized deployment with production configs
+- **ESLint**: Comprehensive code quality and security rules
 
-### 🎨 [Frontend Development](docs/frontend-development.md)
-- Component development
-- State management
-- Styling and design system
-- Internationalization
+## 📋 Table of Contents
 
-### 🐳 [Docker & Deployment](docs/docker-deployment.md)
-- Docker setup and configuration
-- Production deployment
-- Environment configuration
-- Monitoring and logging
-
-### 📡 [API Reference](docs/api-reference.md)
-- Complete API documentation
-- Authentication methods
-- Request/response examples
-- Error handling
-
-### 🧠 [Implementation Guides](docs/implementation-guides.md)
-- Behavioral psychology features
-- Translation system
-- Security implementations
-- Performance optimization
-
-### 🔒 [Security & Best Practices](docs/security-best-practices.md)
-- Security features
-- Best practices
-- Compliance requirements
-- Testing strategies
-
-## 🌟 Features
-
-### Core Functionality
-- **Dashboard**: Complete financial overview with savings progress, budget summary, and insights
-- **Budget Planner**: Multiple budgeting methods (50/30/20, Pay Yourself First, Envelope System, etc.)
-- **Savings Goals**: Goal setting wizard with progress tracking and automation
-- **Transaction Management**: Comprehensive transaction history with analytics
-- **Financial Education**: Interactive learning modules and personalized tips
-- **Settings**: Comprehensive user preferences and regional customization
-
-### Behavioral Design
-- **Psychological Nudges**: Encourage positive financial behavior
-- **Gamification**: Achievements, challenges, and progress celebrations
-- **Automation**: Smart saving rules and round-up features
-- **Insights**: Personalized recommendations based on spending patterns
-
-### Technical Features
-- **Responsive Design**: Mobile-first approach with touch-optimized interactions
-- **Accessibility**: WCAG AA compliance with screen reader support
-- **Internationalization**: Multi-language and regional customization support
-- **Modern UI**: Beautiful design system with smooth animations
-
-## 🔒 Security Setup (CRITICAL)
-
-**⚠️ IMPORTANT: Before running this application, you MUST configure security settings:**
-
-1. **Environment Configuration**
-   ```bash
-   # Copy the template and configure your secrets
-   cp env.template .env.local
-   
-   # Edit .env.local with your actual values
-   # NEVER commit .env.local to version control
-   ```
-
-2. **Required Security Variables**
-   - `JWT_SECRET`: Generate a secure random string (minimum 32 characters)
-   - `DB_PASSWORD`: Strong database password
-   - `REDIS_PASSWORD`: Strong Redis password
-   - `ALLOWED_ORIGINS`: Comma-separated list of allowed domains
-
-3. **Generate Secure Secrets**
-   ```bash
-   # Generate JWT secret
-   openssl rand -base64 32
-   
-   # Generate database password
-   openssl rand -base64 16
-   ```
-
-4. **Docker Security**
-   - In production, remove all port exposures from docker-compose.yml
-   - Use internal networking only
-   - Implement proper secrets management
+- [Quick Start](#quick-start)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Development](#development)
+- [Security](#security)
+- [Deployment](#deployment)
+- [API Documentation](#api-documentation)
+- [Contributing](#contributing)
+- [Support](#support)
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 18.0 or higher
-- npm or yarn package manager
-- Docker (for containerized deployment)
 
-### Installation
+- **Node.js**: 18.0.0 or higher
+- **Docker**: 20.10.0 or higher
+- **Git**: Latest version
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd smartsave-finance-platform
-   ```
+### 1. Clone Repository
 
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
+```bash
+git clone https://github.com/yourusername/mybudget.git
+cd mybudget
+```
 
-3. **Start the development server**
-   ```bash
-   npm run dev
-   ```
+### 2. Environment Setup
 
-4. **Open your browser**
-   Navigate to [http://localhost:3000](http://localhost:3000)
+```bash
+# Copy environment template
+cp .env.example .env.local
+
+# Edit environment variables
+nano .env.local
+```
+
+### 3. Start Services
+
+```bash
+# Start database and Redis
+docker-compose -f docker-compose.dev.yml up -d
+
+# Install dependencies
+npm install
+
+# Run database setup
+npm run db:setup
+
+# Start development server
+npm run dev
+```
+
+### 4. Access Application
+
+- **Frontend**: http://localhost:3000
+- **API**: http://localhost:3001/api/health
+- **Database**: PostgreSQL on localhost:5432
+- **Redis**: Redis on localhost:6379
+
+## 📦 Installation
+
+### Option 1: Docker (Recommended)
+
+```bash
+# Clone repository
+git clone https://github.com/yourusername/mybudget.git
+cd mybudget
+
+# Start all services
+docker-compose up -d
+
+# Check status
+docker-compose ps
+```
+
+### Option 2: Manual Installation
+
+```bash
+# Install Node.js dependencies
+npm install
+
+# Install PostgreSQL
+sudo apt-get install postgresql postgresql-contrib
+
+# Install Redis
+sudo apt-get install redis-server
+
+# Setup database
+npm run db:setup
+
+# Start application
+npm run dev
+```
+
+### Option 3: Development with Docker Services
+
+```bash
+# Start only database and Redis
+docker-compose -f docker-compose.dev.yml up -d
+
+# Run application locally
+npm install
+npm run dev
+```
+
+## ⚙️ Configuration
+
+### Environment Variables
+
+Create a `.env.local` file with the following variables:
+
+```bash
+# Database Configuration
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=mybudget_dev
+DB_USER=mybudget_user
+DB_PASSWORD=your_secure_password_here
+
+# Redis Configuration
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=your_redis_password_here
+
+# JWT Configuration
+JWT_SECRET=your_super_secure_jwt_secret_key_here_change_this_in_production
+JWT_EXPIRES_IN=7d
+JWT_REFRESH_EXPIRES_IN=30d
+
+# Application Configuration
+NODE_ENV=development
+PORT=3001
+CORS_ORIGIN=http://localhost:3000
+
+# Security Configuration
+ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3001
+EXTERNAL_DOMAINS=https://cdn.sentry.io
+```
+
+### Security Configuration
+
+The application includes comprehensive security features:
+
+- **Content Security Policy**: XSS protection with nonce-based script execution
+- **Rate Limiting**: Configurable limits per endpoint type
+- **Input Validation**: Zod schema validation with sanitization
+- **Authentication**: JWT with refresh token rotation
+- **Authorization**: Role-based access control (RBAC)
+
+## 🛠️ Development
+
+### Project Structure
+
+```
+mybudget/
+├── app/                    # Next.js App Router
+│   ├── api/               # API routes
+│   ├── (auth)/            # Authentication pages
+│   ├── dashboard/         # Dashboard pages
+│   └── globals.css        # Global styles
+├── components/            # Reusable React components
+├── lib/                   # Utility libraries
+│   ├── api-validation.ts  # Input validation
+│   ├── auth.ts           # Authentication utilities
+│   ├── database.ts       # Database connection
+│   └── redis.ts          # Redis connection
+├── middleware/            # Next.js middleware
+│   ├── security.ts       # Security headers
+│   └── locale.ts         # Internationalization
+├── types/                 # TypeScript type definitions
+├── docs/                  # Documentation
+└── docker-compose.yml     # Docker configuration
+```
 
 ### Available Scripts
 
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm start` - Start production server
-- `npm run lint` - Run ESLint
-- `npm run type-check` - Run TypeScript type checking
+```bash
+# Development
+npm run dev              # Start development server
+npm run build            # Build for production
+npm run start            # Start production server
+npm run lint             # Run ESLint
+npm run lint:fix         # Fix ESLint issues
 
-## 🎨 Design System
+# Database
+npm run db:setup         # Setup database and tables
+npm run db:migrate       # Run database migrations
+npm run db:seed          # Seed initial data
+npm run db:reset         # Reset database
 
-### Color Palette
-- **Primary**: Trust Blue (#1E5A8D) - Reliability and security
-- **Secondary**: Growth Green (#27AE60) - Progress and success
-- **Accent**: Action Orange (#FF6B35) - Call-to-action elements
-- **Neutral**: Comprehensive grayscale for backgrounds and text
+# Testing
+npm run test             # Run unit tests
+npm run test:watch       # Run tests in watch mode
+npm run test:coverage    # Generate coverage report
 
-### Typography
-- **Primary Font**: Inter - Clean, modern, highly readable
-- **Secondary Font**: Roboto - Versatile and friendly
-- **Numeric Font**: Roboto Mono - Clear number display
+# Security
+npm run security:check   # Run security validation
+npm run audit            # Audit dependencies
+```
 
-### Components
-- Rounded corners for modern feel
-- Subtle shadows for depth
-- Smooth animations for engagement
-- Touch-friendly button sizes (44px minimum)
+### Code Quality
 
-## 📱 Mobile Optimization
+The project uses comprehensive code quality tools:
 
-### Responsive Breakpoints
-- **Mobile**: 375px and up
-- **Tablet**: 768px and up
-- **Desktop**: 1024px and up
-- **Wide**: 1440px and up
+- **ESLint**: TypeScript-aware linting with security rules
+- **Prettier**: Code formatting
+- **TypeScript**: Strict type checking
+- **Security Scanning**: Automated vulnerability detection
 
-### Touch Interactions
-- Swipe to save functionality
-- Pull to refresh
-- Long press actions
-- Gesture-based navigation
+## 🔒 Security
 
-## 🌍 Regional Support
+### Security Features
 
-### Middle East
-- Arabic language support
-- RTL (Right-to-Left) layout
-- Islamic banking features
-- Cultural spending categories
-- Currency support (SAR, AED, QAR)
+- ✅ **OWASP Top 10 Protection**: All critical vulnerabilities addressed
+- ✅ **Input Validation**: Comprehensive XSS and injection prevention
+- ✅ **Rate Limiting**: DoS attack protection
+- ✅ **Security Headers**: Complete security header implementation
+- ✅ **Authentication**: Secure JWT with refresh token rotation
+- ✅ **Authorization**: Role-based access control
+- ✅ **Audit Logging**: Complete user action tracking
+- ✅ **Data Encryption**: At-rest and in-transit encryption
 
-### United States
-- English and Spanish languages
-- Student loan tracking
-- 401k integration
-- Credit score monitoring
-- Tax planning features
+### Security Testing
 
-### Europe
-- GDPR compliance
-- PSD2 integration
-- Multiple currency support
-- VAT handling
-- Minimal social sharing
+```bash
+# Run security checks
+npm run security:check
 
-## ♿ Accessibility Features
+# Run vulnerability scan
+npm audit
 
-- **WCAG AA Compliance**: Meets international accessibility standards
-- **Keyboard Navigation**: Full keyboard support for all interactions
-- **Screen Reader Support**: Comprehensive ARIA labels and descriptions
-- **High Contrast Mode**: Enhanced visibility options
-- **Focus Indicators**: Clear visual focus states
-- **Alternative Text**: Descriptive alt text for all images
+# Test security headers
+curl -I http://localhost:3001/api/health
+```
 
-## 🔐 Security & Privacy
+### Security Documentation
 
-- **Data Encryption**: AES-256 at rest, TLS 1.3 in transit
-- **Authentication**: Multi-factor authentication support
-- **Compliance**: GDPR, PCI, and PSD2 compliant
-- **Privacy Controls**: Granular privacy settings
-- **Session Management**: Secure session handling
+- [Security Documentation](docs/SECURITY.md) - Comprehensive security guide
+- [Threat Model](docs/SECURITY.md#threat-model) - Security threat analysis
+- [Incident Response](docs/SECURITY.md#incident-response) - Security incident procedures
 
-## 🏗️ Architecture
+## 🚀 Deployment
 
-### Frontend
-- **Framework**: Next.js 14 with App Router
-- **Language**: TypeScript for type safety
-- **Styling**: Tailwind CSS with custom design system
-- **UI Components**: Custom component library
-- **Animations**: Framer Motion for smooth interactions
+### Production Deployment
 
-### State Management
-- React hooks for local state
-- Context API for global state
-- Custom hooks for business logic
+The application includes production-ready Docker configurations:
 
-### Performance
-- **Code Splitting**: Automatic route-based splitting
-- **Image Optimization**: Next.js Image component
-- **Caching**: Intelligent caching strategies
-- **Bundle Analysis**: Optimized bundle sizes
+```bash
+# Production deployment
+docker-compose -f docker-compose.prod.yml up -d --build
 
-## 📊 Analytics & Insights
+# Check status
+docker-compose -f docker-compose.prod.yml ps
 
-- **User Behavior Tracking**: Anonymous usage analytics
-- **Goal Conversion Tracking**: Success rate monitoring
-- **Feature Usage Analytics**: Popular feature identification
-- **Nudge Effectiveness**: A/B testing for behavioral features
+# View logs
+docker-compose -f docker-compose.prod.yml logs -f app
+```
+
+### Deployment Features
+
+- **Multi-stage Docker builds** for optimized images
+- **Health checks** for all services
+- **Nginx reverse proxy** with SSL termination
+- **Automatic restarts** and failover
+- **Resource limits** and monitoring
+- **Backup and recovery** procedures
+
+### Deployment Documentation
+
+- [Deployment Guide](docs/DEPLOYMENT.md) - Complete deployment instructions
+- [Docker Configuration](docs/DEPLOYMENT.md#docker-production-deployment) - Production Docker setup
+- [Monitoring & Logging](docs/DEPLOYMENT.md#monitoring--logging) - Production monitoring
+
+## 📚 API Documentation
+
+### API Overview
+
+The MyBudget API provides comprehensive endpoints for:
+
+- **Authentication**: Login, logout, token refresh
+- **Transactions**: CRUD operations with filtering
+- **Budgets**: Budget management and tracking
+- **Goals**: Savings goal management
+- **Analytics**: Financial reporting and insights
+
+### API Features
+
+- **RESTful Design**: Standard HTTP methods and status codes
+- **JWT Authentication**: Secure token-based authentication
+- **Rate Limiting**: Configurable limits per endpoint
+- **Input Validation**: Comprehensive request validation
+- **Error Handling**: Consistent error response format
+- **Pagination**: Standard pagination for list endpoints
+
+### API Documentation
+
+- [Complete API Reference](docs/API.md) - Full API documentation
+- [Authentication Guide](docs/API.md#authentication) - JWT authentication details
+- [Error Handling](docs/API.md#error-handling) - Error response format
+
+## 🧪 Testing
+
+### Test Coverage
+
+The project includes comprehensive testing:
+
+- **Unit Tests**: Component and utility testing
+- **Integration Tests**: API endpoint testing
+- **Security Tests**: Authentication and authorization testing
+- **Performance Tests**: Load and stress testing
+
+### Running Tests
+
+```bash
+# Run all tests
+npm test
+
+# Run tests with coverage
+npm run test:coverage
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run specific test suites
+npm test -- --testPathPattern=auth
+```
+
+## 📊 Monitoring & Performance
+
+### Application Monitoring
+
+- **Health Checks**: Comprehensive service health monitoring
+- **Performance Metrics**: Response time and throughput tracking
+- **Error Tracking**: Centralized error logging and alerting
+- **Security Monitoring**: Threat detection and incident response
+
+### Performance Features
+
+- **Redis Caching**: High-performance data caching
+- **Database Optimization**: Query optimization and indexing
+- **CDN Integration**: Static asset delivery optimization
+- **Load Balancing**: Horizontal scaling support
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+### Contributing Guidelines
 
-### Development Guidelines
-- Follow TypeScript best practices
-- Maintain accessibility standards
-- Write comprehensive tests
-- Update documentation as needed
-- Follow the established code style
+We welcome contributions! Please read our contributing guidelines:
+
+1. **Fork the repository**
+2. **Create a feature branch**: `git checkout -b feature/amazing-feature`
+3. **Make your changes** with proper testing
+4. **Run quality checks**: `npm run lint && npm test`
+5. **Submit a pull request**
+
+### Development Standards
+
+- **Code Style**: Follow ESLint and Prettier configuration
+- **Testing**: Include tests for new features
+- **Documentation**: Update relevant documentation
+- **Security**: Follow security best practices
+- **Performance**: Consider performance implications
+
+### Code of Conduct
+
+This project adheres to a code of conduct. Please be respectful and inclusive in all interactions.
+
+## 📞 Support
+
+### Getting Help
+
+- **Documentation**: [docs/](docs/) - Comprehensive guides
+- **Issues**: [GitHub Issues](https://github.com/yourusername/mybudget/issues) - Bug reports and feature requests
+- **Discussions**: [GitHub Discussions](https://github.com/yourusername/mybudget/discussions) - Community support
+- **Email**: support@mybudget.com - Direct support
+
+### Community
+
+- **Discord**: [Join our community](https://discord.gg/mybudget)
+- **Twitter**: [@MyBudgetApp](https://twitter.com/MyBudgetApp)
+- **Blog**: [Latest updates and tips](https://blog.mybudget.com)
 
 ## 📄 License
 
@@ -266,13 +421,32 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
-- Design inspiration from leading fintech applications
-- Behavioral economics principles from academic research
-- Accessibility guidelines from WCAG 2.1
-- Open source community for excellent tools and libraries
+- **Next.js Team** for the amazing framework
+- **Vercel** for hosting and deployment tools
+- **PostgreSQL** for the robust database
+- **Redis** for high-performance caching
+- **Open Source Community** for inspiration and tools
+
+## 📈 Roadmap
+
+### Upcoming Features
+
+- [ ] **Multi-Factor Authentication** (MFA)
+- [ ] **Advanced Analytics** with ML insights
+- [ ] **Mobile App** (React Native)
+- [ ] **API Webhooks** for integrations
+- [ ] **Advanced Reporting** with custom dashboards
+- [ ] **Team Budgets** for shared finances
+
+### Performance Improvements
+
+- [ ] **GraphQL API** for efficient data fetching
+- [ ] **Service Worker** for offline support
+- [ ] **Advanced Caching** strategies
+- [ ] **Database Sharding** for scale
 
 ---
 
-**SmartSave** - Empowering users to build better financial habits through intelligent design and behavioral psychology.
+**Made with ❤️ by the MyBudget Team**
 
-> 📖 **Need more details?** Check out our comprehensive [documentation](docs/) for in-depth guides on every aspect of the project.
+For questions, suggestions, or contributions, please reach out to us!

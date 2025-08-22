@@ -9,9 +9,9 @@ import type {
   UserRole, 
   Permission, 
   AuthContextType, 
-  RegisterData,
-  rolePermissions 
+  RegisterData
 } from '@/types/auth';
+import { rolePermissions } from '@/types/auth';
 
 // Re-export AuthContextType for backward compatibility
 type AuthContextValue = AuthContextType;
@@ -134,10 +134,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const updateProfile = async (data: Partial<User>) => {
     try {
-      const response = await api.auth.updateProfile({
+      // Convert Date fields to strings for API compatibility
+      const apiData = {
         ...data,
-        role: data.role as any // Type compatibility fix
-      });
+        role: data.role as any, // Type compatibility fix
+        createdAt: data.createdAt instanceof Date ? data.createdAt.toISOString() : data.createdAt,
+        updatedAt: data.updatedAt instanceof Date ? data.updatedAt.toISOString() : data.updatedAt,
+      };
+      
+      const response = await api.auth.updateProfile(apiData);
       if (!response.success) {
         throw new Error(response.error || 'Profile update failed');
       }

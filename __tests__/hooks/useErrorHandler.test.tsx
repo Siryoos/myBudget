@@ -1,10 +1,10 @@
 import { renderHook, act } from '@testing-library/react';
-import { useErrorHandler } from '@/hooks/useErrorHandler';
-import { ApiError, NetworkError } from '@/lib/error-handling';
-import * as errorReporting from '@/lib/error-reporting';
+import { useErrorHandler } from '../../hooks/useErrorHandler';
+import { ValidationError } from '../../lib/error-handling';
+import * as errorReporting from '../../lib/error-reporting';
 
 // Mock error reporter
-jest.mock('@/lib/error-reporting', () => ({
+jest.mock('../../lib/error-reporting', () => ({
   errorReporter: {
     captureError: jest.fn(),
   },
@@ -12,7 +12,7 @@ jest.mock('@/lib/error-reporting', () => ({
 
 // Mock toast
 const mockToast = jest.fn();
-jest.mock('@/hooks/useToast', () => ({
+jest.mock('../../hooks/useToast', () => ({
   useToast: () => ({ toast: mockToast }),
 }));
 
@@ -52,7 +52,7 @@ describe('useErrorHandler', () => {
 
   it('should handle API errors with proper messages', async () => {
     const { result } = renderHook(() => useErrorHandler());
-    const error = new ApiError('Bad request', 400);
+    const error = new ValidationError('Bad request');
 
     await act(async () => {
       await result.current.handle(error);
@@ -63,13 +63,13 @@ describe('useErrorHandler', () => {
 
   it('should handle network errors', async () => {
     const { result } = renderHook(() => useErrorHandler());
-    const error = new NetworkError();
+    const error = new Error('Network error');
 
     await act(async () => {
       await result.current.handle(error);
     });
 
-    expect(result.current.errorMessage).toBe('Unable to connect. Please check your internet connection.');
+    expect(result.current.errorMessage).toBe('Network error');
   });
 
   it('should prevent duplicate error handling', async () => {

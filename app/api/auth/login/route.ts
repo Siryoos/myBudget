@@ -1,25 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { comparePassword, generateToken } from '@/lib/auth';
+import { generateRefreshToken } from '@/lib/jwt-wrapper';
 import { z, ZodError } from 'zod';
 import { 
   createErrorResponse, 
   createValidationError, 
-  createDatabaseError,
-  handleError 
+  createDatabaseError
 } from '@/lib/error-handling';
+import { 
+  RequestValidator, 
+  createValidationErrorResponse,
+  REQUEST_LIMITS,
+  commonSchemas 
+} from '@/lib/api-validation';
 
 const loginSchema = z.object({
-  email: z.string().email().transform(s => s.trim().toLowerCase()),
-  password: z.string().min(1),
+  email: commonSchemas.email,
+  password: z.string().min(1, 'Password is required'),
 });
 
 export async function POST(request: NextRequest) {
   const requestId = crypto.randomUUID();
   
   try {
-    const body = await request.json();
-    const { email, password } = loginSchema.parse(body);
+    // Validate request size and headers
+    const validator = new RequestValidator(request, REQUEST_LIMITS.AUTH_BODY_SIZE);
+    await validator.validateRequestSize();
+    validator.validateHeaders();
+    
+    // Validate and parse request body
+    const body = await validator.validateAndParseBody(loginSchema);
+    const { email, password } = body;
 
     // Find user
     const result = await query(
@@ -47,27 +59,44 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(errorResponse, { status: 401 });
     }
 
-    // Generate token
-    const token = await generateToken({ id: user.id, userId: user.id, email: user.email });
+    // Generate access token
+    const accessToken = await generateToken({ id: user.id, userId: user.id, email: user.email });
+
+    // Generate refresh token
+    const jwtSecret = process.env.JWT_SECRET as string;
+    if (!jwtSecret) {
+      throw new Error('JWT_SECRET environment variable is not configured');
+    }
+    
+    const refreshToken = generateRefreshToken({
+      userId: user.id,
+      email: user.email,
+      type: 'refresh',
+      tokenVersion: user.token_version || 1,
+      passwordChangedAt: user.password_changed_at?.toISOString() || new Date().toISOString()
+    });
 
     return NextResponse.json({
       success: true,
       data: { 
         user: { id: user.id, email: user.email, name: user.name },
-        token 
+        accessToken,
+        refreshToken,
+        expiresIn: process.env.JWT_EXPIRES_IN || '7d',
+        refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '30d'
       },
       requestId
     });
 
   } catch (error) {
+    if (error instanceof Error && error.message.includes('Validation failed')) {
+      return createValidationErrorResponse(error);
+    }
+    
     if (error instanceof ZodError) {
       // Handle Zod validation errors
-      const validationErrors = error.errors.map(err => 
-        createValidationError(err.path.join('.'), err.message, undefined)
-      );
-      
       const errorResponse = createErrorResponse(
-        validationErrors[0] || new Error('Validation failed'),
+        new Error('Validation failed'),
         requestId
       );
       
@@ -76,16 +105,11 @@ export async function POST(request: NextRequest) {
     
     // Handle database errors
     if (error instanceof Error && error.message.includes('database')) {
-      await handleError(error, 'LOGIN_DATABASE_ERROR', requestId);
-      const errorResponse = createErrorResponse(
-        createDatabaseError('Database operation failed', 'SELECT', 'users'),
-        requestId
-      );
+      const errorResponse = createDatabaseError(error, requestId);
       return NextResponse.json(errorResponse, { status: 500 });
     }
     
     // Handle other errors
-    await handleError(error, 'LOGIN_ERROR', requestId);
     const errorResponse = createErrorResponse(
       new Error('Login failed'),
       requestId

@@ -22,6 +22,7 @@ const nextConfig = {
   
   // Security headers are handled by middleware/security.ts
   // This prevents conflicts and ensures consistent security configuration
+  // All security headers are now managed centrally in the security middleware
   
   // Performance optimizations
   experimental: {

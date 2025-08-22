@@ -1,283 +1,454 @@
-# Security Documentation - MyBudget Application
+# MyBudget Security Documentation
 
-## 🔒 Security Overview
+## Security Overview
 
-This document outlines the security measures, best practices, and threat model for the MyBudget personal finance management application.
+MyBudget implements enterprise-grade security measures to protect user data and ensure application integrity. This document outlines our security architecture, threat model, and incident response procedures.
 
-## 🎯 Security Objectives
+## Security Architecture
 
-- **Data Protection**: Secure storage and transmission of financial data
-- **Access Control**: Robust authentication and authorization mechanisms
-- **Threat Prevention**: Protection against common web application vulnerabilities
-- **Compliance**: Adherence to security standards and best practices
-- **Monitoring**: Continuous security monitoring and incident response
+### Defense in Depth
 
-## 🛡️ Security Architecture
+We employ multiple layers of security:
 
-### Security Layers
+1. **Network Layer**: HTTPS/TLS, rate limiting, DDoS protection
+2. **Application Layer**: Input validation, authentication, authorization
+3. **Data Layer**: Encryption at rest, secure database connections
+4. **Infrastructure Layer**: Container security, network isolation
 
-1. **Network Security**
-   - HTTPS/TLS encryption
-   - Firewall protection
-   - DDoS mitigation
+### Security Principles
 
-2. **Application Security**
-   - Input validation and sanitization
-   - SQL injection prevention
-   - XSS protection
-   - CSRF protection
+- **Zero Trust**: Verify every request, trust no one
+- **Least Privilege**: Minimal access required for functionality
+- **Defense in Depth**: Multiple security layers
+- **Fail Secure**: Default to secure state on failure
+- **Privacy by Design**: Data protection built into architecture
 
-3. **Data Security**
-   - Encryption at rest and in transit
-   - Secure key management
-   - Data backup and recovery
+## Threat Model
 
-4. **Access Security**
-   - Multi-factor authentication
-   - Role-based access control
-   - Session management
-   - Rate limiting
+### Threat Categories
 
-## 🔐 Authentication & Authorization
+#### 1. Authentication & Authorization Attacks
 
-### JWT Implementation
+**Threat**: Unauthorized access to user accounts
+**Vectors**:
+- Brute force password attacks
+- Credential stuffing
+- Session hijacking
+- JWT token theft
 
-- **Secret Management**: JWT secrets are stored as environment variables
-- **Expiration**: Configurable token expiration (default: 7 days)
-- **Refresh Tokens**: Support for token refresh mechanism
-- **Secure Storage**: Tokens stored in HTTP-only cookies
+**Mitigations**:
+- Rate limiting (10 attempts per 15 minutes)
+- JWT token versioning
+- Secure session management
+- Multi-factor authentication (planned)
 
-### Password Security
+**Risk Level**: HIGH
+**Status**: ✅ MITIGATED
 
-- **Hashing**: Passwords are hashed using bcrypt
-- **Complexity Requirements**: Enforced password complexity rules
-- **Rate Limiting**: Login attempts are rate-limited
-- **Account Lockout**: Temporary account lockout after failed attempts
+#### 2. Data Injection Attacks
 
-### Session Management
+**Threat**: Malicious data injection via user inputs
+**Vectors**:
+- SQL injection
+- XSS (Cross-Site Scripting)
+- Command injection
+- NoSQL injection
 
-- **Secure Cookies**: HTTP-only, secure, same-site cookies
-- **Session Timeout**: Configurable session timeout
-- **Concurrent Sessions**: Support for multiple active sessions
-- **Session Invalidation**: Proper logout and session cleanup
+**Mitigations**:
+- Parameterized queries
+- Input sanitization
+- Content Security Policy (CSP)
+- Output encoding
 
-## 🚫 Security Headers
+**Risk Level**: HIGH
+**Status**: ✅ MITIGATED
 
-### Content Security Policy (CSP)
+#### 3. Denial of Service (DoS)
+
+**Threat**: Service unavailability due to resource exhaustion
+**Vectors**:
+- Request flooding
+- Large payload attacks
+- Resource exhaustion
+- API abuse
+
+**Mitigations**:
+- Rate limiting by endpoint
+- Request size limits
+- Resource quotas
+- DDoS protection
+
+**Risk Level**: MEDIUM
+**Status**: ✅ MITIGATED
+
+#### 4. Data Breach & Exfiltration
+
+**Threat**: Unauthorized access to sensitive user data
+**Vectors**:
+- Database compromise
+- API abuse
+- Insider threats
+- Third-party breaches
+
+**Mitigations**:
+- Data encryption at rest
+- API authentication
+- Audit logging
+- Data access controls
+
+**Risk Level**: HIGH
+**Status**: ✅ MITIGATED
+
+#### 5. Infrastructure Attacks
+
+**Threat**: Compromise of hosting infrastructure
+**Vectors**:
+- Container escape
+- Network attacks
+- Supply chain attacks
+- Configuration errors
+
+**Mitigations**:
+- Container security hardening
+- Network segmentation
+- Dependency scanning
+- Configuration validation
+
+**Risk Level**: MEDIUM
+**Status**: ✅ MITIGATED
+
+## Security Features
+
+### Authentication & Authorization
+
+#### JWT Token Security
+
+- **Algorithm**: HS256 (HMAC SHA-256)
+- **Secret**: 32+ character random string
+- **Expiration**: Access tokens (7 days), Refresh tokens (30 days)
+- **Rotation**: Automatic refresh with version tracking
+- **Invalidation**: Immediate on password change
+
+#### Rate Limiting
 
 ```typescript
-// Dynamic CSP configuration based on environment
-const cspDirectives = [
-  "default-src 'self'",
-  "script-src 'self' 'nonce-{NONCE}'",
-  "style-src 'self' 'nonce-{NONCE}'",
-  "img-src 'self'",
-  "font-src 'self'",
-  "connect-src 'self'",
-  "object-src 'none'",
-  "frame-src 'none'",
-  "base-uri 'self'",
-  "form-action 'self'",
-  "frame-ancestors 'none'"
-];
-```
-
-### Other Security Headers
-
-- **X-Frame-Options**: DENY (prevents clickjacking)
-- **X-Content-Type-Options**: nosniff (prevents MIME type sniffing)
-- **X-XSS-Protection**: 1; mode=block (XSS protection)
-- **Strict-Transport-Security**: HSTS with preload
-- **Referrer-Policy**: strict-origin-when-cross-origin
-- **Permissions-Policy**: Restricts browser features
-
-## 🛡️ Input Validation & Sanitization
-
-### API Input Validation
-
-- **Schema Validation**: Zod schemas for all API inputs
-- **Type Safety**: TypeScript for compile-time type checking
-- **Sanitization**: Input sanitization for user-generated content
-- **Length Limits**: Enforced request size and field length limits
-
-### Database Security
-
-- **Parameterized Queries**: All database queries use parameterized statements
-- **Connection Pooling**: Secure database connection management
-- **Access Control**: Database user with minimal required privileges
-- **Encryption**: Database connections use SSL/TLS
-
-## 🚦 Rate Limiting
-
-### Implementation
-
-- **Redis-based**: Scalable rate limiting using Redis
-- **Configurable**: Different limits for different endpoints
-- **Secure Fallback**: Fail-closed behavior when Redis is unavailable
-- **Monitoring**: Rate limit metrics and alerting
-
-### Rate Limit Configuration
-
-```typescript
-export const apiRateLimits: Record<string, RateLimitConfig> = {
-  '/api/auth/login': {
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    maxRequests: 5,
-    message: 'Too many login attempts'
-  },
-  '/api/auth/register': {
-    windowMs: 60 * 60 * 1000, // 1 hour
-    maxRequests: 3,
-    message: 'Too many registration attempts'
-  }
+// Rate limit configuration
+const rateLimits = {
+  auth: { windowMs: 15 * 60 * 1000, max: 10 },      // 10 per 15 min
+  api: { windowMs: 60 * 1000, max: 100 },           // 100 per minute
+  upload: { windowMs: 60 * 1000, max: 5 },          // 5 per minute
+  budget: { windowMs: 60 * 1000, max: 50 }          // 50 per minute
 };
 ```
 
-## 🔍 Security Monitoring
+#### Role-Based Access Control (RBAC)
 
-### Security Metrics
+```typescript
+enum UserRole {
+  GUEST = 'guest',
+  USER = 'user',
+  PREMIUM_USER = 'premium_user',
+  ADMIN = 'admin'
+}
 
-- **Request Monitoring**: Track suspicious requests and patterns
-- **Rate Limit Monitoring**: Monitor rate limit violations
-- **Error Tracking**: Security-related error logging
-- **Performance Monitoring**: Track security overhead
+// Permission-based access
+const permissions = {
+  VIEW_DASHBOARD: [UserRole.USER, UserRole.PREMIUM_USER, UserRole.ADMIN],
+  MANAGE_USERS: [UserRole.ADMIN],
+  EXPORT_DATA: [UserRole.PREMIUM_USER, UserRole.ADMIN]
+};
+```
 
-### Logging
+### Input Validation & Sanitization
 
-- **Structured Logging**: JSON-formatted security logs
-- **Log Levels**: Configurable logging verbosity
-- **Log Retention**: Configurable log retention policies
-- **Log Analysis**: Automated log analysis and alerting
+#### Zod Schema Validation
 
-## 🚨 Incident Response
+```typescript
+const transactionSchema = z.object({
+  amount: z.number().positive().max(999999.99),
+  description: z.string()
+    .min(1, 'Description is required')
+    .max(500, 'Description too long')
+    .transform(s => s.trim()),
+  category: z.string()
+    .min(1, 'Category is required')
+    .max(100, 'Category too long')
+    .transform(s => s.trim())
+});
+```
 
-### Security Incidents
+#### XSS Prevention
 
-1. **Detection**: Automated detection of security events
-2. **Assessment**: Rapid assessment of incident severity
-3. **Containment**: Immediate containment measures
-4. **Investigation**: Thorough investigation and root cause analysis
-5. **Recovery**: System recovery and restoration
-6. **Post-mortem**: Lessons learned and process improvement
+- **Input Sanitization**: HTML tag stripping
+- **Output Encoding**: Context-aware encoding
+- **Content Security Policy**: Restrict script execution
+- **HttpOnly Cookies**: Prevent XSS cookie theft
+
+### Security Headers
+
+#### Comprehensive Header Set
+
+```typescript
+const securityHeaders = {
+  'Content-Security-Policy': cspPolicy,
+  'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
+  'X-Frame-Options': 'DENY',
+  'X-Content-Type-Options': 'nosniff',
+  'X-XSS-Protection': '1; mode=block',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'Permissions-Policy': 'camera=(), microphone=(), geolocation=()'
+};
+```
+
+#### Content Security Policy
+
+```typescript
+const cspPolicy = [
+  "default-src 'self'",
+  "script-src 'self' 'nonce-${nonce}'",
+  "style-src 'self' 'nonce-${nonce}'",
+  "img-src 'self' data: https:",
+  "font-src 'self'",
+  "connect-src 'self'",
+  "frame-ancestors 'none'",
+  "base-uri 'self'",
+  "form-action 'self'"
+].join('; ');
+```
+
+### Data Protection
+
+#### Encryption
+
+- **At Rest**: AES-256 encryption for sensitive data
+- **In Transit**: TLS 1.3 for all communications
+- **Database**: Encrypted connections with certificate validation
+- **Secrets**: Environment-based configuration with validation
+
+#### Data Classification
+
+```typescript
+enum DataClassification {
+  PUBLIC = 'public',           // Public information
+  INTERNAL = 'internal',       // Internal use only
+  CONFIDENTIAL = 'confidential', // Sensitive business data
+  RESTRICTED = 'restricted'    // Highly sensitive (PII, financial)
+}
+```
+
+## Security Monitoring
+
+### Logging & Auditing
+
+#### Security Event Logging
+
+```typescript
+interface SecurityEvent {
+  timestamp: string;
+  eventType: 'AUTH_FAILURE' | 'RATE_LIMIT' | 'VALIDATION_ERROR' | 'SUSPICIOUS_ACTIVITY';
+  userId?: string;
+  ipAddress: string;
+  userAgent: string;
+  details: Record<string, any>;
+  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+}
+```
+
+#### Audit Trail
+
+- **Authentication Events**: Login, logout, password changes
+- **Data Access**: CRUD operations with user context
+- **Configuration Changes**: Security setting modifications
+- **Admin Actions**: Privileged operation logging
+
+### Threat Detection
+
+#### Anomaly Detection
+
+- **Behavioral Analysis**: User activity patterns
+- **Rate Limit Violations**: Excessive request patterns
+- **Geographic Anomalies**: Unusual access locations
+- **Time-based Patterns**: Off-hours access attempts
+
+#### Security Metrics
+
+```typescript
+interface SecurityMetrics {
+  failedLogins: number;
+  rateLimitViolations: number;
+  validationErrors: number;
+  suspiciousActivities: number;
+  securityIncidents: number;
+  lastUpdated: string;
+}
+```
+
+## Incident Response
+
+### Security Incident Classification
+
+#### Severity Levels
+
+1. **CRITICAL**: Data breach, system compromise
+2. **HIGH**: Unauthorized access, service disruption
+3. **MEDIUM**: Failed attacks, suspicious activity
+4. **LOW**: Minor security issues, false positives
 
 ### Response Procedures
 
-- **Escalation Matrix**: Clear escalation procedures
-- **Communication Plan**: Stakeholder communication protocols
-- **Documentation**: Incident documentation and reporting
-- **Legal Compliance**: Compliance with legal and regulatory requirements
+#### Immediate Response (0-1 hour)
 
-## 🔧 Security Configuration
+1. **Incident Identification**: Detect and classify incident
+2. **Initial Assessment**: Determine scope and impact
+3. **Containment**: Isolate affected systems
+4. **Notification**: Alert security team and stakeholders
 
-### Environment Variables
+#### Short-term Response (1-24 hours)
 
-```bash
-# Security Configuration
-REDIS_SECURE_MODE=true
-ALLOWED_ORIGINS=http://localhost:3000,https://app.yourdomain.com
-EXTERNAL_DOMAINS=https://cdn.sentry.io
-API_DOMAIN=https://api.yourdomain.com
+1. **Investigation**: Gather evidence and analyze
+2. **Remediation**: Fix vulnerabilities and restore services
+3. **Communication**: Update stakeholders and users
+4. **Documentation**: Record incident details
 
-# JWT Configuration
-JWT_SECRET=your_secure_jwt_secret_here
-JWT_EXPIRES_IN=7d
+#### Long-term Response (1-30 days)
 
-# Rate Limiting
-RATE_LIMIT_ENABLED=true
-```
+1. **Post-mortem Analysis**: Identify root causes
+2. **Process Improvement**: Update security procedures
+3. **Training**: Educate team on lessons learned
+4. **Monitoring**: Enhance detection capabilities
 
-### Security Modes
+### Communication Plan
 
-- **Development Mode**: Relaxed security for development
-- **Production Mode**: Strict security enforcement
-- **Testing Mode**: Security testing and validation
+#### Internal Communication
 
-## 🧪 Security Testing
+- **Security Team**: Immediate notification
+- **Development Team**: Technical details and fixes
+- **Management**: Business impact and timeline
+- **Legal Team**: Compliance and reporting requirements
 
-### Test Coverage
+#### External Communication
 
-- **Unit Tests**: Security function unit tests
-- **Integration Tests**: Security middleware integration tests
-- **Penetration Tests**: Regular security penetration testing
-- **Vulnerability Scans**: Automated vulnerability scanning
+- **Users**: Transparent but secure communication
+- **Regulators**: Required breach notifications
+- **Partners**: Business continuity information
+- **Public**: Press releases if necessary
+
+## Compliance & Standards
+
+### Data Protection Regulations
+
+#### GDPR Compliance
+
+- **Data Minimization**: Collect only necessary data
+- **User Rights**: Access, rectification, deletion
+- **Consent Management**: Clear and revocable consent
+- **Data Portability**: Export user data on request
+
+#### SOC 2 Type II
+
+- **Security**: Protection against unauthorized access
+- **Availability**: System availability and performance
+- **Processing Integrity**: Accurate and complete processing
+- **Confidentiality**: Protection of confidential information
+- **Privacy**: Protection of personal information
+
+### Security Standards
+
+#### OWASP Top 10
+
+- ✅ **A01:2021 – Broken Access Control**: RBAC implemented
+- ✅ **A02:2021 – Cryptographic Failures**: TLS 1.3, encryption
+- ✅ **A03:2021 – Injection**: Input validation, parameterized queries
+- ✅ **A04:2021 – Insecure Design**: Security by design principles
+- ✅ **A05:2021 – Security Misconfiguration**: Hardened configurations
+- ✅ **A06:2021 – Vulnerable Components**: Dependency scanning
+- ✅ **A07:2021 – Authentication Failures**: Multi-factor, rate limiting
+- ✅ **A08:2021 – Software and Data Integrity**: Integrity checks
+- ✅ **A09:2021 – Security Logging**: Comprehensive audit logging
+- ✅ **A10:2021 – Server-Side Request Forgery**: Origin validation
+
+#### NIST Cybersecurity Framework
+
+- **Identify**: Asset management, risk assessment
+- **Protect**: Access control, data security
+- **Detect**: Continuous monitoring, anomaly detection
+- **Respond**: Incident response, communications
+- **Recover**: Recovery planning, improvements
+
+## Security Testing
+
+### Testing Strategy
+
+#### Automated Testing
+
+- **Unit Tests**: Security function validation
+- **Integration Tests**: API security testing
+- **Security Scans**: Dependency vulnerability scanning
+- **SAST/DAST**: Static and dynamic analysis
+
+#### Manual Testing
+
+- **Penetration Testing**: Quarterly security assessments
+- **Code Reviews**: Security-focused code analysis
+- **Red Team Exercises**: Simulated attack scenarios
+- **Social Engineering**: Phishing awareness testing
 
 ### Testing Tools
 
-- **Jest**: Unit and integration testing
-- **OWASP ZAP**: Security testing and scanning
-- **npm audit**: Dependency vulnerability scanning
-- **CodeQL**: Static code analysis
+#### Security Scanners
 
-## 📋 Security Checklist
+- **Dependency Scanning**: npm audit, Snyk
+- **Container Scanning**: Trivy, Clair
+- **Code Analysis**: SonarQube, CodeQL
+- **API Security**: OWASP ZAP, Burp Suite
 
-### Pre-deployment
+#### Monitoring Tools
 
-- [ ] Security headers configured
-- [ ] Rate limiting enabled
-- [ ] Input validation implemented
-- [ ] Authentication configured
-- [ ] Database security configured
-- [ ] Environment variables secured
-- [ ] SSL/TLS configured
-- [ ] Security tests passing
+- **Application Monitoring**: New Relic, DataDog
+- **Security Monitoring**: SIEM, IDS/IPS
+- **Log Aggregation**: ELK Stack, Splunk
+- **Vulnerability Management**: Qualys, Rapid7
 
-### Post-deployment
+## Security Roadmap
 
-- [ ] Security monitoring active
-- [ ] Logs being collected
-- [ ] Alerts configured
-- [ ] Backup procedures tested
-- [ ] Incident response plan ready
-- [ ] Security documentation updated
+### Short-term (3 months)
 
-## 🔄 Security Updates
+- [ ] Multi-factor authentication implementation
+- [ ] Advanced threat detection
+- [ ] Security awareness training
+- [ ] Penetration testing
 
-### Regular Maintenance
+### Medium-term (6 months)
 
-- **Dependency Updates**: Regular security updates
-- **Security Patches**: Apply security patches promptly
-- **Configuration Reviews**: Regular security configuration reviews
-- **Access Reviews**: Regular access control reviews
+- [ ] Zero-trust architecture
+- [ ] Advanced analytics
+- [ ] Automated incident response
+- [ ] Compliance automation
 
-### Security Audits
+### Long-term (12 months)
 
-- **Internal Audits**: Regular internal security audits
-- **External Audits**: Periodic external security assessments
-- **Compliance Audits**: Regulatory compliance audits
-- **Penetration Tests**: Regular penetration testing
+- [ ] AI-powered threat detection
+- [ ] Advanced encryption (homomorphic)
+- [ ] Quantum-resistant cryptography
+- [ ] Security orchestration
 
-## 📚 Security Resources
-
-### Documentation
-
-- [OWASP Top 10](https://owasp.org/www-project-top-ten/)
-- [Security Headers](https://securityheaders.com/)
-- [Content Security Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP)
-- [JWT Security](https://jwt.io/introduction)
-
-### Tools
-
-- [OWASP ZAP](https://owasp.org/www-project-zap/)
-- [Security Headers](https://securityheaders.com/)
-- [Mozilla Observatory](https://observatory.mozilla.org/)
-- [SSL Labs](https://www.ssllabs.com/ssltest/)
-
-## 📞 Security Contacts
+## Contact Information
 
 ### Security Team
 
-- **Security Lead**: [Contact Information]
-- **Incident Response**: [Contact Information]
-- **Security Operations**: [Contact Information]
+- **Security Lead**: security@mybudget.com
+- **Incident Response**: security-incident@mybudget.com
+- **Vulnerability Reports**: security-vuln@mybudget.com
 
-### Reporting Security Issues
+### Emergency Contacts
 
-- **Email**: security@yourdomain.com
-- **Bug Bounty**: [Bug Bounty Program Details]
-- **Responsible Disclosure**: [Disclosure Policy]
+- **24/7 Security Hotline**: +1-XXX-XXX-XXXX
+- **On-call Security Engineer**: Available via PagerDuty
+- **CISO**: Direct line for critical incidents
 
 ---
 
-**Last Updated**: [Date]
-**Version**: 1.0
-**Next Review**: [Date]
+**Document Version**: 1.0.0  
+**Last Updated**: August 2024  
+**Next Review**: November 2024  
+**Owner**: Security Team

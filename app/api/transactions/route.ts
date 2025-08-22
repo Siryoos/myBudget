@@ -3,37 +3,62 @@ import { query } from '@/lib/database';
 import { requireAuth } from '@/lib/auth-middleware';
 import { z } from 'zod';
 import type { AuthenticatedRequest } from '@/types/auth';
+import { 
+  commonSchemas, 
+  RequestValidator, 
+  createValidationErrorResponse,
+  REQUEST_LIMITS,
+  withRequestSizeLimit 
+} from '@/lib/api-validation';
 
 const transactionSchema = z.object({
-  amount: z.number().positive('Amount must be positive'),
-  description: z.string().min(1, 'Description is required'),
-  category: z.string().min(1, 'Category is required'),
+  amount: commonSchemas.amount,
+  description: commonSchemas.description,
+  category: commonSchemas.category,
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format'),
   type: z.enum(['income', 'expense']),
-  account: z.string().optional(),
-  tags: z.array(z.string()).optional(),
+  account: z.string().max(100).optional(),
+  tags: z.array(z.string().max(50)).max(10).optional(),
   isRecurring: z.boolean().optional(),
-  budgetCategoryId: z.string().uuid('Invalid budget category ID').optional(),
+  budgetCategoryId: commonSchemas.uuid.optional(),
 });
 
 const updateTransactionSchema = transactionSchema.partial().extend({
-  id: z.string().uuid('Invalid transaction ID'),
+  id: commonSchemas.uuid,
 });
+
+// Query parameter validation schema
+const querySchema = z.object({
+  page: commonSchemas.pagination.shape.page,
+  limit: commonSchemas.pagination.shape.limit,
+  category: z.string().max(100).optional(),
+  type: z.enum(['income', 'expense']).optional(),
+  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Start date must be in YYYY-MM-DD format').optional(),
+  endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'End date must be in YYYY-MM-DD format').optional(),
+  budgetCategoryId: commonSchemas.uuid.optional(),
+}).refine(
+  (data) => {
+    if (data.startDate && data.endDate) {
+      return new Date(data.startDate) <= new Date(data.endDate);
+    }
+    return true;
+  },
+  { message: 'Start date must be before or equal to end date' }
+);
 
 export const GET = requireAuth(async (request: AuthenticatedRequest) => {
   try {
+    // Validate request size and headers
+    const validator = new RequestValidator(request as unknown as NextRequest, REQUEST_LIMITS.SEARCH_BODY_SIZE);
+    await validator.validateRequestSize();
+    validator.validateHeaders();
+    
+    // Validate and sanitize query parameters
+    const queryParams = validator.validateQueryParams(querySchema);
+    
     const user = request.user;
-    const { searchParams } = new URL(request.url);
-    
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '20');
+    const { page = 1, limit = 20, category, type, startDate, endDate, budgetCategoryId } = queryParams;
     const offset = (page - 1) * limit;
-    
-    const category = searchParams.get('category');
-    const type = searchParams.get('type');
-    const startDate = searchParams.get('startDate');
-    const endDate = searchParams.get('endDate');
-    const budgetCategoryId = searchParams.get('budgetCategoryId');
 
     const conditions = ['t.user_id = $1'];
     const params = [user.id];
@@ -103,9 +128,17 @@ export const GET = requireAuth(async (request: AuthenticatedRequest) => {
     });
 
   } catch (error) {
-    console.error('Get transactions error:', error);
+    if (error instanceof Error && error.message.includes('Validation failed')) {
+      return createValidationErrorResponse(error);
+    }
+    
+    console.error('Error fetching transactions:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch transactions' },
+      { 
+        success: false, 
+        error: 'Failed to fetch transactions',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     );
   }
@@ -113,86 +146,62 @@ export const GET = requireAuth(async (request: AuthenticatedRequest) => {
 
 export const POST = requireAuth(async (request: AuthenticatedRequest) => {
   try {
-    const body = await request.json();
-    const transactionData = transactionSchema.parse(body);
-    const user = request.user;
-
-    // Validate date is not in the future
-    const transactionDate = new Date(transactionData.date);
-    const today = new Date();
-    today.setHours(23, 59, 59, 999); // End of today
+    // Validate request size and headers
+    const validator = new RequestValidator(request as unknown as NextRequest, REQUEST_LIMITS.DEFAULT_BODY_SIZE);
+    await validator.validateRequestSize();
+    validator.validateHeaders();
     
-    if (transactionDate > today) {
-      return NextResponse.json(
-        { error: 'Transaction date cannot be in the future' },
-        { status: 400 }
-      );
-    }
+    // Validate and parse request body
+    const body = await validator.validateAndParseBody(transactionSchema);
+    
+    const user = request.user;
+    const { amount, description, category, date, type, account, tags, isRecurring, budgetCategoryId } = body;
 
-    // Validate budget category belongs to user if provided
-    if (transactionData.budgetCategoryId) {
-      const budgetCategory = await query(
-        `SELECT bc.id FROM budget_categories bc
-         JOIN budgets b ON bc.budget_id = b.id
-         WHERE bc.id = $1 AND b.user_id = $2`,
-        [transactionData.budgetCategoryId, user.id]
+    // Validate budget category exists if provided
+    if (budgetCategoryId) {
+      const budgetCategoryResult = await query(
+        'SELECT id FROM budget_categories WHERE id = $1 AND user_id = $2',
+        [budgetCategoryId, user.id]
       );
       
-      if (budgetCategory.rows.length === 0) {
+      if (budgetCategoryResult.rows.length === 0) {
         return NextResponse.json(
-          { error: 'Invalid budget category' },
+          { 
+            success: false, 
+            error: 'Invalid budget category' 
+          },
           { status: 400 }
         );
       }
     }
 
-    // Start transaction
-    await query('BEGIN');
+    // Insert transaction
+    const result = await query(
+      `INSERT INTO transactions (
+        user_id, amount, description, category, date, type, 
+        account, tags, is_recurring, budget_category_id, created_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())
+      RETURNING *`,
+      [user.id, amount, description, category, date, type, account, tags, isRecurring, budgetCategoryId]
+    );
 
-    try {
-      const result = await query(
-        `INSERT INTO transactions (user_id, budget_category_id, amount, description, category, date, type, account, tags, is_recurring)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
-        [user.id, transactionData.budgetCategoryId || null, transactionData.amount, 
-         transactionData.description, transactionData.category, transactionData.date,
-         transactionData.type, transactionData.account || null, 
-         transactionData.tags || [], transactionData.isRecurring || false]
-      );
-
-      // Update budget category spent amount if it's an expense
-      if (transactionData.type === 'expense' && transactionData.budgetCategoryId) {
-        await query(
-          `UPDATE budget_categories 
-           SET spent = spent + $1 
-           WHERE id = $2`,
-          [transactionData.amount, transactionData.budgetCategoryId]
-        );
-      }
-
-      await query('COMMIT');
-
-      return NextResponse.json({
-        success: true,
-        data: result.rows[0]
-      });
-
-    } catch (error) {
-      await query('ROLLBACK');
-      throw error;
-    }
+    return NextResponse.json({
+      success: true,
+      data: result.rows[0]
+    }, { status: 201 });
 
   } catch (error) {
-    console.error('Create transaction error:', error);
-    
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: error.errors },
-        { status: 400 }
-      );
+    if (error instanceof Error && error.message.includes('Validation failed')) {
+      return createValidationErrorResponse(error);
     }
-
+    
+    console.error('Error creating transaction:', error);
     return NextResponse.json(
-      { error: 'Failed to create transaction' },
+      { 
+        success: false, 
+        error: 'Failed to create transaction',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     );
   }

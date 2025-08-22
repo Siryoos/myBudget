@@ -89,38 +89,80 @@ function localeMiddleware(request: NextRequest): NextResponse {
   return response;
 }
 
-export function middleware(request: NextRequest) {
-  // First apply locale middleware
-  let response = localeMiddleware(request);
+// Safe header merging function to prevent conflicts
+function mergeHeadersSafely(target: Headers, source: Headers): void {
+  // Define priority order: security headers take precedence over locale headers
+  const securityPriorityHeaders = [
+    'Content-Security-Policy',
+    'X-Frame-Options',
+    'X-Content-Type-Options',
+    'X-XSS-Protection',
+    'Strict-Transport-Security',
+    'Cross-Origin-Embedder-Policy',
+    'Cross-Origin-Opener-Policy',
+    'Cross-Origin-Resource-Policy'
+  ];
   
-  // If locale middleware redirected, return early
-  if (response.status === 302) {
-    return response;
-  }
-  
-  // Then apply security middleware
-  const securityResponse = securityMiddleware(request);
-  
-  // Check if securityResponse is a terminal response (status !== 200 and !== 302)
-  // Terminal responses include 204 (preflight), 429 (rate limit), etc.
-  if (securityResponse.status !== 200 && securityResponse.status !== 302) {
-    return securityResponse;
-  }
-  
-  // Merge security headers into the locale response for non-terminal responses
-  securityResponse.headers.forEach((value, key) => {
-    response.headers.set(key, value);
+  // Merge all headers, but security headers from security middleware take priority
+  source.forEach((value, key) => {
+    if (securityPriorityHeaders.includes(key)) {
+      // Security headers always override
+      target.set(key, value);
+    } else if (!target.has(key)) {
+      // Non-security headers only if not already set
+      target.set(key, value);
+    }
+    // If header already exists and it's not security-related, keep the existing one
   });
-  
-  return response;
+}
+
+export function middleware(request: NextRequest) {
+  try {
+    // First apply locale middleware
+    let response = localeMiddleware(request);
+    
+    // If locale middleware redirected, return early
+    if (response.status === 302) {
+      return response;
+    }
+    
+    // Then apply security middleware
+    const securityResponse = securityMiddleware(request);
+    
+    // Check if securityResponse is a terminal response (status !== 200 and !== 302)
+    // Terminal responses include 204 (preflight), 429 (rate limit), etc.
+    if (securityResponse.status !== 200 && securityResponse.status !== 302) {
+      return securityResponse;
+    }
+    
+    // Safely merge security headers into the locale response for non-terminal responses
+    mergeHeadersSafely(response.headers, securityResponse.headers);
+    
+    return response;
+  } catch (error) {
+    console.error('Middleware error:', error);
+    
+    // Return a safe fallback response instead of crashing
+    return new NextResponse(
+      JSON.stringify({
+        success: false,
+        error: 'Internal server error',
+        message: 'Middleware processing failed'
+      }),
+      {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate'
+        }
+      }
+    );
+  }
 }
 
 export const config = {
   matcher: [
-    // Combine both locale and security matchers
-    // Locale matcher: Skip internal paths but include locale-specific routes
-    '/((?!_next|api|favicon.ico|fonts|images|sw.js|manifest.json|.*\\..*|locales).*)',
-    // Security matcher: Include all routes except static files and API routes
-    '/((?!_next/static|_next/image|favicon.ico|public|api).*)',
+    // Simplified matcher that covers all necessary routes without conflicts
+    '/((?!_next/static|_next/image|favicon.ico|public|sw.js|manifest.json|.*\\..*).*)',
   ],
 };

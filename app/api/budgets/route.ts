@@ -3,29 +3,59 @@ import { query } from '@/lib/database';
 import { requireAuth } from '@/lib/auth-middleware';
 import { z } from 'zod';
 import type { AuthenticatedRequest } from '@/types/auth';
+import { 
+  commonSchemas, 
+  RequestValidator, 
+  createValidationErrorResponse,
+  REQUEST_LIMITS 
+} from '@/lib/api-validation';
 
 const budgetSchema = z.object({
-  name: z.string().min(1, 'Budget name is required'),
+  name: z.string()
+    .min(1, 'Budget name is required')
+    .max(100, 'Budget name cannot exceed 100 characters')
+    .transform(s => s.trim()),
   method: z.enum(['50-30-20', 'pay-yourself-first', 'envelope', 'zero-based', 'kakeibo']),
-  totalIncome: z.number().positive('Total income must be positive'),
+  totalIncome: commonSchemas.amount,
   period: z.enum(['weekly', 'monthly', 'yearly']),
   startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Start date must be in YYYY-MM-DD format'),
   endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'End date must be in YYYY-MM-DD format'),
   categories: z.array(z.object({
-    name: z.string().min(1, 'Category name is required'),
-    allocated: z.number().positive('Allocated amount must be positive'),
+    name: z.string()
+      .min(1, 'Category name is required')
+      .max(100, 'Category name cannot exceed 100 characters')
+      .transform(s => s.trim()),
+    allocated: commonSchemas.amount,
     color: z.string().regex(/^#[0-9A-F]{6}$/i, 'Color must be a valid hex color'),
-    icon: z.string().optional(),
+    icon: z.string().max(50).optional(),
     isEssential: z.boolean().optional(),
-  })).min(1, 'At least one category is required'),
+  })).min(1, 'At least one category is required').max(50, 'Cannot exceed 50 categories'),
 });
 
+// Create update schema before adding refinements
 const updateBudgetSchema = budgetSchema.partial().extend({
-  id: z.string().uuid('Invalid budget ID'),
+  id: commonSchemas.uuid,
 });
+
+// Add refinements to the base schema for validation
+const validatedBudgetSchema = budgetSchema.refine(
+  (data) => new Date(data.startDate) < new Date(data.endDate),
+  { message: 'End date must be after start date' }
+).refine(
+  (data) => {
+    const totalAllocated = data.categories.reduce((sum, cat) => sum + cat.allocated, 0);
+    return Math.abs(totalAllocated - data.totalIncome) <= 0.01;
+  },
+  { message: 'Total allocated amount must equal total income' }
+);
 
 export const GET = requireAuth(async (request: AuthenticatedRequest) => {
   try {
+    // Validate request size and headers
+    const validator = new RequestValidator(request as unknown as NextRequest, REQUEST_LIMITS.SEARCH_BODY_SIZE);
+    await validator.validateRequestSize();
+    validator.validateHeaders();
+    
     const user = request.user;
     
     const result = await query(
@@ -56,9 +86,17 @@ export const GET = requireAuth(async (request: AuthenticatedRequest) => {
     });
 
   } catch (error) {
-    console.error('Get budgets error:', error);
+    if (error instanceof Error && error.message.includes('Validation failed')) {
+      return createValidationErrorResponse(error);
+    }
+    
+    console.error('Error fetching budgets:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch budgets' },
+      { 
+        success: false,
+        error: 'Failed to fetch budgets',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     );
   }
@@ -66,29 +104,14 @@ export const GET = requireAuth(async (request: AuthenticatedRequest) => {
 
 export const POST = requireAuth(async (request: AuthenticatedRequest) => {
   try {
-    const body = await request.json();
-    const budgetData = budgetSchema.parse(body);
-    const user = request.user;
-
-    // Validate date range
-    const startDate = new Date(budgetData.startDate);
-    const endDate = new Date(budgetData.endDate);
+    // Validate request size and headers
+    const validator = new RequestValidator(request as unknown as NextRequest, REQUEST_LIMITS.DEFAULT_BODY_SIZE);
+    await validator.validateRequestSize();
+    validator.validateHeaders();
     
-    if (startDate >= endDate) {
-      return NextResponse.json(
-        { error: 'End date must be after start date' },
-        { status: 400 }
-      );
-    }
-
-    // Validate total allocation matches income
-    const totalAllocated = budgetData.categories.reduce((sum, cat) => sum + cat.allocated, 0);
-    if (Math.abs(totalAllocated - budgetData.totalIncome) > 0.01) {
-      return NextResponse.json(
-        { error: 'Total allocated amount must equal total income' },
-        { status: 400 }
-      );
-    }
+    // Validate and parse request body using the validated schema
+    const budgetData = await validator.validateAndParseBody(validatedBudgetSchema);
+    const user = request.user;
 
     // Start transaction
     await query('BEGIN');
@@ -118,8 +141,8 @@ export const POST = requireAuth(async (request: AuthenticatedRequest) => {
 
       return NextResponse.json({
         success: true,
-        data: { budgetId, message: 'Budget created successfully' }
-      });
+        data: { id: budgetId, ...budgetData }
+      }, { status: 201 });
 
     } catch (error) {
       await query('ROLLBACK');
@@ -127,17 +150,17 @@ export const POST = requireAuth(async (request: AuthenticatedRequest) => {
     }
 
   } catch (error) {
-    console.error('Create budget error:', error);
-    
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: error.errors },
-        { status: 400 }
-      );
+    if (error instanceof Error && error.message.includes('Validation failed')) {
+      return createValidationErrorResponse(error);
     }
-
+    
+    console.error('Error creating budget:', error);
     return NextResponse.json(
-      { error: 'Failed to create budget' },
+      { 
+        success: false,
+        error: 'Failed to create budget',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     );
   }

@@ -67,10 +67,13 @@ process.env.DB_PASSWORD = 'test_password_for_testing_only'
 process.env.REDIS_HOST = 'localhost'
 process.env.REDIS_PORT = '6379'
 process.env.REDIS_PASSWORD = 'test_redis_password_for_testing_only'
-process.env.ALLOWED_ORIGINS = 'http://localhost:3000'
+process.env.ALLOWED_ORIGINS = 'http://localhost:3000,https://test.example.com'
 process.env.REDIS_SECURE_MODE = 'false'
 process.env.RATE_LIMIT_ENABLED = 'false'
 process.env.SECURITY_HEADERS_ENABLED = 'false'
+process.env.EXTERNAL_DOMAINS = ''
+process.env.SENTRY_DSN = ''
+process.env.API_DOMAIN = ''
 
 // Global test utilities
 global.ResizeObserver = jest.fn().mockImplementation(() => ({

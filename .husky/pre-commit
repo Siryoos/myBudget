@@ -1,0 +1,60 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🔍 Running pre-commit checks..."
+
+# Run TypeScript type checking
+echo "📝 Checking TypeScript types..."
+npm run type-check || {
+  echo "❌ TypeScript type checking failed"
+  exit 1
+}
+
+# Run ESLint
+echo "🔧 Running ESLint..."
+npm run lint || {
+  echo "❌ ESLint found issues"
+  exit 1
+}
+
+# Run Prettier check
+echo "💅 Checking code formatting..."
+npm run format:check || {
+  echo "❌ Code formatting check failed"
+  exit 1
+}
+
+# Run security audit
+echo "🔒 Running security audit..."
+npm audit --audit-level=moderate || {
+  echo "⚠️ Security audit found issues"
+  echo "Please review and fix security vulnerabilities"
+}
+
+# Run unit tests
+echo "🧪 Running unit tests..."
+npm run test:unit || {
+  echo "❌ Unit tests failed"
+  exit 1
+}
+
+# Check for secrets in staged files
+echo "🔐 Checking for secrets in staged files..."
+npx detect-secrets scan --baseline .secrets.baseline || {
+  echo "⚠️ Potential secrets detected"
+  echo "Please review and remove any sensitive information"
+}
+
+# Check for large files
+echo "📦 Checking for large files..."
+git diff --cached --name-only | xargs -I {} sh -c '
+  if [ -f "{}" ]; then
+    size=$(stat -c%s "{}" 2>/dev/null || stat -f%z "{}" 2>/dev/null || echo "0")
+    if [ "$size" -gt 1048576 ]; then
+      echo "⚠️ Large file detected: {} ($(($size / 1024 / 1024))MB)"
+      echo "Consider using Git LFS for large files"
+    fi
+  fi
+'
+
+echo "✅ Pre-commit checks passed!"

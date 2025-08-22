@@ -1,5 +1,5 @@
-import { apiClient } from './api-client';
 import { z } from 'zod';
+
 import type {
   Transaction,
   Budget,
@@ -7,8 +7,11 @@ import type {
   DashboardData,
   Notification,
   Achievement,
-  User
+  User,
 } from '@/types';
+
+import { apiClient } from './api-client';
+
 
 // Response validation schemas
 const userSchema = z.object({
@@ -19,7 +22,7 @@ const userSchema = z.object({
   currency: z.string(),
   language: z.string(),
   createdAt: z.string(),
-  updatedAt: z.string()
+  updatedAt: z.string(),
 });
 
 const transactionSchema = z.object({
@@ -34,7 +37,7 @@ const transactionSchema = z.object({
   recurringFrequency: z.enum(['daily', 'weekly', 'monthly', 'yearly']).optional(),
   tags: z.array(z.string()).optional(),
   createdAt: z.string(),
-  updatedAt: z.string()
+  updatedAt: z.string(),
 });
 
 const budgetCategorySchema = z.object({
@@ -45,7 +48,7 @@ const budgetCategorySchema = z.object({
   remaining: z.number(),
   color: z.string(),
   icon: z.string().optional(),
-  isEssential: z.boolean()
+  isEssential: z.boolean(),
 });
 
 const budgetSchema = z.object({
@@ -59,7 +62,7 @@ const budgetSchema = z.object({
   endDate: z.string(),
   categories: z.array(budgetCategorySchema),
   createdAt: z.string(),
-  updatedAt: z.string()
+  updatedAt: z.string(),
 });
 
 const milestoneSchema = z.object({
@@ -67,10 +70,11 @@ const milestoneSchema = z.object({
   amount: z.number(),
   description: z.string(),
   isCompleted: z.boolean(),
-  completedDate: z.string().nullable()
+  completedDate: z.string().nullable(),
 });
 
-const savingsGoalSchema = z.object({
+// API response schemas (expect strings for dates)
+const savingsGoalApiSchema = z.object({
   id: z.string(),
   userId: z.string(),
   name: z.string(),
@@ -84,10 +88,12 @@ const savingsGoalSchema = z.object({
   color: z.string().optional(),
   milestones: z.array(milestoneSchema),
   createdAt: z.string(),
-  updatedAt: z.string()
+  updatedAt: z.string(),
+  isActive: z.boolean().optional().default(true),
 });
 
-const notificationSchema = z.object({
+// API response schemas
+const notificationApiSchema = z.object({
   id: z.string(),
   userId: z.string(),
   type: z.string(),
@@ -95,10 +101,10 @@ const notificationSchema = z.object({
   message: z.string(),
   isRead: z.boolean(),
   data: z.record(z.any()).optional(),
-  createdAt: z.string()
+  createdAt: z.string(),
 });
 
-const achievementSchema = z.object({
+const achievementApiSchema = z.object({
   id: z.string(),
   name: z.string(),
   description: z.string(),
@@ -107,7 +113,7 @@ const achievementSchema = z.object({
   progress: z.number(),
   maxProgress: z.number(),
   category: z.string(),
-  points: z.number()
+  points: z.number(),
 });
 
 // API wrapper functions with validation
@@ -139,7 +145,7 @@ export const api = {
         dateOfBirth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
         monthlyIncome: z.number().positive(),
         currency: z.string().optional(),
-        language: z.string().optional()
+        language: z.string().optional(),
       }).parse(data);
 
       const response = await apiClient.register(validatedData);
@@ -165,7 +171,7 @@ export const api = {
         response.data = userSchema.parse(response.data);
       }
       return response;
-    }
+    },
   },
 
   // Dashboard
@@ -175,7 +181,7 @@ export const api = {
       // Dashboard data is complex, so we'll trust the type system here
       // In production, you'd want to validate this thoroughly
       return response;
-    }
+    },
   },
 
   // Transactions
@@ -191,10 +197,13 @@ export const api = {
     }) {
       const response = await apiClient.getTransactions(params);
       if (response.success && response.data) {
-        response.data.transactions = z.array(transactionSchema).parse(response.data.transactions.map(t => ({
+        // First parse with API schema (expects strings)
+        const parsedTransactions = z.array(transactionSchema).parse(response.data.transactions);
+        // Then convert to frontend format (with Date objects)
+        response.data.transactions = parsedTransactions.map(t => ({
           ...t,
-          date: new Date(t.date)
-        })));
+          date: new Date(t.date),
+        }));
       }
       return response;
     },
@@ -202,10 +211,13 @@ export const api = {
     async get(id: string) {
       const response = await apiClient.getTransaction(id);
       if (response.success && response.data) {
-        response.data = transactionSchema.parse({
-          ...response.data,
-          date: new Date(response.data.date)
-        });
+        // First parse with API schema (expects strings)
+        const parsedTransaction = transactionSchema.parse(response.data);
+        // Then convert to frontend format (with Date objects)
+        response.data = {
+          ...parsedTransaction,
+          date: new Date(parsedTransaction.date),
+        };
       }
       return response;
     },
@@ -229,15 +241,18 @@ export const api = {
         date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
         isRecurring: z.boolean().optional(),
         recurringFrequency: z.enum(['daily', 'weekly', 'monthly', 'yearly']).optional(),
-        tags: z.array(z.string()).optional()
+        tags: z.array(z.string()).optional(),
       }).parse(data);
 
       const response = await apiClient.createTransaction(validatedData);
       if (response.success && response.data) {
-        response.data = transactionSchema.parse({
-          ...response.data,
-          date: new Date(response.data.date)
-        });
+        // First parse with API schema (expects strings)
+        const parsedTransaction = transactionSchema.parse(response.data);
+        // Then convert to frontend format (with Date objects)
+        response.data = {
+          ...parsedTransaction,
+          date: new Date(parsedTransaction.date),
+        };
       }
       return response;
     },
@@ -245,15 +260,18 @@ export const api = {
     async update(id: string, data: Partial<Transaction>) {
       const response = await apiClient.updateTransaction(id, data);
       if (response.success && response.data) {
-        response.data = transactionSchema.parse({
-          ...response.data,
-          date: new Date(response.data.date)
-        });
+        // First parse with API schema (expects strings)
+        const parsedTransaction = transactionSchema.parse(response.data);
+        // Then convert to frontend format (with Date objects)
+        response.data = {
+          ...parsedTransaction,
+          date: new Date(parsedTransaction.date),
+        };
       }
       return response;
     },
 
-    delete: (id: string) => apiClient.deleteTransaction(id)
+    delete: (id: string) => apiClient.deleteTransaction(id),
   },
 
   // Budgets
@@ -264,7 +282,7 @@ export const api = {
         response.data = z.array(budgetSchema).parse(response.data.map(b => ({
           ...b,
           startDate: new Date(b.startDate),
-          endDate: new Date(b.endDate)
+          endDate: new Date(b.endDate),
         })));
       }
       return response;
@@ -276,7 +294,7 @@ export const api = {
         response.data = budgetSchema.parse({
           ...response.data,
           startDate: new Date(response.data.startDate),
-          endDate: new Date(response.data.endDate)
+          endDate: new Date(response.data.endDate),
         });
       }
       return response;
@@ -310,15 +328,15 @@ export const api = {
           allocated: z.number().positive(),
           color: z.string().regex(/^#[0-9A-F]{6}$/i),
           icon: z.string().optional(),
-          isEssential: z.boolean().optional()
-        })).min(1)
+          isEssential: z.boolean().optional(),
+        })).min(1),
       }).parse(data);
 
       return apiClient.createBudget(validatedData);
     },
 
     update: (id: string, data: Partial<Budget>) => apiClient.updateBudget(id, data),
-    delete: (id: string) => apiClient.deleteBudget(id)
+    delete: (id: string) => apiClient.deleteBudget(id),
   },
 
   // Goals
@@ -326,11 +344,20 @@ export const api = {
     async list(priority?: 'low' | 'medium' | 'high') {
       const response = await apiClient.getGoals(priority);
       if (response.success && response.data) {
-        response.data = z.array(savingsGoalSchema).parse(response.data.map(goal => ({
+        // First parse with API schema
+        const parsedGoals = z.array(savingsGoalApiSchema).parse(response.data);
+        // Then convert to frontend format
+        response.data = parsedGoals.map(goal => ({
           ...goal,
           targetDate: new Date(goal.targetDate),
-          isActive: goal.isActive ?? true
-        })));
+          createdAt: goal.createdAt ? new Date(goal.createdAt) : undefined,
+          updatedAt: goal.updatedAt ? new Date(goal.updatedAt) : undefined,
+          isActive: goal.isActive ?? true,
+          milestones: goal.milestones?.map(milestone => ({
+            ...milestone,
+            completedDate: milestone.completedDate ? new Date(milestone.completedDate) : undefined,
+          })) || [],
+        }));
       }
       return response;
     },
@@ -338,11 +365,20 @@ export const api = {
     async get(id: string) {
       const response = await apiClient.getGoal(id);
       if (response.success && response.data) {
-        response.data = savingsGoalSchema.parse({
-          ...response.data,
-          targetDate: new Date(response.data.targetDate),
-          isActive: response.data.isActive ?? true
-        });
+        // First parse with API schema
+        const parsedGoal = savingsGoalApiSchema.parse(response.data);
+        // Then convert to frontend format
+        response.data = {
+          ...parsedGoal,
+          targetDate: new Date(parsedGoal.targetDate),
+          createdAt: parsedGoal.createdAt ? new Date(parsedGoal.createdAt) : undefined,
+          updatedAt: parsedGoal.updatedAt ? new Date(parsedGoal.updatedAt) : undefined,
+          isActive: parsedGoal.isActive ?? true,
+          milestones: parsedGoal.milestones?.map(milestone => ({
+            ...milestone,
+            completedDate: milestone.completedDate ? new Date(milestone.completedDate) : undefined,
+          })) || [],
+        };
       }
       return response;
     },
@@ -366,7 +402,7 @@ export const api = {
         priority: z.enum(['low', 'medium', 'high']),
         category: z.string().min(1),
         icon: z.string().optional(),
-        color: z.string().regex(/^#[0-9A-F]{6}$/i).optional()
+        color: z.string().regex(/^#[0-9A-F]{6}$/i).optional(),
       }).parse(data);
 
       return apiClient.createGoal(validatedData);
@@ -377,11 +413,11 @@ export const api = {
     contribute: (goalId: string, amount: number) => apiClient.addGoalContribution(goalId, amount),
 
     milestones: {
-      create: (goalId: string, data: { amount: number; description: string }) => 
+      create: (goalId: string, data: { amount: number; description: string }) =>
         apiClient.createMilestone(goalId, data),
-      complete: (goalId: string, milestoneId: string) => 
-        apiClient.completeMilestone(goalId, milestoneId)
-    }
+      complete: (goalId: string, milestoneId: string) =>
+        apiClient.completeMilestone(goalId, milestoneId),
+    },
   },
 
   // Analytics
@@ -390,7 +426,7 @@ export const api = {
       startDate?: string;
       endDate?: string;
       groupBy?: 'day' | 'week' | 'month' | 'year';
-    }) => apiClient.getAnalytics(params)
+    }) => apiClient.getAnalytics(params),
   },
 
   // Notifications
@@ -398,16 +434,20 @@ export const api = {
     async list(unreadOnly?: boolean) {
       const response = await apiClient.getNotifications(unreadOnly);
       if (response.success && response.data) {
-        response.data = z.array(notificationSchema).parse(response.data.map(n => ({
-          ...n,
-          type: n.type as 'error' | 'insight' | 'budget_alert' | 'success' | 'warning' | 'info'
-        })));
+        // First parse with API schema
+        const parsedNotifications = z.array(notificationApiSchema).parse(response.data);
+        // Then convert to frontend format
+        response.data = parsedNotifications.map(notification => ({
+          ...notification,
+          type: notification.type as 'info' | 'warning' | 'success' | 'error' | 'insight' | 'budget_alert',
+          createdAt: notification.createdAt, // Keep as string for now to match expected type
+        }));
       }
       return response;
     },
 
     markRead: (id: string) => apiClient.markNotificationRead(id),
-    markAllRead: () => apiClient.markAllNotificationsRead()
+    markAllRead: () => apiClient.markAllNotificationsRead(),
   },
 
   // Achievements
@@ -415,21 +455,26 @@ export const api = {
     async list() {
       const response = await apiClient.getAchievements();
       if (response.success && response.data) {
-        response.data = z.array(achievementSchema).parse(response.data.map(a => ({
-          ...a,
-          requirement: a.requirement || 'Custom achievement',
-          isUnlocked: a.isUnlocked ?? false
-        })));
+        // First parse with API schema
+        const parsedAchievements = z.array(achievementApiSchema).parse(response.data);
+        // Then convert to frontend format
+        response.data = parsedAchievements.map(achievement => ({
+          ...achievement,
+          requirement: 'Custom achievement', // Add default requirement
+          isUnlocked: Boolean(achievement.unlockedAt),
+          unlockedDate: achievement.unlockedAt ? new Date(achievement.unlockedAt) : undefined,
+          unlockedAt: achievement.unlockedAt || undefined, // Convert null to undefined
+        }));
       }
       return response;
-    }
+    },
   },
 
   // Settings
   settings: {
     get: () => apiClient.getSettings(),
-    update: (data: Parameters<typeof apiClient.updateSettings>[0]) => 
-      apiClient.updateSettings(data)
+    update: (data: Parameters<typeof apiClient.updateSettings>[0]) =>
+      apiClient.updateSettings(data),
   },
 
   // Utility functions
@@ -437,8 +482,8 @@ export const api = {
     clearCache: () => apiClient.clearCache(),
     invalidateCache: (pattern: string) => apiClient.invalidateCache(pattern),
     setToken: (token: string | null) => apiClient.setToken(token),
-    getToken: () => apiClient.getToken()
-  }
+    getToken: () => apiClient.getToken(),
+  },
 };
 
 // Export types for convenience
