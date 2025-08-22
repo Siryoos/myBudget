@@ -334,6 +334,9 @@ export const createRateLimiter = (secureMode: boolean = true) => new RedisRateLi
 // Export Redis connection for direct access when needed
 export default redis;
 
+// Export getRedisClient function for compatibility
+export const getRedisClient = (): Redis => redis;
+
 // Export connection health check utility
 export const checkRedisHealth = async (): Promise<{
   healthy: boolean;

@@ -116,7 +116,7 @@ function mergeHeadersSafely(target: Headers, source: Headers): void {
   });
 }
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   try {
     // First apply locale middleware
     let response = localeMiddleware(request);
@@ -127,7 +127,7 @@ export function middleware(request: NextRequest) {
     }
     
     // Then apply security middleware
-    const securityResponse = securityMiddleware(request);
+    const securityResponse = await securityMiddleware(request);
     
     // Check if securityResponse is a terminal response (status !== 200 and !== 302)
     // Terminal responses include 204 (preflight), 429 (rate limit), etc.

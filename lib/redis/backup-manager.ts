@@ -308,7 +308,10 @@ export class RedisBackupManager {
   private async getRedisDumpPath(): Promise<string | null> {
     try {
       const config = await this.redis!.config('GET', 'dir');
-      const dir = config[1];
+      const dir = Array.isArray(config) && config.length > 1 ? config[1] : null;
+      if (!dir || typeof dir !== 'string') {
+        throw new Error('Invalid Redis config response');
+      }
       return path.join(dir, 'dump.rdb');
     } catch (error) {
       console.warn('Failed to get Redis dump path:', error);

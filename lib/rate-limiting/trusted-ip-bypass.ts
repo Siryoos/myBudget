@@ -162,7 +162,7 @@ export class TrustedIPBypassManager {
   private isIPv6InRange(ip: string, rangeIP: string, prefix: number): boolean {
     // Simplified IPv6 range checking
     // In production, use a proper IPv6 library
-    return ip.startsWith(rangeIP.split('/')[0].substring(0, prefix / 4));
+    return ip.startsWith(rangeIP.split('/')[0].substring(0, Math.floor(prefix / 4)));
   }
 
   // Convert IPv4 to number

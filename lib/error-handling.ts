@@ -298,8 +298,19 @@ export const createErrorResponse = (
   const errorHandler = ErrorHandler.getInstance();
   
   if (error instanceof AppError) {
-    error.userAgent = userAgent;
-    error.ipAddress = ipAddress;
+    // Create a new error instance with the additional context instead of modifying the existing one
+    const enhancedError = new AppError(
+      error.message,
+      error.code,
+      error.statusCode,
+      error.severity,
+      error.isOperational,
+      error.details,
+      requestId || error.requestId,
+      userAgent || error.userAgent,
+      ipAddress || error.ipAddress
+    );
+    return errorHandler.handleError(enhancedError, requestId);
   }
   
   return errorHandler.handleError(error, requestId);

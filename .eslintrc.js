@@ -28,6 +28,10 @@ module.exports = {
     'react-hooks',
   ],
   rules: {
+    // Disable problematic indent rule that causes stack overflow
+    'indent': 'off',
+    '@typescript-eslint/indent': 'off',
+    
     // TypeScript specific rules
     '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
     '@typescript-eslint/explicit-function-return-type': 'off',
@@ -40,8 +44,6 @@ module.exports = {
       'error',
       { prefer: 'type-imports' },
     ],
-
-
 
     // Import rules
     'import/order': [
@@ -89,8 +91,6 @@ module.exports = {
     'jsx-a11y/role-supports-aria-props': 'error',
     'jsx-a11y/tabindex-no-positive': 'error',
 
-
-
     // General code quality rules
     'no-console': ['warn', { allow: ['warn', 'error'] }],
     'no-debugger': 'error',
@@ -114,7 +114,6 @@ module.exports = {
     'comma-dangle': ['error', 'always-multiline'],
     'quotes': ['error', 'single', { avoidEscape: true }],
     'semi': ['error', 'always'],
-    'indent': ['error', 2, { SwitchCase: 1 }],
     'max-len': [
       'error',
       {

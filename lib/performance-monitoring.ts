@@ -1,6 +1,7 @@
 import { performance } from 'perf_hooks';
 import { getPool } from './database';
 import { getRedisClient } from './redis';
+import type { NextRequest } from 'next/server';
 
 // Performance metrics interface
 export interface PerformanceMetrics {
@@ -446,8 +447,8 @@ export const withPerformanceMonitoring = (handler: Function) => {
       stopPerformanceMonitoring(
         requestId,
         response.status,
-        request.headers.get('user-agent'),
-        request.ip || request.headers.get('x-forwarded-for')
+        request.headers.get('user-agent') || undefined,
+        request.ip || request.headers.get('x-forwarded-for') || undefined
       );
 
       return response;

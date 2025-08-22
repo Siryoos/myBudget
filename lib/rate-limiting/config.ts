@@ -155,7 +155,7 @@ export const DEFAULT_RATE_LIMIT_CONFIG: RateLimitConfig = {
     retryAfter: 'Retry-After'
   },
   storage: {
-    type: process.env.RATE_LIMIT_STORAGE || 'redis',
+    type: (process.env.RATE_LIMIT_STORAGE || 'redis') as 'memory' | 'redis',
     redis: {
       host: process.env.REDIS_HOST || 'localhost',
       port: parseInt(process.env.REDIS_PORT || '6379'),
@@ -182,12 +182,12 @@ export const DEFAULT_RATE_LIMIT_CONFIG: RateLimitConfig = {
 export function validateRateLimitConfig(config: RateLimitConfig): string[] {
   const errors: string[] = [];
 
-  if (config.windowMs <= 0) {
-    errors.push('windowMs must be greater than 0');
+  if (config.defaultLimits.windowMs <= 0) {
+    errors.push('defaultLimits.windowMs must be greater than 0');
   }
 
-  if (config.maxRequests <= 0) {
-    errors.push('maxRequests must be greater than 0');
+  if (config.defaultLimits.maxRequests <= 0) {
+    errors.push('defaultLimits.maxRequests must be greater than 0');
   }
 
   if (config.adaptiveLimiting.enabled) {

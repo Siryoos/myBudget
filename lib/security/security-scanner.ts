@@ -204,6 +204,7 @@ export class SecurityScanner {
 
   // Scan npm dependencies for vulnerabilities
   private async scanDependencies(): Promise<SecurityScanResult> {
+    const startTime = Date.now();
     const vulnerabilities: SecurityVulnerability[] = [];
 
     try {
@@ -270,6 +271,7 @@ export class SecurityScanner {
 
   // Scan code for security issues
   private async scanCodeSecurity(): Promise<SecurityScanResult> {
+    const startTime = Date.now();
     const vulnerabilities: SecurityVulnerability[] = [];
 
     try {
@@ -318,12 +320,13 @@ export class SecurityScanner {
     return this.createScanResult(
       SecurityScanType.CODE_SECURITY,
       vulnerabilities,
-      Date.now() - Date.now()
+      Date.now() - startTime
     );
   }
 
   // Scan for secrets in code
   private async scanForSecrets(): Promise<SecurityScanResult> {
+    const startTime = Date.now();
     const vulnerabilities: SecurityVulnerability[] = [];
 
     try {
@@ -386,7 +389,7 @@ export class SecurityScanner {
     return this.createScanResult(
       SecurityScanType.SECRETS_DETECTION,
       vulnerabilities,
-      Date.now() - Date.now()
+      Date.now() - startTime
     );
   }
 
@@ -645,7 +648,7 @@ export class SecurityScanner {
     for (const result of results) {
       if (result.status === 'failed' || result.status === 'warning') {
         await logSystemEvent(
-          AuditEventType.SECURITY_VIOLATION,
+          AuditEventType.SUSPICIOUS_ACTIVITY,
           AuditSeverity.HIGH,
           {
             action: 'security_scan_threshold_exceeded',

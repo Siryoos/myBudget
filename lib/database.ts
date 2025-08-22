@@ -1,4 +1,4 @@
-import { Pool, PoolClient } from 'pg';
+import { Pool, PoolClient, QueryResult, QueryResultRow } from 'pg';
 import * as dotenv from 'dotenv';
 
 dotenv.config();
@@ -50,7 +50,8 @@ pool.on('error', (err) => {
 });
 
 export const getClient = (): Promise<PoolClient> => pool.connect();
-export const query = <T = any>(text: string, params?: unknown[]) => pool.query<T>(text, params);
+export const getPool = (): Pool => pool;
+export const query = <T extends QueryResultRow = any>(text: string, params?: unknown[]): Promise<QueryResult<T>> => pool.query<T>(text, params);
 
 /**
  * Executes a function within a database transaction

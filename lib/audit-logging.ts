@@ -397,8 +397,36 @@ export class AuditLogger {
       // Process results
       const stats = {
         totalEvents: 0,
-        eventsByType: {} as Record<AuditEventType, number>,
-        eventsBySeverity: {} as Record<AuditSeverity, number>,
+        eventsByType: {
+          [AuditEventType.USER_LOGIN]: 0,
+          [AuditEventType.USER_LOGOUT]: 0,
+          [AuditEventType.USER_REGISTER]: 0,
+          [AuditEventType.PASSWORD_CHANGE]: 0,
+          [AuditEventType.PASSWORD_RESET]: 0,
+          [AuditEventType.MFA_ENABLE]: 0,
+          [AuditEventType.MFA_DISABLE]: 0,
+          [AuditEventType.MFA_VERIFY]: 0,
+          [AuditEventType.MFA_FAILED]: 0,
+          [AuditEventType.SUSPICIOUS_ACTIVITY]: 0,
+          [AuditEventType.RATE_LIMIT_EXCEEDED]: 0,
+          [AuditEventType.INVALID_TOKEN]: 0,
+          [AuditEventType.UNAUTHORIZED_ACCESS]: 0,
+          [AuditEventType.DATA_CREATE]: 0,
+          [AuditEventType.DATA_UPDATE]: 0,
+          [AuditEventType.DATA_DELETE]: 0,
+          [AuditEventType.DATA_EXPORT]: 0,
+          [AuditEventType.DATA_IMPORT]: 0,
+          [AuditEventType.SYSTEM_ERROR]: 0,
+          [AuditEventType.CONFIGURATION_CHANGE]: 0,
+          [AuditEventType.BACKUP_CREATED]: 0,
+          [AuditEventType.MAINTENANCE_MODE]: 0
+        },
+        eventsBySeverity: {
+          [AuditSeverity.LOW]: 0,
+          [AuditSeverity.MEDIUM]: 0,
+          [AuditSeverity.HIGH]: 0,
+          [AuditSeverity.CRITICAL]: 0
+        },
         topUsers: [] as Array<{ userId: string; eventCount: number }>,
         topResources: [] as Array<{ resourceType: string; eventCount: number }>
       };
@@ -410,10 +438,14 @@ export class AuditLogger {
         stats.totalEvents += parseInt(row.total_events);
         
         // Count by event type
-        stats.eventsByType[row.event_type] = (stats.eventsByType[row.event_type] || 0) + parseInt(row.total_events);
+        if (row.event_type && typeof row.event_type === 'string' && row.event_type in stats.eventsByType) {
+          stats.eventsByType[row.event_type as AuditEventType] = (stats.eventsByType[row.event_type as AuditEventType] || 0) + parseInt(row.total_events);
+        }
         
         // Count by severity
-        stats.eventsBySeverity[row.severity] = (stats.eventsBySeverity[row.severity] || 0) + parseInt(row.total_events);
+        if (row.severity && typeof row.severity === 'string' && row.severity in stats.eventsBySeverity) {
+          stats.eventsBySeverity[row.severity as AuditSeverity] = (stats.eventsBySeverity[row.severity as AuditSeverity] || 0) + parseInt(row.total_events);
+        }
         
         // Count by user
         if (row.user_id) {
@@ -443,8 +475,36 @@ export class AuditLogger {
       console.error('Failed to get audit statistics:', error);
       return {
         totalEvents: 0,
-        eventsByType: {},
-        eventsBySeverity: {},
+        eventsByType: {
+          [AuditEventType.USER_LOGIN]: 0,
+          [AuditEventType.USER_LOGOUT]: 0,
+          [AuditEventType.USER_REGISTER]: 0,
+          [AuditEventType.PASSWORD_CHANGE]: 0,
+          [AuditEventType.PASSWORD_RESET]: 0,
+          [AuditEventType.MFA_ENABLE]: 0,
+          [AuditEventType.MFA_DISABLE]: 0,
+          [AuditEventType.MFA_VERIFY]: 0,
+          [AuditEventType.MFA_FAILED]: 0,
+          [AuditEventType.SUSPICIOUS_ACTIVITY]: 0,
+          [AuditEventType.RATE_LIMIT_EXCEEDED]: 0,
+          [AuditEventType.INVALID_TOKEN]: 0,
+          [AuditEventType.UNAUTHORIZED_ACCESS]: 0,
+          [AuditEventType.DATA_CREATE]: 0,
+          [AuditEventType.DATA_UPDATE]: 0,
+          [AuditEventType.DATA_DELETE]: 0,
+          [AuditEventType.DATA_EXPORT]: 0,
+          [AuditEventType.DATA_IMPORT]: 0,
+          [AuditEventType.SYSTEM_ERROR]: 0,
+          [AuditEventType.CONFIGURATION_CHANGE]: 0,
+          [AuditEventType.BACKUP_CREATED]: 0,
+          [AuditEventType.MAINTENANCE_MODE]: 0
+        },
+        eventsBySeverity: {
+          [AuditSeverity.LOW]: 0,
+          [AuditSeverity.MEDIUM]: 0,
+          [AuditSeverity.HIGH]: 0,
+          [AuditSeverity.CRITICAL]: 0
+        },
         topUsers: [],
         topResources: []
       };
@@ -463,7 +523,7 @@ export class AuditLogger {
       );
 
       console.log(`Cleaned up ${result.rowCount} old audit logs`);
-      return result.rowCount;
+      return result.rowCount || 0;
     } catch (error) {
       console.error('Failed to cleanup old audit logs:', error);
       return 0;

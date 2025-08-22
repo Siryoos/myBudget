@@ -111,8 +111,7 @@ export class MFAService {
       // Verify TOTP token
       const isValid = authenticator.verify({
         token,
-        secret: userSecret,
-        window: this.config.window
+        secret: userSecret
       });
 
       if (isValid) {

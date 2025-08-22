@@ -1,13 +1,14 @@
-import Redis from 'ioredis';
-import { auditLogger, logSystemEvent, AuditEventType, AuditSeverity } from '../audit-logging';
+import Redis, { Cluster } from 'ioredis';
+import { AuditEventType, AuditSeverity } from '@/lib/audit-logging';
+import { logSystemEvent } from '@/lib/audit-logging';
 
-// Redis connection states
-export enum ConnectionState {
+// Connection state enum
+enum ConnectionState {
   DISCONNECTED = 'disconnected',
   CONNECTING = 'connecting',
   CONNECTED = 'connected',
-  RECONNECTING = 'reconnecting',
-  ERROR = 'error'
+  ERROR = 'error',
+  RECONNECTING = 'reconnecting'
 }
 
 // Redis connection configuration
@@ -15,19 +16,12 @@ export interface RedisConnectionConfig {
   host: string;
   port: number;
   password?: string;
-  db?: number;
+  db: number;
   retryDelayOnFailover?: number;
   maxRetriesPerRequest?: number;
   retryDelayOnClusterDown?: number;
   enableReadyCheck?: boolean;
   maxLoadingTimeout?: number;
-  lazyConnect?: boolean;
-  keepAlive?: number;
-  family?: number;
-  connectTimeout?: number;
-  commandTimeout?: number;
-  autoResubscribe?: boolean;
-  autoResendUnfulfilledCommands?: boolean;
   lazyConnect?: boolean;
   keepAlive?: number;
   family?: number;
@@ -76,7 +70,7 @@ const DEFAULT_REDIS_CONFIG: RedisConnectionConfig = {
 export class RedisConnectionManager {
   private static instance: RedisConnectionManager;
   private redisClient: Redis | null = null;
-  private clusterClient: Redis.Cluster | null = null;
+  private clusterClient: Cluster | null = null;
   private connectionState: ConnectionState = ConnectionState.DISCONNECTED;
   private reconnectAttempts: number = 0;
   private maxReconnectAttempts: number = 10;
@@ -117,97 +111,44 @@ export class RedisConnectionManager {
       await logSystemEvent(
         AuditEventType.CONFIGURATION_CHANGE,
         AuditSeverity.LOW,
-        {
-          action: 'redis_connection_established',
-          connectionType: clusterConfig ? 'cluster' : 'standalone',
-          host: this.config.host,
-          port: this.config.port
-        }
+        'Redis connection initialized successfully',
+        { config: this.config, clusterMode: !!clusterConfig }
       );
-
     } catch (error) {
       this.connectionState = ConnectionState.ERROR;
-      console.error('Failed to initialize Redis connection:', error);
-      
       await logSystemEvent(
-        AuditEventType.SYSTEM_ERROR,
+        AuditEventType.CONFIGURATION_CHANGE,
         AuditSeverity.HIGH,
-        {
-          action: 'redis_connection_failed',
-          error: error instanceof Error ? error.message : String(error),
-          host: this.config.host,
-          port: this.config.port
-        }
+        'Failed to initialize Redis connection',
+        { error: error instanceof Error ? error.message : String(error) }
       );
-
       throw error;
     }
   }
 
-  // Initialize standalone Redis
+  // Initialize standalone Redis connection
   private async initializeStandalone(): Promise<void> {
     this.redisClient = new Redis(this.config);
-    
-    return new Promise((resolve, reject) => {
-      if (!this.redisClient) {
-        reject(new Error('Failed to create Redis client'));
-        return;
-      }
-
-      this.redisClient.on('connect', () => {
-        this.connectionState = ConnectionState.CONNECTED;
-        this.reconnectAttempts = 0;
-        resolve();
-      });
-
-      this.redisClient.on('error', (error) => {
-        this.connectionState = ConnectionState.ERROR;
-        reject(error);
-      });
-
-      this.redisClient.on('ready', () => {
-        this.connectionState = ConnectionState.CONNECTED;
-        resolve();
-      });
-    });
+    await this.redisClient.ping();
   }
 
-  // Initialize Redis cluster
+  // Initialize Redis cluster connection
   private async initializeCluster(): Promise<void> {
     if (!this.clusterConfig) {
-      throw new Error('Cluster configuration required for cluster mode');
+      throw new Error('Cluster configuration is required for cluster mode');
     }
 
-    this.clusterClient = new Redis.Cluster(
-      this.clusterConfig.nodes,
-      {
-        ...this.clusterConfig.redisOptions,
-        ...this.clusterConfig.clusterOptions
-      }
-    );
-
-    return new Promise((resolve, reject) => {
-      if (!this.clusterClient) {
-        reject(new Error('Failed to create Redis cluster client'));
-        return;
-      }
-
-      this.clusterClient.on('connect', () => {
-        this.connectionState = ConnectionState.CONNECTED;
-        this.reconnectAttempts = 0;
-        resolve();
-      });
-
-      this.clusterClient.on('error', (error) => {
-        this.connectionState = ConnectionState.ERROR;
-        reject(error);
-      });
-
-      this.clusterClient.on('ready', () => {
-        this.connectionState = ConnectionState.CONNECTED;
-        resolve();
-      });
+    this.clusterClient = new Cluster(this.clusterConfig.nodes, {
+      redisOptions: this.clusterConfig.redisOptions,
+      ...this.clusterConfig.clusterOptions
     });
+
+    this.clusterClient.on('error', (error: Error) => {
+      console.error('Redis cluster error:', error);
+      this.connectionState = ConnectionState.ERROR;
+    });
+
+    await this.clusterClient.ping();
   }
 
   // Setup event handlers
@@ -223,7 +164,7 @@ export class RedisConnectionManager {
   }
 
   // Get Redis client (standalone or cluster)
-  getClient(): Redis | Redis.Cluster | null {
+  getClient(): Redis | Cluster | null {
     return this.clusterClient || this.redisClient;
   }
 
@@ -439,7 +380,7 @@ export class RedisConnectionManager {
 export const redisConnectionManager = RedisConnectionManager.getInstance();
 
 // Convenience functions
-export const getRedisClient = (): Redis | Redis.Cluster | null => {
+export const getRedisClient = (): Redis | Cluster | null => {
   return redisConnectionManager.getClient();
 };
 

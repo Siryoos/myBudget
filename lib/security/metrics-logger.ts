@@ -102,7 +102,7 @@ export class SecurityMetricsLogger {
       userId,
       sessionId,
       headers: this.config.includeHeaders ? headers : undefined,
-      metadata: this.config.includeMetadata ? metadata : {}
+      metadata: this.config.includeMetadata ? (metadata || {}) : {}
     });
   }
 
@@ -130,7 +130,7 @@ export class SecurityMetricsLogger {
       statusCode,
       responseTime,
       headers: this.config.includeHeaders ? headers : undefined,
-      metadata: this.config.includeMetadata ? metadata : {}
+      metadata: this.config.includeMetadata ? (metadata || {}) : {}
     });
   }
 
@@ -158,7 +158,7 @@ export class SecurityMetricsLogger {
       statusCode,
       headers: this.config.includeHeaders ? headers : undefined,
       metadata: {
-        ...this.config.includeMetadata ? metadata : {},
+        ...this.config.includeMetadata ? (metadata || {}) : {},
         error: error instanceof Error ? error.message : error,
         stack: error instanceof Error ? error.stack : undefined
       }
@@ -181,7 +181,7 @@ export class SecurityMetricsLogger {
   ): Promise<void> {
     // Log to audit system
     await logSystemEvent(
-      AuditEventType.SECURITY_VIOLATION,
+      AuditEventType.SUSPICIOUS_ACTIVITY,
       this.mapSeverity(severity),
       {
         action: 'security_violation',
@@ -208,7 +208,7 @@ export class SecurityMetricsLogger {
       sessionId,
       headers: this.config.includeHeaders ? headers : undefined,
       metadata: {
-        ...this.config.includeMetadata ? metadata : {},
+        ...this.config.includeMetadata ? (metadata || {}) : {},
         violationType,
         details,
         severity
@@ -236,7 +236,7 @@ export class SecurityMetricsLogger {
       userId,
       sessionId,
       responseTime,
-      metadata: this.config.includeMetadata ? metadata : {}
+      metadata: this.config.includeMetadata ? (metadata || {}) : {}
     });
   }
 

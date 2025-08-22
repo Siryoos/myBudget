@@ -384,37 +384,4 @@ export interface DatabaseView {
   isTriggerUpdatable: boolean;
 }
 
-// Export all types
-export type {
-  DatabaseSchema,
-  UserTable,
-  AuditLogTable,
-  PasswordResetTokenTable,
-  UserBackupCodeTable,
-  SecretMetadataTable,
-  PerformanceMetricsTable,
-  SecurityEventTable,
-  UserQueryResult,
-  AuditLogQueryResult,
-  PasswordResetTokenQueryResult,
-  UserBackupCodeQueryResult,
-  SecretMetadataQueryResult,
-  PerformanceMetricsQueryResult,
-  SecurityEventQueryResult,
-  QueryResult,
-  DatabaseConnection,
-  DatabasePoolStats,
-  QueryPerformanceMetrics,
-  TransactionOptions,
-  TransactionResult,
-  Migration,
-  DatabaseBackup,
-  DatabaseHealth,
-  SecurityMetrics,
-  PerformanceMetrics,
-  DatabaseRow,
-  TypedQueryResult,
-  DatabaseConstraint,
-  DatabaseIndex,
-  DatabaseView
-};
+// All types are already exported above, no need for duplicate exports

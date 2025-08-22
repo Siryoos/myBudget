@@ -1,10 +1,18 @@
-import { sign as jwtSign, verify as jwtVerify, SignOptions, VerifyOptions } from 'jsonwebtoken';
+import jwt, { SignOptions, VerifyOptions } from 'jsonwebtoken';
+import type { StringValue } from 'ms';
 
-// Type-safe JWT wrapper to resolve type compatibility issues
+const { sign: jwtSign, verify: jwtVerify } = jwt;
+
+/**
+ * Type-safe JWT wrapper with proper error handling
+ */
 export class JWTWrapper {
+  /**
+   * Validate JWT secret meets security requirements
+   */
   private static validateSecret(secret: string | undefined): string {
     if (!secret) {
-      throw new Error('JWT_SECRET environment variable is not configured');
+      throw new Error('JWT_SECRET environment variable is required');
     }
     
     if (secret.length < 32) {
@@ -68,7 +76,7 @@ export class JWTWrapper {
     passwordChangedAt: string;
   }): string {
     const secret = process.env.JWT_SECRET;
-    const expiresIn = process.env.JWT_REFRESH_EXPIRES_IN || '30d';
+    const expiresIn = (process.env.JWT_REFRESH_EXPIRES_IN || '30d') as StringValue;
     
     return this.sign(payload, secret, {
       algorithm: 'HS256',
@@ -89,7 +97,7 @@ export class JWTWrapper {
     passwordChangedAt: string;
   }): string {
     const secret = process.env.JWT_SECRET;
-    const expiresIn = process.env.JWT_EXPIRES_IN || '7d';
+    const expiresIn = (process.env.JWT_REFRESH_EXPIRES_IN || '7d') as StringValue;
     
     return this.sign(payload, secret, {
       algorithm: 'HS256',
