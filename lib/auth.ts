@@ -62,6 +62,37 @@ export const generateToken = async (payload: Omit<JWTPayload, 'tokenVersion' | '
   });
 };
 
+export const generateRefreshToken = async (userId: string): Promise<string> => {
+  // Validate JWT secret at runtime before token generation
+  validateJWTSecretRuntime();
+  
+  const secret = process.env.JWT_SECRET!;
+  
+  // Fetch current user data for token versioning
+  const userResult = await query(
+    'SELECT token_version FROM users WHERE id = $1',
+    [userId]
+  );
+  
+  if (userResult.rows.length === 0) {
+    throw new Error('User not found');
+  }
+  
+  const user = userResult.rows[0];
+  const payload = {
+    userId,
+    type: 'refresh' as const,
+    tokenVersion: user.token_version || 1
+  };
+  
+  const expiresIn = process.env.JWT_REFRESH_EXPIRES_IN || '30d';
+  
+  return jwt.sign(payload, secret, { 
+    algorithm: 'HS256', 
+    expiresIn: expiresIn as jwt.SignOptions['expiresIn'] 
+  });
+};
+
 export const verifyToken = async (token: string): Promise<JWTPayload> => {
   // Validate JWT secret at runtime before token verification
   validateJWTSecretRuntime();

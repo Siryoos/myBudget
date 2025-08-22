@@ -27,6 +27,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Centralized function to clear auth tokens and headers
   const clearAuthTokens = () => {
     localStorage.removeItem('authToken');
+    localStorage.removeItem('refreshToken');
     api.utils.setToken(null);
   };
 
@@ -65,11 +66,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error(response.error || 'Login failed');
       }
 
-      const { user, token } = response.data!;
+      const { user, token, refreshToken, accessToken } = response.data!;
       
-      // Save token
-      localStorage.setItem('authToken', token);
-      api.utils.setToken(token);
+      // Save tokens (support both old and new format)
+      const authToken = accessToken || token;
+      localStorage.setItem('authToken', authToken);
+      if (refreshToken) {
+        localStorage.setItem('refreshToken', refreshToken);
+      }
+      api.utils.setToken(authToken, refreshToken);
       
       // Update state
       setUser(user);
@@ -94,11 +99,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error(response.error || 'Registration failed');
       }
 
-      const { user, token } = response.data!;
+      const { user, token, refreshToken, accessToken } = response.data!;
       
-      // Save token
-      localStorage.setItem('authToken', token);
-      api.utils.setToken(token);
+      // Save tokens (support both old and new format)
+      const authToken = accessToken || token;
+      localStorage.setItem('authToken', authToken);
+      if (refreshToken) {
+        localStorage.setItem('refreshToken', refreshToken);
+      }
+      api.utils.setToken(authToken, refreshToken);
       
       // Update state
       setUser(user);

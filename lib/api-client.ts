@@ -36,6 +36,7 @@ interface PendingRequest {
 export class ApiClient {
   private baseUrl: string;
   private token: string | null = null;
+  private refreshToken: string | null = null;
   private refreshPromise: Promise<string> | null = null;
   private requestCache = new Map<string, PendingRequest>();
   private cacheTimeout = 5000; // 5 seconds cache
@@ -46,8 +47,22 @@ export class ApiClient {
     this.baseUrl = baseUrl;
   }
 
-  setToken(token: string | null) {
+  setToken(token: string | null, refreshToken?: string | null) {
     this.token = token;
+    if (refreshToken !== undefined) {
+      this.refreshToken = refreshToken;
+    }
+    
+    if (token && typeof window !== 'undefined') {
+      localStorage.setItem('authToken', token);
+      if (this.refreshToken) {
+        localStorage.setItem('refreshToken', this.refreshToken);
+      }
+    } else if (typeof window !== 'undefined') {
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('refreshToken');
+      this.refreshToken = null;
+    }
   }
 
   getToken(): string | null {
@@ -80,12 +95,23 @@ export class ApiClient {
 
     this.refreshPromise = (async () => {
       try {
+        // Load refresh token from storage if not in memory
+        if (!this.refreshToken && typeof window !== 'undefined') {
+          this.refreshToken = localStorage.getItem('refreshToken');
+        }
+        
+        if (!this.refreshToken) {
+          throw new Error('No refresh token available');
+        }
+        
         const response = await fetch(`${this.baseUrl}/api/auth/refresh`, {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${this.token}`
-          }
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            refreshToken: this.refreshToken
+          })
         });
 
         let data: any;
@@ -124,16 +150,20 @@ export class ApiClient {
           );
         }
 
-        if (!data.data.token || typeof data.data.token !== 'string' || data.data.token.trim() === '') {
+        // Support both old format (token) and new format (accessToken/refreshToken)
+        const accessToken = data.data.accessToken || data.data.token;
+        const refreshToken = data.data.refreshToken;
+        
+        if (!accessToken || typeof accessToken !== 'string' || accessToken.trim() === '') {
           throw new ApiError(
-            'Missing or invalid token in refresh response',
+            'Missing or invalid access token in refresh response',
             response.status,
             data
           );
         }
 
-        this.token = data.data.token;
-        return this.token;
+        this.setToken(accessToken, refreshToken);
+        return accessToken;
       } catch (error) {
         // Re-throw ApiError instances, wrap others
         if (error instanceof ApiError) {

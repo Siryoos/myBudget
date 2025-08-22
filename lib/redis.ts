@@ -1,5 +1,7 @@
-import Redis from 'ioredis';
+import { Redis } from 'ioredis';
 import * as dotenv from 'dotenv';
+import { validateRedisConfig } from '@/lib/validate-env';
+import { logger } from '@/lib/logger';
 
 dotenv.config();
 
@@ -18,7 +20,7 @@ const validateRedisConfig = (): void => {
 // Validate configuration before creating client
 validateRedisConfig();
 
-// Create Redis client
+// Create Redis client with enhanced retry logic
 const redis = new Redis({
   host: process.env.REDIS_HOST!,
   port: parseInt(process.env.REDIS_PORT || '6379'),
@@ -29,23 +31,59 @@ const redis = new Redis({
   keepAlive: 30000,
   connectTimeout: 10000,
   commandTimeout: 5000,
+  retryStrategy: (times: number) => {
+    const maxRetryTime = 60000; // 1 minute
+    const delay = Math.min(times * 1000, maxRetryTime);
+    
+    logger.warn(`Redis connection attempt ${times}, retrying in ${delay}ms`);
+    
+    // Stop retrying after 10 attempts
+    if (times > 10) {
+      logger.error('Redis connection failed after maximum retry attempts');
+      return null;
+    }
+    
+    return delay;
+  },
+  reconnectOnError: (err: Error) => {
+    const targetErrors = ['READONLY', 'ECONNRESET', 'ETIMEDOUT'];
+    
+    if (targetErrors.some(e => err.message.includes(e))) {
+      logger.info('Reconnecting to Redis due to error', { error: err.message });
+      return true;
+    }
+    
+    return false;
+  }
 });
 
 // Handle Redis connection events
 redis.on('connect', () => {
-  console.log('Connected to Redis');
+  logger.info('Connected to Redis');
 });
 
 redis.on('error', (err) => {
-  console.error('Redis connection error:', err);
+  logger.error('Redis connection error', err);
 });
 
 redis.on('close', () => {
-  console.log('Redis connection closed');
+  logger.info('Redis connection closed');
 });
 
-redis.on('reconnecting', () => {
-  console.log('Reconnecting to Redis...');
+redis.on('reconnecting', (delay: number) => {
+  logger.info('Reconnecting to Redis', { delay });
+});
+
+redis.on('ready', () => {
+  logger.info('Redis client ready');
+});
+
+redis.on('end', () => {
+  logger.warn('Redis connection ended');
+});
+
+redis.on('wait', () => {
+  logger.debug('Redis client waiting for connection');
 });
 
 // Rate limiting utilities
@@ -121,13 +159,13 @@ export class RedisRateLimiter {
         retryAfter: isAllowed ? undefined : Math.ceil(config.windowMs / 1000)
       };
     } catch (error) {
-      console.error('Rate limiting error:', error);
+      logger.error('Rate limiting error', error as Error);
       
       // Implement secure fallback behavior based on configuration
       if (this.secureMode) {
         // FAIL CLOSED: Deny the request if Redis is unavailable
         // This is more secure but can impact availability
-        console.warn('Redis unavailable - failing closed (denying request) for security');
+        logger.warn('Redis unavailable - failing closed (denying request) for security');
         return {
           allowed: false,
           remaining: 0,
@@ -137,7 +175,7 @@ export class RedisRateLimiter {
       } else {
         // FAIL OPEN: Allow the request but log the incident
         // This maintains availability but is less secure
-        console.warn('Redis unavailable - failing open (allowing request) for availability');
+        logger.warn('Redis unavailable - failing open (allowing request) for availability');
         return {
           allowed: true,
           remaining: config.maxRequests,
@@ -156,9 +194,9 @@ export class RedisRateLimiter {
       const resetTime = Date.now() + (ttl * 1000);
       
       return { count, resetTime };
-    } catch (error) {
-      console.error('Error getting rate limit info:', error);
-      return null;
+          } catch (error) {
+        logger.error('Error retrieving rate limit info', error as Error);
+        return null;
     }
   }
   

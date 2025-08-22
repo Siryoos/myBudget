@@ -47,14 +47,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(errorResponse, { status: 401 });
     }
 
-    // Generate token
+    // Generate access token
     const token = await generateToken({ id: user.id, userId: user.id, email: user.email });
+    
+    // Generate refresh token
+    const { generateRefreshToken } = await import('@/lib/auth');
+    const refreshToken = await generateRefreshToken(user.id);
 
     return NextResponse.json({
       success: true,
       data: { 
         user: { id: user.id, email: user.email, name: user.name },
-        token 
+        token,
+        refreshToken,
+        expiresIn: process.env.JWT_EXPIRES_IN || '7d'
       },
       requestId
     });

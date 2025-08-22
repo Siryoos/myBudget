@@ -1,5 +1,6 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import crypto from 'crypto';
+import { logger } from '@/lib/logger';
 
 // Conditional import for Redis - only import in Node.js runtime
 let rateLimiter: any = null;
@@ -11,7 +12,21 @@ if (typeof process !== 'undefined' && process.env && process.env.NODE_ENV) {
     rateLimiter = redisModule.rateLimiter;
     RateLimitConfig = redisModule.RateLimitConfig;
   } catch (error) {
-    console.warn('Redis rate limiter not available in Edge Runtime');
+    logger.warn('Redis rate limiter not available in Edge Runtime');
+  }
+}
+
+// Dynamic imports for non-Edge Runtime features
+let getRateLimiter: any;
+let RateLimitConfig: any;
+
+if (typeof globalThis.EdgeRuntime === 'undefined') {
+  try {
+    const redisModule = require('@/lib/redis');
+    getRateLimiter = redisModule.getRateLimiter;
+    RateLimitConfig = redisModule.RateLimitConfig;
+  } catch (error) {
+    logger.warn('Redis rate limiter not available in Edge Runtime');
   }
 }
 
@@ -27,7 +42,7 @@ const validateEnvironment = () => {
   const missingVars = requiredVars.filter(varName => !process.env[varName]);
   
   if (missingVars.length > 0) {
-    console.error('Missing required environment variables:', missingVars);
+    logger.error('Missing required environment variables', undefined, { missingVars });
     throw new Error(`Missing required environment variables: ${missingVars.join(', ')}`);
   }
   
@@ -42,7 +57,7 @@ const validateEnvironment = () => {
     });
     
     if (invalidOrigins.length > 0) {
-      console.error('Invalid origins in ALLOWED_ORIGINS:', invalidOrigins);
+      logger.error('Invalid origins in ALLOWED_ORIGINS', undefined, { invalidOrigins });
       throw new Error('ALLOWED_ORIGINS must contain valid HTTP/HTTPS URLs');
     }
   }
@@ -58,7 +73,7 @@ const validateEnvironment = () => {
 try {
   validateEnvironment();
 } catch (error) {
-  console.error('Environment validation failed:', error);
+  logger.error('Environment validation failed', error as Error);
   // In production, this should cause the process to exit
   // Note: process.exit() not available in Edge Runtime, so we throw instead
   if (process.env.NODE_ENV === 'production') {
@@ -151,7 +166,7 @@ export function securityMiddleware(request: NextRequest): NextResponse {
       const size = parseInt(contentLength);
       if (isNaN(size) || size > 10 * 1024 * 1024) { // 10MB limit
         securityMonitor.recordRequest('largeRequests');
-        console.warn('Large request detected:', { ...securityLog, size });
+        logger.warn('Large request detected', { ...securityLog, size });
         return new NextResponse(
           JSON.stringify({
             success: false,
@@ -170,7 +185,7 @@ export function securityMiddleware(request: NextRequest): NextResponse {
       const contentType = request.headers.get('content-type');
       if (!contentType || !contentType.includes('application/json')) {
         securityMonitor.recordRequest('invalidContentTypes');
-        console.warn('Invalid content type:', { ...securityLog, contentType });
+        logger.warn('Invalid content type', { ...securityLog, contentType });
         return new NextResponse(
           JSON.stringify({
             success: false,
@@ -190,7 +205,7 @@ export function securityMiddleware(request: NextRequest): NextResponse {
         securityLog.userAgent.includes('python') ||
         securityLog.userAgent.includes('bot')) {
       securityMonitor.recordRequest('suspiciousRequests');
-      console.warn('Suspicious request detected:', securityLog);
+      logger.warn('Suspicious request detected', securityLog);
     }
     
     // Handle CORS - consolidated logic to avoid duplication
@@ -202,7 +217,7 @@ export function securityMiddleware(request: NextRequest): NextResponse {
     } else if (origin) {
       // Log unauthorized origin attempts
       securityMonitor.recordRequest('unauthorizedOrigins');
-      console.warn('Unauthorized origin attempt:', securityLog);
+      logger.warn('Unauthorized origin attempt', securityLog);
     }
     
     // Handle preflight requests
@@ -267,7 +282,7 @@ export function securityMiddleware(request: NextRequest): NextResponse {
         const updatedCsp = csp.replace(/{NONCE}/g, nonce);
         response.headers.set('Content-Security-Policy', updatedCsp);
       } catch (error) {
-        console.error('Failed to generate nonce:', error);
+        logger.error('Failed to generate nonce', error as Error);
         // Continue without nonce rather than failing the request
         // Remove nonce-dependent CSP directives
         const csp = response.headers.get('Content-Security-Policy') || '';
@@ -278,7 +293,7 @@ export function securityMiddleware(request: NextRequest): NextResponse {
     
     return response;
   } catch (error) {
-    console.error('Security middleware error:', error);
+    logger.error('Security middleware error', error as Error);
     // Return a generic error response instead of crashing
     return new NextResponse(
       JSON.stringify({
@@ -317,50 +332,158 @@ export const apiRateLimits: Record<string, any> = {
   }
 };
 
-// Enhanced security metrics and monitoring with better typing
+// Enhanced security metrics and monitoring with comprehensive typing
 interface SecurityMetrics {
+  // Request counters
   totalRequests: number;
   blockedRequests: number;
   suspiciousRequests: number;
-  unauthorizedOrigins: number;
   largeRequests: number;
   invalidContentTypes: number;
+  unauthorizedOrigins: number;
+  errors: number;
+  
+  // Rate limiting metrics
+  rateLimitHits: number;
+  rateLimitMisses: number;
+  rateLimitErrors: number;
+  
+  // Security event metrics
+  csrfAttempts: number;
+  xssAttempts: number;
+  sqlInjectionAttempts: number;
+  
+  // Performance metrics
+  avgResponseTime: number;
+  maxResponseTime: number;
+  responseCount: number;
+  
+  // Timestamp tracking
+  startTime: number;
+  lastResetTime: number;
+}
+
+interface SecurityEvent {
+  type: 'blocked' | 'suspicious' | 'error' | 'rate_limit' | 'security_violation';
+  timestamp: number;
+  ip?: string;
+  userAgent?: string;
+  path?: string;
+  method?: string;
+  reason?: string;
+  details?: Record<string, any>;
 }
 
 class SecurityMonitor {
   private metrics: SecurityMetrics = {
+    // Request counters
     totalRequests: 0,
     blockedRequests: 0,
     suspiciousRequests: 0,
-    unauthorizedOrigins: 0,
     largeRequests: 0,
-    invalidContentTypes: 0
+    invalidContentTypes: 0,
+    unauthorizedOrigins: 0,
+    errors: 0,
+    
+    // Rate limiting metrics
+    rateLimitHits: 0,
+    rateLimitMisses: 0,
+    rateLimitErrors: 0,
+    
+    // Security event metrics
+    csrfAttempts: 0,
+    xssAttempts: 0,
+    sqlInjectionAttempts: 0,
+    
+    // Performance metrics
+    avgResponseTime: 0,
+    maxResponseTime: 0,
+    responseCount: 0,
+    
+    // Timestamp tracking
+    startTime: Date.now(),
+    lastResetTime: Date.now()
   };
   
-  recordRequest(type: keyof SecurityMetrics): void {
-    this.metrics[type]++;
+  private events: SecurityEvent[] = [];
+  private maxEvents = 1000; // Keep last 1000 security events
+  
+  recordRequest(type: keyof Omit<SecurityMetrics, 'avgResponseTime' | 'maxResponseTime' | 'responseCount' | 'startTime' | 'lastResetTime'>): void {
+    if (type in this.metrics && typeof this.metrics[type as keyof SecurityMetrics] === 'number') {
+      (this.metrics[type as keyof SecurityMetrics] as number)++;
+    }
     this.metrics.totalRequests++;
     
     // Log metrics every 100 requests
     if (this.metrics.totalRequests % 100 === 0) {
-      console.log('Security metrics:', this.metrics);
+      logger.info('Security metrics', this.getMetrics());
     }
   }
   
-  getMetrics(): SecurityMetrics {
-    return { ...this.metrics };
+  recordSecurityEvent(event: Omit<SecurityEvent, 'timestamp'>): void {
+    const fullEvent: SecurityEvent = {
+      ...event,
+      timestamp: Date.now()
+    };
+    
+    this.events.push(fullEvent);
+    
+    // Keep only the last maxEvents
+    if (this.events.length > this.maxEvents) {
+      this.events.shift();
+    }
+    
+    // Log security events
+    logger.security(`Security event: ${event.type}`, event);
+  }
+  
+  recordResponseTime(duration: number): void {
+    this.metrics.responseCount++;
+    this.metrics.maxResponseTime = Math.max(this.metrics.maxResponseTime, duration);
+    
+    // Calculate running average
+    const currentAvg = this.metrics.avgResponseTime;
+    const count = this.metrics.responseCount;
+    this.metrics.avgResponseTime = (currentAvg * (count - 1) + duration) / count;
+  }
+  
+  getMetrics(): SecurityMetrics & { uptime: number } {
+    return {
+      ...this.metrics,
+      uptime: Date.now() - this.metrics.startTime
+    };
+  }
+  
+  getRecentEvents(limit: number = 100): SecurityEvent[] {
+    return this.events.slice(-limit);
   }
   
   resetMetrics(): void {
+    const now = Date.now();
     this.metrics = {
+      ...this.metrics,
       totalRequests: 0,
       blockedRequests: 0,
       suspiciousRequests: 0,
-      unauthorizedOrigins: 0,
       largeRequests: 0,
-      invalidContentTypes: 0
+      invalidContentTypes: 0,
+      unauthorizedOrigins: 0,
+      errors: 0,
+      rateLimitHits: 0,
+      rateLimitMisses: 0,
+      rateLimitErrors: 0,
+      csrfAttempts: 0,
+      xssAttempts: 0,
+      sqlInjectionAttempts: 0,
+      avgResponseTime: 0,
+      maxResponseTime: 0,
+      responseCount: 0,
+      lastResetTime: now
     };
   }
+  
+
+
 }
 
 const securityMonitor = new SecurityMonitor();
@@ -451,7 +574,7 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
           response.headers.set('X-RateLimit-Reset', new Date(rateLimitResult.resetTime).toISOString());
           
         } catch (error) {
-          console.error('Rate limiting error:', error);
+          logger.error('Rate limiting error', error as Error);
           // Fail securely - return 500 error instead of continuing
           return new NextResponse(
             JSON.stringify({
@@ -471,7 +594,7 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
     
     return response;
   } catch (error) {
-    console.error('Middleware error:', error);
+    logger.error('Middleware error', error as Error);
     // Return a generic error response instead of crashing
     return new NextResponse(
       JSON.stringify({
@@ -512,7 +635,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
             error: healthResult.error || 'Unknown error'
           };
         } catch (error) {
-          console.error('Failed to check Redis health:', error);
+          logger.error('Failed to check Redis health', error as Error);
           redisHealth = {
             healthy: false,
             latency: undefined,
@@ -555,7 +678,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     
     return NextResponse.next();
   } catch (error) {
-    console.error('Health check error:', error);
+    logger.error('Health check error', error as Error);
     return new NextResponse(
       JSON.stringify({
         status: 'unhealthy',
