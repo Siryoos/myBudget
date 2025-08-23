@@ -1,4 +1,4 @@
-import { auditLogger, logSystemEvent, AuditEventType, AuditSeverity } from '../audit-logging';
+import { logSystemEvent, AuditEventType, AuditSeverity } from '../audit-logging';
 
 // Security metric types
 export interface SecurityMetric {
@@ -180,10 +180,10 @@ export class SecurityMetricsLogger {
     metadata?: Record<string, any>,
   ): Promise<void> {
     // Log to audit system
-    await logSystemEvent(
-      AuditEventType.SUSPICIOUS_ACTIVITY,
-      this.mapSeverity(severity),
-      {
+    await logSystemEvent({
+      eventType: AuditEventType.SUSPICIOUS_ACTIVITY,
+      severity: this.mapSeverity(severity),
+      details: {
         action: 'security_violation',
         endpoint,
         method,
@@ -195,7 +195,7 @@ export class SecurityMetricsLogger {
         sessionId,
         metadata,
       },
-    );
+    });
 
     // Log to metrics
     await this.logMetric({

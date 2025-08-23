@@ -116,11 +116,14 @@ export class ErrorReportingService {
   setUser(userId: string, email?: string) {
     this.userId = userId;
 
-    if (typeof window !== 'undefined' && (window as WindowWithSentry).Sentry) {
-      (window as WindowWithSentry).Sentry.setUser({
-        id: userId,
-        email: email ? this.hashEmail(email) : undefined,
-      });
+    if (typeof window !== 'undefined') {
+      const sentry = (window as WindowWithSentry).Sentry;
+      if (sentry) {
+        sentry.setUser({
+          id: userId,
+          email: email ? this.hashEmail(email) : undefined,
+        });
+      }
     }
   }
 
@@ -130,8 +133,11 @@ export class ErrorReportingService {
   clearUser() {
     this.userId = undefined;
 
-    if (typeof window !== 'undefined' && (window as WindowWithSentry).Sentry) {
-      (window as WindowWithSentry).Sentry.setUser(null);
+    if (typeof window !== 'undefined') {
+      const sentry = (window as WindowWithSentry).Sentry;
+      if (sentry) {
+        sentry.setUser(null);
+      }
     }
   }
 
@@ -161,16 +167,19 @@ export class ErrorReportingService {
     this.queue.push(errorReport);
 
     // Send to Sentry if available
-    if (typeof window !== 'undefined' && (window as WindowWithSentry).Sentry) {
-      if (error instanceof Error) {
-        (window as WindowWithSentry).Sentry.captureException(error, {
-          level,
-          contexts: {
-            custom: context,
-          },
-        });
-      } else {
-        (window as WindowWithSentry).Sentry.captureMessage(error, level);
+    if (typeof window !== 'undefined') {
+      const sentry = (window as WindowWithSentry).Sentry;
+      if (sentry) {
+        if (error instanceof Error) {
+          sentry.captureException(error, {
+            level,
+            contexts: {
+              custom: context,
+            },
+          });
+        } else {
+          sentry.captureMessage(error, level);
+        }
       }
     }
 
@@ -217,11 +226,14 @@ export class ErrorReportingService {
     data?: Record<string, unknown>;
     level?: 'debug' | 'info' | 'warning' | 'error';
   }) {
-    if (typeof window !== 'undefined' && (window as WindowWithSentry).Sentry) {
-      (window as WindowWithSentry).Sentry.addBreadcrumb?.({
-        ...breadcrumb,
-        timestamp: Date.now() / 1000,
-      });
+    if (typeof window !== 'undefined') {
+      const sentry = (window as WindowWithSentry).Sentry;
+      if (sentry && sentry.addBreadcrumb) {
+        sentry.addBreadcrumb({
+          ...breadcrumb,
+          timestamp: Date.now() / 1000,
+        });
+      }
     }
   }
 
@@ -250,18 +262,21 @@ export class ErrorReportingService {
       });
 
       // Also send to Sentry if available
-      if (typeof window !== 'undefined' && (window as WindowWithSentry).Sentry && feedback.associatedEventId) {
-        const user = feedback.name || feedback.email ? {
-          name: feedback.name,
-          email: feedback.email,
-        } : undefined;
+      if (typeof window !== 'undefined' && feedback.associatedEventId) {
+        const sentry = (window as WindowWithSentry).Sentry;
+        if (sentry && sentry.captureUserFeedback) {
+          const user = feedback.name || feedback.email ? {
+            name: feedback.name,
+            email: feedback.email,
+          } : undefined;
 
-        (window as WindowWithSentry).Sentry.captureUserFeedback({
-          event_id: feedback.associatedEventId,
-          name: user?.name,
-          email: user?.email,
-          comments: feedback.message,
-        });
+          sentry.captureUserFeedback({
+            event_id: feedback.associatedEventId,
+            name: user?.name,
+            email: user?.email,
+            comments: feedback.message,
+          });
+        }
       }
     } catch (error) {
       console.error('Failed to capture user feedback:', error);

@@ -1,4 +1,4 @@
-import { headers } from 'next/headers';
+
 import type { ReactNode } from 'react';
 
 interface LocaleLayoutProps {
@@ -8,13 +8,12 @@ interface LocaleLayoutProps {
 
 export default function LocaleLayout({
   children,
-  params: { locale },
 }: LocaleLayoutProps) {
   return children;
 }
 
 // Generate static params for all supported locales
-export async function generateStaticParams() {
+export const generateStaticParams = () => {
   return [
     { locale: 'en' },
     { locale: 'fa' },
