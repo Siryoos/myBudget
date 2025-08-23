@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+
 import { useAuth } from '@/contexts/AuthContext';
 import type { ProtectedRouteProps } from '@/types/auth';
 
@@ -10,7 +11,7 @@ export function ProtectedRoute({
   requiredRoles,
   requiredPermissions,
   fallback,
-  redirectTo = '/unauthorized'
+  redirectTo = '/unauthorized',
 }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading, canAccess } = useAuth();
   const router = useRouter();
@@ -31,7 +32,7 @@ export function ProtectedRoute({
         if (window.location.pathname !== redirectTo) {
           router.replace(redirectTo);
         }
-        return;
+
       }
     }
   }, [isLoading, isAuthenticated, canAccess, requiredRoles, requiredPermissions, redirectTo, router]);

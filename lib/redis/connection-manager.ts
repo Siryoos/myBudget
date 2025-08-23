@@ -1,6 +1,6 @@
 import Redis, { Cluster } from 'ioredis';
-import { AuditEventType, AuditSeverity } from '@/lib/audit-logging';
-import { logSystemEvent } from '@/lib/audit-logging';
+
+import { AuditEventType, AuditSeverity , logSystemEvent } from '@/lib/audit-logging';
 
 // Connection state enum
 enum ConnectionState {
@@ -46,12 +46,18 @@ export interface RedisClusterConfig {
   };
 }
 
+// Redis error interface for better type safety
+interface RedisError extends Error {
+  code?: string;
+  message: string;
+}
+
 // Default Redis configuration
 const DEFAULT_REDIS_CONFIG: RedisConnectionConfig = {
   host: process.env.REDIS_HOST || 'localhost',
-  port: parseInt(process.env.REDIS_PORT || '6379'),
+  port: parseInt(process.env.REDIS_PORT || '6379', 10),
   password: process.env.REDIS_PASSWORD,
-  db: parseInt(process.env.REDIS_DB || '0'),
+  db: parseInt(process.env.REDIS_DB || '0', 10),
   retryDelayOnFailover: 100,
   maxRetriesPerRequest: 3,
   retryDelayOnClusterDown: 300,
@@ -63,38 +69,33 @@ const DEFAULT_REDIS_CONFIG: RedisConnectionConfig = {
   connectTimeout: 10000,
   commandTimeout: 5000,
   autoResubscribe: true,
-  autoResendUnfulfilledCommands: true
+  autoResendUnfulfilledCommands: true,
 };
 
 // Redis connection manager
 export class RedisConnectionManager {
-  private static instance: RedisConnectionManager;
   private redisClient: Redis | null = null;
   private clusterClient: Cluster | null = null;
   private connectionState: ConnectionState = ConnectionState.DISCONNECTED;
   private reconnectAttempts: number = 0;
   private maxReconnectAttempts: number = 10;
   private reconnectDelay: number = 1000;
-  private healthCheckInterval: NodeJS.Timeout | null = null;
+  private healthCheckInterval: ReturnType<typeof setInterval> | null = null;
   private isProduction: boolean;
   private config: RedisConnectionConfig;
   private clusterConfig?: RedisClusterConfig;
 
-  private constructor() {
+  constructor() {
     this.isProduction = process.env.NODE_ENV === 'production';
     this.config = { ...DEFAULT_REDIS_CONFIG };
     this.startHealthCheck();
   }
 
-  static getInstance(): RedisConnectionManager {
-    if (!RedisConnectionManager.instance) {
-      RedisConnectionManager.instance = new RedisConnectionManager();
-    }
-    return RedisConnectionManager.instance;
-  }
-
   // Initialize Redis connection
-  async initialize(config?: Partial<RedisConnectionConfig>, clusterConfig?: RedisClusterConfig): Promise<void> {
+  async initialize(
+    config?: Partial<RedisConnectionConfig>,
+    clusterConfig?: RedisClusterConfig,
+  ): Promise<void> {
     try {
       this.config = { ...this.config, ...config };
       this.clusterConfig = clusterConfig;
@@ -107,12 +108,15 @@ export class RedisConnectionManager {
 
       this.setupEventHandlers();
       this.connectionState = ConnectionState.CONNECTED;
-      
+
       await logSystemEvent(
         AuditEventType.CONFIGURATION_CHANGE,
         AuditSeverity.LOW,
         'Redis connection initialized successfully',
-        { config: this.config, clusterMode: !!clusterConfig }
+        {
+          config: this.config,
+          clusterMode: Boolean(clusterConfig),
+        },
       );
     } catch (error) {
       this.connectionState = ConnectionState.ERROR;
@@ -120,7 +124,7 @@ export class RedisConnectionManager {
         AuditEventType.CONFIGURATION_CHANGE,
         AuditSeverity.HIGH,
         'Failed to initialize Redis connection',
-        { error: error instanceof Error ? error.message : String(error) }
+        { error: error instanceof Error ? error.message : String(error) },
       );
       throw error;
     }
@@ -140,7 +144,7 @@ export class RedisConnectionManager {
 
     this.clusterClient = new Cluster(this.clusterConfig.nodes, {
       redisOptions: this.clusterConfig.redisOptions,
-      ...this.clusterConfig.clusterOptions
+      ...this.clusterConfig.clusterOptions,
     });
 
     this.clusterClient.on('error', (error: Error) => {
@@ -154,13 +158,21 @@ export class RedisConnectionManager {
   // Setup event handlers
   private setupEventHandlers(): void {
     const client = this.getClient();
-    if (!client) return;
+    if (!client) {return;}
 
-    client.on('error', this.handleError.bind(this));
-    client.on('close', this.handleClose.bind(this));
-    client.on('reconnecting', this.handleReconnecting.bind(this));
-    client.on('connect', this.handleConnect.bind(this));
-    client.on('ready', this.handleReady.bind(this));
+    client.on('error', (error: Error) => {
+      this.handleError(error).catch(console.error);
+    });
+    client.on('close', () => {
+      this.handleClose().catch(console.error);
+    });
+    client.on('reconnecting', () => {
+      this.handleReconnecting().catch(console.error);
+    });
+    client.on('connect', () => this.handleConnect());
+    client.on('ready', () => {
+      this.handleReady().catch(console.error);
+    });
   }
 
   // Get Redis client (standalone or cluster)
@@ -171,8 +183,8 @@ export class RedisConnectionManager {
   // Execute Redis command with retry logic
   async executeCommand<T>(
     command: string,
-    args: any[],
-    retries: number = 3
+    args: (string | number | Buffer)[],
+    retries: number = 3,
   ): Promise<T> {
     const client = this.getClient();
     if (!client) {
@@ -188,16 +200,17 @@ export class RedisConnectionManager {
         await this.delay(this.getRetryDelay());
         return this.executeCommand(command, args, retries - 1);
       }
-      
+
       throw error;
     }
   }
 
   // Check if error is retryable
-  private isRetryableError(error: any): boolean {
-    if (!error) return false;
+  private isRetryableError(error: unknown): boolean {
+    if (!error) {return false;}
 
-    const errorMessage = error.message || String(error);
+    const redisError = error as RedisError;
+    const errorMessage = redisError.message || String(error);
     const retryableErrors = [
       'ECONNREFUSED',
       'ECONNRESET',
@@ -207,23 +220,26 @@ export class RedisConnectionManager {
       'ASK',
       'TRYAGAIN',
       'LOADING',
-      'BUSY'
+      'BUSY',
     ];
 
     return retryableErrors.some(retryable =>
       errorMessage.includes(retryable) ||
-      error.code === retryable
+      redisError.code === retryable,
     );
   }
 
   // Get retry delay with exponential backoff
   private getRetryDelay(): number {
-    return Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
+    const maxDelay = 30000;
+    return Math.min(1000 * Math.pow(2, this.reconnectAttempts), maxDelay);
   }
 
   // Delay utility
   private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise(resolve => {
+      setTimeout(resolve, ms);
+    });
   }
 
   // Event handlers
@@ -237,8 +253,8 @@ export class RedisConnectionManager {
       {
         action: 'redis_connection_error',
         error: error.message,
-        connectionState: this.connectionState
-      }
+        connectionState: this.connectionState,
+      },
     );
 
     // Attempt reconnection if not in production
@@ -256,8 +272,8 @@ export class RedisConnectionManager {
       AuditSeverity.LOW,
       {
         action: 'redis_connection_closed',
-        connectionState: this.connectionState
-      }
+        connectionState: this.connectionState,
+      },
     );
   }
 
@@ -272,12 +288,12 @@ export class RedisConnectionManager {
       {
         action: 'redis_reconnecting',
         attempt: this.reconnectAttempts,
-        connectionState: this.connectionState
-      }
+        connectionState: this.connectionState,
+      },
     );
   }
 
-  private async handleConnect(): Promise<void> {
+  private handleConnect(): void {
     this.connectionState = ConnectionState.CONNECTING;
     console.log('Redis connecting...');
   }
@@ -292,8 +308,8 @@ export class RedisConnectionManager {
       AuditSeverity.LOW,
       {
         action: 'redis_connection_ready',
-        connectionState: this.connectionState
-      }
+        connectionState: this.connectionState,
+      },
     );
   }
 
@@ -301,23 +317,25 @@ export class RedisConnectionManager {
   private async attemptReconnection(): Promise<void> {
     try {
       console.log('Attempting Redis reconnection...');
-      
+
       if (this.clusterConfig) {
         await this.initializeCluster();
       } else {
         await this.initializeStandalone();
       }
-      
+
       this.setupEventHandlers();
       console.log('Redis reconnection successful');
-      
+
     } catch (error) {
       console.error('Redis reconnection failed:', error);
-      
+
       if (this.reconnectAttempts < this.maxReconnectAttempts) {
         const delay = this.getRetryDelay();
         console.log(`Scheduling reconnection attempt in ${delay}ms`);
-        setTimeout(() => this.attemptReconnection(), delay);
+        setTimeout(() => {
+          this.attemptReconnection().catch(console.error);
+        }, delay);
       } else {
         console.error('Max reconnection attempts reached');
         this.connectionState = ConnectionState.ERROR;
@@ -327,17 +345,20 @@ export class RedisConnectionManager {
 
   // Health check
   private startHealthCheck(): void {
-    this.healthCheckInterval = setInterval(async () => {
-      try {
-        const client = this.getClient();
-        if (client && this.connectionState === ConnectionState.CONNECTED) {
-          await client.ping();
+    const healthCheckIntervalMs = 30000; // Every 30 seconds
+    this.healthCheckInterval = setInterval(() => {
+      (async () => {
+        try {
+          const client = this.getClient();
+          if (client && this.connectionState === ConnectionState.CONNECTED) {
+            await client.ping();
+          }
+        } catch (error) {
+          console.warn('Redis health check failed:', error);
+          this.connectionState = ConnectionState.ERROR;
         }
-      } catch (error) {
-        console.warn('Redis health check failed:', error);
-        this.connectionState = ConnectionState.ERROR;
-      }
-    }, 30000); // Every 30 seconds
+      })().catch(console.error);
+    }, healthCheckIntervalMs);
   }
 
   // Get connection status
@@ -349,14 +370,14 @@ export class RedisConnectionManager {
     return {
       state: this.connectionState,
       reconnectAttempts: this.reconnectAttempts,
-      isHealthy: this.connectionState === ConnectionState.CONNECTED
+      isHealthy: this.connectionState === ConnectionState.CONNECTED,
     };
   }
 
   // Graceful shutdown
   async shutdown(): Promise<void> {
     console.log('Shutting down Redis connection...');
-    
+
     if (this.healthCheckInterval) {
       clearInterval(this.healthCheckInterval);
     }
@@ -372,7 +393,12 @@ export class RedisConnectionManager {
 
   // Cleanup
   destroy(): void {
-    this.shutdown();
+    this.shutdown().catch(console.error);
+  }
+
+  // Static method to get instance
+  static getInstance(): RedisConnectionManager {
+    return new RedisConnectionManager();
   }
 }
 
@@ -380,21 +406,15 @@ export class RedisConnectionManager {
 export const redisConnectionManager = RedisConnectionManager.getInstance();
 
 // Convenience functions
-export const getRedisClient = (): Redis | Cluster | null => {
-  return redisConnectionManager.getClient();
-};
+export const getRedisClient = (): Redis | Cluster | null => redisConnectionManager.getClient();
 
 export const executeRedisCommand = <T>(
   command: string,
-  args: any[],
-  retries?: number
-): Promise<T> => {
-  return redisConnectionManager.executeCommand(command, args, retries);
-};
+  args: (string | number | Buffer)[],
+  retries?: number,
+): Promise<T> => redisConnectionManager.executeCommand(command, args, retries);
 
-export const getRedisConnectionStatus = () => {
-  return redisConnectionManager.getConnectionStatus();
-};
+export const getRedisConnectionStatus = () => redisConnectionManager.getConnectionStatus();
 
 // Cleanup on process exit
 process.on('exit', () => {

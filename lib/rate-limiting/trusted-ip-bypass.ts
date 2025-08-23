@@ -1,10 +1,11 @@
-import { rateLimitConfig } from './config';
 import { isIP, isIPv4, isIPv6 } from 'net';
+
+import { rateLimitConfig } from './config';
 
 // IP address types
 export type IPAddress = string;
 export type IPRange = string; // CIDR notation
-export type TrustedIP = IPAddress | IPRange;
+export type TrustedIP = IPAddress ;
 
 // Trusted IP bypass result
 export interface TrustedIPBypassResult {
@@ -35,7 +36,7 @@ export class TrustedIPBypassManager {
   // Initialize trusted IPs from configuration
   private initializeTrustedIPs(): void {
     this.trustedIPs = [...rateLimitConfig.trustedIPs];
-    
+
     // Separate individual IPs from IP ranges
     for (const ip of this.trustedIPs) {
       if (this.isIPRange(ip)) {
@@ -44,7 +45,7 @@ export class TrustedIPBypassManager {
         this.individualIPs.add(ip);
       }
     }
-    
+
     console.log(`Initialized ${this.individualIPs.size} individual trusted IPs and ${this.ipRanges.length} IP ranges`);
   }
 
@@ -57,7 +58,7 @@ export class TrustedIPBypassManager {
           isTrusted: false,
           reason: 'Invalid IP address format',
           bypassLevel: 'none',
-          headers: {}
+          headers: {},
         };
       }
 
@@ -67,7 +68,7 @@ export class TrustedIPBypassManager {
           isTrusted: true,
           reason: 'IP is in trusted IP list',
           bypassLevel: 'full',
-          headers: this.generateTrustedHeaders(ip, 'full')
+          headers: this.generateTrustedHeaders(ip, 'full'),
         };
       }
 
@@ -78,7 +79,7 @@ export class TrustedIPBypassManager {
             isTrusted: true,
             reason: `IP is in trusted range ${range}`,
             bypassLevel: 'full',
-            headers: this.generateTrustedHeaders(ip, 'full')
+            headers: this.generateTrustedHeaders(ip, 'full'),
           };
       }
       }
@@ -89,7 +90,7 @@ export class TrustedIPBypassManager {
           isTrusted: true,
           reason: 'Partial bypass for endpoint',
           bypassLevel: 'partial',
-          headers: this.generateTrustedHeaders(ip, 'partial')
+          headers: this.generateTrustedHeaders(ip, 'partial'),
         };
       }
 
@@ -99,7 +100,7 @@ export class TrustedIPBypassManager {
           isTrusted: true,
           reason: 'Bypass by headers',
           bypassLevel: 'partial',
-          headers: this.generateTrustedHeaders(ip, 'partial')
+          headers: this.generateTrustedHeaders(ip, 'partial'),
         };
       }
 
@@ -107,7 +108,7 @@ export class TrustedIPBypassManager {
         isTrusted: false,
         reason: 'IP not in trusted list',
         bypassLevel: 'none',
-        headers: {}
+        headers: {},
       };
 
     } catch (error) {
@@ -116,7 +117,7 @@ export class TrustedIPBypassManager {
         isTrusted: false,
         reason: 'Error checking trusted IP',
         bypassLevel: 'none',
-        headers: {}
+        headers: {},
       };
     }
   }
@@ -131,7 +132,7 @@ export class TrustedIPBypassManager {
     try {
       const [rangeIP, prefixLength] = range.split('/');
       const prefix = parseInt(prefixLength);
-      
+
       if (isNaN(prefix) || prefix < 0 || prefix > (isIPv6(rangeIP) ? 128 : 32)) {
         return false;
       }
@@ -141,7 +142,7 @@ export class TrustedIPBypassManager {
       } else if (isIPv6(ip) && isIPv6(rangeIP)) {
         return this.isIPv6InRange(ip, rangeIP, prefix);
       }
-      
+
       return false;
     } catch (error) {
       console.warn('Error checking IP range:', error);
@@ -154,7 +155,7 @@ export class TrustedIPBypassManager {
     const ipNum = this.ipv4ToNumber(ip);
     const rangeNum = this.ipv4ToNumber(rangeIP);
     const mask = (0xFFFFFFFF << (32 - prefix)) >>> 0;
-    
+
     return (ipNum & mask) === (rangeNum & mask);
   }
 
@@ -198,7 +199,7 @@ export class TrustedIPBypassManager {
         (parts[0] === 0)
       );
     }
-    
+
     if (isIPv6(ip)) {
       return (
         ip.startsWith('fe80:') ||
@@ -207,7 +208,7 @@ export class TrustedIPBypassManager {
         ip === '::1'
       );
     }
-    
+
     return false;
   }
 
@@ -223,7 +224,7 @@ export class TrustedIPBypassManager {
     const headers: Record<string, string> = {
       'X-Trusted-IP': 'true',
       'X-Bypass-Level': bypassLevel,
-      'X-Trusted-IP-Address': ip
+      'X-Trusted-IP-Address': ip,
     };
 
     if (bypassLevel === 'full') {
@@ -242,13 +243,13 @@ export class TrustedIPBypassManager {
   addTrustedIP(ip: TrustedIP): void {
     if (!this.trustedIPs.includes(ip)) {
       this.trustedIPs.push(ip);
-      
+
       if (this.isIPRange(ip)) {
         this.ipRanges.push(ip);
       } else {
         this.individualIPs.add(ip);
       }
-      
+
       console.log(`Added trusted IP: ${ip}`);
     }
   }
@@ -258,7 +259,7 @@ export class TrustedIPBypassManager {
     const index = this.trustedIPs.indexOf(ip);
     if (index > -1) {
       this.trustedIPs.splice(index, 1);
-      
+
       if (this.isIPRange(ip)) {
         const rangeIndex = this.ipRanges.indexOf(ip);
         if (rangeIndex > -1) {
@@ -267,7 +268,7 @@ export class TrustedIPBypassManager {
       } else {
         this.individualIPs.delete(ip);
       }
-      
+
       console.log(`Removed trusted IP: ${ip}`);
     }
   }
@@ -294,7 +295,7 @@ export class TrustedIPBypassManager {
       totalTrustedIPs: this.trustedIPs.length,
       individualIPs: this.individualIPs.size,
       ipRanges: this.ipRanges.length,
-      lastUpdated: new Date().toISOString()
+      lastUpdated: new Date().toISOString(),
     };
   }
 
@@ -307,17 +308,17 @@ export class TrustedIPBypassManager {
   validateCIDR(cidr: string): boolean {
     try {
       const [ip, prefix] = cidr.split('/');
-      if (!isIP(ip)) return false;
-      
+      if (!isIP(ip)) {return false;}
+
       const prefixNum = parseInt(prefix);
-      if (isNaN(prefixNum)) return false;
-      
+      if (isNaN(prefixNum)) {return false;}
+
       if (isIPv4(ip)) {
         return prefixNum >= 0 && prefixNum <= 32;
       } else if (isIPv6(ip)) {
         return prefixNum >= 0 && prefixNum <= 128;
       }
-      
+
       return false;
     } catch {
       return false;
@@ -331,25 +332,25 @@ export class TrustedIPBypassManager {
     reason: string;
   } {
     const matchedRanges: string[] = [];
-    
+
     // Check individual IPs
     if (this.individualIPs.has(ip)) {
       matchedRanges.push(ip);
     }
-    
+
     // Check IP ranges
     for (const range of this.ipRanges) {
       if (this.isIPInRange(ip, range)) {
         matchedRanges.push(range);
       }
     }
-    
+
     return {
       isTrusted: matchedRanges.length > 0,
       matchedRanges,
-      reason: matchedRanges.length > 0 
-        ? `IP matched ${matchedRanges.length} trusted range(s)` 
-        : 'IP not in any trusted range'
+      reason: matchedRanges.length > 0
+        ? `IP matched ${matchedRanges.length} trusted range(s)`
+        : 'IP not in any trusted range',
     };
   }
 }
@@ -358,13 +359,9 @@ export class TrustedIPBypassManager {
 export const trustedIPBypassManager = TrustedIPBypassManager.getInstance();
 
 // Convenience functions
-export const checkTrustedIP = (ip: string, endpoint?: string): TrustedIPBypassResult => {
-  return trustedIPBypassManager.checkTrustedIP(ip, endpoint);
-};
+export const checkTrustedIP = (ip: string, endpoint?: string): TrustedIPBypassResult => trustedIPBypassManager.checkTrustedIP(ip, endpoint);
 
-export const isIPTrusted = (ip: string): boolean => {
-  return trustedIPBypassManager.isIPTrusted(ip);
-};
+export const isIPTrusted = (ip: string): boolean => trustedIPBypassManager.isIPTrusted(ip);
 
 export const addTrustedIP = (ip: TrustedIP): void => {
   trustedIPBypassManager.addTrustedIP(ip);

@@ -1,31 +1,33 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { Card, CardContent, CardHeader } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
-import { useTranslation } from '@/lib/useTranslation'
-import { useI18n } from '@/lib/i18n-provider'
-import { InsightsPanel } from './InsightsPanel'
-import { QuickSaveWidget } from './QuickSaveWidget'
-import { SavingsOverview } from './SavingsOverview'
-import { BudgetSummary } from './BudgetSummary'
-import { RecentTransactions } from './RecentTransactions'
-import { WelcomeHeader } from './WelcomeHeader'
+import { useState } from 'react';
+
+import { Button } from '@/components/ui/Button';
+import { Card, CardContent, CardHeader } from '@/components/ui/Card';
+import { useI18n } from '@/lib/i18n-provider';
+import { useTranslation } from '@/lib/useTranslation';
+
+import { BudgetSummary } from './BudgetSummary';
+import { InsightsPanel } from './InsightsPanel';
+import { QuickSaveWidget } from './QuickSaveWidget';
+import { RecentTransactions } from './RecentTransactions';
+import { SavingsOverview } from './SavingsOverview';
+import { WelcomeHeader } from './WelcomeHeader';
 
 export function TranslationTestPage() {
-  const { t, isReady, forceUpdate } = useTranslation(['common', 'dashboard'])
-  const { locale, changeLanguage } = useI18n()
-  const [showComponents, setShowComponents] = useState(true)
+  const { t, isReady, forceUpdate } = useTranslation(['common', 'dashboard']);
+  const { locale, changeLanguage } = useI18n();
+  const [showComponents, setShowComponents] = useState(true);
 
   const handleLanguageChange = async (newLocale: string) => {
     try {
-      console.log(`Changing language to ${newLocale}...`)
-      await changeLanguage(newLocale)
-      console.log(`Language changed to ${newLocale}`)
+      console.log(`Changing language to ${newLocale}...`);
+      await changeLanguage(newLocale);
+      console.log(`Language changed to ${newLocale}`);
     } catch (error) {
-      console.error('Failed to change language:', error)
+      console.error('Failed to change language:', error);
     }
-  }
+  };
 
   if (!isReady) {
     return (
@@ -35,7 +37,7 @@ export function TranslationTestPage() {
           <p className="text-neutral-gray text-lg">Loading translations...</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -60,7 +62,7 @@ export function TranslationTestPage() {
                 Force Update Count: <strong>{forceUpdate}</strong>
               </p>
             </div>
-            
+
             <div className="flex gap-2">
               <Button
                 variant={locale === 'en' ? 'primary' : 'outline'}
@@ -111,7 +113,7 @@ export function TranslationTestPage() {
       {showComponents && (
         <div className="space-y-6">
           {/* Welcome Header */}
-          <WelcomeHeader 
+          <WelcomeHeader
             showGreeting={true}
             showDate={true}
             showQuickActions={true}
@@ -142,14 +144,14 @@ export function TranslationTestPage() {
         <CardContent className="p-4">
           <div className="text-center text-sm text-neutral-gray">
             <p>
-              {t('common:app.name', { defaultValue: 'SmartSave' })} - 
-              {t('common:status.success', { defaultValue: 'Translation System Active' })} | 
-              {t('common:time.today', { defaultValue: 'Language' })}: {locale} | 
+              {t('common:app.name', { defaultValue: 'SmartSave' })} -
+              {t('common:status.success', { defaultValue: 'Translation System Active' })} |
+              {t('common:time.today', { defaultValue: 'Language' })}: {locale} |
               {t('common:status.online', { defaultValue: 'Updates' })}: {forceUpdate}
             </p>
           </div>
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

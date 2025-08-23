@@ -1,13 +1,5 @@
 // Database table schemas and types
-export interface DatabaseSchema {
-  users: UserTable;
-  audit_logs: AuditLogTable;
-  password_reset_tokens: PasswordResetTokenTable;
-  user_backup_codes: UserBackupCodeTable;
-  secret_metadata: SecretMetadataTable;
-  performance_metrics: PerformanceMetricsTable;
-  security_events: SecurityEventTable;
-}
+// (Will be defined after all table interfaces)
 
 // User table
 export interface UserTable {
@@ -42,8 +34,8 @@ export interface AuditLogTable {
   resource_type?: string;
   resource_id?: string;
   action?: string;
-  details?: any;
-  metadata?: any;
+  details?: Record<string, unknown>;
+  metadata?: Record<string, unknown>;
   tags: string[];
 }
 
@@ -91,7 +83,7 @@ export interface PerformanceMetricsTable {
   endpoint: string;
   method: string;
   response_time: number;
-  memory_usage: any;
+  memory_usage: Record<string, unknown>;
   database_queries: number;
   database_time: number;
   redis_operations: number;
@@ -110,8 +102,8 @@ export interface SecurityEventTable {
   user_id?: string;
   ip_address?: string;
   user_agent?: string;
-  details: any;
-  metadata: any;
+  details: Record<string, unknown>;
+  metadata: Record<string, unknown>;
   tags: string[];
 }
 
@@ -166,7 +158,7 @@ export interface TransactionOptions {
   backoffMs: number;
 }
 
-export interface TransactionResult<T = any> {
+export interface TransactionResult<T = unknown> {
   success: boolean;
   data?: T;
   error?: Error;
@@ -263,68 +255,68 @@ export interface PerformanceMetrics {
 }
 
 // Type guards for runtime type checking
-export function isUserTable(obj: any): obj is UserTable {
+export function isUserTable(obj: unknown): obj is UserTable {
   return (
     typeof obj === 'object' &&
     obj !== null &&
-    typeof obj.id === 'string' &&
-    typeof obj.email === 'string' &&
-    typeof obj.name === 'string' &&
-    typeof obj.password_hash === 'string' &&
-    typeof obj.mfa_enabled === 'boolean' &&
-    typeof obj.mfa_verified === 'boolean' &&
-    typeof obj.token_version === 'number' &&
-    obj.created_at instanceof Date &&
-    obj.updated_at instanceof Date
+    typeof (obj as Record<string, unknown>).id === 'string' &&
+    typeof (obj as Record<string, unknown>).email === 'string' &&
+    typeof (obj as Record<string, unknown>).name === 'string' &&
+    typeof (obj as Record<string, unknown>).password_hash === 'string' &&
+    typeof (obj as Record<string, unknown>).mfa_enabled === 'boolean' &&
+    typeof (obj as Record<string, unknown>).mfa_verified === 'boolean' &&
+    typeof (obj as Record<string, unknown>).token_version === 'number' &&
+    (obj as Record<string, unknown>).created_at instanceof Date &&
+    (obj as Record<string, unknown>).updated_at instanceof Date
   );
 }
 
-export function isAuditLogTable(obj: any): obj is AuditLogTable {
+export function isAuditLogTable(obj: unknown): obj is AuditLogTable {
   return (
     typeof obj === 'object' &&
     obj !== null &&
-    typeof obj.id === 'string' &&
-    obj.timestamp instanceof Date &&
-    typeof obj.event_type === 'string' &&
-    typeof obj.severity === 'string' &&
-    Array.isArray(obj.tags)
+    typeof (obj as Record<string, unknown>).id === 'string' &&
+    (obj as Record<string, unknown>).timestamp instanceof Date &&
+    typeof (obj as Record<string, unknown>).event_type === 'string' &&
+    typeof (obj as Record<string, unknown>).severity === 'string' &&
+    Array.isArray((obj as Record<string, unknown>).tags)
   );
 }
 
-export function isPerformanceMetricsTable(obj: any): obj is PerformanceMetricsTable {
+export function isPerformanceMetricsTable(obj: unknown): obj is PerformanceMetricsTable {
   return (
     typeof obj === 'object' &&
     obj !== null &&
-    typeof obj.id === 'string' &&
-    obj.timestamp instanceof Date &&
-    typeof obj.request_id === 'string' &&
-    typeof obj.endpoint === 'string' &&
-    typeof obj.method === 'string' &&
-    typeof obj.response_time === 'number' &&
-    typeof obj.database_queries === 'number' &&
-    typeof obj.database_time === 'number' &&
-    typeof obj.redis_operations === 'number' &&
-    typeof obj.redis_time === 'number' &&
-    typeof obj.status_code === 'number'
+    typeof (obj as Record<string, unknown>).id === 'string' &&
+    (obj as Record<string, unknown>).timestamp instanceof Date &&
+    typeof (obj as Record<string, unknown>).request_id === 'string' &&
+    typeof (obj as Record<string, unknown>).endpoint === 'string' &&
+    typeof (obj as Record<string, unknown>).method === 'string' &&
+    typeof (obj as Record<string, unknown>).response_time === 'number' &&
+    typeof (obj as Record<string, unknown>).database_queries === 'number' &&
+    typeof (obj as Record<string, unknown>).database_time === 'number' &&
+    typeof (obj as Record<string, unknown>).redis_operations === 'number' &&
+    typeof (obj as Record<string, unknown>).redis_time === 'number' &&
+    typeof (obj as Record<string, unknown>).status_code === 'number'
   );
 }
 
-export function isSecurityEventTable(obj: any): obj is SecurityEventTable {
+export function isSecurityEventTable(obj: unknown): obj is SecurityEventTable {
   return (
     typeof obj === 'object' &&
     obj !== null &&
-    typeof obj.id === 'string' &&
-    obj.timestamp instanceof Date &&
-    typeof obj.event_type === 'string' &&
-    typeof obj.severity === 'string' &&
-    typeof obj.details === 'object' &&
-    typeof obj.metadata === 'object' &&
-    Array.isArray(obj.tags)
+    typeof (obj as Record<string, unknown>).id === 'string' &&
+    (obj as Record<string, unknown>).timestamp instanceof Date &&
+    typeof (obj as Record<string, unknown>).event_type === 'string' &&
+    typeof (obj as Record<string, unknown>).severity === 'string' &&
+    typeof (obj as Record<string, unknown>).details === 'object' &&
+    typeof (obj as Record<string, unknown>).metadata === 'object' &&
+    Array.isArray((obj as Record<string, unknown>).tags)
   );
 }
 
 // Utility types for database operations
-export type DatabaseRow = Record<string, any>;
+export type DatabaseRow = Record<string, unknown>;
 
 export interface TypedQueryResult<T> {
   rows: T[];
@@ -345,8 +337,8 @@ export interface TypedQueryResult<T> {
 // Type-safe database query functions
 export async function executeTypedQuery<T>(
   queryText: string,
-  params: any[],
-  typeGuard: (obj: any) => obj is T
+  params: unknown[],
+  typeGuard: (obj: unknown) => obj is T,
 ): Promise<TypedQueryResult<T>> {
   // This would be implemented in the actual database module
   // For now, it's a type definition
@@ -382,6 +374,17 @@ export interface DatabaseView {
   isUpdatable: boolean;
   isInsertableInto: boolean;
   isTriggerUpdatable: boolean;
+}
+
+// Database schema - defined after all table interfaces
+export interface DatabaseSchema {
+  users: UserTable;
+  audit_logs: AuditLogTable;
+  password_reset_tokens: PasswordResetTokenTable;
+  user_backup_codes: UserBackupCodeTable;
+  secret_metadata: SecretMetadataTable;
+  performance_metrics: PerformanceMetricsTable;
+  security_events: SecurityEventTable;
 }
 
 // All types are already exported above, no need for duplicate exports

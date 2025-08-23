@@ -1,16 +1,16 @@
-import { forwardRef } from 'react'
-import { cn } from '@/lib/utils'
-import type { CardProps } from '@/types'
+import { forwardRef } from 'react';
+
+import { cn } from '@/lib/utils';
+import type { CardProps } from '@/types';
 
 const Card = forwardRef<HTMLDivElement, CardProps>(
-  ({ className, title, subtitle, actions, hoverable = false, children, ...props }, ref) => {
-    return (
+  ({ className, title, subtitle, actions, hoverable = false, children, ...props }, ref) => (
       <div
         ref={ref}
         className={cn(
           'bg-white rounded-md shadow-sm border border-neutral-gray/10 overflow-hidden',
           hoverable && 'hover:shadow-md transition-shadow duration-200 cursor-pointer',
-          className
+          className,
         )}
         {...props}
       >
@@ -41,15 +41,13 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
           {children}
         </div>
       </div>
-    )
-  }
-)
+    ),
+);
 
-Card.displayName = 'Card'
+Card.displayName = 'Card';
 
 const CardHeader = forwardRef<HTMLDivElement, CardProps>(
-  ({ className, children, ...props }, ref) => {
-    return (
+  ({ className, children, ...props }, ref) => (
       <div
         ref={ref}
         className={cn('px-6 py-4 border-b border-neutral-gray/10', className)}
@@ -57,15 +55,13 @@ const CardHeader = forwardRef<HTMLDivElement, CardProps>(
       >
         {children}
       </div>
-    )
-  }
-)
+    ),
+);
 
-CardHeader.displayName = 'CardHeader'
+CardHeader.displayName = 'CardHeader';
 
 const CardContent = forwardRef<HTMLDivElement, CardProps>(
-  ({ className, children, ...props }, ref) => {
-    return (
+  ({ className, children, ...props }, ref) => (
       <div
         ref={ref}
         className={cn('p-6', className)}
@@ -73,15 +69,13 @@ const CardContent = forwardRef<HTMLDivElement, CardProps>(
       >
         {children}
       </div>
-    )
-  }
-)
+    ),
+);
 
-CardContent.displayName = 'CardContent'
+CardContent.displayName = 'CardContent';
 
 const CardFooter = forwardRef<HTMLDivElement, CardProps>(
-  ({ className, children, ...props }, ref) => {
-    return (
+  ({ className, children, ...props }, ref) => (
       <div
         ref={ref}
         className={cn('px-6 py-4 border-t border-neutral-gray/10 bg-neutral-light-gray/50', className)}
@@ -89,10 +83,9 @@ const CardFooter = forwardRef<HTMLDivElement, CardProps>(
       >
         {children}
       </div>
-    )
-  }
-)
+    ),
+);
 
-CardFooter.displayName = 'CardFooter'
+CardFooter.displayName = 'CardFooter';
 
-export { Card, CardHeader, CardContent, CardFooter }
+export { Card, CardHeader, CardContent, CardFooter };

@@ -1,7 +1,6 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { 
+import {
   MagnifyingGlassIcon,
   FunnelIcon,
   ArrowsUpDownIcon,
@@ -9,12 +8,14 @@ import {
   TrashIcon,
   CheckIcon,
   XMarkIcon,
-  EllipsisHorizontalIcon
-} from '@heroicons/react/24/outline'
-import { Card, CardContent, CardHeader } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
-import { formatCurrency, formatRelativeTime } from '@/lib/utils'
-import type { Transaction } from '@/types'
+  EllipsisHorizontalIcon,
+} from '@heroicons/react/24/outline';
+import { useState } from 'react';
+
+import { Button } from '@/components/ui/Button';
+import { Card, CardContent, CardHeader } from '@/components/ui/Card';
+import { formatCurrency, formatRelativeTime } from '@/lib/utils';
+import type { Transaction } from '@/types';
 
 interface TransactionTableProps {
   sortable?: boolean
@@ -31,14 +32,14 @@ export function TransactionTable({
   bulkActions = true,
   categoryEditing = true,
 }: TransactionTableProps) {
-  const [searchQuery, setSearchQuery] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState('all')
-  const [selectedType, setSelectedType] = useState('all')
-  const [sortBy, setSortBy] = useState<'date' | 'amount' | 'description'>('date')
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
-  const [selectedTransactions, setSelectedTransactions] = useState<string[]>([])
-  const [editingTransaction, setEditingTransaction] = useState<string | null>(null)
-  const [editCategory, setEditCategory] = useState('')
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedType, setSelectedType] = useState('all');
+  const [sortBy, setSortBy] = useState<'date' | 'amount' | 'description'>('date');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [selectedTransactions, setSelectedTransactions] = useState<string[]>([]);
+  const [editingTransaction, setEditingTransaction] = useState<string | null>(null);
+  const [editCategory, setEditCategory] = useState('');
 
   // Mock transaction data
   const [transactions, setTransactions] = useState<Transaction[]>([
@@ -125,85 +126,92 @@ export function TransactionTable({
       account: 'Credit Card',
       tags: ['coffee', 'dining'],
     },
-  ])
+  ]);
 
   const categories = [
-    'All', 'Food', 'Transportation', 'Entertainment', 'Utilities', 
-    'Shopping', 'Healthcare', 'Income', 'Other'
-  ]
+    'All',
+'Food',
+'Transportation',
+'Entertainment',
+'Utilities',
+    'Shopping',
+'Healthcare',
+'Income',
+'Other',
+  ];
 
   // Filter and sort transactions
   const filteredTransactions = transactions
     .filter(transaction => {
-      const matchesSearch = searchQuery === '' || 
+      const matchesSearch = searchQuery === '' ||
         (transaction.description?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
         transaction.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        transaction.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
-      
-      const matchesCategory = selectedCategory === 'all' || 
-        transaction.category.toLowerCase() === selectedCategory.toLowerCase()
-      
-      const matchesType = selectedType === 'all' || transaction.type === selectedType
-      
-      return matchesSearch && matchesCategory && matchesType
+        transaction.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+
+      const matchesCategory = selectedCategory === 'all' ||
+        transaction.category.toLowerCase() === selectedCategory.toLowerCase();
+
+      const matchesType = selectedType === 'all' || transaction.type === selectedType;
+
+      return matchesSearch && matchesCategory && matchesType;
     })
     .sort((a, b) => {
-      let comparison = 0
-      
+      let comparison = 0;
+
       switch (sortBy) {
         case 'date':
-          comparison = a.date.getTime() - b.date.getTime()
-          break
+          comparison = a.date.getTime() - b.date.getTime();
+          break;
         case 'amount':
-          comparison = Math.abs(a.amount) - Math.abs(b.amount)
-          break
+          comparison = Math.abs(a.amount) - Math.abs(b.amount);
+          break;
         case 'description':
-          comparison = (a.description || '').localeCompare(b.description || '')
-          break
+          comparison = (a.description || '').localeCompare(b.description || '');
+          break;
       }
-      
-      return sortOrder === 'asc' ? comparison : -comparison
-    })
+
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
 
   const handleSort = (column: 'date' | 'amount' | 'description') => {
     if (sortBy === column) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
     } else {
-      setSortBy(column)
-      setSortOrder('desc')
+      setSortBy(column);
+      setSortOrder('desc');
     }
-  }
+  };
 
   const handleSelectTransaction = (transactionId: string) => {
-    setSelectedTransactions(prev => 
-      prev.includes(transactionId)
+    setSelectedTransactions(prev =>
+      (prev.includes(transactionId)
         ? prev.filter(id => id !== transactionId)
-        : [...prev, transactionId]
-    )
-  }
+        : [...prev, transactionId]),
+    );
+  };
 
   const handleSelectAll = () => {
     if (selectedTransactions.length === filteredTransactions.length) {
-      setSelectedTransactions([])
+      setSelectedTransactions([]);
     } else {
-      setSelectedTransactions(filteredTransactions.map(t => t.id))
+      setSelectedTransactions(filteredTransactions.map(t => t.id));
     }
-  }
+  };
 
   const handleEditCategory = (transactionId: string, newCategory: string) => {
     setTransactions(prev =>
       prev.map(t =>
-        t.id === transactionId ? { ...t, category: newCategory } : t
-      )
-    )
-    setEditingTransaction(null)
-    setEditCategory('')
-  }
+        (t.id === transactionId ? { ...t, category: newCategory } : t),
+      ),
+    );
+    setEditingTransaction(null);
+    setEditCategory('');
+  };
 
   const handleDeleteTransactions = (transactionIds: string[]) => {
-    setTransactions(prev => prev.filter(t => !transactionIds.includes(t.id)))
-    setSelectedTransactions([])
-  }
+    setTransactions(prev => prev.filter(t => !transactionIds.includes(t.id)));
+    setSelectedTransactions([]);
+  };
 
   const getCategoryIcon = (category: string) => {
     const icons: Record<string, string> = {
@@ -215,13 +223,13 @@ export function TransactionTable({
       'Shopping': '🛍️',
       'Healthcare': '🏥',
       'Other': '📝',
-    }
-    return icons[category] || '💳'
-  }
+    };
+    return icons[category] || '💳';
+  };
 
   const getCategoryColor = (category: string, type: 'income' | 'expense') => {
-    if (type === 'income') return 'bg-secondary-growth-green/10 text-secondary-growth-green'
-    
+    if (type === 'income') {return 'bg-secondary-growth-green/10 text-secondary-growth-green';}
+
     const colors: Record<string, string> = {
       'Food': 'bg-accent-action-orange/10 text-accent-action-orange',
       'Entertainment': 'bg-purple-100 text-purple-700',
@@ -230,9 +238,9 @@ export function TransactionTable({
       'Shopping': 'bg-pink-100 text-pink-700',
       'Healthcare': 'bg-red-100 text-red-700',
       'Other': 'bg-neutral-gray/10 text-neutral-gray',
-    }
-    return colors[category] || 'bg-neutral-gray/10 text-neutral-gray'
-  }
+    };
+    return colors[category] || 'bg-neutral-gray/10 text-neutral-gray';
+  };
 
   return (
     <Card>
@@ -246,7 +254,7 @@ export function TransactionTable({
               {filteredTransactions.length} of {transactions.length} transactions
             </p>
           </div>
-          
+
           {/* Search and Filters */}
           <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
             {searchable && (
@@ -263,7 +271,7 @@ export function TransactionTable({
                 />
               </div>
             )}
-            
+
             {filterable && (
               <div className="flex space-x-2">
                 <select
@@ -277,7 +285,7 @@ export function TransactionTable({
                     </option>
                   ))}
                 </select>
-                
+
                 <select
                   value={selectedType}
                   onChange={(e) => setSelectedType(e.target.value)}
@@ -350,7 +358,7 @@ export function TransactionTable({
                       />
                     </th>
                   )}
-                  <th 
+                  <th
                     className={`text-left py-3 px-2 text-sm font-medium text-neutral-gray ${
                       sortable ? 'cursor-pointer hover:text-neutral-dark-gray' : ''
                     }`}
@@ -363,7 +371,7 @@ export function TransactionTable({
                       )}
                     </div>
                   </th>
-                  <th 
+                  <th
                     className={`text-left py-3 px-2 text-sm font-medium text-neutral-gray ${
                       sortable ? 'cursor-pointer hover:text-neutral-dark-gray' : ''
                     }`}
@@ -379,7 +387,7 @@ export function TransactionTable({
                   <th className="text-left py-3 px-2 text-sm font-medium text-neutral-gray">
                     Category
                   </th>
-                  <th 
+                  <th
                     className={`text-right py-3 px-2 text-sm font-medium text-neutral-gray ${
                       sortable ? 'cursor-pointer hover:text-neutral-dark-gray' : ''
                     }`}
@@ -402,8 +410,8 @@ export function TransactionTable({
               </thead>
               <tbody>
                 {filteredTransactions.map((transaction) => (
-                  <tr 
-                    key={transaction.id} 
+                  <tr
+                    key={transaction.id}
                     className="border-b border-neutral-gray/10 hover:bg-neutral-light-gray/30 transition-colors duration-150"
                   >
                     {bulkActions && (
@@ -436,7 +444,7 @@ export function TransactionTable({
                           {transaction.tags && transaction.tags.length > 0 && (
                             <div className="flex flex-wrap gap-1 mt-1">
                               {transaction.tags.slice(0, 2).map(tag => (
-                                <span 
+                                <span
                                   key={tag}
                                   className="text-xs px-1.5 py-0.5 bg-neutral-gray/10 text-neutral-gray rounded-full"
                                 >
@@ -475,8 +483,8 @@ export function TransactionTable({
                           </button>
                           <button
                             onClick={() => {
-                              setEditingTransaction(null)
-                              setEditCategory('')
+                              setEditingTransaction(null);
+                              setEditCategory('');
                             }}
                             className="p-1 text-neutral-gray hover:bg-neutral-gray/10 rounded"
                           >
@@ -484,7 +492,7 @@ export function TransactionTable({
                           </button>
                         </div>
                       ) : (
-                        <span 
+                        <span
                           className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full ${
                             getCategoryColor(transaction.category, transaction.type)
                           }`}
@@ -518,8 +526,8 @@ export function TransactionTable({
                         {categoryEditing && (
                           <button
                             onClick={() => {
-                              setEditingTransaction(transaction.id)
-                              setEditCategory(transaction.category)
+                              setEditingTransaction(transaction.id);
+                              setEditCategory(transaction.category);
                             }}
                             className="p-1 text-neutral-gray hover:text-primary-trust-blue hover:bg-primary-trust-blue/10 rounded transition-colors duration-150"
                             title="Edit category"
@@ -550,5 +558,5 @@ export function TransactionTable({
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

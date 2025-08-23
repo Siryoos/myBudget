@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+
 import { middleware as securityMiddleware } from './middleware/security';
 
 const locales = ['en', 'fa', 'ar'];
@@ -12,7 +13,7 @@ function getLocale(request: NextRequest): string {
   // Check if there's a locale in the pathname
   const pathname = request.nextUrl.pathname;
   const pathnameHasLocale = locales.some(
-    (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
+    (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`,
   );
 
   if (pathnameHasLocale) {
@@ -27,7 +28,7 @@ function getLocale(request: NextRequest): string {
       .split(',')
       .map((lang) => lang.split(';')[0].trim().split('-')[0])
       .find((lang) => locales.includes(lang));
-    
+
     if (detectedLocale) {
       return detectedLocale;
     }
@@ -45,32 +46,32 @@ function getLocale(request: NextRequest): string {
 // Locale middleware function
 function localeMiddleware(request: NextRequest): NextResponse {
   const pathname = request.nextUrl.pathname;
-  
+
   // Skip API routes entirely - they don't need locale handling
   if (pathname.startsWith('/api/')) {
     return NextResponse.next();
   }
-  
+
   // Check if the pathname is missing a locale
   const pathnameIsMissingLocale = locales.every(
-    (locale) => !pathname.startsWith(`/${locale}/`) && pathname !== `/${locale}`
+    (locale) => !pathname.startsWith(`/${locale}/`) && pathname !== `/${locale}`,
   );
 
   // Redirect if pathname is missing a locale
   if (pathnameIsMissingLocale) {
     const locale = getLocale(request);
-    
+
     // e.g. incoming request is /products
     // The new URL is now /en/products
     return NextResponse.redirect(
-      new URL(`/${locale}${pathname}`, request.url)
+      new URL(`/${locale}${pathname}`, request.url),
     );
   }
 
   // Set the locale cookie and direction
   const response = NextResponse.next();
   const locale = pathname.split('/')[1];
-  
+
   response.cookies.set('NEXT_LOCALE', locale, {
     maxAge: 60 * 60 * 24 * 365, // 1 year
     path: '/',
@@ -82,7 +83,7 @@ function localeMiddleware(request: NextRequest): NextResponse {
   } else {
     response.headers.set('x-text-direction', 'ltr');
   }
-  
+
   // Set locale header
   response.headers.set('x-locale', locale);
 
@@ -100,9 +101,9 @@ function mergeHeadersSafely(target: Headers, source: Headers): void {
     'Strict-Transport-Security',
     'Cross-Origin-Embedder-Policy',
     'Cross-Origin-Opener-Policy',
-    'Cross-Origin-Resource-Policy'
+    'Cross-Origin-Resource-Policy',
   ];
-  
+
   // Merge all headers, but security headers from security middleware take priority
   source.forEach((value, key) => {
     if (securityPriorityHeaders.includes(key)) {
@@ -119,43 +120,43 @@ function mergeHeadersSafely(target: Headers, source: Headers): void {
 export async function middleware(request: NextRequest) {
   try {
     // First apply locale middleware
-    let response = localeMiddleware(request);
-    
+    const response = localeMiddleware(request);
+
     // If locale middleware redirected, return early
     if (response.status === 302) {
       return response;
     }
-    
+
     // Then apply security middleware
     const securityResponse = await securityMiddleware(request);
-    
+
     // Check if securityResponse is a terminal response (status !== 200 and !== 302)
     // Terminal responses include 204 (preflight), 429 (rate limit), etc.
     if (securityResponse.status !== 200 && securityResponse.status !== 302) {
       return securityResponse;
     }
-    
+
     // Safely merge security headers into the locale response for non-terminal responses
     mergeHeadersSafely(response.headers, securityResponse.headers);
-    
+
     return response;
   } catch (error) {
     console.error('Middleware error:', error);
-    
+
     // Return a safe fallback response instead of crashing
     return new NextResponse(
       JSON.stringify({
         success: false,
         error: 'Internal server error',
-        message: 'Middleware processing failed'
+        message: 'Middleware processing failed',
       }),
       {
         status: 500,
         headers: {
           'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache, no-store, must-revalidate'
-        }
-      }
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+        },
+      },
     );
   }
 }

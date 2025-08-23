@@ -1,15 +1,16 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { 
+import {
   BanknotesIcon,
   PlusIcon,
-  SparklesIcon
-} from '@heroicons/react/24/outline'
-import { Card, CardContent, CardHeader } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
-import { formatCurrency, sanitizeNumberInput } from '@/lib/utils'
-import { useTranslation } from '@/lib/useTranslation'
+  SparklesIcon,
+} from '@heroicons/react/24/outline';
+import { useState } from 'react';
+
+import { Button } from '@/components/ui/Button';
+import { Card, CardContent, CardHeader } from '@/components/ui/Card';
+import { useTranslation } from '@/lib/useTranslation';
+import { formatCurrency, sanitizeNumberInput } from '@/lib/utils';
 
 interface QuickSaveWidgetProps {
   defaultAmounts?: number[]
@@ -22,51 +23,51 @@ export function QuickSaveWidget({
   customAmountEnabled = true,
   celebrationAnimation = true,
 }: QuickSaveWidgetProps) {
-  const { t } = useTranslation(['dashboard'])
-  const [selectedAmount, setSelectedAmount] = useState<number | null>(null)
-  const [customAmount, setCustomAmount] = useState('')
-  const [showCustomInput, setShowCustomInput] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [showCelebration, setShowCelebration] = useState(false)
+  const { t } = useTranslation(['dashboard']);
+  const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
+  const [customAmount, setCustomAmount] = useState('');
+  const [showCustomInput, setShowCustomInput] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
 
   const handleQuickSave = async (amount: number) => {
-    setIsLoading(true)
-    
+    setIsLoading(true);
+
     try {
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
       if (celebrationAnimation) {
-        setShowCelebration(true)
-        setTimeout(() => setShowCelebration(false), 2000)
+        setShowCelebration(true);
+        setTimeout(() => setShowCelebration(false), 2000);
       }
-      
+
       // Reset form
-      setSelectedAmount(null)
-      setCustomAmount('')
-      setShowCustomInput(false)
-      
-      console.log(`Saved ${formatCurrency(amount)}`)
+      setSelectedAmount(null);
+      setCustomAmount('');
+      setShowCustomInput(false);
+
+      console.log(`Saved ${formatCurrency(amount)}`);
     } catch (error) {
-      console.error('Failed to save:', error)
+      console.error('Failed to save:', error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleCustomAmountSubmit = () => {
-    const amount = sanitizeNumberInput(customAmount)
+    const amount = sanitizeNumberInput(customAmount);
     if (amount > 0) {
-      handleQuickSave(amount)
+      handleQuickSave(amount);
     }
-  }
+  };
 
   const getSelectedAmount = () => {
     if (showCustomInput) {
-      return sanitizeNumberInput(customAmount)
+      return sanitizeNumberInput(customAmount);
     }
-    return selectedAmount || 0
-  }
+    return selectedAmount || 0;
+  };
 
   return (
     <Card className="relative overflow-hidden">
@@ -113,9 +114,9 @@ export function QuickSaveWidget({
                 <button
                   key={amount}
                   onClick={() => {
-                    setSelectedAmount(amount)
-                    setShowCustomInput(false)
-                    setCustomAmount('')
+                    setSelectedAmount(amount);
+                    setShowCustomInput(false);
+                    setCustomAmount('');
                   }}
                   className={`p-3 rounded-lg border-2 transition-all duration-200 text-center ${
                     selectedAmount === amount && !showCustomInput
@@ -135,8 +136,8 @@ export function QuickSaveWidget({
             <div>
               <button
                 onClick={() => {
-                  setShowCustomInput(!showCustomInput)
-                  setSelectedAmount(null)
+                  setShowCustomInput(!showCustomInput);
+                  setSelectedAmount(null);
                 }}
                 className={`w-full p-3 rounded-lg border-2 transition-all duration-200 flex items-center justify-center ${
                   showCustomInput
@@ -184,9 +185,9 @@ export function QuickSaveWidget({
             className="w-full"
             onClick={() => {
               if (showCustomInput) {
-                handleCustomAmountSubmit()
+                handleCustomAmountSubmit();
               } else if (selectedAmount) {
-                handleQuickSave(selectedAmount)
+                handleQuickSave(selectedAmount);
               }
             }}
             disabled={isLoading || (!selectedAmount && !showCustomInput) || (showCustomInput && !customAmount)}
@@ -208,10 +209,10 @@ export function QuickSaveWidget({
               {t('dashboard:quickSave.tip', { defaultValue: '💡 Tip: Small, consistent savings add up quickly!' })}
             </p>
             <p className="text-xs text-neutral-gray mt-1">
-              {t('dashboard:quickSave.weeklySavings', { 
-                amount: formatCurrency(25), 
+              {t('dashboard:quickSave.weeklySavings', {
+                amount: formatCurrency(25),
                 annual: formatCurrency(1300),
-                defaultValue: 'Saving $25 weekly = $1,300 annually'
+                defaultValue: 'Saving $25 weekly = $1,300 annually',
               })}
             </p>
           </div>
@@ -239,5 +240,5 @@ export function QuickSaveWidget({
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

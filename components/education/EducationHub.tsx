@@ -1,18 +1,19 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { 
+import {
   AcademicCapIcon,
   BookOpenIcon,
   CheckCircleIcon,
   PlayIcon,
   ClockIcon,
   StarIcon,
-  TrophyIcon
-} from '@heroicons/react/24/outline'
-import { Card, CardContent, CardHeader } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
-import { ProgressBar } from '@/components/ui/ProgressBar'
+  TrophyIcon,
+} from '@heroicons/react/24/outline';
+import { useState } from 'react';
+
+import { Button } from '@/components/ui/Button';
+import { Card, CardContent, CardHeader } from '@/components/ui/Card';
+import { ProgressBar } from '@/components/ui/ProgressBar';
 
 interface EducationModule {
   id: string
@@ -40,8 +41,8 @@ export function EducationHub({
   progressTracking = true,
   quizzes = true,
 }: EducationHubProps) {
-  const [selectedModule, setSelectedModule] = useState<string | null>(null)
-  const [filter, setFilter] = useState<'all' | 'in-progress' | 'completed'>('all')
+  const [selectedModule, setSelectedModule] = useState<string | null>(null);
+  const [filter, setFilter] = useState<'all' | 'in-progress' | 'completed'>('all');
 
   // Mock education modules
   const modules: EducationModule[] = [
@@ -117,40 +118,40 @@ export function EducationHub({
       quizzes: 3,
       icon: '📋',
     },
-  ]
+  ];
 
   const filteredModules = modules.filter(module => {
     switch (filter) {
       case 'in-progress':
-        return module.progress > 0 && !module.isCompleted
+        return module.progress > 0 && !module.isCompleted;
       case 'completed':
-        return module.isCompleted
+        return module.isCompleted;
       default:
-        return true
+        return true;
     }
-  })
+  });
 
   const totalProgress = Math.round(
-    modules.reduce((sum, module) => sum + module.progress, 0) / modules.length
-  )
+    modules.reduce((sum, module) => sum + module.progress, 0) / modules.length,
+  );
 
-  const completedModules = modules.filter(m => m.isCompleted).length
+  const completedModules = modules.filter(m => m.isCompleted).length;
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case 'Beginner':
-        return 'bg-secondary-growth-green/10 text-secondary-growth-green'
+        return 'bg-secondary-growth-green/10 text-secondary-growth-green';
       case 'Intermediate':
-        return 'bg-accent-action-orange/10 text-accent-action-orange'
+        return 'bg-accent-action-orange/10 text-accent-action-orange';
       case 'Advanced':
-        return 'bg-accent-warning-red/10 text-accent-warning-red'
+        return 'bg-accent-warning-red/10 text-accent-warning-red';
       default:
-        return 'bg-neutral-gray/10 text-neutral-gray'
+        return 'bg-neutral-gray/10 text-neutral-gray';
     }
-  }
+  };
 
   const ModuleCard = ({ module }: { module: EducationModule }) => (
-    <div 
+    <div
       className={`bg-white border rounded-lg p-6 cursor-pointer transition-all duration-200 hover:shadow-md ${
         selectedModule === module.id ? 'border-primary-trust-blue shadow-md' : 'border-neutral-gray/20'
       }`}
@@ -168,7 +169,7 @@ export function EducationHub({
             </p>
           </div>
         </div>
-        
+
         {module.isCompleted && (
           <div className="bg-secondary-growth-green/10 rounded-full p-2">
             <CheckCircleIcon className="h-5 w-5 text-secondary-growth-green" />
@@ -213,9 +214,9 @@ export function EducationHub({
 
       <div className="flex items-center justify-between">
         <div className="text-sm text-neutral-gray">
-          {module.isCompleted 
-            ? '✅ Completed' 
-            : module.progress > 0 
+          {module.isCompleted
+            ? '✅ Completed'
+            : module.progress > 0
               ? `${module.progress}% complete`
               : 'Not started'
           }
@@ -229,7 +230,7 @@ export function EducationHub({
         </Button>
       </div>
     </div>
-  )
+  );
 
   return (
     <Card>
@@ -248,7 +249,7 @@ export function EducationHub({
               </p>
             </div>
           </div>
-          
+
           {/* Filter buttons */}
           <div className="flex bg-neutral-light-gray rounded-lg p-1">
             {(['all', 'in-progress', 'completed'] as const).map((filterType) => (
@@ -261,7 +262,7 @@ export function EducationHub({
                     : 'text-neutral-gray hover:text-neutral-dark-gray'
                 }`}
               >
-                {filterType === 'all' ? 'All' : 
+                {filterType === 'all' ? 'All' :
                  filterType === 'in-progress' ? 'In Progress' : 'Completed'}
               </button>
             ))}
@@ -283,7 +284,7 @@ export function EducationHub({
                 <div className="text-sm text-primary-trust-blue-light">Overall</div>
               </div>
             </div>
-            
+
             <ProgressBar
               value={totalProgress}
               max={100}
@@ -292,7 +293,7 @@ export function EducationHub({
               showPercentage={false}
               className="bg-white/20"
             />
-            
+
             <div className="flex items-center justify-between mt-3 text-sm">
               <span className="text-primary-trust-blue-light">Keep learning!</span>
               <div className="flex items-center">
@@ -312,7 +313,7 @@ export function EducationHub({
               No modules found
             </h4>
             <p className="text-neutral-gray">
-              {filter === 'completed' 
+              {filter === 'completed'
                 ? 'Complete some modules to see them here!'
                 : 'Start learning to track your progress.'
               }
@@ -335,7 +336,7 @@ export function EducationHub({
                 Recent Achievements
               </h4>
             </div>
-            
+
             <div className="space-y-2">
               {modules
                 .filter(m => m.isCompleted)
@@ -354,9 +355,9 @@ export function EducationHub({
 
         {/* Next Recommended Module */}
         {(() => {
-          const nextModule = modules.find(m => !m.isCompleted && m.progress === 0)
-          if (!nextModule) return null
-          
+          const nextModule = modules.find(m => !m.isCompleted && m.progress === 0);
+          if (!nextModule) {return null;}
+
           return (
             <div className="mt-6 bg-accent-action-orange/5 rounded-lg p-4 border border-accent-action-orange/20">
               <div className="flex items-center justify-between">
@@ -377,9 +378,9 @@ export function EducationHub({
                 </Button>
               </div>
             </div>
-          )
+          );
         })()}
       </CardContent>
     </Card>
-  )
+  );
 }

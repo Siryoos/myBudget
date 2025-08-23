@@ -1,14 +1,15 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { 
+import {
   UserCircleIcon,
   PencilIcon,
   CheckIcon,
-  XMarkIcon
-} from '@heroicons/react/24/outline'
-import { Card, CardContent, CardHeader } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
+  XMarkIcon,
+} from '@heroicons/react/24/outline';
+import { useState } from 'react';
+
+import { Button } from '@/components/ui/Button';
+import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 
 interface ProfileManagerProps {
   personalInfo?: boolean
@@ -21,7 +22,7 @@ export function ProfileManager({
   financialProfile = true,
   preferences = true,
 }: ProfileManagerProps) {
-  const [editingSection, setEditingSection] = useState<string | null>(null)
+  const [editingSection, setEditingSection] = useState<string | null>(null);
   const [profileData, setProfileData] = useState({
     name: 'Alex Johnson',
     email: 'alex.johnson@email.com',
@@ -33,18 +34,18 @@ export function ProfileManager({
     currency: 'USD',
     language: 'English',
     timezone: 'America/New_York',
-  })
+  });
 
   const handleSave = (section: string) => {
     // Here you would typically save to API
-    console.log(`Saving ${section}:`, profileData)
-    setEditingSection(null)
-  }
+    console.log(`Saving ${section}:`, profileData);
+    setEditingSection(null);
+  };
 
   const handleCancel = (section: string) => {
     // Reset changes
-    setEditingSection(null)
-  }
+    setEditingSection(null);
+  };
 
   return (
     <div className="space-y-6">
@@ -66,7 +67,7 @@ export function ProfileManager({
                   </p>
                 </div>
               </div>
-              
+
               {editingSection !== 'personal' && (
                 <Button
                   variant="outline"
@@ -98,7 +99,7 @@ export function ProfileManager({
                     <div className="py-2 text-neutral-dark-gray">{profileData.name}</div>
                   )}
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-neutral-dark-gray mb-1">
                     Email Address
@@ -114,7 +115,7 @@ export function ProfileManager({
                     <div className="py-2 text-neutral-dark-gray">{profileData.email}</div>
                   )}
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-neutral-dark-gray mb-1">
                     Phone Number
@@ -170,7 +171,7 @@ export function ProfileManager({
                   Help us personalize your experience
                 </p>
               </div>
-              
+
               {editingSection !== 'financial' && (
                 <Button
                   variant="outline"
@@ -208,7 +209,7 @@ export function ProfileManager({
                     <div className="py-2 text-neutral-dark-gray">${profileData.monthlyIncome.toLocaleString()}</div>
                   )}
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-neutral-dark-gray mb-1">
                     Risk Tolerance
@@ -227,7 +228,7 @@ export function ProfileManager({
                     <div className="py-2 text-neutral-dark-gray capitalize">{profileData.riskTolerance}</div>
                   )}
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-neutral-dark-gray mb-1">
                     Target Savings Rate (%)
@@ -245,7 +246,7 @@ export function ProfileManager({
                     <div className="py-2 text-neutral-dark-gray">{profileData.savingsRate}%</div>
                   )}
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-neutral-dark-gray mb-1">
                     Number of Dependents
@@ -302,7 +303,7 @@ export function ProfileManager({
                   Customize your app experience
                 </p>
               </div>
-              
+
               {editingSection !== 'preferences' && (
                 <Button
                   variant="outline"
@@ -340,7 +341,7 @@ export function ProfileManager({
                     <div className="py-2 text-neutral-dark-gray">{profileData.currency}</div>
                   )}
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-neutral-dark-gray mb-1">
                     Language
@@ -361,7 +362,7 @@ export function ProfileManager({
                     <div className="py-2 text-neutral-dark-gray">{profileData.language}</div>
                   )}
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-neutral-dark-gray mb-1">
                     Timezone
@@ -412,5 +413,5 @@ export function ProfileManager({
         </Card>
       )}
     </div>
-  )
+  );
 }

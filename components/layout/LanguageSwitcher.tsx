@@ -1,10 +1,12 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { ChevronDownIcon, GlobeAltIcon } from '@heroicons/react/24/outline';
-import { getDirection } from '@/lib/i18n';
 import i18n from 'i18next';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { useState, useRef, useEffect } from 'react';
+
+import { getDirection } from '@/lib/i18n';
+
 
 type Locale = 'en' | 'fa' | 'ar';
 
@@ -82,7 +84,7 @@ export default function LanguageSwitcher({ currentLocale = 'en' }: LanguageSwitc
         loadedNamespaces.forEach(ns => {
           i18n.removeResourceBundle(newLocale, ns);
         });
-        
+
         // Clear the language detector cache
         if ((i18n as any).languageDetector) {
           (i18n as any).languageDetector.cacheUserLanguage(newLocale);
@@ -99,7 +101,7 @@ export default function LanguageSwitcher({ currentLocale = 'en' }: LanguageSwitc
       // Force a complete page reload to ensure all components are re-rendered with new language
       // This ensures instant language switching across all modules
       window.location.href = newPath;
-      
+
       setIsOpen(false);
     } catch (error) {
       console.error('Error changing language:', error);

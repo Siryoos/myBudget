@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
+
 import { useAuth } from '@/contexts/AuthContext';
-import React from 'react';
 import { errorReporter } from '@/lib/error-reporting';
 
 interface ErrorProviderProps {
@@ -11,14 +11,14 @@ interface ErrorProviderProps {
   environment?: string;
 }
 
-export function ErrorProvider({ 
-  children, 
+export function ErrorProvider({
+  children,
   sentryDsn,
-  environment = process.env.NODE_ENV 
+  environment = process.env.NODE_ENV,
 }: ErrorProviderProps) {
   const { user } = useAuth();
   const isInitialized = useRef(false);
-  
+
   // Initialize error reporting only once when DSN/environment become available
   useEffect(() => {
     if (!isInitialized.current && (sentryDsn || process.env.NEXT_PUBLIC_SENTRY_DSN)) {
@@ -30,7 +30,7 @@ export function ErrorProvider({
       isInitialized.current = true;
     }
   }, [sentryDsn, environment]); // Remove user dependency from initialization
-  
+
   // Separate effect for user context updates - runs only when user changes
   useEffect(() => {
     if (isInitialized.current) {
@@ -41,14 +41,12 @@ export function ErrorProvider({
       }
     }
   }, [user]); // Only depend on user changes
-  
+
   // Flush errors on unmount
-  useEffect(() => {
-    return () => {
+  useEffect(() => () => {
       errorReporter.forceFlush();
-    };
-  }, []);
-  
+    }, []);
+
   return <ErrorBoundary>{children}</ErrorBoundary>;
 }
 

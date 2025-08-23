@@ -1,4 +1,5 @@
 import { renderHook, act, waitFor } from '@testing-library/react';
+
 import { useAsync } from '@/hooks/useAsync';
 
 describe('useAsync', () => {
@@ -41,8 +42,8 @@ describe('useAsync', () => {
   });
 
   it('should set loading state during execution', async () => {
-    const mockAsyncFn = jest.fn(() => 
-      new Promise(resolve => setTimeout(() => resolve('Done'), 100))
+    const mockAsyncFn = jest.fn(() =>
+      new Promise(resolve => setTimeout(() => resolve('Done'), 100)),
     );
     const { result } = renderHook(() => useAsync(mockAsyncFn));
 
@@ -60,8 +61,8 @@ describe('useAsync', () => {
   it('should call onSuccess callback', async () => {
     const mockAsyncFn = jest.fn().mockResolvedValue('Success');
     const onSuccess = jest.fn();
-    const { result } = renderHook(() => 
-      useAsync(mockAsyncFn, { onSuccess })
+    const { result } = renderHook(() =>
+      useAsync(mockAsyncFn, { onSuccess }),
     );
 
     await act(async () => {
@@ -75,8 +76,8 @@ describe('useAsync', () => {
     const error = new Error('Failed');
     const mockAsyncFn = jest.fn().mockRejectedValue(error);
     const onError = jest.fn();
-    const { result } = renderHook(() => 
-      useAsync(mockAsyncFn, { onError })
+    const { result } = renderHook(() =>
+      useAsync(mockAsyncFn, { onError }),
     );
 
     await act(async () => {
@@ -100,8 +101,8 @@ describe('useAsync', () => {
       return Promise.resolve('Success');
     });
 
-    const { result } = renderHook(() => 
-      useAsync(mockAsyncFn, { retries: 3, retryDelay: 10 })
+    const { result } = renderHook(() =>
+      useAsync(mockAsyncFn, { retries: 3, retryDelay: 10 }),
     );
 
     // Execute the async operation (this will start the retry process)
@@ -123,8 +124,8 @@ describe('useAsync', () => {
   });
 
   it('should cancel pending requests', async () => {
-    const mockAsyncFn = jest.fn(() => 
-      new Promise(resolve => setTimeout(() => resolve('Done'), 1000))
+    const mockAsyncFn = jest.fn(() =>
+      new Promise(resolve => setTimeout(() => resolve('Done'), 1000)),
     );
     const { result } = renderHook(() => useAsync(mockAsyncFn));
 

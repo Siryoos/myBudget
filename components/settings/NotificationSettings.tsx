@@ -1,13 +1,14 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { 
+import {
   BellIcon,
   EnvelopeIcon,
   DevicePhoneMobileIcon,
-  ChatBubbleLeftIcon
-} from '@heroicons/react/24/outline'
-import { Card, CardContent, CardHeader } from '@/components/ui/Card'
+  ChatBubbleLeftIcon,
+} from '@heroicons/react/24/outline';
+import { useState } from 'react';
+
+import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 
 interface NotificationSettingsProps {
   channels?: string[]
@@ -43,51 +44,51 @@ export function NotificationSettings({
       insights: false,
     },
     frequency: 'daily',
-  })
+  });
 
   const handleChannelToggle = (channel: string) => {
     setSettings(prev => {
-      const channelSettings = prev[channel as keyof typeof prev] as any
+      const channelSettings = prev[channel as keyof typeof prev] as any;
       return {
         ...prev,
         [channel]: {
           ...channelSettings,
           enabled: !channelSettings.enabled,
         },
-      }
-    })
-  }
+      };
+    });
+  };
 
   const handleTypeToggle = (channel: string, type: string) => {
     setSettings(prev => {
-      const channelSettings = prev[channel as keyof typeof prev] as any
+      const channelSettings = prev[channel as keyof typeof prev] as any;
       return {
         ...prev,
         [channel]: {
           ...channelSettings,
           [type]: !channelSettings[type],
         },
-      }
-    })
-  }
+      };
+    });
+  };
 
   const getChannelIcon = (channel: string) => {
     const icons = {
       email: EnvelopeIcon,
       push: BellIcon,
       sms: DevicePhoneMobileIcon,
-    }
-    return icons[channel as keyof typeof icons] || BellIcon
-  }
+    };
+    return icons[channel as keyof typeof icons] || BellIcon;
+  };
 
   const getChannelLabel = (channel: string) => {
     const labels = {
       email: 'Email Notifications',
       push: 'Push Notifications',
       sms: 'SMS Notifications',
-    }
-    return labels[channel as keyof typeof labels] || channel
-  }
+    };
+    return labels[channel as keyof typeof labels] || channel;
+  };
 
   const getTypeLabel = (type: string) => {
     const labels = {
@@ -95,9 +96,9 @@ export function NotificationSettings({
       budget: 'Budget Alerts',
       goals: 'Goal Progress',
       insights: 'Financial Insights',
-    }
-    return labels[type as keyof typeof labels] || type
-  }
+    };
+    return labels[type as keyof typeof labels] || type;
+  };
 
   const getTypeDescription = (type: string) => {
     const descriptions = {
@@ -105,9 +106,9 @@ export function NotificationSettings({
       budget: 'Alerts when you exceed budget categories',
       goals: 'Updates on your financial goal progress',
       insights: 'Personalized financial tips and recommendations',
-    }
-    return descriptions[type as keyof typeof descriptions] || ''
-  }
+    };
+    return descriptions[type as keyof typeof descriptions] || '';
+  };
 
   return (
     <Card>
@@ -158,9 +159,9 @@ export function NotificationSettings({
 
           {/* Channel Settings */}
           {channels.map((channel) => {
-            const IconComponent = getChannelIcon(channel)
-            const channelSettings = settings[channel as keyof typeof settings] as any
-            
+            const IconComponent = getChannelIcon(channel);
+            const channelSettings = settings[channel as keyof typeof settings] as any;
+
             return (
               <div key={channel} className="border border-neutral-gray/20 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-4">
@@ -179,7 +180,7 @@ export function NotificationSettings({
                       </p>
                     </div>
                   </div>
-                  
+
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
                       type="checkbox"
@@ -204,7 +205,7 @@ export function NotificationSettings({
                             {getTypeDescription(type)}
                           </div>
                         </div>
-                        
+
                         <label className="relative inline-flex items-center cursor-pointer ml-4">
                           <input
                             type="checkbox"
@@ -219,7 +220,7 @@ export function NotificationSettings({
                   </div>
                 )}
               </div>
-            )
+            );
           })}
 
           {/* Quiet Hours */}
@@ -230,7 +231,7 @@ export function NotificationSettings({
             <p className="text-sm text-neutral-gray mb-3">
               Pause non-urgent notifications during these hours
             </p>
-            
+
             <div className="flex items-center space-x-4">
               <div className="flex-1">
                 <label className="block text-sm font-medium text-neutral-dark-gray mb-1">
@@ -253,7 +254,7 @@ export function NotificationSettings({
                 />
               </div>
             </div>
-            
+
             <label className="flex items-center mt-3 cursor-pointer">
               <input
                 type="checkbox"
@@ -279,8 +280,8 @@ export function NotificationSettings({
               </div>
               <div className="flex space-x-2">
                 {channels.filter(channel => {
-                  const channelSettings = settings[channel as keyof typeof settings] as any
-                  return channelSettings.enabled
+                  const channelSettings = settings[channel as keyof typeof settings] as any;
+                  return channelSettings.enabled;
                 }).map((channel) => (
                   <button
                     key={channel}
@@ -295,5 +296,5 @@ export function NotificationSettings({
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

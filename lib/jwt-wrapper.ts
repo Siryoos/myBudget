@@ -1,4 +1,5 @@
-import jwt, { SignOptions, VerifyOptions } from 'jsonwebtoken';
+import type { SignOptions, VerifyOptions } from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 import type { StringValue } from 'ms';
 
 const { sign: jwtSign, verify: jwtVerify } = jwt;
@@ -14,11 +15,11 @@ export class JWTWrapper {
     if (!secret) {
       throw new Error('JWT_SECRET environment variable is required');
     }
-    
+
     if (secret.length < 32) {
       throw new Error('JWT_SECRET must be at least 32 characters long for security');
     }
-    
+
     return secret;
   }
 
@@ -28,10 +29,10 @@ export class JWTWrapper {
   static sign(
     payload: string | object | Buffer,
     secret: string | undefined,
-    options?: SignOptions
+    options?: SignOptions,
   ): string {
     const validatedSecret = this.validateSecret(secret);
-    
+
     try {
       return jwtSign(payload, validatedSecret, options);
     } catch (error) {
@@ -45,10 +46,10 @@ export class JWTWrapper {
   static verify<T = any>(
     token: string,
     secret: string | undefined,
-    options?: VerifyOptions
+    options?: VerifyOptions,
   ): T {
     const validatedSecret = this.validateSecret(secret);
-    
+
     try {
       return jwtVerify(token, validatedSecret, options) as T;
     } catch (error) {
@@ -77,12 +78,12 @@ export class JWTWrapper {
   }): string {
     const secret = process.env.JWT_SECRET;
     const expiresIn = (process.env.JWT_REFRESH_EXPIRES_IN || '30d') as StringValue;
-    
+
     return this.sign(payload, secret, {
       algorithm: 'HS256',
       expiresIn,
       audience: 'mybudget-users',
-      issuer: 'mybudget'
+      issuer: 'mybudget',
     });
   }
 
@@ -98,12 +99,12 @@ export class JWTWrapper {
   }): string {
     const secret = process.env.JWT_SECRET;
     const expiresIn = (process.env.JWT_REFRESH_EXPIRES_IN || '7d') as StringValue;
-    
+
     return this.sign(payload, secret, {
       algorithm: 'HS256',
       expiresIn,
       audience: 'mybudget-users',
-      issuer: 'mybudget'
+      issuer: 'mybudget',
     });
   }
 }

@@ -1,29 +1,32 @@
-import { Inter, Roboto, Roboto_Mono } from 'next/font/google'
-import './globals.css'
-import { Metadata } from 'next'
-import { Navigation } from '@/components/layout/Navigation'
-import { Header } from '@/components/layout/Header'
-import ClientLayout from './ClientLayout'
-import { headers } from 'next/headers'
+import { Inter, Roboto, Roboto_Mono } from 'next/font/google';
+import './globals.css';
+import type { Metadata } from 'next';
+import { headers } from 'next/headers';
+
+import { Header } from '@/components/layout/Header';
+import { Navigation } from '@/components/layout/Navigation';
+
+import ClientLayout from './ClientLayout';
+
 
 const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
   display: 'swap',
-})
+});
 
 const roboto = Roboto({
   weight: ['300', '400', '500', '700'],
   subsets: ['latin'],
   variable: '--font-roboto',
   display: 'swap',
-})
+});
 
 const robotoMono = Roboto_Mono({
   subsets: ['latin'],
   variable: '--font-roboto-mono',
   display: 'swap',
-})
+});
 
 export const metadata: Metadata = {
   title: {
@@ -50,14 +53,14 @@ export const metadata: Metadata = {
     description: 'Take control of your finances with intelligent saving tools and personalized insights',
     images: ['/og-image.png'],
   },
-}
+};
 
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
   themeColor: '#1E5A8D',
-}
+};
 
 interface RootLayoutProps {
   children: React.ReactNode
@@ -70,7 +73,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
   const locale = headersList.get('x-locale') || 'en';
 
   return (
-    <html 
+    <html
       lang={locale}
       dir={textDirection}
       className={`${inter.variable} ${roboto.variable} ${robotoMono.variable}`}
@@ -88,10 +91,10 @@ export default function RootLayout({ children }: RootLayoutProps) {
               </main>
             </div>
           </div>
-          
+
           {/* Accessibility skip link */}
-          <a 
-            href="#main-content" 
+          <a
+            href="#main-content"
             className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-primary-trust-blue text-white px-4 py-2 rounded-md z-50"
           >
             {/* Intentionally not using i18n hook in server component; client will still be localized */}
@@ -100,5 +103,5 @@ export default function RootLayout({ children }: RootLayoutProps) {
         </ClientLayout>
       </body>
     </html>
-  )
+  );
 }

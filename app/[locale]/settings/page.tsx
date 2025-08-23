@@ -1,13 +1,14 @@
-import { Metadata } from 'next'
-import { ProfileManager } from '@/components/settings/ProfileManager'
-import { NotificationSettings } from '@/components/settings/NotificationSettings'
-import { SecurityPanel } from '@/components/settings/SecurityPanel'
-import { RegionalizationSettings } from '@/components/settings/RegionalizationSettings'
+import type { Metadata } from 'next';
+
+import { NotificationSettings } from '@/components/settings/NotificationSettings';
+import { ProfileManager } from '@/components/settings/ProfileManager';
+import { RegionalizationSettings } from '@/components/settings/RegionalizationSettings';
+import { SecurityPanel } from '@/components/settings/SecurityPanel';
 
 export const metadata: Metadata = {
   title: 'Settings',
   description: 'Manage your account settings and preferences',
-}
+};
 
 export default function SettingsPage() {
   return (
@@ -23,28 +24,28 @@ export default function SettingsPage() {
       {/* Settings Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Profile Settings */}
-        <ProfileManager 
+        <ProfileManager
           personalInfo={true}
           financialProfile={true}
           preferences={true}
         />
 
         {/* Notification Settings */}
-        <NotificationSettings 
+        <NotificationSettings
           channels={['email', 'push', 'sms']}
           frequency={['realtime', 'daily', 'weekly']}
           types={['savings', 'budget', 'goals', 'insights']}
         />
 
         {/* Security Settings */}
-        <SecurityPanel 
+        <SecurityPanel
           twoFactor={true}
           biometric={true}
           sessionManagement={true}
         />
 
         {/* Regional Settings */}
-        <RegionalizationSettings 
+        <RegionalizationSettings
           currency={true}
           language={true}
           dateFormat={true}
@@ -52,6 +53,6 @@ export default function SettingsPage() {
         />
       </div>
     </div>
-  )
+  );
 }
 

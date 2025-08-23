@@ -1,6 +1,8 @@
 'use client';
 
-import React, { createContext, useContext, useReducer, useEffect, useCallback, ReactNode } from 'react';
+import type { ReactNode } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
+
 import { api } from '@/lib/api';
 import type { User, Transaction, Budget, SavingsGoal, Notification } from '@/types';
 
@@ -8,20 +10,20 @@ interface AppState {
   // Authentication
   user: User | null;
   isAuthenticated: boolean;
-  
+
   // UI State
   theme: 'light' | 'dark' | 'system';
   sidebarOpen: boolean;
-  
+
   // Financial Data (for optimistic updates and offline support)
   recentTransactions: Transaction[];
   activeBudget: Budget | null;
   savingsGoals: SavingsGoal[];
-  
+
   // Notifications
   notifications: Notification[];
   unreadNotificationCount: number;
-  
+
   // App State
   isOnline: boolean;
   isSyncing: boolean;
@@ -70,7 +72,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
       return {
         ...state,
         user: action.payload,
-        isAuthenticated: !!action.payload,
+        isAuthenticated: Boolean(action.payload),
       };
 
     case 'SET_THEME':
@@ -101,7 +103,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
       return {
         ...state,
         recentTransactions: state.recentTransactions.map(t =>
-          t.id === action.payload.id ? { ...t, ...action.payload.data } : t
+          (t.id === action.payload.id ? { ...t, ...action.payload.data } : t),
         ),
       };
 
@@ -133,7 +135,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
       return {
         ...state,
         savingsGoals: state.savingsGoals.map(g =>
-          g.id === action.payload.id ? { ...g, ...action.payload.data } : g
+          (g.id === action.payload.id ? { ...g, ...action.payload.data } : g),
         ),
       };
 
@@ -154,7 +156,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
       return {
         ...state,
         notifications: state.notifications.map(n =>
-          n.id === action.payload ? { ...n, isRead: true } : n
+          (n.id === action.payload ? { ...n, isRead: true } : n),
         ),
         unreadNotificationCount: Math.max(0, state.unreadNotificationCount - 1),
       };
@@ -269,7 +271,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const applyTheme = (theme: 'light' | 'dark' | 'system') => {
       const root = document.documentElement;
-      
+
       if (theme === 'system') {
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         root.classList.toggle('dark', prefersDark);
@@ -290,7 +292,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // Sync data function - memoized to prevent unnecessary re-renders
   const syncData = useCallback(async () => {
-    if (!state.isOnline || !state.isAuthenticated) return;
+    if (!state.isOnline || !state.isAuthenticated) {return;}
 
     dispatch({ type: 'SET_SYNC_STATUS', payload: { isSyncing: true } });
 

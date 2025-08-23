@@ -1,10 +1,5 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { usePathname } from 'next/navigation'
-import Link from 'next/link'
-import { useTranslation } from '@/lib/useTranslation'
-import { useI18n } from '@/lib/i18n-provider'
 import {
   HomeIcon,
   ChartBarIcon,
@@ -13,7 +8,7 @@ import {
   AcademicCapIcon,
   Cog6ToothIcon,
   XMarkIcon,
-} from '@heroicons/react/24/outline'
+} from '@heroicons/react/24/outline';
 import {
   HomeIcon as HomeIconSolid,
   ChartBarIcon as ChartBarIconSolid,
@@ -21,9 +16,15 @@ import {
   CreditCardIcon as CreditCardIconSolid,
   AcademicCapIcon as AcademicCapIconSolid,
   Cog6ToothIcon as Cog6ToothIconSolid,
-} from '@heroicons/react/24/solid'
-import { cn } from '@/lib/utils'
-import type { NavigationItem } from '@/types'
+} from '@heroicons/react/24/solid';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { useState } from 'react';
+
+import { useI18n } from '@/lib/i18n-provider';
+import { useTranslation } from '@/lib/useTranslation';
+import { cn } from '@/lib/utils';
+import type { NavigationItem } from '@/types';
 
 const getNavigationItems = (t: any, locale: string): NavigationItem[] => [
   {
@@ -62,7 +63,7 @@ const getNavigationItems = (t: any, locale: string): NavigationItem[] => [
     href: `/${locale}/settings`,
     icon: 'cog',
   },
-]
+];
 
 const iconMap = {
   home: { outline: HomeIcon, solid: HomeIconSolid },
@@ -71,7 +72,7 @@ const iconMap = {
   'credit-card': { outline: CreditCardIcon, solid: CreditCardIconSolid },
   'academic-cap': { outline: AcademicCapIcon, solid: AcademicCapIconSolid },
   cog: { outline: Cog6ToothIcon, solid: Cog6ToothIconSolid },
-}
+};
 
 interface NavigationProps {
   isOpen?: boolean
@@ -79,36 +80,36 @@ interface NavigationProps {
 }
 
 export function Navigation({ isOpen = false, onClose }: NavigationProps) {
-  const pathname = usePathname()
-  const { t } = useTranslation('common')
-  const { locale } = useI18n()
-  const [hoveredItem, setHoveredItem] = useState<string | null>(null)
-  
+  const pathname = usePathname();
+  const { t } = useTranslation('common');
+  const { locale } = useI18n();
+  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+
   // Get navigation items with translations
-  const navigationItems = getNavigationItems(t, locale)
+  const navigationItems = getNavigationItems(t, locale);
 
   const isActiveRoute = (href: string) => {
     // hrefs are already localized (e.g., /en/dashboard)
     if (href.endsWith('/dashboard')) {
-      const homePath = `/${locale}`
-      return pathname === homePath || pathname === href
+      const homePath = `/${locale}`;
+      return pathname === homePath || pathname === href;
     }
-    return pathname.startsWith(href)
-  }
+    return pathname.startsWith(href);
+  };
 
   const getIcon = (iconName: string, isActive: boolean, isHovered: boolean) => {
-    const icons = iconMap[iconName as keyof typeof iconMap]
-    if (!icons) return null
-    
-    const IconComponent = (isActive || isHovered) ? icons.solid : icons.outline
-    return <IconComponent className="h-6 w-6" />
-  }
+    const icons = iconMap[iconName as keyof typeof iconMap];
+    if (!icons) {return null;}
+
+    const IconComponent = (isActive || isHovered) ? icons.solid : icons.outline;
+    return <IconComponent className="h-6 w-6" />;
+  };
 
   return (
     <>
       {/* Mobile overlay */}
       {isOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
           onClick={onClose}
           aria-hidden="true"
@@ -119,7 +120,7 @@ export function Navigation({ isOpen = false, onClose }: NavigationProps) {
       <nav
         className={cn(
           'fixed top-0 left-0 z-50 h-full w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:z-auto',
-          isOpen ? 'translate-x-0' : '-translate-x-full'
+          isOpen ? 'translate-x-0' : '-translate-x-full',
         )}
         aria-label="Main navigation"
       >
@@ -141,8 +142,8 @@ export function Navigation({ isOpen = false, onClose }: NavigationProps) {
         {/* Navigation items */}
         <div className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
           {navigationItems.map((item) => {
-            const isActive = isActiveRoute(item.href)
-            const isHovered = hoveredItem === item.id
+            const isActive = isActiveRoute(item.href);
+            const isHovered = hoveredItem === item.id;
 
             return (
               <Link
@@ -152,12 +153,12 @@ export function Navigation({ isOpen = false, onClose }: NavigationProps) {
                   'flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 group',
                   isActive
                     ? 'bg-primary-trust-blue text-white shadow-sm'
-                    : 'text-neutral-gray hover:bg-neutral-light-gray hover:text-neutral-dark-gray'
+                    : 'text-neutral-gray hover:bg-neutral-light-gray hover:text-neutral-dark-gray',
                 )}
                 onMouseEnter={() => setHoveredItem(item.id)}
                 onMouseLeave={() => setHoveredItem(null)}
                 onClick={() => {
-                  if (onClose) onClose()
+                  if (onClose) {onClose();}
                 }}
                 aria-current={isActive ? 'page' : undefined}
               >
@@ -171,14 +172,14 @@ export function Navigation({ isOpen = false, onClose }: NavigationProps) {
                       'ml-2 px-2 py-1 text-xs rounded-full',
                       isActive
                         ? 'bg-white/20 text-white'
-                        : 'bg-accent-action-orange text-white'
+                        : 'bg-accent-action-orange text-white',
                     )}
                   >
                     {item.badge}
                   </span>
                 )}
               </Link>
-            )
+            );
           })}
         </div>
 
@@ -200,7 +201,7 @@ export function Navigation({ isOpen = false, onClose }: NavigationProps) {
                 <span>68%</span>
               </div>
               <div className="mt-1 w-full bg-white/20 rounded-full h-2">
-                <div 
+                <div
                   className="bg-white h-2 rounded-full transition-all duration-500"
                   style={{ width: '68%' }}
                   role="progressbar"
@@ -218,5 +219,5 @@ export function Navigation({ isOpen = false, onClose }: NavigationProps) {
       {/* Desktop spacer */}
       <div className="hidden lg:block w-64 flex-shrink-0" aria-hidden="true" />
     </>
-  )
+  );
 }

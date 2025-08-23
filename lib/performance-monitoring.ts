@@ -1,7 +1,47 @@
 import { performance } from 'perf_hooks';
+
+import type { NextRequest } from 'next/server';
+
 import { getPool } from './database';
 import { getRedisClient } from './redis';
-import type { NextRequest } from 'next/server';
+
+// Memory usage interface (replacing NodeJS.MemoryUsage)
+export interface MemoryUsage {
+  rss: number;
+  heapTotal: number;
+  heapUsed: number;
+  external: number;
+  arrayBuffers: number;
+}
+
+// Performance context interface for global storage
+export interface PerformanceContext {
+  requestId: string;
+  endpoint: string;
+  method: string;
+  startTime: number;
+  startMemory: MemoryUsage;
+  databaseQueries: number;
+  databaseTime: number;
+  redisOperations: number;
+  redisTime: number;
+}
+
+// Extended global interface
+interface GlobalWithPerformance {
+  __performanceContext?: PerformanceContext;
+}
+
+// Performance alert interface
+export interface PerformanceAlert {
+  type: 'warning' | 'critical';
+  metric: string;
+  value: number;
+  threshold: number;
+  timestamp: string;
+  requestId?: string;
+  endpoint?: string;
+}
 
 // Performance metrics interface
 export interface PerformanceMetrics {
@@ -10,7 +50,7 @@ export interface PerformanceMetrics {
   endpoint: string;
   method: string;
   responseTime: number;
-  memoryUsage: NodeJS.MemoryUsage;
+  memoryUsage: MemoryUsage;
   databaseQueries: number;
   databaseTime: number;
   redisOperations: number;
@@ -40,46 +80,38 @@ export interface PerformanceThresholds {
 const DEFAULT_THRESHOLDS: PerformanceThresholds = {
   responseTime: {
     warning: 1000, // 1 second
-    critical: 3000 // 3 seconds
+    critical: 3000, // 3 seconds
   },
   memoryUsage: {
     warning: 80, // 80%
-    critical: 90 // 90%
+    critical: 90, // 90%
   },
   databaseQueries: {
     warning: 10,
-    critical: 20
-  }
+    critical: 20,
+  },
 };
 
 // Performance monitoring class
 export class PerformanceMonitor {
-  private static instance: PerformanceMonitor;
   private metrics: PerformanceMetrics[] = [];
   private thresholds: PerformanceThresholds;
   private isEnabled: boolean;
   private maxMetrics: number;
 
-  private constructor() {
+  constructor() {
     this.thresholds = DEFAULT_THRESHOLDS;
     this.isEnabled = process.env.PERFORMANCE_MONITORING_ENABLED !== 'false';
-    this.maxMetrics = parseInt(process.env.MAX_PERFORMANCE_METRICS || '1000');
-  }
-
-  static getInstance(): PerformanceMonitor {
-    if (!PerformanceMonitor.instance) {
-      PerformanceMonitor.instance = new PerformanceMonitor();
-    }
-    return PerformanceMonitor.instance;
+    this.maxMetrics = parseInt(process.env.MAX_PERFORMANCE_METRICS || '1000', 10);
   }
 
   // Start monitoring a request
   startMonitoring(requestId: string, endpoint: string, method: string): string {
-    if (!this.isEnabled) return '';
+    if (!this.isEnabled) {return '';}
 
     const startTime = performance.now();
     const startMemory = process.memoryUsage();
-    
+
     // Store monitoring context
     const context = {
       requestId,
@@ -90,20 +122,20 @@ export class PerformanceMonitor {
       databaseQueries: 0,
       databaseTime: 0,
       redisOperations: 0,
-      redisTime: 0
+      redisTime: 0,
     };
 
     // Store in global context for this request
-    (global as any).__performanceContext = context;
-    
+    (global as GlobalWithPerformance).__performanceContext = context;
+
     return requestId;
   }
 
   // Record database operation
   recordDatabaseOperation(query: string, duration: number): void {
-    if (!this.isEnabled) return;
+    if (!this.isEnabled) {return;}
 
-    const context = (global as any).__performanceContext;
+    const context = (global as GlobalWithPerformance).__performanceContext;
     if (context) {
       context.databaseQueries++;
       context.databaseTime += duration;
@@ -112,9 +144,9 @@ export class PerformanceMonitor {
 
   // Record Redis operation
   recordRedisOperation(operation: string, duration: number): void {
-    if (!this.isEnabled) return;
+    if (!this.isEnabled) {return;}
 
-    const context = (global as any).__performanceContext;
+    const context = (global as GlobalWithPerformance).__performanceContext;
     if (context) {
       context.redisOperations++;
       context.redisTime += duration;
@@ -126,16 +158,16 @@ export class PerformanceMonitor {
     requestId: string,
     statusCode: number,
     userAgent?: string,
-    ipAddress?: string
+    ipAddress?: string,
   ): PerformanceMetrics | null {
-    if (!this.isEnabled) return null;
+    if (!this.isEnabled) {return null;}
 
-    const context = (global as any).__performanceContext;
-    if (!context || context.requestId !== requestId) return null;
+    const context = (global as GlobalWithPerformance).__performanceContext;
+    if (!context || context.requestId !== requestId) {return null;}
 
     const endTime = performance.now();
     const endMemory = process.memoryUsage();
-    
+
     const metrics: PerformanceMetrics = {
       timestamp: new Date().toISOString(),
       requestId,
@@ -149,7 +181,7 @@ export class PerformanceMonitor {
       redisTime: context.redisTime,
       statusCode,
       userAgent,
-      ipAddress
+      ipAddress,
     };
 
     // Store metrics
@@ -159,7 +191,7 @@ export class PerformanceMonitor {
     this.checkThresholds(metrics);
 
     // Clean up context
-    delete (global as any).__performanceContext;
+    delete (global as GlobalWithPerformance).__performanceContext;
 
     return metrics;
   }
@@ -167,7 +199,7 @@ export class PerformanceMonitor {
   // Store performance metrics
   private storeMetrics(metrics: PerformanceMetrics): void {
     this.metrics.push(metrics);
-    
+
     // Keep only the latest metrics
     if (this.metrics.length > this.maxMetrics) {
       this.metrics = this.metrics.slice(-this.maxMetrics);
@@ -183,7 +215,7 @@ export class PerformanceMonitor {
       const redis = getRedisClient();
       const key = `performance:${metrics.requestId}`;
       const ttl = 24 * 60 * 60; // 24 hours
-      
+
       await redis.setex(key, ttl, JSON.stringify(metrics));
     } catch (error) {
       console.warn('Failed to persist performance metrics:', error);
@@ -225,8 +257,8 @@ export class PerformanceMonitor {
         endpoint: metrics.endpoint,
         responseTime: metrics.responseTime,
         databaseQueries: metrics.databaseQueries,
-        memoryUsage: metrics.memoryUsage
-      }
+        memoryUsage: metrics.memoryUsage,
+      },
     };
 
     console.warn(`[PERFORMANCE ${level}] ${message}`, alert);
@@ -238,7 +270,7 @@ export class PerformanceMonitor {
   }
 
   // Send to external monitoring service
-  private async sendToMonitoringService(alert: any): Promise<void> {
+  private async sendToMonitoringService(alert: PerformanceAlert): Promise<void> {
     try {
       // Example: Send to DataDog, New Relic, or custom monitoring service
       const monitoringUrl = process.env.MONITORING_WEBHOOK_URL;
@@ -246,7 +278,7 @@ export class PerformanceMonitor {
         await fetch(monitoringUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(alert)
+          body: JSON.stringify(alert),
         });
       }
     } catch (error) {
@@ -280,8 +312,8 @@ export class PerformanceMonitor {
         cutoffTime = now - 24 * 60 * 60 * 1000;
     }
 
-    const recentMetrics = this.metrics.filter(m => 
-      new Date(m.timestamp).getTime() > cutoffTime
+    const recentMetrics = this.metrics.filter(m =>
+      new Date(m.timestamp).getTime() > cutoffTime,
     );
 
     if (recentMetrics.length === 0) {
@@ -291,7 +323,7 @@ export class PerformanceMonitor {
         slowestEndpoints: [],
         memoryTrend: [],
         databasePerformance: { totalQueries: 0, averageTime: 0 },
-        redisPerformance: { totalOperations: 0, averageTime: 0 }
+        redisPerformance: { totalOperations: 0, averageTime: 0 },
       };
     }
 
@@ -312,7 +344,7 @@ export class PerformanceMonitor {
       .map(([endpoint, stats]) => ({
         endpoint,
         avgTime: stats.totalTime / stats.count,
-        count: stats.count
+        count: stats.count,
       }))
       .sort((a, b) => b.avgTime - a.avgTime)
       .slice(0, 10);
@@ -322,7 +354,7 @@ export class PerformanceMonitor {
       .filter((_, index) => index % Math.max(1, Math.floor(totalRequests / 20)) === 0)
       .map(m => ({
         timestamp: m.timestamp,
-        usage: (m.memoryUsage.heapUsed / m.memoryUsage.heapTotal) * 100
+        usage: (m.memoryUsage.heapUsed / m.memoryUsage.heapTotal) * 100,
       }));
 
     // Database performance
@@ -342,12 +374,12 @@ export class PerformanceMonitor {
       memoryTrend,
       databasePerformance: {
         totalQueries: totalDatabaseQueries,
-        averageTime: averageDatabaseTime
+        averageTime: averageDatabaseTime,
       },
       redisPerformance: {
         totalOperations: totalRedisOperations,
-        averageTime: averageRedisTime
-      }
+        averageTime: averageRedisTime,
+      },
     };
   }
 
@@ -362,7 +394,7 @@ export class PerformanceMonitor {
     const memoryPercentage = (currentMemory.heapUsed / currentMemory.heapTotal) * 100;
 
     // Count active requests (requests with context)
-    const activeRequests = (global as any).__performanceContext ? 1 : 0;
+    const activeRequests = (global as GlobalWithPerformance).__performanceContext ? 1 : 0;
 
     // Get database connection info
     const pool = getPool();
@@ -375,7 +407,7 @@ export class PerformanceMonitor {
       currentMemoryUsage: Math.round(memoryPercentage * 100) / 100,
       activeRequests,
       databaseConnections,
-      redisConnections
+      redisConnections,
     };
   }
 
@@ -401,25 +433,21 @@ export class PerformanceMonitor {
 }
 
 // Singleton instance
-export const performanceMonitor = PerformanceMonitor.getInstance();
+export const performanceMonitor = new PerformanceMonitor();
 
 // Convenience functions
 export const startPerformanceMonitoring = (
   requestId: string,
   endpoint: string,
-  method: string
-): string => {
-  return performanceMonitor.startMonitoring(requestId, endpoint, method);
-};
+  method: string,
+): string => performanceMonitor.startMonitoring(requestId, endpoint, method);
 
 export const stopPerformanceMonitoring = (
   requestId: string,
   statusCode: number,
   userAgent?: string,
-  ipAddress?: string
-): PerformanceMetrics | null => {
-  return performanceMonitor.stopMonitoring(requestId, statusCode, userAgent, ipAddress);
-};
+  ipAddress?: string,
+): PerformanceMetrics | null => performanceMonitor.stopMonitoring(requestId, statusCode, userAgent, ipAddress);
 
 export const recordDatabaseOperation = (query: string, duration: number): void => {
   performanceMonitor.recordDatabaseOperation(query, duration);
@@ -430,8 +458,7 @@ export const recordRedisOperation = (operation: string, duration: number): void 
 };
 
 // Performance monitoring middleware
-export const withPerformanceMonitoring = (handler: Function) => {
-  return async (request: NextRequest) => {
+export const withPerformanceMonitoring = (handler: (request: NextRequest) => Promise<Response>) => async (request: NextRequest) => {
     const requestId = crypto.randomUUID();
     const endpoint = request.nextUrl.pathname;
     const method = request.method;
@@ -446,9 +473,9 @@ export const withPerformanceMonitoring = (handler: Function) => {
       // Stop monitoring
       stopPerformanceMonitoring(
         requestId,
-        response.status,
+        response.status || 200,
         request.headers.get('user-agent') || undefined,
-        request.ip || request.headers.get('x-forwarded-for') || undefined
+        request.ip || request.headers.get('x-forwarded-for') || undefined,
       );
 
       return response;
@@ -459,4 +486,3 @@ export const withPerformanceMonitoring = (handler: Function) => {
       throw error;
     }
   };
-};

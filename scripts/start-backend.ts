@@ -2,7 +2,9 @@
 
 import { createServer } from 'http';
 import { parse } from 'url';
+
 import next from 'next';
+
 import { validateJWTSecret } from '@/lib/auth';
 
 // Validate JWT_SECRET before starting the server
@@ -21,7 +23,7 @@ app.prepare().then(() => {
     try {
       // Parse the URL
       const parsedUrl = parse(req.url!, true);
-      
+
       // Only handle API routes
       if (parsedUrl.pathname?.startsWith('/api/')) {
         await handle(req, res, parsedUrl);

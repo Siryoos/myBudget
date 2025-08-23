@@ -1,17 +1,17 @@
 'use client';
 
-import { createContext, useContext, ReactNode, useState, useEffect } from 'react';
-import { I18nextProvider } from 'react-i18next';
 import i18n from 'i18next';
-import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import Backend from 'i18next-http-backend';
+import type { ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
+import { I18nextProvider , initReactI18next } from 'react-i18next';
 
 // Initialize i18next with optimized configuration
 const initI18n = async () => {
   if (!i18n.isInitialized) {
     console.log('🌐 Initializing i18n...');
-    
+
     await i18n
       .use(Backend)
       .use(LanguageDetector)
@@ -61,7 +61,7 @@ const initI18n = async () => {
         returnEmptyString: false,
         returnNull: false,
       });
-      
+
     console.log('✅ i18n initialized successfully');
   }
   return i18n;
@@ -90,18 +90,18 @@ export function I18nProvider({ children, locale = 'en' }: I18nProviderProps) {
     try {
       setIsLoading(true);
       console.log(`Changing language from ${currentLocale} to ${newLocale}`);
-      
+
       // Simply change language - let i18next handle resource management
       if (i18n.isInitialized) {
         await i18n.changeLanguage(newLocale);
-        
+
         // Ensure critical namespaces are loaded for the new locale
         const criticalNamespaces = ['common', 'dashboard'];
         await Promise.all(
-          criticalNamespaces.map(ns => i18n.loadNamespaces(ns))
+          criticalNamespaces.map(ns => i18n.loadNamespaces(ns)),
         );
       }
-      
+
       setCurrentLocale(newLocale);
       console.log(`Language successfully changed to ${newLocale}`);
     } catch (error) {
@@ -116,20 +116,20 @@ export function I18nProvider({ children, locale = 'en' }: I18nProviderProps) {
     const initialize = async () => {
       try {
         await initI18n();
-        
+
         // Change language if locale prop changes
         if (i18n.language !== locale) {
           await i18n.changeLanguage(locale);
         }
-        
+
         // Ensure all required namespaces are loaded for the current locale
         const requiredNamespaces = ['common', 'dashboard'];
         await Promise.all(
-          requiredNamespaces.map(ns => 
-            i18n.loadNamespaces(ns)
-          )
+          requiredNamespaces.map(ns =>
+            i18n.loadNamespaces(ns),
+          ),
         );
-        
+
         setCurrentLocale(locale);
         setIsLoading(false);
       } catch (error) {
@@ -154,7 +154,7 @@ export function I18nProvider({ children, locale = 'en' }: I18nProviderProps) {
     return () => {
       if (i18n.isInitialized) {
         i18n.off('languageChanged', handleLanguageChanged);
-        
+
         // Clean up loaded namespaces on unmount to prevent memory leaks
         const loadedNamespaces = i18n.reportNamespaces?.getUsedNamespaces() || [];
         loadedNamespaces.forEach(ns => {

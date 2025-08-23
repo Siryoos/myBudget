@@ -1,5 +1,5 @@
-import { BehavioralDashboard } from '@/components/goals/BehavioralDashboard'
-import { SkeletonDemo } from '@/components/ui/SkeletonDemo'
+import { BehavioralDashboard } from '@/components/goals/BehavioralDashboard';
+import { SkeletonDemo } from '@/components/ui/SkeletonDemo';
 
 export default function DemoPage() {
   return (
@@ -10,11 +10,11 @@ export default function DemoPage() {
             SmartSave Behavioral Psychology Demo
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Experience how behavioral psychology can transform personal finance. 
+            Experience how behavioral psychology can transform personal finance.
             This demo showcases loss aversion, social proof, gamification, and other proven techniques.
           </p>
         </div>
-        
+
         <BehavioralDashboard
           showAllFeatures={true}
           enableAbtesting={true}
@@ -36,5 +36,5 @@ export default function DemoPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

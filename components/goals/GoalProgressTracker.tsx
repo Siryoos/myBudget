@@ -1,8 +1,6 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import Image from 'next/image'
-import { 
+import {
   ChartBarIcon,
   FireIcon,
   BanknotesIcon,
@@ -13,17 +11,20 @@ import {
   MinusIcon,
   PhotoIcon,
   ExclamationTriangleIcon,
-  SparklesIcon
-} from '@heroicons/react/24/outline'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Card, CardContent, CardHeader } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
-import { ProgressBar } from '@/components/ui/ProgressBar'
-import { formatDate, calculateProgress } from '@/lib/utils'
-import { useTranslation } from '@/lib/useTranslation'
-import { useCurrency } from '@/lib/useCurrency'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-import type { SavingsGoal, FutureProjection } from '@/types'
+  SparklesIcon,
+} from '@heroicons/react/24/outline';
+import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
+import { useState, useEffect } from 'react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+
+import { Button } from '@/components/ui/Button';
+import { Card, CardContent, CardHeader } from '@/components/ui/Card';
+import { ProgressBar } from '@/components/ui/ProgressBar';
+import { useCurrency } from '@/lib/useCurrency';
+import { useTranslation } from '@/lib/useTranslation';
+import { formatDate, calculateProgress } from '@/lib/utils';
+import type { SavingsGoal, FutureProjection } from '@/types';
 
 interface GoalProgressTrackerProps {
   goals?: SavingsGoal[]
@@ -42,12 +43,12 @@ export function GoalProgressTracker({
   celebrationAnimations = true,
   showFutureProjections = true,
 }: GoalProgressTrackerProps) {
-  const { t, isReady } = useTranslation(['goals', 'common'])
-  const { formatCurrency } = useCurrency()
-  const [selectedVisual, setSelectedVisual] = useState<'progressBar' | 'thermometer' | 'jar'>('progressBar')
-  const [showCompleted, setShowCompleted] = useState(false)
-  const [showProjections, setShowProjections] = useState(false)
-  const [celebrationTrigger, setCelebrationTrigger] = useState<string | null>(null)
+  const { t, isReady } = useTranslation(['goals', 'common']);
+  const { formatCurrency } = useCurrency();
+  const [selectedVisual, setSelectedVisual] = useState<'progressBar' | 'thermometer' | 'jar'>('progressBar');
+  const [showCompleted, setShowCompleted] = useState(false);
+  const [showProjections, setShowProjections] = useState(false);
+  const [celebrationTrigger, setCelebrationTrigger] = useState<string | null>(null);
 
   // Use goals passed as prop, with fallback to empty array
 
@@ -64,33 +65,33 @@ export function GoalProgressTracker({
     interestRate: 0.05,
     inflationRate: 0.02,
     lastCalculated: new Date(),
-  }))
+  }));
 
   // Enhanced progress calculation with acceleration effect
   const calculateEnhancedProgress = (goal: SavingsGoal) => {
-    const progress = (goal.currentAmount / goal.targetAmount) * 100
+    const progress = (goal.currentAmount / goal.targetAmount) * 100;
     // Add acceleration effect as progress approaches 100%
     if (progress > 80) {
-      return progress + (progress - 80) * 0.2 // 20% boost in final stretch
+      return progress + (progress - 80) * 0.2; // 20% boost in final stretch
     }
-    return progress
-  }
+    return progress;
+  };
 
   // Trigger celebration animation when milestone is reached
   useEffect(() => {
     goals.forEach(goal => {
       goal.milestones?.forEach(milestone => {
         if (goal.currentAmount >= milestone.amount && !milestone.isCompleted) {
-          setCelebrationTrigger(`${goal.id}-${milestone.id}`)
-          setTimeout(() => setCelebrationTrigger(null), 3000)
+          setCelebrationTrigger(`${goal.id}-${milestone.id}`);
+          setTimeout(() => setCelebrationTrigger(null), 3000);
         }
-      })
-    })
-  }, [goals])
+      });
+    });
+  }, [goals]);
 
   const renderProgressVisual = (goal: SavingsGoal, progress: number) => {
-    const enhancedProgress = calculateEnhancedProgress(goal)
-    
+    const enhancedProgress = calculateEnhancedProgress(goal);
+
     switch (selectedVisual) {
       case 'thermometer':
         return (
@@ -99,7 +100,7 @@ export function GoalProgressTracker({
               className="absolute bottom-0 w-full bg-gradient-to-t from-red-500 via-yellow-500 to-green-500"
               initial={{ height: 0 }}
               animate={{ height: `${enhancedProgress}%` }}
-              transition={{ duration: 1, ease: "easeOut" }}
+              transition={{ duration: 1, ease: 'easeOut' }}
             />
             {/* Bubbles effect */}
             {enhancedProgress > 50 && (
@@ -110,22 +111,22 @@ export function GoalProgressTracker({
               />
             )}
           </motion.div>
-        )
-      
+        );
+
       case 'jar':
         return (
           <motion.div className="relative w-16 h-20 bg-yellow-100 border-2 border-yellow-300 rounded-lg overflow-hidden">
             {/* Jar outline */}
             <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-8 h-2 bg-yellow-300 rounded-t-full" />
-            
+
             {/* Coins filling the jar */}
             <motion.div
               className="absolute bottom-0 w-full bg-gradient-to-t from-yellow-400 to-yellow-600"
               initial={{ height: 0 }}
               animate={{ height: `${enhancedProgress}%` }}
-              transition={{ duration: 1, ease: "easeOut" }}
+              transition={{ duration: 1, ease: 'easeOut' }}
             />
-            
+
             {/* Coin dropping effect */}
             {enhancedProgress > 0 && (
               <motion.div
@@ -135,24 +136,24 @@ export function GoalProgressTracker({
               />
             )}
           </motion.div>
-        )
-      
+        );
+
       default:
         return (
           <div className="w-full">
-            <ProgressBar 
-              value={enhancedProgress} 
+            <ProgressBar
+              value={enhancedProgress}
               max={100}
               className="h-3"
             />
           </div>
-        )
+        );
     }
-  }
+  };
 
   const renderFutureProjection = (goal: SavingsGoal) => {
-    const projection = futureProjections.find(p => p.goalId === goal.id)
-    if (!projection) return null
+    const projection = futureProjections.find(p => p.goalId === goal.id);
+    if (!projection) {return null;}
 
     const chartData = [
       { year: 'Now', value: projection.currentSavings },
@@ -160,7 +161,7 @@ export function GoalProgressTracker({
       { year: '5 Years', value: Math.round(projection.projectedValue.fiveYears) },
       { year: '10 Years', value: Math.round(projection.projectedValue.tenYears) },
       { year: '20 Years', value: Math.round(projection.projectedValue.twentyYears) },
-    ]
+    ];
 
     return (
       <motion.div
@@ -176,28 +177,28 @@ export function GoalProgressTracker({
         <p className="text-sm text-gray-600 mb-4">
           {t('goals:projections.description', { defaultValue: 'See how your savings could grow over time with compound interest' })}
         </p>
-        
+
         <div className="h-48 mb-4">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="year" />
               <YAxis tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`} />
-              <Tooltip 
+              <Tooltip
                 formatter={(value: number) => [`$${value.toLocaleString()}`, 'Projected Value']}
                 labelFormatter={(label) => `${label}`}
               />
-              <Line 
-                type="monotone" 
-                dataKey="value" 
-                stroke="#3b82f6" 
+              <Line
+                type="monotone"
+                dataKey="value"
+                stroke="#3b82f6"
                 strokeWidth={3}
                 dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
               />
             </LineChart>
           </ResponsiveContainer>
         </div>
-        
+
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div className="text-center p-3 bg-white rounded-lg">
             <div className="text-2xl font-bold text-green-600">
@@ -213,14 +214,14 @@ export function GoalProgressTracker({
           </div>
         </div>
       </motion.div>
-    )
-  }
+    );
+  };
 
   const renderGoalCard = (goal: SavingsGoal) => {
-    const progress = (goal.currentAmount / goal.targetAmount) * 100
-    const isCompleted = progress >= 100
-    const timeRemaining = (goal.targetDate instanceof Date ? goal.targetDate : new Date(goal.targetDate)).getTime() - Date.now()
-    const monthsRemaining = Math.ceil(timeRemaining / (30 * 24 * 60 * 60 * 1000))
+    const progress = (goal.currentAmount / goal.targetAmount) * 100;
+    const isCompleted = progress >= 100;
+    const timeRemaining = (goal.targetDate instanceof Date ? goal.targetDate : new Date(goal.targetDate)).getTime() - Date.now();
+    const monthsRemaining = Math.ceil(timeRemaining / (30 * 24 * 60 * 60 * 1000));
 
     return (
       <motion.div
@@ -257,7 +258,7 @@ export function GoalProgressTracker({
                   </div>
                 </div>
                 <p className="text-sm text-gray-600 mb-2">{goal.description}</p>
-                
+
                 {/* Framing Type Display */}
                 <div className="text-xs">
                   {goal.framingType === 'loss-avoidance' && goal.lossAvoidanceDescription && (
@@ -284,7 +285,7 @@ export function GoalProgressTracker({
                   {t('goals:progress.target', { defaultValue: 'Target' })}: {formatCurrency(goal.targetAmount)}
                 </span>
               </div>
-              
+
               <div className="flex items-center space-x-4">
                 {renderProgressVisual(goal, progress)}
                 <div className="flex-1">
@@ -293,7 +294,7 @@ export function GoalProgressTracker({
                       {Math.round(progress)}%
                     </div>
                     <div className="text-sm text-gray-500">
-                      {isCompleted 
+                      {isCompleted
                         ? t('goals:progress.completed', { defaultValue: 'Completed!' })
                         : `${formatCurrency(goal.targetAmount - goal.currentAmount)} ${t('goals:progress.remaining', { defaultValue: 'remaining' })}`
                       }
@@ -309,13 +310,13 @@ export function GoalProgressTracker({
                 <div className="flex items-center space-x-1">
                   <CalendarIcon className="w-4 h-4" />
                   <span>
-                    {monthsRemaining > 0 
+                    {monthsRemaining > 0
                       ? t('goals:time.monthsRemaining', { defaultValue: '{{months}} months remaining', months: monthsRemaining })
                       : t('goals:time.overdue', { defaultValue: 'Overdue' })
                     }
                   </span>
                 </div>
-                
+
                 {showFutureProjections && (
                   <Button
                     variant="ghost"
@@ -323,7 +324,7 @@ export function GoalProgressTracker({
                     onClick={() => setShowProjections(!showProjections)}
                     className="text-blue-600 hover:text-blue-800"
                   >
-                    {showProjections 
+                    {showProjections
                       ? t('goals:projections.hide', { defaultValue: 'Hide Projections' })
                       : t('goals:projections.show', { defaultValue: 'Show Future Value' })
                     }
@@ -343,13 +344,13 @@ export function GoalProgressTracker({
                 </h4>
                 <div className="space-y-2">
                   {goal.milestones.map((milestone) => {
-                    const isMilestoneCompleted = goal.currentAmount >= milestone.amount
+                    const isMilestoneCompleted = goal.currentAmount >= milestone.amount;
                     return (
                       <motion.div
                         key={milestone.id}
                         className={`flex items-center justify-between p-2 rounded-lg text-sm ${
-                          isMilestoneCompleted 
-                            ? 'bg-green-100 text-green-800' 
+                          isMilestoneCompleted
+                            ? 'bg-green-100 text-green-800'
                             : 'bg-gray-100 text-gray-600'
                         }`}
                         initial={{ opacity: 0, x: -20 }}
@@ -365,7 +366,7 @@ export function GoalProgressTracker({
                           )}
                         </div>
                       </motion.div>
-                    )
+                    );
                   })}
                 </div>
               </div>
@@ -387,8 +388,8 @@ export function GoalProgressTracker({
           </CardContent>
         </Card>
       </motion.div>
-    )
-  }
+    );
+  };
 
   return (
     <>
@@ -413,7 +414,7 @@ export function GoalProgressTracker({
             {t('goals:progress.subtitle', { defaultValue: 'Track your savings goals and see your progress' })}
           </p>
         </div>
-        
+
         <div className="flex items-center space-x-4">
           {/* Visual Style Selector */}
           <div className="flex items-center space-x-2">
@@ -430,14 +431,14 @@ export function GoalProgressTracker({
               <option value="jar">{t('goals:progress.styles.jar', { defaultValue: 'Jar' })}</option>
             </select>
           </div>
-          
+
           {/* Show/Hide Completed Toggle */}
           <Button
             variant="outline"
             size="sm"
             onClick={() => setShowCompleted(!showCompleted)}
           >
-            {showCompleted 
+            {showCompleted
               ? t('goals:progress.hideCompleted', { defaultValue: 'Hide Completed' })
               : t('goals:progress.showCompleted', { defaultValue: 'Show Completed' })
             }
@@ -474,5 +475,5 @@ export function GoalProgressTracker({
       </div>
       )}
     </>
-  )
+  );
 }

@@ -1,4 +1,4 @@
-import type { FinancialInsight } from '@/types'
+import type { FinancialInsight } from '@/types';
 
 export interface SavingTip {
   id: string
@@ -17,9 +17,9 @@ export interface PeerComparison {
 }
 
 const getTranslationWithFallback = (t: (key: string) => string, key: string, fallback: string): string => {
-  const translation = t(key)
-  return translation === key ? fallback : translation
-}
+  const translation = t(key);
+  return translation === key ? fallback : translation;
+};
 
 export const getMockInsights = (t: (key: string) => string): FinancialInsight[] => [
   {
@@ -31,17 +31,17 @@ export const getMockInsights = (t: (key: string) => string): FinancialInsight[] 
     category: getTranslationWithFallback(t, 'categories.food', 'Food & Dining'),
     actionable: true,
     actions: [
-      { 
-        id: '1', 
-        label: getTranslationWithFallback(t, 'insights.coffeeSpending.actions.setBudget', 'Set Coffee Budget'), 
-        type: 'navigate', 
-        target: '/budget' 
+      {
+        id: '1',
+        label: getTranslationWithFallback(t, 'insights.coffeeSpending.actions.setBudget', 'Set Coffee Budget'),
+        type: 'navigate',
+        target: '/budget',
       },
-      { 
-        id: '2', 
-        label: getTranslationWithFallback(t, 'insights.coffeeSpending.actions.trackDaily', 'Track Daily Spending'), 
-        type: 'execute', 
-        target: 'track_coffee' 
+      {
+        id: '2',
+        label: getTranslationWithFallback(t, 'insights.coffeeSpending.actions.trackDaily', 'Track Daily Spending'),
+        type: 'execute',
+        target: 'track_coffee',
       },
     ],
     createdAt: new Date(),
@@ -56,11 +56,11 @@ export const getMockInsights = (t: (key: string) => string): FinancialInsight[] 
     category: getTranslationWithFallback(t, 'categories.savings', 'Savings'),
     actionable: true,
     actions: [
-      { 
-        id: '1', 
-        label: getTranslationWithFallback(t, 'insights.emergencyFund.actions.viewDetails', 'View Details'), 
-        type: 'navigate', 
-        target: '/goals' 
+      {
+        id: '1',
+        label: getTranslationWithFallback(t, 'insights.emergencyFund.actions.viewDetails', 'View Details'),
+        type: 'navigate',
+        target: '/goals',
       },
     ],
     createdAt: new Date(),
@@ -75,17 +75,17 @@ export const getMockInsights = (t: (key: string) => string): FinancialInsight[] 
     category: getTranslationWithFallback(t, 'categories.budget', 'Budget'),
     actionable: true,
     actions: [
-      { 
-        id: '1', 
-        label: getTranslationWithFallback(t, 'insights.weekendSpending.actions.viewPatterns', 'View Spending Patterns'), 
-        type: 'navigate', 
-        target: '/transactions' 
+      {
+        id: '1',
+        label: getTranslationWithFallback(t, 'insights.weekendSpending.actions.viewPatterns', 'View Spending Patterns'),
+        type: 'navigate',
+        target: '/transactions',
       },
     ],
     createdAt: new Date(),
     isRead: false,
   },
-]
+];
 
 export const getMockSavingTips = (t: (key: string) => string): SavingTip[] => [
   {
@@ -109,7 +109,7 @@ export const getMockSavingTips = (t: (key: string) => string): SavingTip[] => [
     icon: '🚫',
     difficulty: getTranslationWithFallback(t, 'difficulty.medium', 'Medium'),
   },
-]
+];
 
 export const getMockPeerComparisons = (t: (key: string) => string): PeerComparison[] => [
   {
@@ -133,4 +133,4 @@ export const getMockPeerComparisons = (t: (key: string) => string): PeerComparis
     unit: '%',
     better: true,
   },
-]
+];

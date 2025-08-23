@@ -1,21 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/database';
+
 import { requireAuth } from '@/lib/auth-middleware';
+import { query } from '@/lib/database';
 import type { AuthenticatedRequest } from '@/types/auth';
 
 export const GET = requireAuth(async (request: AuthenticatedRequest) => {
   try {
     const user = request.user;
     const { searchParams } = new URL(request.url);
-    
+
     const reportType = searchParams.get('type') || 'monthly';
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
-    
+
     if (!startDate || !endDate) {
       return NextResponse.json(
         { error: 'Start date and end date are required' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -37,7 +38,7 @@ export const GET = requireAuth(async (request: AuthenticatedRequest) => {
       default:
         return NextResponse.json(
           { error: 'Invalid report type. Supported types: monthly, category, trends, budget' },
-          { status: 400 }
+          { status: 400 },
         );
     }
 
@@ -46,15 +47,15 @@ export const GET = requireAuth(async (request: AuthenticatedRequest) => {
       data: {
         reportType,
         dateRange: { startDate, endDate },
-        ...reportData
-      }
+        ...reportData,
+      },
     });
 
   } catch (error) {
     console.error('Generate report error:', error);
     return NextResponse.json(
       { error: 'Failed to generate report' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 });
@@ -72,7 +73,7 @@ async function generateMonthlyReport(userId: string, startDate: string, endDate:
     WHERE user_id = $1 AND date >= $2 AND date <= $3
     GROUP BY DATE_TRUNC('month', date)
     ORDER BY month`,
-    [userId, startDate, endDate]
+    [userId, startDate, endDate],
   );
 
   // Top spending categories
@@ -87,12 +88,12 @@ async function generateMonthlyReport(userId: string, startDate: string, endDate:
     GROUP BY category
     ORDER BY total_spent DESC
     LIMIT 10`,
-    [userId, startDate, endDate]
+    [userId, startDate, endDate],
   );
 
   return {
     monthlyData: monthlyResult.rows,
-    topCategories: topCategoriesResult.rows
+    topCategories: topCategoriesResult.rows,
   };
 }
 
@@ -110,7 +111,7 @@ async function generateCategoryReport(userId: string, startDate: string, endDate
     WHERE t.user_id = $1 AND t.type = 'expense' AND t.date >= $2 AND t.date <= $3
     GROUP BY t.category
     ORDER BY actual_spent DESC`,
-    [userId, startDate, endDate]
+    [userId, startDate, endDate],
   );
 
   // Category spending trends
@@ -123,12 +124,12 @@ async function generateCategoryReport(userId: string, startDate: string, endDate
     WHERE user_id = $1 AND type = 'expense' AND date >= $2 AND date <= $3
     GROUP BY category, DATE_TRUNC('month', date)
     ORDER BY category, month`,
-    [userId, startDate, endDate]
+    [userId, startDate, endDate],
   );
 
   return {
     categoryBreakdown: categoryResult.rows,
-    categoryTrends: trendsResult.rows
+    categoryTrends: trendsResult.rows,
   };
 }
 
@@ -144,7 +145,7 @@ async function generateTrendsReport(userId: string, startDate: string, endDate: 
     WHERE user_id = $1 AND date >= $2 AND date <= $3
     GROUP BY date
     ORDER BY date`,
-    [userId, startDate, endDate]
+    [userId, startDate, endDate],
   );
 
   // Weekly averages
@@ -166,12 +167,12 @@ async function generateTrendsReport(userId: string, startDate: string, endDate: 
     ) daily_totals
     GROUP BY DATE_TRUNC('week', date)
     ORDER BY week_start`,
-    [userId, startDate, endDate]
+    [userId, startDate, endDate],
   );
 
   return {
     dailyTrends: dailyTrendsResult.rows,
-    weeklyAverages: weeklyAveragesResult.rows
+    weeklyAverages: weeklyAveragesResult.rows,
   };
 }
 
@@ -195,7 +196,7 @@ async function generateBudgetReport(userId: string, startDate: string, endDate: 
     WHERE b.user_id = $1 AND b.start_date <= $3 AND b.end_date >= $2
     GROUP BY b.id, b.name, bc.id, bc.name, bc.allocated, bc.color
     ORDER BY b.name, bc.allocated DESC`,
-    [userId, startDate, endDate]
+    [userId, startDate, endDate],
   );
 
   // Budget performance summary
@@ -215,11 +216,11 @@ async function generateBudgetReport(userId: string, startDate: string, endDate: 
     WHERE b.user_id = $1 AND b.start_date <= $3 AND b.end_date >= $2
     GROUP BY b.id, b.name
     ORDER BY total_allocated DESC`,
-    [userId, startDate, endDate]
+    [userId, startDate, endDate],
   );
 
   return {
     budgetVsActual: budgetVsActualResult.rows,
-    budgetSummary: budgetSummaryResult.rows
+    budgetSummary: budgetSummaryResult.rows,
   };
 }

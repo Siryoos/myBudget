@@ -1,12 +1,12 @@
-'use client'
+'use client';
 
-import { GoalWizard } from '@/components/goals/GoalWizard'
-import { GoalProgressTracker } from '@/components/goals/GoalProgressTracker'
-import { AutomationSettings } from '@/components/goals/AutomationSettings'
-import { useTranslation } from '@/lib/useTranslation'
+import { AutomationSettings } from '@/components/goals/AutomationSettings';
+import { GoalProgressTracker } from '@/components/goals/GoalProgressTracker';
+import { GoalWizard } from '@/components/goals/GoalWizard';
+import { useTranslation } from '@/lib/useTranslation';
 
 export default function GoalsPage() {
-  const { t, isReady } = useTranslation(['goals', 'common'])
+  const { t, isReady } = useTranslation(['goals', 'common']);
 
   if (!isReady) {
     return (
@@ -16,7 +16,7 @@ export default function GoalsPage() {
           <p className="text-neutral-gray">Loading...</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -35,7 +35,7 @@ export default function GoalsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column - Goal Creation */}
         <div className="lg:col-span-2 space-y-6">
-          <GoalWizard 
+          <GoalWizard
             templates={[
               'Emergency Fund',
               'Vacation',
@@ -44,13 +44,13 @@ export default function GoalsPage() {
               'Wedding',
               'Education',
               'Retirement',
-              'Custom'
+              'Custom',
             ]}
             visualGoalSetting={true}
             milestoneBreakdown={true}
           />
-          
-          <GoalProgressTracker 
+
+          <GoalProgressTracker
             visualStyles={['progressBar', 'thermometer', 'jar']}
             showTimeRemaining={true}
             showProjectedCompletion={true}
@@ -60,7 +60,7 @@ export default function GoalsPage() {
 
         {/* Right Column - Automation */}
         <div>
-          <AutomationSettings 
+          <AutomationSettings
             autoTransfer={true}
             roundUpSavings={true}
             ruleBasedSaving={true}
@@ -69,6 +69,6 @@ export default function GoalsPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 

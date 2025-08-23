@@ -1,20 +1,21 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { 
+import {
   PlusIcon,
   FireIcon,
   UsersIcon,
   ArrowTrendingUpIcon,
   SparklesIcon,
-  ExclamationTriangleIcon
-} from '@heroicons/react/24/outline'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Card, CardContent, CardHeader } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
-import { useTranslation } from '@/lib/useTranslation'
-import { useCurrency } from '@/lib/useCurrency'
-import type { QuickSaveData, SocialProof, SavingsGoal } from '@/types'
+  ExclamationTriangleIcon,
+} from '@heroicons/react/24/outline';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect } from 'react';
+
+import { Button } from '@/components/ui/Button';
+import { Card, CardContent, CardHeader } from '@/components/ui/Card';
+import { useCurrency } from '@/lib/useCurrency';
+import { useTranslation } from '@/lib/useTranslation';
+import type { QuickSaveData, SocialProof, SavingsGoal } from '@/types';
 
 interface QuickSaveWidgetProps {
   goals?: SavingsGoal[]
@@ -29,35 +30,35 @@ export function QuickSaveWidget({
   enableAnchoring = true,
   onQuickSave,
 }: QuickSaveWidgetProps) {
-  const { t, isReady } = useTranslation(['goals', 'common'])
-  const { formatCurrency } = useCurrency()
-  const [selectedAmount, setSelectedAmount] = useState<number>(25)
-  const [selectedGoalId, setSelectedGoalId] = useState<string>('')
-  const [isSaving, setIsSaving] = useState(false)
-  const [showSocialMessage, setShowSocialMessage] = useState(false)
-  const [saveCount, setSaveCount] = useState(0)
+  const { t, isReady } = useTranslation(['goals', 'common']);
+  const { formatCurrency } = useCurrency();
+  const [selectedAmount, setSelectedAmount] = useState<number>(25);
+  const [selectedGoalId, setSelectedGoalId] = useState<string>('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [showSocialMessage, setShowSocialMessage] = useState(false);
+  const [saveCount, setSaveCount] = useState(0);
 
   // A/B testing for default amounts - persistent assignment
   const [abTestGroup] = useState<'control' | 'test'>(() => {
     // Check if user already has an A/B test group assigned
-    const stored = localStorage.getItem('quickSave_abTestGroup')
+    const stored = localStorage.getItem('quickSave_abTestGroup');
     if (stored === 'control' || stored === 'test') {
-      return stored
+      return stored;
     }
-    
+
     // Assign new user to a random group and persist it with timestamp
-    const newGroup = Math.random() > 0.5 ? 'test' : 'control'
-    const timestamp = new Date().toISOString()
-    localStorage.setItem('quickSave_abTestGroup', newGroup)
-    localStorage.setItem('quickSave_abTestGroup_assignedAt', timestamp)
-    return newGroup
-  })
+    const newGroup = Math.random() > 0.5 ? 'test' : 'control';
+    const timestamp = new Date().toISOString();
+    localStorage.setItem('quickSave_abTestGroup', newGroup);
+    localStorage.setItem('quickSave_abTestGroup_assignedAt', timestamp);
+    return newGroup;
+  });
 
   // Anchoring optimization - different default amounts based on A/B test
   const defaultAmounts = {
     control: [10, 25, 50, 100],
-    test: [20, 50, 75, 150]
-  }
+    test: [20, 50, 75, 150],
+  };
 
   // A/B testing metadata for analytics
   const abTestMetadata = {
@@ -65,8 +66,8 @@ export function QuickSaveWidget({
     version: 'v1',
     group: abTestGroup,
     assignedAt: localStorage.getItem('quickSave_abTestGroup_assignedAt') || new Date().toISOString(),
-    defaultAmounts: defaultAmounts[abTestGroup]
-  }
+    defaultAmounts: defaultAmounts[abTestGroup],
+  };
 
   // Social proof messages
   const socialProofMessages: SocialProof[] = [
@@ -101,40 +102,40 @@ export function QuickSaveWidget({
       message: '8 in 10 people with emergency funds avoid debt',
       data: { successRate: 80, benefit: 'debt avoidance' },
       displayFrequency: 6,
-    }
-  ]
+    },
+  ];
 
   // Dynamic defaults based on user behavior and peer data
   const getDynamicDefaults = () => {
-    const baseAmounts = defaultAmounts[abTestGroup]
-    
+    const baseAmounts = defaultAmounts[abTestGroup];
+
     // If user has goals, suggest amounts that align with them
     if (goals.length > 0) {
-      const activeGoal = goals.find(g => g.isActive)
+      const activeGoal = goals.find(g => g.isActive);
       if (activeGoal) {
-        const remaining = activeGoal.targetAmount - activeGoal.currentAmount
-        const monthlyTarget = remaining / Math.max(1, Math.ceil(((activeGoal.targetDate instanceof Date ? activeGoal.targetDate : new Date(activeGoal.targetDate)).getTime() - Date.now()) / (30 * 24 * 60 * 60 * 1000)))
-        
+        const remaining = activeGoal.targetAmount - activeGoal.currentAmount;
+        const monthlyTarget = remaining / Math.max(1, Math.ceil(((activeGoal.targetDate instanceof Date ? activeGoal.targetDate : new Date(activeGoal.targetDate)).getTime() - Date.now()) / (30 * 24 * 60 * 60 * 1000)));
+
         // Suggest amounts that help reach the goal
         const goalAlignedAmounts = [
           Math.round(monthlyTarget * 0.25),
           Math.round(monthlyTarget * 0.5),
           Math.round(monthlyTarget * 0.75),
-          Math.round(monthlyTarget)
-        ].filter(amount => amount > 0)
-        
-        return goalAlignedAmounts.length > 0 ? goalAlignedAmounts : baseAmounts
+          Math.round(monthlyTarget),
+        ].filter(amount => amount > 0);
+
+        return goalAlignedAmounts.length > 0 ? goalAlignedAmounts : baseAmounts;
       }
     }
-    
-    return baseAmounts
-  }
+
+    return baseAmounts;
+  };
 
   const handleQuickSave = async () => {
-    if (selectedAmount <= 0) return
+    if (selectedAmount <= 0) {return;}
 
-    setIsSaving(true)
-    
+    setIsSaving(true);
+
     try {
       const saveData: QuickSaveData = {
         id: Date.now().toString(),
@@ -143,7 +144,7 @@ export function QuickSaveWidget({
         timestamp: new Date(),
         source: 'manual',
         socialProofMessage: showSocialProof ? socialProofMessages[saveCount % socialProofMessages.length].message : undefined,
-      }
+      };
 
       // Track A/B test data for analytics
       const abTestData = {
@@ -152,44 +153,44 @@ export function QuickSaveWidget({
         group: abTestMetadata.group,
         selectedAmount,
         defaultAmounts: abTestMetadata.defaultAmounts,
-        timestamp: new Date().toISOString()
-      }
-      
+        timestamp: new Date().toISOString(),
+      };
+
       // In production, you would send this to your analytics service
       if (process.env.NODE_ENV === 'development') {
-        console.log('A/B Test Data:', abTestData)
+        console.log('A/B Test Data:', abTestData);
       }
 
       if (onQuickSave) {
-        onQuickSave(saveData)
+        onQuickSave(saveData);
       }
 
       // Increment save count for social proof rotation
-      setSaveCount(prev => prev + 1)
-      
+      setSaveCount(prev => prev + 1);
+
       // Show social proof message
       if (showSocialProof && saveCount % 3 === 0) {
-        setShowSocialMessage(true)
-        setTimeout(() => setShowSocialMessage(false), 3000)
+        setShowSocialMessage(true);
+        setTimeout(() => setShowSocialMessage(false), 3000);
       }
 
       // Reset form
-      setSelectedAmount(getDynamicDefaults()[0])
-      setSelectedGoalId('')
-      
+      setSelectedAmount(getDynamicDefaults()[0]);
+      setSelectedGoalId('');
+
       // Success animation
-      setTimeout(() => setIsSaving(false), 1000)
-      
+      setTimeout(() => setIsSaving(false), 1000);
+
     } catch (error) {
-      console.error('Error during quick save:', error)
-      setIsSaving(false)
+      console.error('Error during quick save:', error);
+      setIsSaving(false);
     }
-  }
+  };
 
   const getSocialProofMessage = () => {
-    if (saveCount === 0) return null
-    return socialProofMessages[saveCount % socialProofMessages.length]
-  }
+    if (saveCount === 0) {return null;}
+    return socialProofMessages[saveCount % socialProofMessages.length];
+  };
 
   if (!isReady) {
     return (
@@ -201,11 +202,11 @@ export function QuickSaveWidget({
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
-  const dynamicDefaults = getDynamicDefaults()
-  const currentSocialProof = getSocialProofMessage()
+  const dynamicDefaults = getDynamicDefaults();
+  const currentSocialProof = getSocialProofMessage();
 
   return (
     <div className="space-y-6">
@@ -224,14 +225,14 @@ export function QuickSaveWidget({
             <div className="text-4xl">💰</div>
           </div>
         </CardHeader>
-        
+
         <CardContent className="space-y-6">
           {/* Amount Selection with Anchoring */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-3">
               {t('goals:quickSave.amount.title', { defaultValue: 'How much would you like to save?' })}
             </label>
-            
+
             {/* Quick Amount Buttons */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
               {dynamicDefaults.map((amount) => (
@@ -253,7 +254,7 @@ export function QuickSaveWidget({
                 </motion.button>
               ))}
             </div>
-            
+
             {/* Custom Amount Input */}
             <div className="relative">
               <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
@@ -378,12 +379,12 @@ export function QuickSaveWidget({
                   {t('goals:quickSave.insights.title', { defaultValue: 'Smart Defaults' })}
                 </h4>
                 <p className="text-sm text-orange-800 mb-3">
-                  {t('goals:quickSave.insights.description', { 
+                  {t('goals:quickSave.insights.description', {
                     defaultValue: 'We\'ve optimized the default amounts based on what works best for people like you. The most popular save amounts are pre-selected to make saving easier.',
-                    group: abTestGroup === 'test' ? 'optimized' : 'standard'
+                    group: abTestGroup === 'test' ? 'optimized' : 'standard',
                   })}
                 </p>
-                
+
                 {/* A/B Testing Information (for development/debugging) */}
                 {process.env.NODE_ENV === 'development' && (
                   <div className="mt-3 p-2 bg-white rounded border border-orange-200">
@@ -401,5 +402,5 @@ export function QuickSaveWidget({
         </Card>
       )}
     </div>
-  )
+  );
 }

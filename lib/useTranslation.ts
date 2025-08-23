@@ -1,6 +1,7 @@
-import { useTranslation as useI18nextTranslation } from 'react-i18next';
-import { useEffect, useState, useCallback } from 'react';
 import i18n from 'i18next';
+import { useEffect, useState, useCallback } from 'react';
+import { useTranslation as useI18nextTranslation } from 'react-i18next';
+
 import { useI18n } from './i18n-provider';
 
 export function useTranslation(namespace?: string | string[]) {
@@ -12,14 +13,14 @@ export function useTranslation(namespace?: string | string[]) {
   const checkReady = useCallback(() => {
     const namespaces = Array.isArray(namespace) ? namespace : [namespace || 'common'];
     const allLoaded = namespaces.every(ns => i18n.hasLoadedNamespace(ns));
-    
+
     console.log('🔍 useTranslation checkReady:', {
       namespaces,
       allLoaded,
       isInitialized: i18n.isInitialized,
-      currentLanguage: i18n.language
+      currentLanguage: i18n.language,
     });
-    
+
     if (allLoaded || i18n.isInitialized) {
       setIsReady(true);
     }
@@ -34,7 +35,7 @@ export function useTranslation(namespace?: string | string[]) {
       checkReady();
       setForceUpdate(prev => prev + 1);
     };
-    
+
     const handleLanguageChanged = () => {
       checkReady();
       setForceUpdate(prev => prev + 1);
@@ -69,7 +70,7 @@ export function useTranslation(namespace?: string | string[]) {
     } catch (error) {
       console.warn('Translation error:', error);
     }
-    
+
     // Fallback to default value or key
     return options?.defaultValue || key;
   };
@@ -78,13 +79,13 @@ export function useTranslation(namespace?: string | string[]) {
   const enhancedChangeLanguage = useCallback(async (newLocale: string) => {
     try {
       console.log(`useTranslation: Initiating language change to ${newLocale}`);
-      
+
       // Use the provider's changeLanguage function
       await changeLanguage(newLocale);
-      
+
       // Force a re-render of all components using this hook
       setForceUpdate(prev => prev + 1);
-      
+
       console.log(`useTranslation: Language change to ${newLocale} completed`);
     } catch (error) {
       console.error('useTranslation: Failed to change language:', error);

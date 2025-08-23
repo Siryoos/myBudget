@@ -1,6 +1,7 @@
 import { renderHook, waitFor } from '@testing-library/react';
-import { useGoals, useInsights, useDashboardData } from '../../lib/api-hooks';
+
 import { apiClient } from '../../lib/api-client';
+import { useGoals, useInsights, useDashboardData } from '../../lib/api-hooks';
 
 // Mock API client
 jest.mock('@/lib/api-client', () => ({
@@ -47,7 +48,7 @@ describe('API Hooks', () => {
 
     it('should handle errors when fetching goals', async () => {
       (apiClient.getGoals as jest.Mock).mockRejectedValue(
-        new Error('Failed to fetch')
+        new Error('Failed to fetch'),
       );
 
       const { result } = renderHook(() => useGoals());
@@ -178,8 +179,8 @@ describe('API Hooks', () => {
     });
 
     it('should use fallback data when API fails', async () => {
-      const fallbackData = [{ 
-        id: 'fallback', 
+      const fallbackData = [{
+        id: 'fallback',
         title: 'Fallback',
         type: 'saving-opportunity' as const,
         description: 'Test fallback',
@@ -187,7 +188,7 @@ describe('API Hooks', () => {
         category: 'test',
         actionable: true,
         createdAt: new Date(),
-        isRead: false
+        isRead: false,
       }];
 
       (apiClient.getNotifications as jest.Mock).mockResolvedValue({
@@ -232,7 +233,7 @@ describe('API Hooks', () => {
 
     it('should handle dashboard fetch errors', async () => {
       (apiClient.getDashboard as jest.Mock).mockRejectedValue(
-        new Error('Network error')
+        new Error('Network error'),
       );
 
       const { result } = renderHook(() => useDashboardData());

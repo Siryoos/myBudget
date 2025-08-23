@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { query, withTransaction } from '@/lib/database';
+
 import { requireAuth } from '@/lib/auth-middleware';
+import { query, withTransaction } from '@/lib/database';
 import type { SavingsGoal } from '@/types';
 import type { AuthenticatedRequest } from '@/types/auth';
 
@@ -26,22 +27,22 @@ export const GET = requireAuth(async (request: AuthenticatedRequest, context?: {
   if (!context?.params) {
     return NextResponse.json(
       { success: false, error: 'Missing goal ID' },
-      { status: 400 }
+      { status: 400 },
     );
   }
   const { params } = context;
   try {
     const user = request.user;
     const { id } = params;
-    
+
     // Validate goal ID
     if (!id || !z.string().uuid().safeParse(id).success) {
       return NextResponse.json(
         { success: false, error: 'Invalid goal ID' },
-        { status: 400 }
+        { status: 400 },
       );
     }
-    
+
     // Fetch goal with milestones
     const goalSql = `
       SELECT 
@@ -54,18 +55,18 @@ export const GET = requireAuth(async (request: AuthenticatedRequest, context?: {
       FROM savings_goals 
       WHERE id = $1 AND user_id = $2
     `;
-    
+
     const goalResult = await query(goalSql, [id, user.id]);
-    
+
     if (goalResult.rows.length === 0) {
       return NextResponse.json(
         { success: false, error: 'Goal not found' },
-        { status: 404 }
+        { status: 404 },
       );
     }
-    
+
     const goal = goalResult.rows[0];
-    
+
     // Fetch milestones for this goal
     const milestonesSql = `
       SELECT 
@@ -75,9 +76,9 @@ export const GET = requireAuth(async (request: AuthenticatedRequest, context?: {
       WHERE goal_id = $1 
       ORDER BY amount ASC
     `;
-    
+
     const milestonesResult = await query(milestonesSql, [id]);
-    
+
     // Transform and return goal with milestones
     const transformedGoal: SavingsGoal = {
       ...goal,
@@ -90,18 +91,18 @@ export const GET = requireAuth(async (request: AuthenticatedRequest, context?: {
         createdAt: new Date(milestone.createdAt),
       })),
     };
-    
+
     return NextResponse.json({
       success: true,
-      data: transformedGoal
+      data: transformedGoal,
     });
-    
+
   } catch (error) {
     console.error('Failed to fetch goal:', error);
-    
+
     return NextResponse.json(
       { success: false, error: 'Failed to fetch goal' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 });
@@ -110,7 +111,7 @@ export const PUT = requireAuth(async (request: AuthenticatedRequest, context?: {
   if (!context?.params) {
     return NextResponse.json(
       { success: false, error: 'Missing goal ID' },
-      { status: 400 }
+      { status: 400 },
     );
   }
   const { params } = context;
@@ -118,36 +119,36 @@ export const PUT = requireAuth(async (request: AuthenticatedRequest, context?: {
     const user = request.user;
     const { id } = params;
     const body = await request.json();
-    
+
     // Validate goal ID
     if (!id || !z.string().uuid().safeParse(id).success) {
       return NextResponse.json(
         { success: false, error: 'Invalid goal ID' },
-        { status: 400 }
+        { status: 400 },
       );
     }
-    
+
     // Validate request body
     const validatedData = updateGoalSchema.parse(body);
-    
+
     // Check if goal exists and belongs to user
     const existingGoal = await query(
       'SELECT id FROM savings_goals WHERE id = $1 AND user_id = $2',
-      [id, user.id]
+      [id, user.id],
     );
-    
+
     if (existingGoal.rows.length === 0) {
       return NextResponse.json(
         { success: false, error: 'Goal not found' },
-        { status: 404 }
+        { status: 404 },
       );
     }
-    
+
     // Build update query dynamically
     const updateFields: string[] = [];
     const updateValues: (string | number | boolean | null)[] = [];
     let paramIndex = 1;
-    
+
     Object.entries(validatedData).forEach(([key, value]) => {
       if (value !== undefined) {
         const dbKey = key === 'targetAmount' ? 'target_amount' :
@@ -157,23 +158,23 @@ export const PUT = requireAuth(async (request: AuthenticatedRequest, context?: {
                      key === 'lossAvoidanceDescription' ? 'loss_avoidance_description' :
                      key === 'achievementDescription' ? 'achievement_description' :
                      key === 'photoUrl' ? 'photo_url' : key;
-        
+
         updateFields.push(`${dbKey} = $${paramIndex++}`);
         updateValues.push(value);
       }
     });
-    
+
     if (updateFields.length === 0) {
       return NextResponse.json(
         { success: false, error: 'No fields to update' },
-        { status: 400 }
+        { status: 400 },
       );
     }
-    
+
     // Add updated_at and WHERE clause parameters
     updateFields.push('updated_at = CURRENT_TIMESTAMP');
     updateValues.push(id, user.id);
-    
+
     const updateSql = `
       UPDATE savings_goals 
       SET ${updateFields.join(', ')}
@@ -186,10 +187,10 @@ export const PUT = requireAuth(async (request: AuthenticatedRequest, context?: {
         achievement_description as "achievementDescription", photo_url as "photoUrl",
         icon, color, created_at as "createdAt", updated_at as "updatedAt"
     `;
-    
+
     const result = await query(updateSql, updateValues);
     const updatedGoal = result.rows[0];
-    
+
     return NextResponse.json({
       success: true,
       data: {
@@ -198,29 +199,29 @@ export const PUT = requireAuth(async (request: AuthenticatedRequest, context?: {
         createdAt: new Date(updatedGoal.createdAt),
         updatedAt: new Date(updatedGoal.updatedAt),
       },
-      message: 'Goal updated successfully'
+      message: 'Goal updated successfully',
     });
-    
+
   } catch (error) {
     console.error('Failed to update goal:', error);
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { success: false, error: 'Validation failed', details: error.errors },
-        { status: 400 }
+        { status: 400 },
       );
     }
-    
+
     if (error instanceof Error && error.message.includes('Unauthorized')) {
       return NextResponse.json(
         { success: false, error: 'Authentication required' },
-        { status: 401 }
+        { status: 401 },
       );
     }
-    
+
     return NextResponse.json(
       { success: false, error: 'Failed to update goal' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 });
@@ -229,59 +230,59 @@ export const DELETE = requireAuth(async (request: AuthenticatedRequest, context?
   if (!context?.params) {
     return NextResponse.json(
       { success: false, error: 'Missing goal ID' },
-      { status: 400 }
+      { status: 400 },
     );
   }
   const { params } = context;
   try {
     const user = request.user;
     const { id } = params;
-    
+
     // Validate goal ID
     if (!id || !z.string().uuid().safeParse(id).success) {
       return NextResponse.json(
         { success: false, error: 'Invalid goal ID' },
-        { status: 400 }
+        { status: 400 },
       );
     }
-    
+
     // Check if goal exists and belongs to user
     const existingGoal = await query(
       'SELECT id FROM savings_goals WHERE id = $1 AND user_id = $2',
-      [id, user.id]
+      [id, user.id],
     );
-    
+
     if (existingGoal.rows.length === 0) {
       return NextResponse.json(
         { success: false, error: 'Goal not found' },
-        { status: 404 }
+        { status: 404 },
       );
     }
-    
+
     // Soft delete by setting is_active to false
     await query(
       'UPDATE savings_goals SET is_active = false, updated_at = CURRENT_TIMESTAMP WHERE id = $1 AND user_id = $2',
-      [id, user.id]
+      [id, user.id],
     );
-    
+
     return NextResponse.json({
       success: true,
-      message: 'Goal deleted successfully'
+      message: 'Goal deleted successfully',
     });
-    
+
   } catch (error) {
     console.error('Failed to delete goal:', error);
-    
+
     if (error instanceof Error && error.message.includes('Unauthorized')) {
       return NextResponse.json(
         { success: false, error: 'Authentication required' },
-        { status: 401 }
+        { status: 401 },
       );
     }
-    
+
     return NextResponse.json(
       { success: false, error: 'Failed to delete goal' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 });

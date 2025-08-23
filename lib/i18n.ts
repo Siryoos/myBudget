@@ -7,7 +7,7 @@ const RTL_LOCALES = ['fa', 'ar'];
 // Date locales mapping
 const DATE_LOCALES = {
   en: enUS,
-  ar: ar,
+  ar,
   fa: faIR,
 };
 
@@ -74,17 +74,17 @@ export function formatNumber(num: number, locale: string, options?: Intl.NumberF
  */
 export function formatCurrency(amount: number, locale: string): string {
   const config = CURRENCY_CONFIG[locale as keyof typeof CURRENCY_CONFIG] || CURRENCY_CONFIG.en;
-  
+
   const formattedNumber = formatNumber(amount, locale, {
     minimumFractionDigits: config.decimals,
     maximumFractionDigits: config.decimals,
   });
-  
+
   if (config.position === 'before') {
     return `${config.symbol}${formattedNumber}`;
-  } else {
-    return `${formattedNumber} ${config.symbol}`;
   }
+    return `${formattedNumber} ${config.symbol}`;
+
 }
 
 /**
@@ -93,7 +93,7 @@ export function formatCurrency(amount: number, locale: string): string {
 export function formatDate(date: Date | string | number, locale: string, formatStr: string = 'PPP'): string {
   const dateObj = typeof date === 'string' || typeof date === 'number' ? new Date(date) : date;
   const dateLocale = DATE_LOCALES[locale as keyof typeof DATE_LOCALES] || DATE_LOCALES.en;
-  
+
   return format(dateObj, formatStr, { locale: dateLocale });
 }
 
@@ -103,7 +103,7 @@ export function formatDate(date: Date | string | number, locale: string, formatS
 export function formatRelativeTime(date: Date | string | number, locale: string): string {
   const dateObj = typeof date === 'string' || typeof date === 'number' ? new Date(date) : date;
   const dateLocale = DATE_LOCALES[locale as keyof typeof DATE_LOCALES] || DATE_LOCALES.en;
-  
+
   return formatDistanceToNow(dateObj, { locale: dateLocale, addSuffix: true });
 }
 
@@ -116,7 +116,7 @@ export function getDateFormat(locale: string): string {
     fa: 'yyyy/MM/dd',
     ar: 'dd/MM/yyyy',
   };
-  
+
   return formats[locale as keyof typeof formats] || formats.en;
 }
 
@@ -127,13 +127,13 @@ export function getTimeFormat(locale: string, is24Hour: boolean = false): string
   if (is24Hour) {
     return 'HH:mm';
   }
-  
+
   const formats = {
     en: 'h:mm a',
     fa: 'HH:mm',
     ar: 'h:mm a',
   };
-  
+
   return formats[locale as keyof typeof formats] || formats.en;
 }
 
@@ -143,20 +143,20 @@ export function getTimeFormat(locale: string, is24Hour: boolean = false): string
 export function parseLocaleNumber(value: string, locale: string): number {
   // Remove currency symbols and spaces
   let cleaned = value.replace(/[^\d.,٫٬۰-۹٠-٩-]/g, '');
-  
+
   // Convert locale digits to Western digits
   const westernDigits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
   const localeDigits = NUMBER_SYSTEMS[locale as keyof typeof NUMBER_SYSTEMS] || NUMBER_SYSTEMS.en;
-  
+
   localeDigits.forEach((digit, index) => {
     cleaned = cleaned.replace(new RegExp(digit, 'g'), westernDigits[index]);
   });
-  
+
   // Handle decimal separators
   const config = CURRENCY_CONFIG[locale as keyof typeof CURRENCY_CONFIG] || CURRENCY_CONFIG.en;
   cleaned = cleaned.replace(new RegExp(`\\${config.thousandsSeparator}`, 'g'), '');
   cleaned = cleaned.replace(new RegExp(`\\${config.decimalSeparator}`, 'g'), '.');
-  
+
   return parseFloat(cleaned) || 0;
 }
 

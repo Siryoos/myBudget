@@ -1,14 +1,15 @@
-import { Metadata } from 'next'
-import { BudgetMethodSelector } from '@/components/budget/BudgetMethodSelector'
-import { IncomeManager } from '@/components/budget/IncomeManager'
-import { BudgetAllocator } from '@/components/budget/BudgetAllocator'
-import { BudgetVisualization } from '@/components/budget/BudgetVisualization'
-import BudgetHeader from '@/components/budget/BudgetHeader'
+import type { Metadata } from 'next';
+
+import { BudgetAllocator } from '@/components/budget/BudgetAllocator';
+import BudgetHeader from '@/components/budget/BudgetHeader';
+import { BudgetMethodSelector } from '@/components/budget/BudgetMethodSelector';
+import { BudgetVisualization } from '@/components/budget/BudgetVisualization';
+import { IncomeManager } from '@/components/budget/IncomeManager';
 
 export const metadata: Metadata = {
   title: 'Budget Planner',
   description: 'Create and manage your budget with proven methods',
-}
+};
 
 export default function BudgetPage() {
   return (
@@ -23,12 +24,12 @@ export default function BudgetPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left Column - Input and Configuration */}
         <div className="space-y-6">
-          <IncomeManager 
+          <IncomeManager
             allowMultipleSources={true}
             recurringIncomeTracking={true}
             irregularIncomeSupport={true}
           />
-          
+
           <BudgetAllocator
             visualAllocation={true}
             dragAndDrop={true}
@@ -38,7 +39,7 @@ export default function BudgetPage() {
 
         {/* Right Column - Visualization */}
         <div>
-          <BudgetVisualization 
+          <BudgetVisualization
             chartTypes={['pie', 'bar', 'sankey']}
             interactive={true}
             showComparison={true}
@@ -46,6 +47,6 @@ export default function BudgetPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 

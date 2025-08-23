@@ -1,9 +1,9 @@
-'use client'
+'use client';
 
-import { useTranslation } from '@/lib/useTranslation'
+import { useTranslation } from '@/lib/useTranslation';
 
 export function BudgetHeader() {
-  const { t } = useTranslation('budget')
+  const { t } = useTranslation('budget');
 
   return (
     <div className="bg-gradient-to-r from-primary-trust-blue to-primary-trust-blue-light rounded-lg p-6 text-white">
@@ -12,9 +12,8 @@ export function BudgetHeader() {
         {t('page.subtitle')}
       </p>
     </div>
-  )
+  );
 }
 
-export default BudgetHeader
-
+export default BudgetHeader;
 

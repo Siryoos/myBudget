@@ -1,8 +1,6 @@
-'use client'
+'use client';
 
-import { useState, useRef } from 'react'
-import Image from 'next/image'
-import { 
+import {
   PlusIcon,
   SparklesIcon,
   CalendarIcon,
@@ -15,15 +13,18 @@ import {
   BanknotesIcon,
   ExclamationTriangleIcon,
   PhotoIcon,
-  XMarkIcon
-} from '@heroicons/react/24/outline'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Card, CardContent, CardHeader } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
-import { sanitizeNumberInput, formatDate } from '@/lib/utils'
-import { useTranslation } from '@/lib/useTranslation'
-import { useCurrency } from '@/lib/useCurrency'
-import type { SavingsGoal, GoalCategory, GoalPhoto } from '@/types'
+  XMarkIcon,
+} from '@heroicons/react/24/outline';
+import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
+import { useState, useRef } from 'react';
+
+import { Button } from '@/components/ui/Button';
+import { Card, CardContent, CardHeader } from '@/components/ui/Card';
+import { useCurrency } from '@/lib/useCurrency';
+import { useTranslation } from '@/lib/useTranslation';
+import { sanitizeNumberInput, formatDate } from '@/lib/utils';
+import type { SavingsGoal, GoalCategory, GoalPhoto } from '@/types';
 
 interface GoalTemplate {
   id: GoalCategory
@@ -52,11 +53,11 @@ export function GoalWizard({
   milestoneBreakdown = true,
   onGoalCreated,
 }: GoalWizardProps) {
-  const { t, isReady } = useTranslation(['goals', 'common'])
-  const { formatCurrency } = useCurrency()
-  const [showWizard, setShowWizard] = useState(false)
-  const [currentStep, setCurrentStep] = useState(1)
-  const [selectedTemplate, setSelectedTemplate] = useState<GoalTemplate | null>(null)
+  const { t, isReady } = useTranslation(['goals', 'common']);
+  const { formatCurrency } = useCurrency();
+  const [showWizard, setShowWizard] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
+  const [selectedTemplate, setSelectedTemplate] = useState<GoalTemplate | null>(null);
   const [goalData, setGoalData] = useState({
     name: '',
     targetAmount: '',
@@ -65,10 +66,10 @@ export function GoalWizard({
     priority: 'medium' as 'low' | 'medium' | 'high',
     framingType: 'achievement' as 'achievement' | 'loss-avoidance',
     photoUrl: '',
-  })
-  const [uploadedPhoto, setUploadedPhoto] = useState<GoalPhoto | null>(null)
-  const [isUploading, setIsUploading] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  });
+  const [uploadedPhoto, setUploadedPhoto] = useState<GoalPhoto | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!isReady) {
     return (
@@ -80,7 +81,7 @@ export function GoalWizard({
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   const goalTemplates: GoalTemplate[] = [
@@ -94,7 +95,7 @@ export function GoalWizard({
       tips: [
         t('goals:templates.emergency.tips.amount', { defaultValue: 'Aim for 3-6 months of expenses' }),
         t('goals:templates.emergency.tips.account', { defaultValue: 'Keep in high-yield savings' }),
-        t('goals:templates.emergency.tips.automate', { defaultValue: 'Automate contributions' })
+        t('goals:templates.emergency.tips.automate', { defaultValue: 'Automate contributions' }),
       ],
       lossAvoidanceFrame: t('goals:templates.emergency.lossAvoidance', { defaultValue: 'Avoid financial crisis and high-interest debt from unexpected expenses' }),
       achievementFrame: t('goals:templates.emergency.achievement', { defaultValue: 'Build financial security and peace of mind' }),
@@ -110,7 +111,7 @@ export function GoalWizard({
       tips: [
         t('goals:templates.vacation.tips.research', { defaultValue: 'Research costs early' }),
         t('goals:templates.vacation.tips.booking', { defaultValue: 'Book in advance for deals' }),
-        t('goals:templates.vacation.tips.offseason', { defaultValue: 'Consider off-season travel' })
+        t('goals:templates.vacation.tips.offseason', { defaultValue: 'Consider off-season travel' }),
       ],
       lossAvoidanceFrame: t('goals:templates.vacation.lossAvoidance', { defaultValue: 'Avoid vacation debt and high-interest credit card charges' }),
       achievementFrame: t('goals:templates.vacation.achievement', { defaultValue: 'Create unforgettable memories without financial stress' }),
@@ -126,7 +127,7 @@ export function GoalWizard({
       tips: [
         t('goals:templates.home.tips.downpayment', { defaultValue: 'Aim for 20% down payment' }),
         t('goals:templates.home.tips.closing', { defaultValue: 'Factor in closing costs' }),
-        t('goals:templates.home.tips.programs', { defaultValue: 'Consider first-time buyer programs' })
+        t('goals:templates.home.tips.programs', { defaultValue: 'Consider first-time buyer programs' }),
       ],
       lossAvoidanceFrame: t('goals:templates.home.lossAvoidance', { defaultValue: 'Avoid PMI and higher monthly mortgage payments' }),
       achievementFrame: t('goals:templates.home.achievement', { defaultValue: 'Build equity and reduce long-term housing costs' }),
@@ -142,7 +143,7 @@ export function GoalWizard({
       tips: [
         t('goals:templates.car.tips.depreciation', { defaultValue: 'Research depreciation rates' }),
         t('goals:templates.car.tips.certified', { defaultValue: 'Consider certified pre-owned' }),
-        t('goals:templates.car.tips.insurance', { defaultValue: 'Factor in insurance costs' })
+        t('goals:templates.car.tips.insurance', { defaultValue: 'Factor in insurance costs' }),
       ],
       lossAvoidanceFrame: t('goals:templates.car.lossAvoidance', { defaultValue: 'Avoid auto loan interest and negative equity' }),
       achievementFrame: t('goals:templates.car.achievement', { defaultValue: 'Own your vehicle outright and reduce monthly expenses' }),
@@ -158,7 +159,7 @@ export function GoalWizard({
       tips: [
         t('goals:templates.wedding.tips.prioritize', { defaultValue: 'Prioritize what matters most' }),
         t('goals:templates.wedding.tips.negotiate', { defaultValue: 'Negotiate with vendors' }),
-        t('goals:templates.wedding.tips.alternatives', { defaultValue: 'Consider cost-effective alternatives' })
+        t('goals:templates.wedding.tips.alternatives', { defaultValue: 'Consider cost-effective alternatives' }),
       ],
       lossAvoidanceFrame: t('goals:templates.wedding.lossAvoidance', { defaultValue: 'Avoid starting marriage with wedding debt and stress' }),
       achievementFrame: t('goals:templates.wedding.achievement', { defaultValue: 'Celebrate your love with financial freedom' }),
@@ -174,7 +175,7 @@ export function GoalWizard({
       tips: [
         t('goals:templates.education.tips.scholarships', { defaultValue: 'Apply for scholarships and grants' }),
         t('goals:templates.education.tips.community', { defaultValue: 'Consider community college first' }),
-        t('goals:templates.education.tips.workstudy', { defaultValue: 'Look into work-study programs' })
+        t('goals:templates.education.tips.workstudy', { defaultValue: 'Look into work-study programs' }),
       ],
       lossAvoidanceFrame: t('goals:templates.education.lossAvoidance', { defaultValue: 'Avoid student loan debt and interest accumulation' }),
       achievementFrame: t('goals:templates.education.achievement', { defaultValue: 'Invest in skills that increase earning potential' }),
@@ -190,7 +191,7 @@ export function GoalWizard({
       tips: [
         t('goals:templates.retirement.tips.start', { defaultValue: 'Start early, compound interest is powerful' }),
         t('goals:templates.retirement.tips.employer', { defaultValue: 'Maximize employer matching' }),
-        t('goals:templates.retirement.tips.diversify', { defaultValue: 'Diversify your investments' })
+        t('goals:templates.retirement.tips.diversify', { defaultValue: 'Diversify your investments' }),
       ],
       lossAvoidanceFrame: t('goals:templates.retirement.lossAvoidance', { defaultValue: 'Avoid working longer than desired or reducing lifestyle in retirement' }),
       achievementFrame: t('goals:templates.retirement.achievement', { defaultValue: 'Build wealth and financial independence for your future' }),
@@ -206,46 +207,46 @@ export function GoalWizard({
       tips: [
         t('goals:templates.custom.tips.specific', { defaultValue: 'Be specific about what you want' }),
         t('goals:templates.custom.tips.realistic', { defaultValue: 'Set realistic timelines' }),
-        t('goals:templates.custom.tips.flexible', { defaultValue: 'Stay flexible and adjust as needed' })
+        t('goals:templates.custom.tips.flexible', { defaultValue: 'Stay flexible and adjust as needed' }),
       ],
       lossAvoidanceFrame: t('goals:templates.custom.lossAvoidance', { defaultValue: 'Avoid the cost of not planning and missing opportunities' }),
       achievementFrame: t('goals:templates.custom.achievement', { defaultValue: 'Achieve your personal dreams and aspirations' }),
       riskAwareness: t('goals:templates.custom.risk', { defaultValue: 'Goals without planning are 3x less likely to be achieved' }),
     },
-  ]
+  ];
 
   const handleTemplateSelect = (template: GoalTemplate) => {
-    setSelectedTemplate(template)
+    setSelectedTemplate(template);
     setGoalData(prev => ({
       ...prev,
       name: template.name,
       targetAmount: template.suggestedAmount.toString(),
       targetDate: new Date(Date.now() + template.suggestedTimeframe * 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       description: template.description,
-    }))
-    setCurrentStep(2)
-  }
+    }));
+    setCurrentStep(2);
+  };
 
   const handlePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
+    const file = event.target.files?.[0];
+    if (!file) {return;}
 
     // Validate file type and size
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-      alert('Please select a valid image file (JPEG, PNG, or WebP)')
-      return
+      alert('Please select a valid image file (JPEG, PNG, or WebP)');
+      return;
     }
 
     if (file.size > 5 * 1024 * 1024) { // 5MB limit
-      alert('File size must be less than 5MB')
-      return
+      alert('File size must be less than 5MB');
+      return;
     }
 
-    setIsUploading(true)
-    
+    setIsUploading(true);
+
     try {
       // Simulate file upload - in real app, upload to cloud storage
-      const reader = new FileReader()
+      const reader = new FileReader();
       reader.onload = (e) => {
         const photo: GoalPhoto = {
           id: Date.now().toString(),
@@ -255,25 +256,25 @@ export function GoalWizard({
           uploadedAt: new Date(),
           fileSize: file.size,
           mimeType: file.type,
-        }
-        setUploadedPhoto(photo)
-        setGoalData(prev => ({ ...prev, photoUrl: photo.photoUrl }))
-        setIsUploading(false)
-      }
-      reader.readAsDataURL(file)
+        };
+        setUploadedPhoto(photo);
+        setGoalData(prev => ({ ...prev, photoUrl: photo.photoUrl }));
+        setIsUploading(false);
+      };
+      reader.readAsDataURL(file);
     } catch (error) {
-      console.error('Error uploading photo:', error)
-      setIsUploading(false)
+      console.error('Error uploading photo:', error);
+      setIsUploading(false);
     }
-  }
+  };
 
   const removePhoto = () => {
-    setUploadedPhoto(null)
-    setGoalData(prev => ({ ...prev, photoUrl: '' }))
+    setUploadedPhoto(null);
+    setGoalData(prev => ({ ...prev, photoUrl: '' }));
     if (fileInputRef.current) {
-      fileInputRef.current.value = ''
+      fileInputRef.current.value = '';
     }
-  }
+  };
 
   const handleSubmit = () => {
     const goal: Partial<SavingsGoal> = {
@@ -287,16 +288,16 @@ export function GoalWizard({
       photoUrl: uploadedPhoto?.photoUrl,
       createdAt: new Date(),
       updatedAt: new Date(),
-    }
+    };
 
     if (onGoalCreated) {
-      onGoalCreated(goal)
+      onGoalCreated(goal);
     }
 
-    console.log('Creating goal:', goal)
-    setShowWizard(false)
-    setCurrentStep(1)
-    setSelectedTemplate(null)
+    console.log('Creating goal:', goal);
+    setShowWizard(false);
+    setCurrentStep(1);
+    setSelectedTemplate(null);
     setGoalData({
       name: '',
       targetAmount: '',
@@ -305,11 +306,11 @@ export function GoalWizard({
       priority: 'medium',
       framingType: 'achievement',
       photoUrl: '',
-    })
-    setUploadedPhoto(null)
-  }
+    });
+    setUploadedPhoto(null);
+  };
 
-  const selectedTemplateData = goalTemplates.find(t => t.id === selectedTemplate?.id)
+  const selectedTemplateData = goalTemplates.find(t => t.id === selectedTemplate?.id);
 
   return (
     <div className="space-y-6">
@@ -341,7 +342,7 @@ export function GoalWizard({
               <div className="p-6">
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-2xl font-bold text-gray-900">
-                    {currentStep === 1 
+                    {currentStep === 1
                       ? t('goals:wizard.step1.title', { defaultValue: 'Choose Your Goal' })
                       : t('goals:wizard.step2.title', { defaultValue: 'Customize Your Goal' })
                     }
@@ -413,7 +414,7 @@ export function GoalWizard({
                           </div>
                           <p className="text-sm text-gray-600">{selectedTemplate.achievementFrame}</p>
                         </div>
-                        
+
                         <div
                           className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
                             goalData.framingType === 'loss-avoidance'
@@ -431,7 +432,7 @@ export function GoalWizard({
                           <p className="text-sm text-gray-600">{selectedTemplate.lossAvoidanceFrame}</p>
                         </div>
                       </div>
-                      
+
                       {/* Risk Awareness */}
                       <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
                         <div className="flex items-center space-x-2">
@@ -452,7 +453,7 @@ export function GoalWizard({
                       <p className="text-sm text-gray-600">
                         {t('goals:wizard.photo.description', { defaultValue: 'Upload a photo that represents your goal. This creates an emotional connection and can help motivate you.' })}
                       </p>
-                      
+
                       <div className="flex items-center space-x-4">
                         <input
                           ref={fileInputRef}
@@ -461,7 +462,7 @@ export function GoalWizard({
                           onChange={handlePhotoUpload}
                           className="hidden"
                         />
-                        
+
                         {!uploadedPhoto ? (
                           <Button
                             onClick={() => fileInputRef.current?.click()}
@@ -469,7 +470,7 @@ export function GoalWizard({
                             disabled={isUploading}
                           >
                             <PhotoIcon className="w-4 h-4 mr-2" />
-                            {isUploading 
+                            {isUploading
                               ? t('goals:wizard.photo.uploading', { defaultValue: 'Uploading...' })
                               : t('goals:wizard.photo.select', { defaultValue: 'Select Photo' })
                             }
@@ -501,7 +502,7 @@ export function GoalWizard({
                       <h3 className="font-semibold text-gray-900">
                         {t('goals:wizard.details.title', { defaultValue: 'Goal Details' })}
                       </h3>
-                      
+
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -514,7 +515,7 @@ export function GoalWizard({
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-trust-blue"
                           />
                         </div>
-                        
+
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
                             {t('goals:wizard.details.amount', { defaultValue: 'Target Amount' })}
@@ -526,7 +527,7 @@ export function GoalWizard({
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-trust-blue"
                           />
                         </div>
-                        
+
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
                             {t('goals:wizard.details.date', { defaultValue: 'Target Date' })}
@@ -538,7 +539,7 @@ export function GoalWizard({
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-trust-blue"
                           />
                         </div>
-                        
+
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
                             {t('goals:wizard.details.priority', { defaultValue: 'Priority' })}
@@ -554,7 +555,7 @@ export function GoalWizard({
                           </select>
                         </div>
                       </div>
-                      
+
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           {t('goals:wizard.details.description', { defaultValue: 'Description' })}
@@ -576,7 +577,7 @@ export function GoalWizard({
                       >
                         {t('goals:wizard.actions.back', { defaultValue: 'Back' })}
                       </Button>
-                      
+
                       <Button
                         onClick={handleSubmit}
                         disabled={!goalData.name || !goalData.targetAmount || !goalData.targetDate}
@@ -592,5 +593,5 @@ export function GoalWizard({
         )}
       </AnimatePresence>
     </div>
-  )
+  );
 }

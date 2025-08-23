@@ -1,244 +1,258 @@
-import { clsx, type ClassValue } from 'clsx'
-import { format, formatDistance, isToday, isYesterday, isThisWeek, isThisMonth } from 'date-fns'
+import { clsx, type ClassValue } from 'clsx';
+import { format, formatDistance, isToday, isYesterday, isThisWeek, isThisMonth } from 'date-fns';
 
 /**
  * Utility function to combine class names
  */
-export function cn(...inputs: ClassValue[]) {
-  return clsx(inputs)
-}
+export const cn = (...inputs: ClassValue[]): string => {
+  return clsx(inputs);
+};
 
 /**
  * Format currency based on user preferences
  */
-export function formatCurrency(
+export const formatCurrency = (
   amount: number,
   currency: string = 'USD',
-  locale: string = 'en-US'
-): string {
+  locale: string = 'en-US',
+): string => {
   return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency,
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }).format(amount)
-}
+  }).format(amount);
+};
 
 /**
  * Format percentage with proper precision
  */
-export function formatPercentage(
+export const formatPercentage = (
   value: number,
-  precision: number = 1
-): string {
-  return `${value.toFixed(precision)}%`
-}
+  precision: number = 1,
+): string => {
+  return `${value.toFixed(precision)}%`;
+};
 
 /**
  * Format large numbers with abbreviations (K, M, B)
  */
-export function formatCompactNumber(
+export const formatCompactNumber = (
   num: number,
-  locale: string = 'en-US'
-): string {
+  locale: string = 'en-US',
+): string => {
   return new Intl.NumberFormat(locale, {
     notation: 'compact',
     maximumFractionDigits: 1,
-  }).format(num)
-}
+  }).format(num);
+};
 
 /**
  * Format dates in a user-friendly way
  */
-export function formatDate(
+export const formatDate = (
   date: Date | string,
-  formatStr: string = 'MMM dd, yyyy'
-): string {
-  const dateObj = typeof date === 'string' ? new Date(date) : date
-  return format(dateObj, formatStr)
-}
+  formatStr: string = 'MMM dd, yyyy',
+): string => {
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  return format(dateObj, formatStr);
+};
 
 /**
  * Format relative time (e.g., "2 days ago", "in 3 hours")
  */
-export function formatRelativeTime(date: Date | string): string {
-  const dateObj = typeof date === 'string' ? new Date(date) : date
-  const now = new Date()
-  
+export const formatRelativeTime = (date: Date | string): string => {
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  const now = new Date();
+
   if (isToday(dateObj)) {
-    return 'Today'
+    return 'Today';
   }
-  
+
   if (isYesterday(dateObj)) {
-    return 'Yesterday'
+    return 'Yesterday';
   }
-  
+
   if (isThisWeek(dateObj)) {
-    return format(dateObj, 'EEEE') // Day name
+    return format(dateObj, 'EEEE'); // Day name
   }
-  
+
   if (isThisMonth(dateObj)) {
-    return format(dateObj, 'MMM dd')
+    return format(dateObj, 'MMM dd');
   }
-  
-  return formatDistance(dateObj, now, { addSuffix: true })
-}
+
+  return formatDistance(dateObj, now, { addSuffix: true });
+};
 
 /**
  * Calculate percentage of a value relative to a total
  */
-export function calculatePercentage(value: number, total: number): number {
-  if (total === 0) return 0
-  return (value / total) * 100
-}
+export const calculatePercentage = (value: number, total: number): number => {
+  if (total === 0) {return 0;}
+  return (value / total) * 100;
+};
 
 /**
  * Calculate progress towards a goal
  */
-export function calculateProgress(current: number, target: number): {
+export const calculateProgress = (current: number, target: number): {
   percentage: number
   remaining: number
   isComplete: boolean
-} {
-  const percentage = Math.min(calculatePercentage(current, target), 100)
-  const remaining = Math.max(target - current, 0)
-  const isComplete = current >= target
-  
-  return { percentage, remaining, isComplete }
-}
+} => {
+  const percentage = Math.min(calculatePercentage(current, target), 100);
+  const remaining = Math.max(target - current, 0);
+  const isComplete = current >= target;
+
+  return { percentage, remaining, isComplete };
+};
 
 /**
  * Debounce function to limit the rate of function calls
  */
-export function debounce<T extends (...args: unknown[]) => unknown>(
+export const debounce = <T extends (...args: unknown[]) => unknown>(
   func: T,
-  wait: number
-): (...args: Parameters<T>) => void {
-  let timeout: NodeJS.Timeout
-  
+  wait: number,
+): (...args: Parameters<T>) => void => {
+  let timeout: ReturnType<typeof setTimeout>;
+
   return (...args: Parameters<T>) => {
-    clearTimeout(timeout)
-    timeout = setTimeout(() => func(...args), wait)
-  }
-}
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  };
+};
 
 /**
  * Throttle function to limit the rate of function calls
  */
-export function throttle<T extends (...args: unknown[]) => unknown>(
+export const throttle = <T extends (...args: unknown[]) => unknown>(
   func: T,
-  limit: number
-): (...args: Parameters<T>) => void {
-  let inThrottle: boolean
-  
+  limit: number,
+): (...args: Parameters<T>) => void => {
+  let inThrottle: boolean;
+
   return (...args: Parameters<T>) => {
     if (!inThrottle) {
-      func(...args)
-      inThrottle = true
-      setTimeout(() => (inThrottle = false), limit)
+      func(...args);
+      inThrottle = true;
+      setTimeout(() => (inThrottle = false), limit);
     }
-  }
-}
+  };
+};
+
+// Constants for ID generation
+const ID_BASE = 36;
+const ID_START_INDEX = 2;
 
 /**
  * Generate a random ID
  */
-export function generateId(): string {
-  return Math.random().toString(36).substring(2) + Date.now().toString(36)
-}
+export const generateId = (): string => {
+  return Math.random().toString(ID_BASE).substring(ID_START_INDEX) + Date.now().toString(ID_BASE);
+};
 
 /**
  * Validate email format
  */
-export function isValidEmail(email: string): boolean {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  return emailRegex.test(email)
-}
+export const isValidEmail = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
+// Budget category thresholds
+const BUDGET_CRITICAL_THRESHOLD = 1.0;
+const BUDGET_WARNING_THRESHOLD = 0.8;
+const BUDGET_CAUTION_THRESHOLD = 0.6;
 
 /**
  * Get color for budget category based on spending ratio
  */
-export function getBudgetCategoryColor(spent: number, allocated: number): string {
-  const ratio = spent / allocated
-  
-  if (ratio >= 1) return 'text-accent-warning-red'
-  if (ratio >= 0.8) return 'text-accent-action-orange'
-  if (ratio >= 0.6) return 'text-neutral-gray'
-  return 'text-secondary-growth-green'
-}
+export const getBudgetCategoryColor = (spent: number, allocated: number): string => {
+  const ratio = spent / allocated;
+
+  if (ratio >= BUDGET_CRITICAL_THRESHOLD) {return 'text-accent-warning-red';}
+  if (ratio >= BUDGET_WARNING_THRESHOLD) {return 'text-accent-action-orange';}
+  if (ratio >= BUDGET_CAUTION_THRESHOLD) {return 'text-neutral-gray';}
+  return 'text-secondary-growth-green';
+};
+
+// Goal progress thresholds
+const GOAL_COMPLETE_THRESHOLD = 100;
+const GOAL_NEAR_COMPLETE_THRESHOLD = 75;
+const GOAL_HALFWAY_THRESHOLD = 50;
 
 /**
  * Get status color for savings goals
  */
-export function getGoalStatusColor(current: number, target: number): string {
-  const progress = calculatePercentage(current, target)
-  
-  if (progress >= 100) return 'text-accent-success-emerald'
-  if (progress >= 75) return 'text-secondary-growth-green'
-  if (progress >= 50) return 'text-accent-action-orange'
-  return 'text-primary-trust-blue'
-}
+export const getGoalStatusColor = (current: number, target: number): string => {
+  const progress = calculatePercentage(current, target);
+
+  if (progress >= GOAL_COMPLETE_THRESHOLD) {return 'text-accent-success-emerald';}
+  if (progress >= GOAL_NEAR_COMPLETE_THRESHOLD) {return 'text-secondary-growth-green';}
+  if (progress >= GOAL_HALFWAY_THRESHOLD) {return 'text-accent-action-orange';}
+  return 'text-primary-trust-blue';
+};
 
 /**
  * Format time remaining for goals
  */
-export function formatTimeRemaining(targetDate: Date): string {
-  const now = new Date()
-  const timeDiff = targetDate.getTime() - now.getTime()
-  
+export const formatTimeRemaining = (targetDate: Date): string => {
+  const now = new Date();
+  const timeDiff = targetDate.getTime() - now.getTime();
+
   if (timeDiff <= 0) {
-    return 'Overdue'
+    return 'Overdue';
   }
-  
-  const days = Math.ceil(timeDiff / (1000 * 60 * 60 * 24))
-  
-  if (days === 1) return '1 day left'
-  if (days < 30) return `${days} days left`
+
+  const days = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+
+  if (days === 1) {return '1 day left';}
+  if (days < 30) {return `${days} days left`;}
   if (days < 365) {
-    const months = Math.ceil(days / 30)
-    return months === 1 ? '1 month left' : `${months} months left`
+    const months = Math.ceil(days / 30);
+    return months === 1 ? '1 month left' : `${months} months left`;
   }
-  
-  const years = Math.ceil(days / 365)
-  return years === 1 ? '1 year left' : `${years} years left`
-}
+
+  const years = Math.ceil(days / 365);
+  return years === 1 ? '1 year left' : `${years} years left`;
+};
 
 /**
  * Get greeting based on time of day
  */
-export function getTimeBasedGreeting(): string {
-  const hour = new Date().getHours()
-  
-  if (hour < 12) return 'Good morning'
-  if (hour < 17) return 'Good afternoon'
-  return 'Good evening'
-}
+export const getTimeBasedGreeting = (): string => {
+  const hour = new Date().getHours();
+
+  if (hour < 12) {return 'Good morning';}
+  if (hour < 17) {return 'Good afternoon';}
+  return 'Good evening';
+};
 
 /**
  * Sanitize and validate number input
  */
-export function sanitizeNumberInput(value: string): number {
-  const cleaned = value.replace(/[^0-9.-]/g, '')
-  const parsed = parseFloat(cleaned)
-  return isNaN(parsed) ? 0 : Math.max(0, parsed)
-}
+export const sanitizeNumberInput = (value: string): number => {
+  const cleaned = value.replace(/[^0-9.-]/g, '');
+  const parsed = parseFloat(cleaned);
+  return isNaN(parsed) ? 0 : Math.max(0, parsed);
+};
 
 /**
  * Calculate compound interest
  */
-export function calculateCompoundInterest(
+export const calculateCompoundInterest = (
   principal: number,
   rate: number,
   time: number,
-  compoundingFrequency: number = 12
-): number {
-  return principal * Math.pow(1 + rate / compoundingFrequency, compoundingFrequency * time)
-}
+  compoundingFrequency: number = 12,
+): number => {
+  return principal * Math.pow(1 + rate / compoundingFrequency, compoundingFrequency * time);
+};
 
 /**
  * Get budget method configuration
  */
-export function getBudgetMethodConfig(method: string) {
+export const getBudgetMethodConfig = (method: string) => {
   const configs = {
     '50-30-20': {
       name: '50/30/20 Rule',
@@ -285,27 +299,27 @@ export function getBudgetMethodConfig(method: string) {
         { name: 'Unexpected', percentage: 15, essential: true },
       ],
     },
-  }
-  
-  return configs[method as keyof typeof configs] || configs['50-30-20']
+  };
+
+  return configs[method as keyof typeof configs] || configs['50-30-20'];
 }
 
 /**
  * Check if device supports touch
  */
-export function isTouchDevice(): boolean {
-  return 'ontouchstart' in window || navigator.maxTouchPoints > 0
-}
+export const isTouchDevice = (): boolean => {
+  return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+};
 
 /**
  * Get safe area insets for mobile devices
  */
-export function getSafeAreaInsets() {
-  const style = getComputedStyle(document.documentElement)
+export const getSafeAreaInsets = () => {
+  const style = getComputedStyle(document.documentElement);
   return {
     top: style.getPropertyValue('env(safe-area-inset-top)') || '0px',
     right: style.getPropertyValue('env(safe-area-inset-right)') || '0px',
     bottom: style.getPropertyValue('env(safe-area-inset-bottom)') || '0px',
     left: style.getPropertyValue('env(safe-area-inset-left)') || '0px',
-  }
-}
+  };
+};

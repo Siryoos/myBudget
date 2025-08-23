@@ -1,4 +1,4 @@
-import { Skeleton, SkeletonText, SkeletonCard } from './Skeleton'
+import { Skeleton, SkeletonText, SkeletonCard } from './Skeleton';
 
 export function SkeletonDemo() {
   return (
@@ -81,5 +81,5 @@ export function SkeletonDemo() {
         </ul>
       </div>
     </div>
-  )
+  );
 }

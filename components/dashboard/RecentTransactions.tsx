@@ -1,18 +1,19 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { 
+import {
   ArrowRightIcon,
   FunnelIcon,
-  MagnifyingGlassIcon
-} from '@heroicons/react/24/outline'
-import { Card, CardContent, CardHeader } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
-import { Skeleton } from '@/components/ui/Skeleton'
-import { formatCurrency, formatRelativeTime } from '@/lib/utils'
-import { useTranslation } from '@/lib/useTranslation'
-import { useTransactions } from '@/hooks/use-api'
-import type { Transaction } from '@/types'
+  MagnifyingGlassIcon,
+} from '@heroicons/react/24/outline';
+import { useState } from 'react';
+
+import { Button } from '@/components/ui/Button';
+import { Card, CardContent, CardHeader } from '@/components/ui/Card';
+import { Skeleton } from '@/components/ui/Skeleton';
+import { useTransactions } from '@/hooks/use-api';
+import { useTranslation } from '@/lib/useTranslation';
+import { formatCurrency, formatRelativeTime } from '@/lib/utils';
+import type { Transaction } from '@/types';
 
 interface RecentTransactionsProps {
   limit?: number
@@ -25,20 +26,20 @@ export function RecentTransactions({
   showCategories = true,
   showAmounts = true,
 }: RecentTransactionsProps) {
-  const [filterType, setFilterType] = useState<'all' | 'income' | 'expense'>('all')
-  const { t } = useTranslation(['dashboard', 'transactions', 'common'])
-  
+  const [filterType, setFilterType] = useState<'all' | 'income' | 'expense'>('all');
+  const { t } = useTranslation(['dashboard', 'transactions', 'common']);
+
   // Fetch transactions from API
   const { data, loading, error } = useTransactions({
     limit: limit * 2, // Fetch more to account for filtering
     type: filterType === 'all' ? undefined : filterType,
-  })
-  
-  const allTransactions = data?.transactions || []
+  });
+
+  const allTransactions = data?.transactions || [];
 
   const filteredTransactions = allTransactions
     .filter(transaction => filterType === 'all' || transaction.type === filterType)
-    .slice(0, limit)
+    .slice(0, limit);
 
   const getCategoryIcon = (category: string) => {
     const icons: Record<string, string> = {
@@ -50,13 +51,13 @@ export function RecentTransactions({
       [t('budget:categories.shopping')]: '🛍️',
       [t('budget:categories.healthcare')]: '🏥',
       [t('budget:categories.education')]: '📚',
-    }
-    return icons[category] || '💳'
-  }
+    };
+    return icons[category] || '💳';
+  };
 
   const getCategoryColor = (category: string, type: 'income' | 'expense') => {
-    if (type === 'income') return 'text-secondary-growth-green'
-    
+    if (type === 'income') {return 'text-secondary-growth-green';}
+
     const colors: Record<string, string> = {
       [t('budget:categories.food')]: 'text-accent-action-orange',
       [t('budget:categories.entertainment')]: 'text-purple-600',
@@ -65,9 +66,9 @@ export function RecentTransactions({
       [t('budget:categories.shopping')]: 'text-pink-600',
       [t('budget:categories.healthcare')]: 'text-red-600',
       [t('budget:categories.education')]: 'text-indigo-600',
-    }
-    return colors[category] || 'text-neutral-gray'
-  }
+    };
+    return colors[category] || 'text-neutral-gray';
+  };
 
   return (
     <Card>
@@ -81,7 +82,7 @@ export function RecentTransactions({
               {t('transactions:subtitle', { defaultValue: 'Your latest financial activity' })}
             </p>
           </div>
-          
+
           <div className="flex items-center space-x-2">
             {/* Filter buttons */}
             <div className="flex items-center bg-neutral-light-gray rounded-lg p-1">
@@ -95,7 +96,7 @@ export function RecentTransactions({
                       : 'text-neutral-gray hover:text-neutral-dark-gray'
                   }`}
                 >
-                  {type === 'all' 
+                  {type === 'all'
                     ? t('transactions:filters.all', { defaultValue: 'All' })
                     : type === 'income'
                     ? t('transactions:filters.income', { defaultValue: 'Income' })
@@ -104,7 +105,7 @@ export function RecentTransactions({
                 </button>
               ))}
             </div>
-            
+
             <Button variant="ghost" size="sm">
               <FunnelIcon className="h-4 w-4" />
             </Button>
@@ -155,13 +156,13 @@ export function RecentTransactions({
                       </div>
                     )}
                   </div>
-                  
+
                   <div className="flex items-center justify-between mt-1">
                     {showCategories && (
                       <span
                         className={`text-xs font-medium px-2 py-1 rounded-full ${getCategoryColor(
                           transaction.category,
-                          transaction.type
+                          transaction.type,
                         )} bg-current bg-opacity-10`}
                       >
                         {transaction.category}
@@ -197,20 +198,20 @@ export function RecentTransactions({
               {formatCurrency(
                 filteredTransactions
                   .filter(t => t.type === 'income')
-                  .reduce((sum, t) => sum + t.amount, 0)
+                  .reduce((sum, t) => sum + t.amount, 0),
               )}
             </div>
             <div className="text-xs text-neutral-gray">
               {t('transactions:stats.incomeThisPeriod', { defaultValue: 'Income This Period' })}
             </div>
           </div>
-          
+
           <div className="bg-accent-warning-red/10 rounded-lg p-3 text-center">
             <div className="text-lg font-bold text-accent-warning-red">
               {formatCurrency(
                 Math.abs(filteredTransactions
                   .filter(t => t.type === 'expense')
-                  .reduce((sum, t) => sum + t.amount, 0))
+                  .reduce((sum, t) => sum + t.amount, 0)),
               )}
             </div>
             <div className="text-xs text-neutral-gray">
@@ -220,5 +221,5 @@ export function RecentTransactions({
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

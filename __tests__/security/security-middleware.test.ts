@@ -21,7 +21,8 @@ jest.mock('../../lib/redis', () => ({
   RateLimitConfig: {},
 }));
 
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 
 // Instead of importing the problematic middleware, let's test the core security functions
 describe('Security Middleware Core Logic', () => {
@@ -31,7 +32,7 @@ describe('Security Middleware Core Logic', () => {
   beforeEach(() => {
     // Reset mocks
     jest.clearAllMocks();
-    
+
     // Create a mock request
     mockRequest = {
       ip: '192.168.1.1',
@@ -52,9 +53,9 @@ describe('Security Middleware Core Logic', () => {
   describe('Request Size Validation', () => {
     it('should detect oversized requests', () => {
       const validateRequestSize = (contentLength: string | null): boolean => {
-        if (!contentLength) return true;
+        if (!contentLength) {return true;}
         const size = parseInt(contentLength);
-        if (isNaN(size)) return false;
+        if (isNaN(size)) {return false;}
         return size <= 10 * 1024 * 1024; // 10MB limit
       };
 
@@ -67,9 +68,9 @@ describe('Security Middleware Core Logic', () => {
 
     it('should handle edge cases in size validation', () => {
       const validateRequestSize = (contentLength: string | null): boolean => {
-        if (!contentLength) return true;
+        if (!contentLength) {return true;}
         const size = parseInt(contentLength);
-        if (isNaN(size)) return false;
+        if (isNaN(size)) {return false;}
         return size <= 10 * 1024 * 1024;
       };
 
@@ -85,14 +86,14 @@ describe('Security Middleware Core Logic', () => {
       const allowedContentTypes = [
         'application/json',
         'application/x-www-form-urlencoded',
-        'multipart/form-data'
+        'multipart/form-data',
       ];
 
       const isContentTypeAllowed = (contentType: string | null, method: string): boolean => {
-        if (method !== 'POST' && method !== 'PUT' && method !== 'PATCH') return true;
-        if (!contentType) return false;
-        return allowedContentTypes.some(allowed => 
-          contentType.toLowerCase().startsWith(allowed.toLowerCase())
+        if (method !== 'POST' && method !== 'PUT' && method !== 'PATCH') {return true;}
+        if (!contentType) {return false;}
+        return allowedContentTypes.some(allowed =>
+          contentType.toLowerCase().startsWith(allowed.toLowerCase()),
         );
       };
 
@@ -115,7 +116,7 @@ describe('Security Middleware Core Logic', () => {
   describe('CORS Handling', () => {
     it('should allow requests from allowed origins', () => {
       process.env.ALLOWED_ORIGINS = 'http://localhost:3000,https://app.example.com';
-      
+
       const request = {
         ...mockRequest,
         headers: new Map([
@@ -129,7 +130,7 @@ describe('Security Middleware Core Logic', () => {
 
     it('should block requests from unauthorized origins', () => {
       process.env.ALLOWED_ORIGINS = 'http://localhost:3000';
-      
+
       const request = {
         ...mockRequest,
         headers: new Map([
@@ -146,7 +147,7 @@ describe('Security Middleware Core Logic', () => {
   describe('Security Headers', () => {
     it('should set security headers', () => {
       const response = securityMiddleware(mockRequest);
-      
+
       expect(response.headers.get('X-Frame-Options')).toBe('DENY');
       expect(response.headers.get('X-Content-Type-Options')).toBe('nosniff');
       expect(response.headers.get('X-XSS-Protection')).toBe('1; mode=block');
@@ -156,7 +157,7 @@ describe('Security Middleware Core Logic', () => {
     it('should set CSP header', () => {
       const response = securityMiddleware(mockRequest);
       const csp = response.headers.get('Content-Security-Policy');
-      
+
       expect(csp).toBeDefined();
       expect(csp).toContain("default-src 'self'");
       expect(csp).toContain("object-src 'none'");

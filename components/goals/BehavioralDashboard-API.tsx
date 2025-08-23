@@ -1,13 +1,15 @@
-'use client'
+'use client';
 
-import React, { useState, useEffect } from 'react'
-import { useTranslation } from '@/lib/useTranslation'
-import { useGoals, useAnalytics } from '@/lib/api-hooks'
-import { GoalWizard } from './GoalWizard'
-import { QuickSaveWidget } from './QuickSaveWidget'
-import { AchievementSystem } from './AchievementSystem'
-import { InsightsPanel } from './InsightsPanel'
-import type { SavingsGoal, Achievement, QuickSaveData } from '@/types'
+import React, { useState, useEffect } from 'react';
+
+import { useGoals, useAnalytics } from '@/lib/api-hooks';
+import { useTranslation } from '@/lib/useTranslation';
+import type { SavingsGoal, Achievement, QuickSaveData } from '@/types';
+
+import { AchievementSystem } from './AchievementSystem';
+import { GoalWizard } from './GoalWizard';
+import { InsightsPanel } from './InsightsPanel';
+import { QuickSaveWidget } from './QuickSaveWidget';
 
 interface BehavioralDashboardProps {
   showAllFeatures?: boolean
@@ -22,13 +24,13 @@ export function BehavioralDashboard({
   showSocialProof = true,
   enableNotifications = true,
 }: BehavioralDashboardProps) {
-  const { t, isReady } = useTranslation(['goals', 'dashboard', 'common'])
-  const { goals, loading: goalsLoading, createGoal, addContribution } = useGoals()
-  const { analytics } = useAnalytics()
-  const [quickSaveHistory, setQuickSaveHistory] = useState<QuickSaveData[]>([])
-  const [activeTab, setActiveTab] = useState<'goals' | 'quick-save' | 'achievements' | 'insights'>('goals')
-  const [showGoalWizard, setShowGoalWizard] = useState(false)
-  const [recentAchievement, setRecentAchievement] = useState<Achievement | null>(null)
+  const { t, isReady } = useTranslation(['goals', 'dashboard', 'common']);
+  const { goals, loading: goalsLoading, createGoal, addContribution } = useGoals();
+  const { analytics } = useAnalytics();
+  const [quickSaveHistory, setQuickSaveHistory] = useState<QuickSaveData[]>([]);
+  const [activeTab, setActiveTab] = useState<'goals' | 'quick-save' | 'achievements' | 'insights'>('goals');
+  const [showGoalWizard, setShowGoalWizard] = useState(false);
+  const [recentAchievement, setRecentAchievement] = useState<Achievement | null>(null);
 
   // Mock quick save history from analytics if available
   useEffect(() => {
@@ -41,11 +43,11 @@ export function BehavioralDashboard({
           amount: t.amount,
           timestamp: new Date(t.date),
           source: 'manual' as const,
-          isAboveAverage: t.amount > (analytics.averageSaveAmount || 50)
-        }))
-      setQuickSaveHistory(saves)
+          isAboveAverage: t.amount > (analytics.averageSaveAmount || 50),
+        }));
+      setQuickSaveHistory(saves);
     }
-  }, [analytics])
+  }, [analytics]);
 
   if (!isReady || goalsLoading) {
     return (
@@ -55,15 +57,15 @@ export function BehavioralDashboard({
           <p className="text-neutral-gray">{t('common:status.loading', { defaultValue: 'Loading...' })}</p>
         </div>
       </div>
-    )
+    );
   }
 
   // Handle goal creation
   const handleGoalCreated = async (newGoal: Partial<SavingsGoal>) => {
     try {
-      await createGoal(newGoal)
-      setShowGoalWizard(false)
-      
+      await createGoal(newGoal);
+      setShowGoalWizard(false);
+
       // Show achievement notification
       if (enableNotifications && goals.length === 0) {
         setRecentAchievement({
@@ -76,30 +78,30 @@ export function BehavioralDashboard({
           category: 'milestone',
           progress: 100,
           isUnlocked: true,
-          requirement: 'Create your first savings goal'
-        })
-        
-        setTimeout(() => setRecentAchievement(null), 5000)
+          requirement: 'Create your first savings goal',
+        });
+
+        setTimeout(() => setRecentAchievement(null), 5000);
       }
     } catch (error) {
-      console.error('Failed to create goal:', error)
+      console.error('Failed to create goal:', error);
     }
-  }
+  };
 
   // Handle quick save
   const handleQuickSave = async (saveData: QuickSaveData) => {
     try {
       // Add contribution to the goal if goalId is provided
       if (saveData.goalId) {
-        await addContribution(saveData.goalId, saveData.amount)
+        await addContribution(saveData.goalId, saveData.amount);
       }
-      
+
       // Update local history
-      setQuickSaveHistory(prev => [saveData, ...prev].slice(0, 10))
-      
+      setQuickSaveHistory(prev => [saveData, ...prev].slice(0, 10));
+
       // Check for streak achievement
       if (enableNotifications) {
-        const consecutiveDays = checkConsecutiveSaveDays([saveData, ...quickSaveHistory])
+        const consecutiveDays = checkConsecutiveSaveDays([saveData, ...quickSaveHistory]);
         if (consecutiveDays === 7) {
           setRecentAchievement({
             id: 'week-streak',
@@ -111,39 +113,39 @@ export function BehavioralDashboard({
             category: 'streak',
             progress: 100,
             isUnlocked: true,
-            requirement: 'Save for 7 consecutive days'
-          })
-          
-          setTimeout(() => setRecentAchievement(null), 5000)
+            requirement: 'Save for 7 consecutive days',
+          });
+
+          setTimeout(() => setRecentAchievement(null), 5000);
         }
       }
     } catch (error) {
-      console.error('Failed to save:', error)
+      console.error('Failed to save:', error);
     }
-  }
+  };
 
   // Check consecutive save days
   const checkConsecutiveSaveDays = (history: QuickSaveData[]): number => {
-    if (history.length === 0) return 0
-    
-    let consecutiveDays = 1
-    const sortedHistory = [...history].sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
-    
+    if (history.length === 0) {return 0;}
+
+    let consecutiveDays = 1;
+    const sortedHistory = [...history].sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+
     for (let i = 1; i < sortedHistory.length; i++) {
       const dayDiff = Math.floor(
-        (sortedHistory[i - 1].timestamp.getTime() - sortedHistory[i].timestamp.getTime()) / 
-        (1000 * 60 * 60 * 24)
-      )
-      
+        (sortedHistory[i - 1].timestamp.getTime() - sortedHistory[i].timestamp.getTime()) /
+        (1000 * 60 * 60 * 24),
+      );
+
       if (dayDiff === 1) {
-        consecutiveDays++
+        consecutiveDays++;
       } else {
-        break
+        break;
       }
     }
-    
-    return consecutiveDays
-  }
+
+    return consecutiveDays;
+  };
 
   return (
     <div className="space-y-6">
@@ -204,7 +206,7 @@ export function BehavioralDashboard({
                   </div>
                   {goal.icon && <span className="text-2xl">{goal.icon}</span>}
                 </div>
-                
+
                 <div className="mb-4">
                   <div className="flex justify-between text-sm mb-2">
                     <span className="text-neutral-gray">{t('goals:progress', { defaultValue: 'Progress' })}</span>
@@ -219,7 +221,7 @@ export function BehavioralDashboard({
                     />
                   </div>
                 </div>
-                
+
                 <div className="text-sm text-neutral-gray">
                   <p>${goal.currentAmount.toFixed(2)} / ${goal.targetAmount.toFixed(2)}</p>
                 </div>
@@ -249,7 +251,7 @@ export function BehavioralDashboard({
             quickSaveHistory={quickSaveHistory.map(qs => ({
               ...qs,
               id: qs.id || `qs-${Date.now()}`,
-              source: qs.source || 'manual'
+              source: qs.source || 'manual',
             }))}
             showPeerComparison={showSocialProof}
           />
@@ -270,5 +272,5 @@ export function BehavioralDashboard({
         </div>
       )}
     </div>
-  )
+  );
 }

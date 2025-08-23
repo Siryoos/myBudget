@@ -1,20 +1,20 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { 
+import {
   CogIcon,
   ArrowPathIcon,
   BoltIcon,
   BanknotesIcon,
   CalendarIcon,
   PlusIcon,
-  MinusIcon
-} from '@heroicons/react/24/outline'
-import { Card, CardContent, CardHeader } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
+  MinusIcon,
+} from '@heroicons/react/24/outline';
+import { useState } from 'react';
 
-import { formatCurrency } from '@/lib/utils'
-import { useTranslation } from '@/lib/useTranslation'
+import { Button } from '@/components/ui/Button';
+import { Card, CardContent, CardHeader } from '@/components/ui/Card';
+import { useTranslation } from '@/lib/useTranslation';
+import { formatCurrency } from '@/lib/utils';
 
 interface AutomationSettingsProps {
   autoTransfer?: boolean
@@ -29,10 +29,10 @@ export function AutomationSettings({
   ruleBasedSaving = true,
   customRules = true,
 }: AutomationSettingsProps) {
-  const { t, isReady } = useTranslation(['goals', 'common'])
-  const [activeTab, setActiveTab] = useState<'transfers' | 'roundup' | 'rules'>('transfers')
-  const [transferAmount, setTransferAmount] = useState('200')
-  const [transferFrequency, setTransferFrequency] = useState('weekly')
+  const { t, isReady } = useTranslation(['goals', 'common']);
+  const [activeTab, setActiveTab] = useState<'transfers' | 'roundup' | 'rules'>('transfers');
+  const [transferAmount, setTransferAmount] = useState('200');
+  const [transferFrequency, setTransferFrequency] = useState('weekly');
 
   if (!isReady) {
     return (
@@ -44,15 +44,15 @@ export function AutomationSettings({
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
-  const TabButton = ({ 
-    tab, 
-    label, 
+  const TabButton = ({
+    tab,
+    label,
     icon: Icon,
     isActive,
-    onClick
+    onClick,
   }: {
     tab: string
     label: string
@@ -71,7 +71,7 @@ export function AutomationSettings({
       <Icon className="h-4 w-4 mr-2" />
       {label}
     </button>
-  )
+  );
 
   return (
     <Card>
@@ -93,27 +93,27 @@ export function AutomationSettings({
         {/* Tab Navigation */}
         <div className="flex space-x-2 mt-4">
           {autoTransfer && (
-            <TabButton 
-              tab="transfers" 
-              label={t('goals:automation.tabs.autoTransfer', { defaultValue: 'Auto Transfer' })} 
+            <TabButton
+              tab="transfers"
+              label={t('goals:automation.tabs.autoTransfer', { defaultValue: 'Auto Transfer' })}
               icon={ArrowPathIcon}
               isActive={activeTab === 'transfers'}
               onClick={() => setActiveTab('transfers')}
             />
           )}
           {roundUpSavings && (
-            <TabButton 
-              tab="roundup" 
-              label={t('goals:automation.tabs.roundUp', { defaultValue: 'Round Up' })} 
+            <TabButton
+              tab="roundup"
+              label={t('goals:automation.tabs.roundUp', { defaultValue: 'Round Up' })}
               icon={BoltIcon}
               isActive={activeTab === 'roundup'}
               onClick={() => setActiveTab('roundup')}
             />
           )}
           {ruleBasedSaving && (
-            <TabButton 
-              tab="rules" 
-              label={t('goals:automation.tabs.smartRules', { defaultValue: 'Smart Rules' })} 
+            <TabButton
+              tab="rules"
+              label={t('goals:automation.tabs.smartRules', { defaultValue: 'Smart Rules' })}
               icon={CogIcon}
               isActive={activeTab === 'rules'}
               onClick={() => setActiveTab('rules')}
@@ -133,7 +133,7 @@ export function AutomationSettings({
               <p className="text-sm text-neutral-gray mb-4">
                 {t('goals:automation.transfers.description', { defaultValue: 'Set up recurring transfers from your checking to savings account' })}
               </p>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-neutral-dark-gray mb-2">
@@ -149,7 +149,7 @@ export function AutomationSettings({
                     <option value="monthly">{t('goals:automation.transfers.frequencies.monthly', { defaultValue: 'Monthly' })}</option>
                   </select>
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-neutral-dark-gray mb-2">
                     {t('goals:automation.transfers.amount', { defaultValue: 'Transfer Amount' })}
@@ -165,7 +165,7 @@ export function AutomationSettings({
                   />
                 </div>
               </div>
-              
+
               <Button className="mt-4 w-full">
                 {t('goals:automation.transfers.setup', { defaultValue: 'Set Up Auto Transfer' })}
               </Button>
@@ -208,7 +208,7 @@ export function AutomationSettings({
               <p className="text-sm text-neutral-gray mb-4">
                 {t('goals:automation.roundUp.description', { defaultValue: 'Automatically round up your purchases and save the difference' })}
               </p>
-              
+
               <div className="bg-neutral-light-gray/50 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-3">
                   <div className="text-sm text-neutral-gray">
@@ -231,7 +231,7 @@ export function AutomationSettings({
                   <div className="text-sm font-medium text-secondary-growth-green">$0.33</div>
                 </div>
               </div>
-              
+
               <Button className="mt-4 w-full">
                 {t('goals:automation.roundUp.enable', { defaultValue: 'Enable Round Up' })}
               </Button>
@@ -249,7 +249,7 @@ export function AutomationSettings({
               <p className="text-sm text-neutral-gray mb-4">
                 {t('goals:automation.rules.description', { defaultValue: 'Create custom rules to save money automatically based on your spending patterns' })}
               </p>
-              
+
               <div className="space-y-3">
                 <div className="bg-neutral-light-gray/50 rounded-lg p-4">
                   <div className="flex items-center justify-between mb-2">
@@ -267,7 +267,7 @@ export function AutomationSettings({
                     {t('goals:automation.rules.savedThisMonth', { defaultValue: 'Saved this month: $45.20' })}
                   </div>
                 </div>
-                
+
                 <div className="bg-neutral-light-gray/50 rounded-lg p-4">
                   <div className="flex items-center justify-between mb-2">
                     <h6 className="font-medium text-neutral-dark-gray">
@@ -282,7 +282,7 @@ export function AutomationSettings({
                   </p>
                 </div>
               </div>
-              
+
               <Button className="mt-4 w-full">
                 {t('goals:automation.rules.createRule', { defaultValue: 'Create New Rule' })}
               </Button>
@@ -291,5 +291,5 @@ export function AutomationSettings({
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

@@ -1,17 +1,18 @@
-'use client'
+'use client';
 
-import React, { useState } from 'react'
-import { useTranslation } from '@/lib/useTranslation'
-import { apiClient } from '@/lib/api-client'
-import { useRouter } from 'next/navigation'
-import { 
-  ChartPieIcon, 
+import {
+  ChartPieIcon,
   BanknotesIcon,
   EnvelopeIcon,
   CalculatorIcon,
   BookOpenIcon,
-  CheckCircleIcon
-} from '@heroicons/react/24/outline'
+  CheckCircleIcon,
+} from '@heroicons/react/24/outline';
+import { useRouter } from 'next/navigation';
+import React, { useState } from 'react';
+
+import { apiClient } from '@/lib/api-client';
+import { useTranslation } from '@/lib/useTranslation';
 
 interface BudgetMethod {
   id: string
@@ -96,93 +97,93 @@ const BUDGET_METHODS: BudgetMethod[] = [
       { name: 'Extra', description: 'Unexpected or emergency' },
     ],
   },
-]
+];
 
 export function BudgetMethodSelector({
   showComparison = true,
   allowCustomization = true,
   onMethodSelected,
 }: BudgetMethodSelectorProps) {
-  const { t } = useTranslation(['budget', 'common'])
-  const router = useRouter()
-  const [selectedMethod, setSelectedMethod] = useState<string | null>(null)
-  const [showDetails, setShowDetails] = useState(false)
-  const [isCreating, setIsCreating] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [customizations, setCustomizations] = useState<Record<string, number>>({})
+  const { t } = useTranslation(['budget', 'common']);
+  const router = useRouter();
+  const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
+  const [showDetails, setShowDetails] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [customizations, setCustomizations] = useState<Record<string, number>>({});
 
   const handleSelectMethod = (methodId: string) => {
-    setSelectedMethod(methodId)
-    setShowDetails(true)
-    setError(null)
-    
+    setSelectedMethod(methodId);
+    setShowDetails(true);
+    setError(null);
+
     // Initialize customizations for methods with percentages
-    const method = BUDGET_METHODS.find(m => m.id === methodId)
+    const method = BUDGET_METHODS.find(m => m.id === methodId);
     if (method) {
-      const initialCustomizations: Record<string, number> = {}
+      const initialCustomizations: Record<string, number> = {};
       method.categories.forEach(cat => {
         if (cat.percentage) {
-          initialCustomizations[cat.name] = cat.percentage
+          initialCustomizations[cat.name] = cat.percentage;
         }
-      })
-      setCustomizations(initialCustomizations)
+      });
+      setCustomizations(initialCustomizations);
     }
-  }
+  };
 
   // Helper function to determine which categories require percentage validation
   // Some methods like "Pay Yourself First" only require percentages for specific categories
   const getRequiredPercentageCategories = (methodId: string): string[] => {
-    const method = BUDGET_METHODS.find(m => m.id === methodId)
-    if (!method) return []
-    
+    const method = BUDGET_METHODS.find(m => m.id === methodId);
+    if (!method) {return [];}
+
     // Return categories that have predefined percentages (these require validation)
     return method.categories
       .filter(cat => cat.percentage !== undefined)
-      .map(cat => cat.name)
-  }
+      .map(cat => cat.name);
+  };
 
   // Helper function to validate percentages with partial coverage support
   const validatePercentages = (methodId: string, customizations: Record<string, number>): boolean => {
-    const requiredCategories = getRequiredPercentageCategories(methodId)
-    
+    const requiredCategories = getRequiredPercentageCategories(methodId);
+
     // If no categories require percentages, validation passes
-    if (requiredCategories.length === 0) return true
-    
+    if (requiredCategories.length === 0) {return true;}
+
     // Check if all required categories have provided percentages
-    const allRequiredProvided = requiredCategories.every(cat => 
-      customizations[cat] !== undefined && customizations[cat] > 0
-    )
-    
+    const allRequiredProvided = requiredCategories.every(cat =>
+      customizations[cat] !== undefined && customizations[cat] > 0,
+    );
+
     // If not all required categories are provided, skip 100% validation
-    if (!allRequiredProvided) return true
-    
+    if (!allRequiredProvided) {return true;}
+
     // Validate numeric ranges for provided percentages
-    const providedValues = Object.values(customizations)
-    const hasInvalidRange = providedValues.some(val => val < 0 || val > 100)
-    if (hasInvalidRange) return false
-    
+    const providedValues = Object.values(customizations);
+    const hasInvalidRange = providedValues.some(val => val < 0 || val > 100);
+    if (hasInvalidRange) {return false;}
+
     // Only enforce 100% total when all required categories have percentages
-    const total = providedValues.reduce((sum, val) => sum + val, 0)
-    return Math.abs(total - 100) <= 0.01
-  }
+    const total = providedValues.reduce((sum, val) => sum + val, 0);
+    return Math.abs(total - 100) <= 0.01;
+  };
 
   const handleConfirmMethod = async () => {
-    if (!selectedMethod) return
-    
-    setIsCreating(true)
-    setError(null)
-    
+    if (!selectedMethod) {return;}
+
+    setIsCreating(true);
+    setError(null);
+
     try {
-      const method = BUDGET_METHODS.find(m => m.id === selectedMethod)
-      if (!method) throw new Error('Method not found')
-      
+      const method = BUDGET_METHODS.find(m => m.id === selectedMethod);
+      if (!method) {throw new Error('Method not found');}
+
       // Validate percentages if applicable
       if (allowCustomization && Object.keys(customizations).length > 0) {
         if (!validatePercentages(selectedMethod, customizations)) {
-          throw new Error(t('errors.percentagesMustEqual100'))
+          throw new Error(t('errors.percentagesMustEqual100'));
         }
       }
-      
+
       // Create budget with API
       const response = await apiClient.createBudget({
         name: `My ${method.name} Budget`,
@@ -196,28 +197,28 @@ export function BudgetMethodSelector({
           allocated: customizations[cat.name] || 0,
           color: getColorForCategory(cat.name),
           icon: getIconForCategory(cat.name),
-          isEssential: cat.name === 'Needs' || cat.name === 'Survival' || cat.name === 'Fixed Expenses'
-        }))
-      })
-      
+          isEssential: cat.name === 'Needs' || cat.name === 'Survival' || cat.name === 'Fixed Expenses',
+        })),
+      });
+
       if (response.success && response.data) {
         // Notify parent component
         if (onMethodSelected) {
-          onMethodSelected(selectedMethod)
+          onMethodSelected(selectedMethod);
         }
-        
+
         // Navigate to budget configuration
-        router.push(`/budget/${response.data.budgetId}/configure`)
+        router.push(`/budget/${response.data.budgetId}/configure`);
       } else {
-        throw new Error(response.error || 'Failed to create budget')
+        throw new Error(response.error || 'Failed to create budget');
       }
     } catch (err) {
-      console.error('Failed to create budget:', err)
-      setError(err instanceof Error ? err.message : 'Failed to create budget')
+      console.error('Failed to create budget:', err);
+      setError(err instanceof Error ? err.message : 'Failed to create budget');
     } finally {
-      setIsCreating(false)
+      setIsCreating(false);
     }
-  }
+  };
 
   const getColorForCategory = (name: string): string => {
     const colors: Record<string, string> = {
@@ -234,9 +235,9 @@ export function BudgetMethodSelector({
       'Optional': '#FBBF24',
       'Culture': '#3B82F6',
       'Extra': '#10B981',
-    }
-    return colors[name] || '#6B7280'
-  }
+    };
+    return colors[name] || '#6B7280';
+  };
 
   const getIconForCategory = (name: string): string => {
     const icons: Record<string, string> = {
@@ -253,29 +254,29 @@ export function BudgetMethodSelector({
       'Optional': '✨',
       'Culture': '📚',
       'Extra': '🎁',
-    }
-    return icons[name] || '📁'
-  }
+    };
+    return icons[name] || '📁';
+  };
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case 'Beginner':
-        return 'bg-secondary-growth-green/10 text-secondary-growth-green'
+        return 'bg-secondary-growth-green/10 text-secondary-growth-green';
       case 'Intermediate':
-        return 'bg-accent-warm-orange/10 text-accent-warm-orange'
+        return 'bg-accent-warm-orange/10 text-accent-warm-orange';
       case 'Advanced':
-        return 'bg-accent-coral-red/10 text-accent-coral-red'
+        return 'bg-accent-coral-red/10 text-accent-coral-red';
       default:
-        return 'bg-neutral-gray/10 text-neutral-gray'
+        return 'bg-neutral-gray/10 text-neutral-gray';
     }
-  }
+  };
 
   const handleCustomizationChange = (category: string, value: number) => {
     setCustomizations(prev => ({
       ...prev,
-      [category]: value
-    }))
-  }
+      [category]: value,
+    }));
+  };
 
   return (
     <div className="space-y-6">
@@ -296,7 +297,7 @@ export function BudgetMethodSelector({
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {BUDGET_METHODS.map((method) => {
-          const Icon = method.icon
+          const Icon = method.icon;
           return (
             <button
               key={method.id}
@@ -323,7 +324,7 @@ export function BudgetMethodSelector({
                 <CheckCircleIcon className="w-5 h-5 text-primary-trust-blue mt-4" />
               )}
             </button>
-          )
+          );
         })}
       </div>
 
@@ -333,7 +334,7 @@ export function BudgetMethodSelector({
           <h3 className="text-lg font-semibold text-neutral-charcoal mb-4">
             {BUDGET_METHODS.find(m => m.id === selectedMethod)?.name} Details
           </h3>
-          
+
           <div className="space-y-4">
             {BUDGET_METHODS.find(m => m.id === selectedMethod)?.categories.map((category) => (
               <div key={category.name} className="flex items-start space-x-4">
@@ -376,7 +377,7 @@ export function BudgetMethodSelector({
               <div className="flex items-center justify-between">
                 <span className="font-medium text-neutral-charcoal">Total:</span>
                 <span className={`font-bold ${
-                  validatePercentages(selectedMethod!, customizations)
+                  validatePercentages(selectedMethod, customizations)
                     ? 'text-secondary-growth-green'
                     : 'text-accent-coral-red'
                 }`}>
@@ -389,9 +390,9 @@ export function BudgetMethodSelector({
           <div className="mt-6 flex justify-end space-x-4">
             <button
               onClick={() => {
-                setShowDetails(false)
-                setSelectedMethod(null)
-                setCustomizations({})
+                setShowDetails(false);
+                setSelectedMethod(null);
+                setCustomizations({});
               }}
               className="px-4 py-2 bg-neutral-gray/10 text-neutral-charcoal rounded-lg hover:bg-neutral-gray/20 transition-colors"
             >
@@ -399,8 +400,8 @@ export function BudgetMethodSelector({
             </button>
             <button
               onClick={handleConfirmMethod}
-              disabled={isCreating || (Object.keys(customizations).length > 0 && 
-                !validatePercentages(selectedMethod!, customizations))}
+              disabled={isCreating || (Object.keys(customizations).length > 0 &&
+                !validatePercentages(selectedMethod, customizations))}
               className="px-4 py-2 bg-primary-trust-blue text-white rounded-lg hover:bg-primary-trust-blue/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isCreating ? t('common:status.creating') : t('common:actions.createBudget')}
@@ -470,5 +471,5 @@ export function BudgetMethodSelector({
         </div>
       )}
     </div>
-  )
+  );
 }

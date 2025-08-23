@@ -1,13 +1,14 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { 
+import {
   GlobeAltIcon,
   CurrencyDollarIcon,
   LanguageIcon,
-  CalendarIcon
-} from '@heroicons/react/24/outline'
-import { Card, CardContent, CardHeader } from '@/components/ui/Card'
+  CalendarIcon,
+} from '@heroicons/react/24/outline';
+import { useState } from 'react';
+
+import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 
 interface RegionalizationSettingsProps {
   currency?: boolean
@@ -32,7 +33,7 @@ export function RegionalizationSettings({
       socialSharing: 'prominent',
       customCategories: [] as string[],
     },
-  })
+  });
 
   const regions = [
     {
@@ -56,7 +57,7 @@ export function RegionalizationSettings({
       languages: ['en', 'de', 'fr', 'es', 'it'],
       features: ['GDPR Compliance', 'PSD2', 'VAT Support'],
     },
-  ]
+  ];
 
   const currencies = [
     { code: 'USD', name: 'US Dollar', symbol: '$' },
@@ -66,7 +67,7 @@ export function RegionalizationSettings({
     { code: 'AED', name: 'UAE Dirham', symbol: 'د.إ' },
     { code: 'QAR', name: 'Qatari Riyal', symbol: 'ر.ق' },
     { code: 'CHF', name: 'Swiss Franc', symbol: 'Fr' },
-  ]
+  ];
 
   const languages = [
     { code: 'en', name: 'English', native: 'English' },
@@ -75,16 +76,16 @@ export function RegionalizationSettings({
     { code: 'de', name: 'German', native: 'Deutsch' },
     { code: 'fr', name: 'French', native: 'Français' },
     { code: 'it', name: 'Italian', native: 'Italiano' },
-  ]
+  ];
 
   const dateFormats = [
     { format: 'MM/DD/YYYY', example: '12/31/2024', region: 'US' },
     { format: 'DD/MM/YYYY', example: '31/12/2024', region: 'EU/UK' },
     { format: 'YYYY-MM-DD', example: '2024-12-31', region: 'ISO' },
     { format: 'DD.MM.YYYY', example: '31.12.2024', region: 'DE' },
-  ]
+  ];
 
-  const selectedRegion = regions.find(r => r.id === settings.region)
+  const selectedRegion = regions.find(r => r.id === settings.region);
 
   return (
     <Card>
@@ -120,8 +121,8 @@ export function RegionalizationSettings({
                       ? 'border-primary-trust-blue bg-primary-trust-blue/5'
                       : 'border-neutral-gray/30 hover:border-primary-trust-blue/50'
                   }`}
-                  onClick={() => setSettings(prev => ({ 
-                    ...prev, 
+                  onClick={() => setSettings(prev => ({
+                    ...prev,
                     region: region.id,
                     currency: region.currencies[0],
                     language: region.languages[0],
@@ -137,7 +138,7 @@ export function RegionalizationSettings({
                 </div>
               ))}
             </div>
-            
+
             {selectedRegion && (
               <div className="mt-3 p-3 bg-neutral-light-gray/50 rounded-lg">
                 <h5 className="font-medium text-neutral-dark-gray mb-2">
@@ -245,7 +246,7 @@ export function RegionalizationSettings({
               <h4 className="font-medium text-secondary-growth-green mb-3">
                 Cultural Preferences
               </h4>
-              
+
               <div className="space-y-3">
                 <label className="flex items-center cursor-pointer">
                   <input
@@ -269,7 +270,7 @@ export function RegionalizationSettings({
                     </p>
                   </div>
                 </label>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-neutral-dark-gray mb-2">
                     Additional Categories
@@ -356,5 +357,5 @@ export function RegionalizationSettings({
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

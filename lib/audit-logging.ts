@@ -1,6 +1,5 @@
 import { query } from './database';
 import { getRedisClient } from './redis';
-import { createErrorResponse } from './error-handling';
 
 // Audit event types
 export enum AuditEventType {
@@ -10,26 +9,26 @@ export enum AuditEventType {
   USER_REGISTER = 'user_register',
   PASSWORD_CHANGE = 'password_change',
   PASSWORD_RESET = 'password_reset',
-  
+
   // MFA events
   MFA_ENABLE = 'mfa_enable',
   MFA_DISABLE = 'mfa_disable',
   MFA_VERIFY = 'mfa_verify',
   MFA_FAILED = 'mfa_failed',
-  
+
   // Security events
   SUSPICIOUS_ACTIVITY = 'suspicious_activity',
   RATE_LIMIT_EXCEEDED = 'rate_limit_exceeded',
   INVALID_TOKEN = 'invalid_token',
   UNAUTHORIZED_ACCESS = 'unauthorized_access',
-  
+
   // Data events
   DATA_CREATE = 'data_create',
   DATA_UPDATE = 'data_update',
   DATA_DELETE = 'data_delete',
   DATA_EXPORT = 'data_export',
   DATA_IMPORT = 'data_import',
-  
+
   // System events
   SYSTEM_ERROR = 'system_error',
   CONFIGURATION_CHANGE = 'configuration_change',
@@ -45,6 +44,16 @@ export enum AuditSeverity {
   CRITICAL = 'critical'
 }
 
+// Type-safe details and metadata
+export type AuditEventDetails = Record<string, unknown>;
+export type AuditMetadata = {
+  requestId?: string;
+  endpoint?: string;
+  method?: string;
+  statusCode?: number;
+  responseTime?: number;
+} & Record<string, unknown>;
+
 // Audit event interface
 export interface AuditEvent {
   id: string;
@@ -59,15 +68,8 @@ export interface AuditEvent {
   resourceType?: string;
   resourceId?: string;
   action?: string;
-  details?: any;
-  metadata?: {
-    requestId?: string;
-    endpoint?: string;
-    method?: string;
-    statusCode?: number;
-    responseTime?: number;
-    [key: string]: any;
-  };
+  details?: AuditEventDetails;
+  metadata?: AuditMetadata;
   tags?: string[];
 }
 
@@ -86,45 +88,78 @@ export interface AuditLogConfig {
 // Default configuration
 const DEFAULT_CONFIG: AuditLogConfig = {
   enabled: process.env.AUDIT_LOGGING_ENABLED !== 'false',
-  retentionDays: parseInt(process.env.AUDIT_LOG_RETENTION_DAYS || '90'),
-  batchSize: parseInt(process.env.AUDIT_LOG_BATCH_SIZE || '100'),
-  flushInterval: parseInt(process.env.AUDIT_LOG_FLUSH_INTERVAL || '5000'),
+  retentionDays: parseInt(process.env.AUDIT_LOG_RETENTION_DAYS || '90', 10),
+  batchSize: parseInt(process.env.AUDIT_LOG_BATCH_SIZE || '100', 10),
+  flushInterval: parseInt(process.env.AUDIT_LOG_FLUSH_INTERVAL || '5000', 10),
   includeMetadata: true,
   includeUserContext: true,
   externalLogging: process.env.EXTERNAL_AUDIT_LOGGING === 'true',
-  externalLoggingUrl: process.env.EXTERNAL_AUDIT_LOGGING_URL
+  externalLoggingUrl: process.env.EXTERNAL_AUDIT_LOGGING_URL,
 };
+
+// Type for Redis client
+type RedisClient = ReturnType<typeof getRedisClient>;
+
+// Authentication event parameters
+export interface AuthEventParams {
+  eventType: AuditEventType;
+  userId: string;
+  userEmail: string;
+  success: boolean;
+  details?: AuditEventDetails;
+  metadata?: AuditMetadata;
+}
+
+// Security event parameters
+export interface SecurityEventParams {
+  eventType: AuditEventType;
+  severity: AuditSeverity;
+  details: AuditEventDetails;
+  userId?: string;
+  metadata?: AuditMetadata;
+}
+
+// Data event parameters
+export interface DataEventParams {
+  eventType: AuditEventType;
+  resourceType: string;
+  resourceId: string;
+  action: string;
+  userId: string;
+  details?: AuditEventDetails;
+  metadata?: AuditMetadata;
+}
+
+// System event parameters
+export interface SystemEventParams {
+  eventType: AuditEventType;
+  severity: AuditSeverity;
+  details: AuditEventDetails;
+  metadata?: AuditMetadata;
+}
 
 // Audit logging service
 export class AuditLogger {
-  private static instance: AuditLogger;
   private config: AuditLogConfig;
-  private redis: any;
+  private redis: RedisClient;
   private eventBuffer: AuditEvent[] = [];
-  private flushTimer: NodeJS.Timeout | null = null;
+  private flushTimer: ReturnType<typeof setTimeout> | null = null;
   private isFlushing: boolean = false;
 
-  private constructor() {
+  constructor() {
     this.config = DEFAULT_CONFIG;
     this.redis = getRedisClient();
     this.startFlushTimer();
   }
 
-  static getInstance(): AuditLogger {
-    if (!AuditLogger.instance) {
-      AuditLogger.instance = new AuditLogger();
-    }
-    return AuditLogger.instance;
-  }
-
   // Log an audit event
   async logEvent(event: Omit<AuditEvent, 'id' | 'timestamp'>): Promise<string> {
-    if (!this.config.enabled) return '';
+    if (!this.config.enabled) {return '';}
 
     const auditEvent: AuditEvent = {
       ...event,
       id: crypto.randomUUID(),
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
 
     // Add to buffer
@@ -142,16 +177,10 @@ export class AuditLogger {
   }
 
   // Log authentication event
-  async logAuthEvent(
-    eventType: AuditEventType,
-    userId: string,
-    userEmail: string,
-    success: boolean,
-    details?: any,
-    metadata?: any
-  ): Promise<string> {
+  async logAuthEvent(params: AuthEventParams): Promise<string> {
+    const { eventType, userId, userEmail, success, details, metadata } = params;
     const severity = success ? AuditSeverity.LOW : AuditSeverity.MEDIUM;
-    
+
     return this.logEvent({
       eventType,
       severity,
@@ -160,43 +189,31 @@ export class AuditLogger {
       details: {
         ...details,
         success,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       },
       metadata,
-      tags: ['authentication', success ? 'success' : 'failure']
+      tags: ['authentication', success ? 'success' : 'failure'],
     });
   }
 
   // Log security event
-  async logSecurityEvent(
-    eventType: AuditEventType,
-    severity: AuditSeverity,
-    details: any,
-    userId?: string,
-    metadata?: any
-  ): Promise<string> {
+  async logSecurityEvent(params: SecurityEventParams): Promise<string> {
+    const { eventType, severity, details, userId, metadata } = params;
     return this.logEvent({
       eventType,
       severity,
       userId,
       details,
       metadata,
-      tags: ['security', severity]
+      tags: ['security', severity],
     });
   }
 
   // Log data access event
-  async logDataEvent(
-    eventType: AuditEventType,
-    resourceType: string,
-    resourceId: string,
-    action: string,
-    userId: string,
-    details?: any,
-    metadata?: any
-  ): Promise<string> {
+  async logDataEvent(params: DataEventParams): Promise<string> {
+    const { eventType, resourceType, resourceId, action, userId, details, metadata } = params;
     const severity = this.determineDataEventSeverity(eventType, resourceType);
-    
+
     return this.logEvent({
       eventType,
       severity,
@@ -206,23 +223,19 @@ export class AuditLogger {
       action,
       details,
       metadata,
-      tags: ['data', resourceType, action]
+      tags: ['data', resourceType, action],
     });
   }
 
   // Log system event
-  async logSystemEvent(
-    eventType: AuditEventType,
-    severity: AuditSeverity,
-    details: any,
-    metadata?: any
-  ): Promise<string> {
+  async logSystemEvent(params: SystemEventParams): Promise<string> {
+    const { eventType, severity, details, metadata } = params;
     return this.logEvent({
       eventType,
       severity,
       details,
       metadata,
-      tags: ['system', severity]
+      tags: ['system', severity],
     });
   }
 
@@ -230,7 +243,7 @@ export class AuditLogger {
   async getUserAuditEvents(
     userId: string,
     limit: number = 100,
-    offset: number = 0
+    offset: number = 0,
   ): Promise<AuditEvent[]> {
     try {
       const result = await query(
@@ -238,7 +251,7 @@ export class AuditLogger {
          WHERE user_id = $1 
          ORDER BY timestamp DESC 
          LIMIT $2 OFFSET $3`,
-        [userId, limit, offset]
+        [userId, limit, offset],
       );
 
       return result.rows.map(this.mapDatabaseRowToEvent);
@@ -252,7 +265,7 @@ export class AuditLogger {
   async getAuditEventsByType(
     eventType: AuditEventType,
     limit: number = 100,
-    offset: number = 0
+    offset: number = 0,
   ): Promise<AuditEvent[]> {
     try {
       const result = await query(
@@ -260,7 +273,7 @@ export class AuditLogger {
          WHERE event_type = $1 
          ORDER BY timestamp DESC 
          LIMIT $2 OFFSET $3`,
-        [eventType, limit, offset]
+        [eventType, limit, offset],
       );
 
       return result.rows.map(this.mapDatabaseRowToEvent);
@@ -274,7 +287,7 @@ export class AuditLogger {
   async getAuditEventsBySeverity(
     severity: AuditSeverity,
     limit: number = 100,
-    offset: number = 0
+    offset: number = 0,
   ): Promise<AuditEvent[]> {
     try {
       const result = await query(
@@ -282,7 +295,7 @@ export class AuditLogger {
          WHERE severity = $1 
          ORDER BY timestamp DESC 
          LIMIT $2 OFFSET $3`,
-        [severity, limit, offset]
+        [severity, limit, offset],
       );
 
       return result.rows.map(this.mapDatabaseRowToEvent);
@@ -304,7 +317,7 @@ export class AuditLogger {
       tags?: string[];
     },
     limit: number = 100,
-    offset: number = 0
+    offset: number = 0,
   ): Promise<AuditEvent[]> {
     try {
       let queryText = 'SELECT * FROM audit_logs WHERE 1=1';
@@ -391,7 +404,7 @@ export class AuditLogger {
          FROM audit_logs 
          WHERE timestamp >= $1 
          GROUP BY event_type, severity, user_id, resource_type`,
-        [cutoffDate.toISOString()]
+        [cutoffDate.toISOString()],
       );
 
       // Process results
@@ -419,16 +432,16 @@ export class AuditLogger {
           [AuditEventType.SYSTEM_ERROR]: 0,
           [AuditEventType.CONFIGURATION_CHANGE]: 0,
           [AuditEventType.BACKUP_CREATED]: 0,
-          [AuditEventType.MAINTENANCE_MODE]: 0
+          [AuditEventType.MAINTENANCE_MODE]: 0,
         },
         eventsBySeverity: {
           [AuditSeverity.LOW]: 0,
           [AuditSeverity.MEDIUM]: 0,
           [AuditSeverity.HIGH]: 0,
-          [AuditSeverity.CRITICAL]: 0
+          [AuditSeverity.CRITICAL]: 0,
         },
         topUsers: [] as Array<{ userId: string; eventCount: number }>,
-        topResources: [] as Array<{ resourceType: string; eventCount: number }>
+        topResources: [] as Array<{ resourceType: string; eventCount: number }>,
       };
 
       const userCounts = new Map<string, number>();
@@ -436,22 +449,22 @@ export class AuditLogger {
 
       result.rows.forEach(row => {
         stats.totalEvents += parseInt(row.total_events);
-        
+
         // Count by event type
         if (row.event_type && typeof row.event_type === 'string' && row.event_type in stats.eventsByType) {
           stats.eventsByType[row.event_type as AuditEventType] = (stats.eventsByType[row.event_type as AuditEventType] || 0) + parseInt(row.total_events);
         }
-        
+
         // Count by severity
         if (row.severity && typeof row.severity === 'string' && row.severity in stats.eventsBySeverity) {
           stats.eventsBySeverity[row.severity as AuditSeverity] = (stats.eventsBySeverity[row.severity as AuditSeverity] || 0) + parseInt(row.total_events);
         }
-        
+
         // Count by user
         if (row.user_id) {
           userCounts.set(row.user_id, (userCounts.get(row.user_id) || 0) + parseInt(row.total_events));
         }
-        
+
         // Count by resource
         if (row.resource_type) {
           resourceCounts.set(row.resource_type, (resourceCounts.get(row.resource_type) || 0) + parseInt(row.total_events));
@@ -497,16 +510,16 @@ export class AuditLogger {
           [AuditEventType.SYSTEM_ERROR]: 0,
           [AuditEventType.CONFIGURATION_CHANGE]: 0,
           [AuditEventType.BACKUP_CREATED]: 0,
-          [AuditEventType.MAINTENANCE_MODE]: 0
+          [AuditEventType.MAINTENANCE_MODE]: 0,
         },
         eventsBySeverity: {
           [AuditSeverity.LOW]: 0,
           [AuditSeverity.MEDIUM]: 0,
           [AuditSeverity.HIGH]: 0,
-          [AuditSeverity.CRITICAL]: 0
+          [AuditSeverity.CRITICAL]: 0,
         },
         topUsers: [],
-        topResources: []
+        topResources: [],
       };
     }
   }
@@ -519,7 +532,7 @@ export class AuditLogger {
 
       const result = await query(
         'DELETE FROM audit_logs WHERE timestamp < $1',
-        [cutoffDate.toISOString()]
+        [cutoffDate.toISOString()],
       );
 
       console.log(`Cleaned up ${result.rowCount} old audit logs`);
@@ -533,16 +546,16 @@ export class AuditLogger {
   // Export audit logs
   async exportAuditLogs(
     format: 'json' | 'csv' = 'json',
-    filters?: any
+    filters?: any,
   ): Promise<string> {
     try {
       const events = await this.searchAuditEvents(filters || {}, 10000, 0);
 
       if (format === 'csv') {
         return this.convertToCSV(events);
-      } else {
-        return JSON.stringify(events, null, 2);
       }
+        return JSON.stringify(events, null, 2);
+
     } catch (error) {
       console.error('Failed to export audit logs:', error);
       throw new Error('Failed to export audit logs');
@@ -553,7 +566,7 @@ export class AuditLogger {
 
   private determineDataEventSeverity(eventType: AuditEventType, resourceType: string): AuditSeverity {
     // Critical data operations
-    if (eventType === AuditEventType.DATA_DELETE || 
+    if (eventType === AuditEventType.DATA_DELETE ||
         eventType === AuditEventType.DATA_EXPORT ||
         resourceType === 'financial_data' ||
         resourceType === 'personal_data') {
@@ -574,7 +587,7 @@ export class AuditLogger {
     try {
       const key = `audit:${event.id}`;
       const ttl = 24 * 60 * 60; // 24 hours
-      
+
       await this.redis.setex(key, ttl, JSON.stringify(event));
     } catch (error) {
       console.warn('Failed to store audit event in Redis:', error);
@@ -582,7 +595,7 @@ export class AuditLogger {
   }
 
   private async flushBuffer(): Promise<void> {
-    if (this.isFlushing || this.eventBuffer.length === 0) return;
+    if (this.isFlushing || this.eventBuffer.length === 0) {return;}
 
     this.isFlushing = true;
     const eventsToFlush = [...this.eventBuffer];
@@ -598,7 +611,7 @@ export class AuditLogger {
       }
     } catch (error) {
       console.error('Failed to flush audit buffer:', error);
-      
+
       // Put events back in buffer for retry
       this.eventBuffer.unshift(...eventsToFlush);
     } finally {
@@ -607,7 +620,7 @@ export class AuditLogger {
   }
 
   private async storeInDatabase(events: AuditEvent[]): Promise<void> {
-    if (events.length === 0) return;
+    if (events.length === 0) {return;}
 
     const values = events.map((event, index) => {
       const offset = index * 12;
@@ -623,11 +636,21 @@ export class AuditLogger {
     `;
 
     const params = events.flatMap(event => [
-      event.id, event.timestamp, event.eventType, event.severity,
-      event.userId, event.userEmail, event.ipAddress, event.userAgent,
-      event.sessionId, event.resourceType, event.resourceId, event.action,
-      JSON.stringify(event.details), JSON.stringify(event.metadata), 
-      JSON.stringify(event.tags)
+      event.id,
+event.timestamp,
+event.eventType,
+event.severity,
+      event.userId,
+event.userEmail,
+event.ipAddress,
+event.userAgent,
+      event.sessionId,
+event.resourceType,
+event.resourceId,
+event.action,
+      JSON.stringify(event.details),
+JSON.stringify(event.metadata),
+      JSON.stringify(event.tags),
     ]);
 
     await query(queryText, params);
@@ -638,7 +661,7 @@ export class AuditLogger {
       const response = await fetch(this.config.externalLoggingUrl!, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ events })
+        body: JSON.stringify({ events }),
       });
 
       if (!response.ok) {
@@ -671,17 +694,29 @@ export class AuditLogger {
       action: row.action,
       details: row.details ? JSON.parse(row.details) : undefined,
       metadata: row.metadata ? JSON.parse(row.metadata) : undefined,
-      tags: row.tags ? JSON.parse(row.tags) : []
+      tags: row.tags ? JSON.parse(row.tags) : [],
     };
   }
 
   private convertToCSV(events: AuditEvent[]): string {
-    if (events.length === 0) return '';
+    if (events.length === 0) {return '';}
 
     const headers = [
-      'ID', 'Timestamp', 'Event Type', 'Severity', 'User ID', 'User Email',
-      'IP Address', 'User Agent', 'Session ID', 'Resource Type', 'Resource ID',
-      'Action', 'Details', 'Metadata', 'Tags'
+      'ID',
+'Timestamp',
+'Event Type',
+'Severity',
+'User ID',
+'User Email',
+      'IP Address',
+'User Agent',
+'Session ID',
+'Resource Type',
+'Resource ID',
+      'Action',
+'Details',
+'Metadata',
+'Tags',
     ];
 
     const csvRows = [headers.join(',')];
@@ -702,7 +737,7 @@ export class AuditLogger {
         event.action || '',
         `"${JSON.stringify(event.details || {}).replace(/"/g, '""')}"`,
         `"${JSON.stringify(event.metadata || {}).replace(/"/g, '""')}"`,
-        `"${(event.tags || []).join(';')}"`
+        `"${(event.tags || []).join(';')}"`,
       ];
       csvRows.push(row.join(','));
     });
@@ -728,50 +763,20 @@ export class AuditLogger {
 }
 
 // Singleton instance
-export const auditLogger = AuditLogger.getInstance();
+export const auditLogger = new AuditLogger();
 
-// Convenience functions
-export const logAuthEvent = (
-  eventType: AuditEventType,
-  userId: string,
-  userEmail: string,
-  success: boolean,
-  details?: any,
-  metadata?: any
-): Promise<string> => {
-  return auditLogger.logAuthEvent(eventType, userId, userEmail, success, details, metadata);
-};
+// Type-safe convenience functions
+export const logAuthEvent = (params: AuthEventParams): Promise<string> => 
+  auditLogger.logAuthEvent(params);
 
-export const logSecurityEvent = (
-  eventType: AuditEventType,
-  severity: AuditSeverity,
-  details: any,
-  userId?: string,
-  metadata?: any
-): Promise<string> => {
-  return auditLogger.logSecurityEvent(eventType, severity, details, userId, metadata);
-};
+export const logSecurityEvent = (params: SecurityEventParams): Promise<string> => 
+  auditLogger.logSecurityEvent(params);
 
-export const logDataEvent = (
-  eventType: AuditEventType,
-  resourceType: string,
-  resourceId: string,
-  action: string,
-  userId: string,
-  details?: any,
-  metadata?: any
-): Promise<string> => {
-  return auditLogger.logDataEvent(eventType, resourceType, resourceId, action, userId, details, metadata);
-};
+export const logDataEvent = (params: DataEventParams): Promise<string> => 
+  auditLogger.logDataEvent(params);
 
-export const logSystemEvent = (
-  eventType: AuditEventType,
-  severity: AuditSeverity,
-  details: any,
-  metadata?: any
-): Promise<string> => {
-  return auditLogger.logSystemEvent(eventType, severity, details, metadata);
-};
+export const logSystemEvent = (params: SystemEventParams): Promise<string> => 
+  auditLogger.logSystemEvent(params);
 
 // Cleanup on process exit
 process.on('exit', () => {

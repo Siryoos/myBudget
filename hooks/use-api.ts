@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+
 import { api } from '@/lib/api';
 
 export interface UseApiState<T> {
@@ -40,7 +41,7 @@ const cache = new Map<string, { data: any; timestamp: number; promise?: Promise<
 export function useApi<T>(
   key: string | null,
   fetcher: () => Promise<T>,
-  options: UseApiOptions = {}
+  options: UseApiOptions = {},
 ): UseApiState<T> & {
   refetch: () => Promise<void>;
   mutate: (data: T | ((current: T | null) => T)) => void;
@@ -48,7 +49,7 @@ export function useApi<T>(
   const opts = { ...defaultOptions, ...options };
   const [state, setState] = useState<UseApiState<T>>({
     data: opts.fallbackData || null,
-    loading: (opts.enabled ?? true) && !!key,
+    loading: (opts.enabled ?? true) && Boolean(key),
     error: null,
     isValidating: false,
   });
@@ -57,11 +58,11 @@ export function useApi<T>(
   const fetcherRef = useRef(fetcher);
   const intervalRef = useRef<NodeJS.Timeout>();
   const loadingTimeoutRef = useRef<NodeJS.Timeout>();
-  
+
   fetcherRef.current = fetcher;
 
   const fetchData = useCallback(async (isValidating = false) => {
-    if (!key || !opts.enabled) return;
+    if (!key || !opts.enabled) {return;}
 
     const cached = cache.get(key);
     const now = Date.now();
@@ -77,11 +78,11 @@ export function useApi<T>(
       return;
     }
 
-    setState(prev => ({ 
-      ...prev, 
+    setState(prev => ({
+      ...prev,
       loading: !isValidating && !prev.data,
-      isValidating: isValidating,
-      error: null 
+      isValidating,
+      error: null,
     }));
 
     // Set loading slow timeout
@@ -96,20 +97,20 @@ export function useApi<T>(
       while (retries <= opts.errorRetryCount!) {
         try {
           const data = await fetcherRef.current();
-          
+
           if (mountedRef.current) {
             cache.set(key, { data, timestamp: Date.now() });
             setState({ data, loading: false, error: null, isValidating: false });
             opts.onSuccess?.(data);
           }
-          
+
           clearTimeout(loadingTimeoutRef.current);
           return data;
         } catch (error) {
           if (retries < opts.errorRetryCount!) {
             retries++;
-            await new Promise(resolve => 
-              setTimeout(resolve, opts.errorRetryInterval! * Math.pow(2, retries - 1))
+            await new Promise(resolve =>
+              setTimeout(resolve, opts.errorRetryInterval! * Math.pow(2, retries - 1)),
             );
           } else {
             if (mountedRef.current) {
@@ -126,10 +127,10 @@ export function useApi<T>(
 
     // Safe fallback to prevent spreading undefined
     const cachedData = cached || {};
-    cache.set(key, { 
-      data: 'data' in cachedData ? cachedData.data : null, 
-      timestamp: now, 
-      promise 
+    cache.set(key, {
+      data: 'data' in cachedData ? cachedData.data : null,
+      timestamp: now,
+      promise,
     });
     return promise;
   }, [key, opts.enabled, opts.dedupingInterval, opts.errorRetryCount, opts.errorRetryInterval, state.data]);
@@ -164,7 +165,7 @@ export function useApi<T>(
 
   // Refetch on focus
   useEffect(() => {
-    if (!opts.refetchOnFocus) return;
+    if (!opts.refetchOnFocus) {return;}
 
     const handleFocus = () => {
       if (document.visibilityState === 'visible') {
@@ -183,7 +184,7 @@ export function useApi<T>(
 
   // Refetch on reconnect
   useEffect(() => {
-    if (!opts.refetchOnReconnect) return;
+    if (!opts.refetchOnReconnect) {return;}
 
     const handleOnline = () => {
       fetchData(true);
@@ -197,13 +198,11 @@ export function useApi<T>(
   }, [opts.refetchOnReconnect, fetchData]);
 
   // Cleanup
-  useEffect(() => {
-    return () => {
+  useEffect(() => () => {
       mountedRef.current = false;
       clearTimeout(loadingTimeoutRef.current);
       clearInterval(intervalRef.current);
-    };
-  }, []);
+    }, []);
 
   return {
     ...state,
@@ -218,7 +217,7 @@ export function useTransactions(params?: Parameters<typeof api.transactions.list
   return useApi(
     key,
     () => api.transactions.list(params).then(res => res.data),
-    options
+    options,
   );
 }
 
@@ -226,7 +225,7 @@ export function useTransaction(id: string | null, options?: UseApiOptions) {
   return useApi(
     id ? `transaction-${id}` : null,
     () => api.transactions.get(id!).then(res => res.data),
-    options
+    options,
   );
 }
 
@@ -234,7 +233,7 @@ export function useBudgets(options?: UseApiOptions) {
   return useApi(
     'budgets',
     () => api.budgets.list().then(res => res.data),
-    options
+    options,
   );
 }
 
@@ -242,7 +241,7 @@ export function useBudget(id: string | null, options?: UseApiOptions) {
   return useApi(
     id ? `budget-${id}` : null,
     () => api.budgets.get(id!).then(res => res.data),
-    options
+    options,
   );
 }
 
@@ -251,7 +250,7 @@ export function useGoals(priority?: Parameters<typeof api.goals.list>[0], option
   return useApi(
     key,
     () => api.goals.list(priority).then(res => res.data),
-    options
+    options,
   );
 }
 
@@ -259,7 +258,7 @@ export function useGoal(id: string | null, options?: UseApiOptions) {
   return useApi(
     id ? `goal-${id}` : null,
     () => api.goals.get(id!).then(res => res.data),
-    options
+    options,
   );
 }
 
@@ -267,7 +266,7 @@ export function useDashboard(options?: UseApiOptions) {
   return useApi(
     'dashboard',
     () => api.dashboard.get().then(res => res.data),
-    options
+    options,
   );
 }
 
@@ -276,7 +275,7 @@ export function useNotifications(unreadOnly?: boolean, options?: UseApiOptions) 
   return useApi(
     key,
     () => api.notifications.list(unreadOnly).then(res => res.data),
-    options
+    options,
   );
 }
 
@@ -284,7 +283,7 @@ export function useAchievements(options?: UseApiOptions) {
   return useApi(
     'achievements',
     () => api.achievements.list().then(res => res.data),
-    options
+    options,
   );
 }
 
@@ -292,7 +291,7 @@ export function useProfile(options?: UseApiOptions) {
   return useApi(
     'profile',
     () => api.auth.getProfile().then(res => res.data),
-    options
+    options,
   );
 }
 
@@ -300,18 +299,18 @@ export function useSettings(options?: UseApiOptions) {
   return useApi(
     'settings',
     () => api.settings.get().then(res => res.data),
-    options
+    options,
   );
 }
 
 export function useAnalytics(
-  params?: Parameters<typeof api.analytics.get>[0], 
-  options?: UseApiOptions
+  params?: Parameters<typeof api.analytics.get>[0],
+  options?: UseApiOptions,
 ) {
   const key = params ? `analytics-${JSON.stringify(params)}` : 'analytics';
   return useApi(
     key,
     () => api.analytics.get(params).then(res => res.data),
-    options
+    options,
   );
 }

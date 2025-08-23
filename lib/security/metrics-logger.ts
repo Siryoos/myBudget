@@ -40,7 +40,7 @@ const DEFAULT_CONFIG: SecurityMetricsConfig = {
   batchSize: parseInt(process.env.SECURITY_METRICS_BATCH_SIZE || '100'),
   flushInterval: parseInt(process.env.SECURITY_METRICS_FLUSH_INTERVAL || '5000'),
   retentionDays: parseInt(process.env.SECURITY_METRICS_RETENTION_DAYS || '30'),
-  exportFormat: (process.env.SECURITY_METRICS_EXPORT_FORMAT as 'json' | 'csv' | 'logfmt') || 'json'
+  exportFormat: (process.env.SECURITY_METRICS_EXPORT_FORMAT as 'json' | 'csv' | 'logfmt') || 'json',
 };
 
 // Security metrics logger
@@ -65,12 +65,12 @@ export class SecurityMetricsLogger {
 
   // Log security metric
   async logMetric(metric: Omit<SecurityMetric, 'id' | 'timestamp'>): Promise<void> {
-    if (!this.config.enabled) return;
+    if (!this.config.enabled) {return;}
 
     const fullMetric: SecurityMetric = {
       ...metric,
       id: crypto.randomUUID(),
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
 
     // Add to buffer
@@ -91,7 +91,7 @@ export class SecurityMetricsLogger {
     userId?: string,
     sessionId?: string,
     headers?: Record<string, string>,
-    metadata?: Record<string, any>
+    metadata?: Record<string, any>,
   ): Promise<void> {
     await this.logMetric({
       type: 'request',
@@ -102,7 +102,7 @@ export class SecurityMetricsLogger {
       userId,
       sessionId,
       headers: this.config.includeHeaders ? headers : undefined,
-      metadata: this.config.includeMetadata ? (metadata || {}) : {}
+      metadata: this.config.includeMetadata ? (metadata || {}) : {},
     });
   }
 
@@ -117,7 +117,7 @@ export class SecurityMetricsLogger {
     userId?: string,
     sessionId?: string,
     headers?: Record<string, string>,
-    metadata?: Record<string, any>
+    metadata?: Record<string, any>,
   ): Promise<void> {
     await this.logMetric({
       type: 'response',
@@ -130,7 +130,7 @@ export class SecurityMetricsLogger {
       statusCode,
       responseTime,
       headers: this.config.includeHeaders ? headers : undefined,
-      metadata: this.config.includeMetadata ? (metadata || {}) : {}
+      metadata: this.config.includeMetadata ? (metadata || {}) : {},
     });
   }
 
@@ -145,7 +145,7 @@ export class SecurityMetricsLogger {
     userId?: string,
     sessionId?: string,
     headers?: Record<string, string>,
-    metadata?: Record<string, any>
+    metadata?: Record<string, any>,
   ): Promise<void> {
     await this.logMetric({
       type: 'error',
@@ -160,8 +160,8 @@ export class SecurityMetricsLogger {
       metadata: {
         ...this.config.includeMetadata ? (metadata || {}) : {},
         error: error instanceof Error ? error.message : error,
-        stack: error instanceof Error ? error.stack : undefined
-      }
+        stack: error instanceof Error ? error.stack : undefined,
+      },
     });
   }
 
@@ -177,7 +177,7 @@ export class SecurityMetricsLogger {
     userId?: string,
     sessionId?: string,
     headers?: Record<string, string>,
-    metadata?: Record<string, any>
+    metadata?: Record<string, any>,
   ): Promise<void> {
     // Log to audit system
     await logSystemEvent(
@@ -193,8 +193,8 @@ export class SecurityMetricsLogger {
         userAgent,
         userId,
         sessionId,
-        metadata
-      }
+        metadata,
+      },
     );
 
     // Log to metrics
@@ -211,8 +211,8 @@ export class SecurityMetricsLogger {
         ...this.config.includeMetadata ? (metadata || {}) : {},
         violationType,
         details,
-        severity
-      }
+        severity,
+      },
     });
   }
 
@@ -225,7 +225,7 @@ export class SecurityMetricsLogger {
     userAgent?: string,
     userId?: string,
     sessionId?: string,
-    metadata?: Record<string, any>
+    metadata?: Record<string, any>,
   ): Promise<void> {
     await this.logMetric({
       type: 'performance',
@@ -236,13 +236,13 @@ export class SecurityMetricsLogger {
       userId,
       sessionId,
       responseTime,
-      metadata: this.config.includeMetadata ? (metadata || {}) : {}
+      metadata: this.config.includeMetadata ? (metadata || {}) : {},
     });
   }
 
   // Flush metrics buffer
   async flushMetrics(): Promise<void> {
-    if (this.isFlushing || this.metricsBuffer.length === 0) return;
+    if (this.isFlushing || this.metricsBuffer.length === 0) {return;}
 
     this.isFlushing = true;
     const metricsToFlush = [...this.metricsBuffer];
@@ -282,8 +282,8 @@ export class SecurityMetricsLogger {
         statusCode: metric.statusCode,
         responseTime: metric.responseTime,
         headers: metric.headers,
-        metadata: metric.metadata
-      }
+        metadata: metric.metadata,
+      },
     };
 
     // Log based on configuration
@@ -312,10 +312,10 @@ export class SecurityMetricsLogger {
       data.metric.type,
       data.metric.endpoint,
       data.metric.method,
-      data.metric.ipAddress
+      data.metric.ipAddress,
     ];
-    
-    return headers.join(',') + '\n' + values.join(',');
+
+    return `${headers.join(',')}\n${values.join(',')}`;
   }
 
   // Format as logfmt
@@ -327,9 +327,9 @@ export class SecurityMetricsLogger {
       `metric_type=${data.metric.type}`,
       `endpoint=${data.metric.endpoint}`,
       `method=${data.metric.method}`,
-      `ip_address=${data.metric.ipAddress}`
+      `ip_address=${data.metric.ipAddress}`,
     ];
-    
+
     return pairs.join(' ');
   }
 
@@ -364,7 +364,7 @@ export class SecurityMetricsLogger {
       totalMetrics: this.metricsBuffer.length,
       bufferSize: this.config.batchSize,
       lastFlush: new Date().toISOString(),
-      config: { ...this.config }
+      config: { ...this.config },
     };
   }
 
@@ -399,10 +399,8 @@ export const logSecurityRequest = (
   userId?: string,
   sessionId?: string,
   headers?: Record<string, string>,
-  metadata?: Record<string, any>
-): Promise<void> => {
-  return securityMetricsLogger.logRequest(endpoint, method, ipAddress, userAgent, userId, sessionId, headers, metadata);
-};
+  metadata?: Record<string, any>,
+): Promise<void> => securityMetricsLogger.logRequest(endpoint, method, ipAddress, userAgent, userId, sessionId, headers, metadata);
 
 export const logSecurityResponse = (
   endpoint: string,
@@ -414,10 +412,8 @@ export const logSecurityResponse = (
   userId?: string,
   sessionId?: string,
   headers?: Record<string, string>,
-  metadata?: Record<string, any>
-): Promise<void> => {
-  return securityMetricsLogger.logResponse(endpoint, method, ipAddress, statusCode, responseTime, userAgent, userId, sessionId, headers, metadata);
-};
+  metadata?: Record<string, any>,
+): Promise<void> => securityMetricsLogger.logResponse(endpoint, method, ipAddress, statusCode, responseTime, userAgent, userId, sessionId, headers, metadata);
 
 export const logSecurityError = (
   endpoint: string,
@@ -429,10 +425,8 @@ export const logSecurityError = (
   userId?: string,
   sessionId?: string,
   headers?: Record<string, string>,
-  metadata?: Record<string, any>
-): Promise<void> => {
-  return securityMetricsLogger.logError(endpoint, method, ipAddress, error, statusCode, userAgent, userId, sessionId, headers, metadata);
-};
+  metadata?: Record<string, any>,
+): Promise<void> => securityMetricsLogger.logError(endpoint, method, ipAddress, error, statusCode, userAgent, userId, sessionId, headers, metadata);
 
 export const logSecurityViolation = (
   endpoint: string,
@@ -445,10 +439,8 @@ export const logSecurityViolation = (
   userId?: string,
   sessionId?: string,
   headers?: Record<string, string>,
-  metadata?: Record<string, any>
-): Promise<void> => {
-  return securityMetricsLogger.logViolation(endpoint, method, ipAddress, violationType, details, severity, userAgent, userId, sessionId, headers, metadata);
-};
+  metadata?: Record<string, any>,
+): Promise<void> => securityMetricsLogger.logViolation(endpoint, method, ipAddress, violationType, details, severity, userAgent, userId, sessionId, headers, metadata);
 
 // Cleanup on process exit
 process.on('exit', () => {

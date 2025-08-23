@@ -1,32 +1,33 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { Card, CardContent, CardHeader } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
-import { useTranslation } from '@/lib/useTranslation'
-import { useI18n } from '@/lib/i18n-provider'
+import { useState } from 'react';
+
+import { Button } from '@/components/ui/Button';
+import { Card, CardContent, CardHeader } from '@/components/ui/Card';
+import { useI18n } from '@/lib/i18n-provider';
+import { useTranslation } from '@/lib/useTranslation';
 
 export function TranslationDemo() {
-  const { t, isReady, forceUpdate } = useTranslation(['dashboard', 'common'])
-  const { locale, changeLanguage } = useI18n()
-  const [currentTime, setCurrentTime] = useState(new Date())
+  const { t, isReady, forceUpdate } = useTranslation(['dashboard', 'common']);
+  const { locale, changeLanguage } = useI18n();
+  const [currentTime, setCurrentTime] = useState(new Date());
 
   // Update time every second to show dynamic content
   useState(() => {
     const interval = setInterval(() => {
-      setCurrentTime(new Date())
-    }, 1000)
-    return () => clearInterval(interval)
-  })
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(interval);
+  });
 
   const handleLanguageChange = async (newLocale: string) => {
     try {
-      await changeLanguage(newLocale)
-      console.log(`Language changed to ${newLocale}`)
+      await changeLanguage(newLocale);
+      console.log(`Language changed to ${newLocale}`);
     } catch (error) {
-      console.error('Failed to change language:', error)
+      console.error('Failed to change language:', error);
     }
-  }
+  };
 
   if (!isReady) {
     return (
@@ -38,7 +39,7 @@ export function TranslationDemo() {
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   return (
@@ -51,7 +52,7 @@ export function TranslationDemo() {
           Current Language: <strong>{locale}</strong> | Force Update Counter: <strong>{forceUpdate}</strong>
         </p>
       </CardHeader>
-      
+
       <CardContent className="space-y-6">
         {/* Language Switching */}
         <div className="bg-neutral-light-gray/50 rounded-lg p-4">
@@ -146,5 +147,5 @@ export function TranslationDemo() {
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

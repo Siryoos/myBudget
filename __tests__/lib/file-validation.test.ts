@@ -16,43 +16,43 @@ if (typeof crypto !== 'undefined' && !crypto.subtle) {
       // Simple mock implementation for testing that generates consistent hashes
       const content = new Uint8Array(data);
       const hash = new Uint8Array(32); // SHA-256 is 32 bytes
-      
+
       // Generate a deterministic hash based on content
       for (let i = 0; i < hash.length; i++) {
         hash[i] = content[i % content.length] || i;
       }
-      
+
       return hash.buffer;
-    }
+    },
   };
 }
 
 // Mock File object methods for Node.js environment
 const createMockFile = (content: string | Uint8Array, name: string, options: { type: string }, customSize?: number) => {
   const file = new File([content], name, options) as any;
-  
+
   // Set size (default 1MB or custom size)
   const size = customSize || 1024 * 1024;
   Object.defineProperty(file, 'size', { value: size, writable: true, configurable: true });
-  
+
   // Mock text() method
   file.text = jest.fn().mockResolvedValue(typeof content === 'string' ? content : '');
-  
+
   // Mock arrayBuffer() method
   file.arrayBuffer = jest.fn().mockResolvedValue(
-    typeof content === 'string' 
-      ? new TextEncoder().encode(content).buffer 
-      : content.buffer
+    typeof content === 'string'
+      ? new TextEncoder().encode(content).buffer
+      : content.buffer,
   );
-  
+
   // Mock slice() method
   file.slice = jest.fn().mockImplementation((start: number, end: number) => {
-    const slicedContent = typeof content === 'string' 
-      ? content.slice(start, end) 
+    const slicedContent = typeof content === 'string'
+      ? content.slice(start, end)
       : content.slice(start, end);
     return createMockFile(slicedContent, name, options, size);
   });
-  
+
   return file;
 };
 
@@ -61,13 +61,13 @@ describe('FileValidator', () => {
     it('should accept files within size limit', () => {
       const file = createMockFile('content', 'test.jpg', { type: 'image/jpeg' });
       Object.defineProperty(file, 'size', { value: 1024 * 1024 }); // 1MB
-      
+
       expect(FileValidator.validateSize(file, 5 * 1024 * 1024)).toBe(true);
     });
 
     it('should reject files exceeding size limit', () => {
       const file = createMockFile('content', 'test.jpg', { type: 'image/jpeg' }, 10 * 1024 * 1024); // 10MB
-      
+
       expect(FileValidator.validateSize(file, 5 * 1024 * 1024)).toBe(false);
     });
   });
@@ -86,13 +86,13 @@ describe('FileValidator', () => {
   describe('validateMimeType', () => {
     it('should accept allowed MIME types', () => {
       const file = createMockFile('content', 'test.jpg', { type: 'image/jpeg' });
-      
+
       expect(FileValidator.validateMimeType(file, ['image/jpeg', 'image/png'])).toBe(true);
     });
 
     it('should reject disallowed MIME types', () => {
       const file = createMockFile('content', 'test.exe', { type: 'application/x-msdownload' });
-      
+
       expect(FileValidator.validateMimeType(file, ['image/jpeg', 'image/png'])).toBe(false);
     });
   });
@@ -122,7 +122,7 @@ describe('FileValidator', () => {
     });
 
     it('should handle long filenames', () => {
-      const longName = 'a'.repeat(300) + '.jpg';
+      const longName = `${'a'.repeat(300)}.jpg`;
       const sanitized = FileValidator.sanitizeFilename(longName);
       expect(sanitized.length).toBeLessThanOrEqual(255);
       expect(sanitized).toContain('.jpg');
@@ -133,7 +133,7 @@ describe('FileValidator', () => {
     it('should accept safe SVG files', async () => {
       const safeSVG = '<svg><circle cx="50" cy="50" r="40" /></svg>';
       const file = createMockFile(safeSVG, 'safe.svg', { type: 'image/svg+xml' });
-      
+
       const result = await FileValidator.checkSVGSafety(file);
       expect(result).toBe(true);
     });
@@ -141,7 +141,7 @@ describe('FileValidator', () => {
     it('should reject SVG with script tags', async () => {
       const maliciousSVG = '<svg><script>alert("XSS")</script></svg>';
       const file = createMockFile(maliciousSVG, 'malicious.svg', { type: 'image/svg+xml' });
-      
+
       const result = await FileValidator.checkSVGSafety(file);
       expect(result).toBe(false);
     });
@@ -149,14 +149,14 @@ describe('FileValidator', () => {
     it('should reject SVG with event handlers', async () => {
       const maliciousSVG = '<svg><circle onload="alert(\'XSS\')" /></svg>';
       const file = createMockFile(maliciousSVG, 'malicious.svg', { type: 'image/svg+xml' });
-      
+
       const result = await FileValidator.checkSVGSafety(file);
       expect(result).toBe(false);
     });
 
     it('should skip non-SVG files', async () => {
       const file = createMockFile('content', 'image.jpg', { type: 'image/jpeg' });
-      
+
       const result = await FileValidator.checkSVGSafety(file);
       expect(result).toBe(true);
     });
@@ -167,7 +167,7 @@ describe('FileValidator', () => {
       // JPEG magic numbers: FF D8 FF
       const jpegData = new Uint8Array([0xFF, 0xD8, 0xFF, 0xE0]);
       const file = createMockFile(jpegData, 'test.jpg', { type: 'image/jpeg' });
-      
+
       const signatures = { 'image/jpeg': [0xFF, 0xD8, 0xFF] };
       const result = await FileValidator.verifyFileSignature(file, signatures);
       expect(result).toBe(true);
@@ -177,7 +177,7 @@ describe('FileValidator', () => {
       // Wrong magic numbers
       const fakeData = new Uint8Array([0x00, 0x00, 0x00, 0x00]);
       const file = createMockFile(fakeData, 'fake.jpg', { type: 'image/jpeg' });
-      
+
       const signatures = { 'image/jpeg': [0xFF, 0xD8, 0xFF] };
       const result = await FileValidator.verifyFileSignature(file, signatures);
       expect(result).toBe(false);
@@ -189,14 +189,14 @@ describe('FileValidator', () => {
       const jpegData = new Uint8Array([0xFF, 0xD8, 0xFF, 0xE0]);
       const file = createMockFile(jpegData, 'test.jpg', { type: 'image/jpeg' });
       Object.defineProperty(file, 'size', { value: 1024 * 1024 }); // 1MB
-      
+
       const result = await FileValidator.validateFile(file, 'images');
       expect(result.valid).toBe(true);
     });
 
     it('should reject oversized files', async () => {
       const file = createMockFile('content', 'large.jpg', { type: 'image/jpeg' }, 10 * 1024 * 1024); // 10MB
-      
+
       const result = await FileValidator.validateFile(file, 'images');
       expect(result.valid).toBe(false);
       expect(result.error).toContain('exceeds maximum allowed size');
@@ -204,7 +204,7 @@ describe('FileValidator', () => {
 
     it('should reject files with wrong extension', async () => {
       const file = createMockFile('content', 'script.exe', { type: 'image/jpeg' });
-      
+
       const result = await FileValidator.validateFile(file, 'images');
       expect(result.valid).toBe(false);
       expect(result.error).toContain('File type not allowed');
@@ -212,7 +212,7 @@ describe('FileValidator', () => {
 
     it('should reject files with wrong MIME type', async () => {
       const file = createMockFile('content', 'test.jpg', { type: 'application/x-msdownload' });
-      
+
       const result = await FileValidator.validateFile(file, 'images');
       expect(result.valid).toBe(false);
       expect(result.error).toContain('Invalid file type');
@@ -225,19 +225,19 @@ describe('FileValidator', () => {
       const pngData = new Uint8Array([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]);
       const files = [
         createMockFile(jpegData, 'test1.jpg', { type: 'image/jpeg' }),
-        createMockFile(pngData, 'test2.png', { type: 'image/png' })
+        createMockFile(pngData, 'test2.png', { type: 'image/png' }),
       ];
-      
+
       const result = await FileValidator.validateFiles(files, 'images');
       expect(result.valid).toBe(true);
       expect(result.errors.size).toBe(0);
     });
 
     it('should reject when exceeding file count', async () => {
-      const files = Array(11).fill(null).map((_, i) => 
-        createMockFile('content', `test${i}.jpg`, { type: 'image/jpeg' })
+      const files = Array(11).fill(null).map((_, i) =>
+        createMockFile('content', `test${i}.jpg`, { type: 'image/jpeg' }),
       );
-      
+
       const result = await FileValidator.validateFiles(files, 'images', 10);
       expect(result.valid).toBe(false);
       expect(result.errors.get('count')).toContain('Maximum 10 files allowed');
@@ -247,9 +247,9 @@ describe('FileValidator', () => {
       const jpegData = new Uint8Array([0xFF, 0xD8, 0xFF, 0xE0]);
       const files = [
         createMockFile(jpegData, 'valid.jpg', { type: 'image/jpeg' }),
-        createMockFile('content', 'invalid.exe', { type: 'application/x-msdownload' })
+        createMockFile('content', 'invalid.exe', { type: 'application/x-msdownload' }),
       ];
-      
+
       const result = await FileValidator.validateFiles(files, 'images');
       expect(result.valid).toBe(false);
       expect(result.errors.size).toBe(1);
@@ -262,10 +262,10 @@ describe('FileValidator', () => {
       const content = 'test content';
       const file1 = createMockFile(content, 'test1.txt', { type: 'text/plain' });
       const file2 = createMockFile(content, 'test2.txt', { type: 'text/plain' });
-      
+
       const hash1 = await FileValidator.generateFileHash(file1);
       const hash2 = await FileValidator.generateFileHash(file2);
-      
+
       expect(hash1).toBe(hash2);
       expect(hash1).toMatch(/^[a-f0-9]{64}$/); // SHA-256 hex string
     });
@@ -273,10 +273,10 @@ describe('FileValidator', () => {
     it('should generate different hash for different content', async () => {
       const file1 = createMockFile('content1', 'test1.txt', { type: 'text/plain' });
       const file2 = createMockFile('content2', 'test2.txt', { type: 'text/plain' });
-      
+
       const hash1 = await FileValidator.generateFileHash(file1);
       const hash2 = await FileValidator.generateFileHash(file2);
-      
+
       expect(hash1).not.toBe(hash2);
     });
   });

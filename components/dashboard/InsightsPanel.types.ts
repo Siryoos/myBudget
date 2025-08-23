@@ -1,4 +1,4 @@
-import type { FinancialInsight } from '@/types'
+import type { FinancialInsight } from '@/types';
 
 // Component props types
 export type TabType = 'tips' | 'recommendations' | 'compare'

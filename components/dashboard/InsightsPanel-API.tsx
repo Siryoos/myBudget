@@ -1,23 +1,25 @@
-'use client'
+'use client';
 
-import React, { useState, useCallback, useEffect, useMemo } from 'react'
-import { 
+import {
   LightBulbIcon,
   ChartBarIcon,
   UserGroupIcon,
   ArrowRightIcon,
-  XMarkIcon
-} from '@heroicons/react/24/outline'
-import { Card, CardContent, CardHeader } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
-import { formatCurrency } from '@/lib/utils'
-import { useTranslation } from '@/lib/useTranslation'
-import { useInsights, useDashboardData } from '@/lib/api-hooks'
-import { useRouter } from 'next/navigation'
-import { useAuth } from '@/contexts/AuthContext'
-import { actionHandler } from '@/lib/action-handler'
-import type { FinancialInsight } from '@/types'
-import { getMockInsights, getMockSavingTips, getMockPeerComparisons } from './insights-data'
+  XMarkIcon,
+} from '@heroicons/react/24/outline';
+import { useRouter } from 'next/navigation';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
+
+import { Button } from '@/components/ui/Button';
+import { Card, CardContent, CardHeader } from '@/components/ui/Card';
+import { useAuth } from '@/contexts/AuthContext';
+import { actionHandler } from '@/lib/action-handler';
+import { useInsights, useDashboardData } from '@/lib/api-hooks';
+import { useTranslation } from '@/lib/useTranslation';
+import { formatCurrency } from '@/lib/utils';
+import type { FinancialInsight } from '@/types';
+
+import { getMockInsights, getMockSavingTips, getMockPeerComparisons } from './insights-data';
 
 type TabType = 'tips' | 'recommendations' | 'peers'
 
@@ -32,48 +34,48 @@ export function InsightsPanel({
   personalizedRecommendations = true,
   comparePeers = true,
 }: InsightsPanelProps) {
-  const [activeTab, setActiveTab] = useState<TabType>('tips')
-  const { t, isReady } = useTranslation(['dashboard', 'common'])
-  const router = useRouter()
-  const { user } = useAuth()
-  
+  const [activeTab, setActiveTab] = useState<TabType>('tips');
+  const { t, isReady } = useTranslation(['dashboard', 'common']);
+  const router = useRouter();
+  const { user } = useAuth();
+
   // Use API hooks with fallback data
-  const mockInsights = useMemo(() => getMockInsights(t), [t])
-  const { insights, loading: insightsLoading, dismissInsight } = useInsights(mockInsights)
-  const { data: dashboardData, loading: dashboardLoading } = useDashboardData()
-  
+  const mockInsights = useMemo(() => getMockInsights(t), [t]);
+  const { insights, loading: insightsLoading, dismissInsight } = useInsights(mockInsights);
+  const { data: dashboardData, loading: dashboardLoading } = useDashboardData();
+
   // Generate dynamic tips and comparisons from dashboard data
-  const savingTips = useMemo(() => {
+  const savingTips = useMemo(() =>
     // Analytics not available in current DashboardData, use mock data
-    return getMockSavingTips(t)
-  }, [t])
-  
-  const peerComparisons = useMemo(() => {
+     getMockSavingTips(t)
+  , [t]);
+
+  const peerComparisons = useMemo(() =>
     // Trends not available in current DashboardData, use mock data
-    return getMockPeerComparisons(t)
-  }, [t])
-  
+     getMockPeerComparisons(t)
+  , [t]);
+
   const handleInsightAction = useCallback(async (action: any) => {
     switch (action.type) {
       case 'navigate':
-        router.push(action.target)
-        break
+        router.push(action.target);
+        break;
       case 'execute':
         // Handle custom actions via action handler
         const result = await actionHandler.executeAction(action, {
           userId: user?.id,
-          data: action.data
-        })
+          data: action.data,
+        });
         if (!result.success && result.message) {
-          console.error('Action failed:', result.message)
+          console.error('Action failed:', result.message);
         }
-        break
+        break;
       case 'external':
-        window.open(action.target, '_blank', 'noopener,noreferrer')
-        break
+        window.open(action.target, '_blank', 'noopener,noreferrer');
+        break;
     }
-  }, [router, user])
-  
+  }, [router, user]);
+
   const renderContent = () => {
     if (!isReady || insightsLoading || dashboardLoading) {
       return (
@@ -83,9 +85,9 @@ export function InsightsPanel({
             <p className="text-neutral-gray">{t('common:status.loading')}</p>
           </div>
         </div>
-      )
+      );
     }
-    
+
     switch (activeTab) {
       case 'tips':
         return (
@@ -102,7 +104,7 @@ export function InsightsPanel({
                       {tip.description}
                     </p>
                     <span className={`inline-block px-2 py-1 text-xs rounded-full ${
-                      tip.difficulty === t('difficulty.easy') 
+                      tip.difficulty === t('difficulty.easy')
                         ? 'bg-secondary-growth-green/10 text-secondary-growth-green'
                         : tip.difficulty === t('difficulty.medium')
                         ? 'bg-accent-warm-orange/10 text-accent-warm-orange'
@@ -115,8 +117,8 @@ export function InsightsPanel({
               </div>
             ))}
           </div>
-        )
-        
+        );
+
       case 'recommendations':
         return (
           <div className="space-y-4">
@@ -155,8 +157,8 @@ export function InsightsPanel({
               </div>
             ))}
           </div>
-        )
-        
+        );
+
       case 'peers':
         return (
           <div className="space-y-4">
@@ -173,11 +175,11 @@ export function InsightsPanel({
                   </span>
                 </div>
                 <div className="relative h-2 bg-neutral-gray/10 rounded-full overflow-hidden">
-                  <div 
+                  <div
                     className="absolute top-0 left-0 h-full bg-primary-trust-blue rounded-full"
                     style={{ width: `${(comparison.userValue / (comparison.peerAverage * 2)) * 100}%` }}
                   />
-                  <div 
+                  <div
                     className="absolute top-0 h-full w-0.5 bg-neutral-charcoal"
                     style={{ left: '50%' }}
                   />
@@ -188,10 +190,10 @@ export function InsightsPanel({
               </div>
             ))}
           </div>
-        )
+        );
     }
-  }
-  
+  };
+
   return (
     <Card className="h-full">
       <CardHeader>
@@ -244,5 +246,5 @@ export function InsightsPanel({
         {renderContent()}
       </CardContent>
     </Card>
-  )
+  );
 }

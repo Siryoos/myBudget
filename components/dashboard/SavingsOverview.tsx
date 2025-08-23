@@ -1,20 +1,22 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { 
-  ArrowUpIcon, 
-  ArrowDownIcon, 
+import {
+  ArrowUpIcon,
+  ArrowDownIcon,
   ArrowTrendingUpIcon,
   BanknotesIcon,
-  CalendarIcon
-} from '@heroicons/react/24/outline'
-import { Card, CardContent } from '@/components/ui/Card'
-import { ProgressBar } from '@/components/ui/ProgressBar'
-import { Skeleton } from '@/components/ui/Skeleton'
-import { formatCurrency, calculateProgress, formatPercentage } from '@/lib/utils'
-import { useTranslation } from '@/lib/useTranslation'
-import { useDashboard } from '@/hooks/use-api'
-import { format, startOfMonth, endOfMonth } from 'date-fns'
+  CalendarIcon,
+} from '@heroicons/react/24/outline';
+import { format, startOfMonth, endOfMonth } from 'date-fns';
+import { useState, useEffect } from 'react';
+
+import { Card, CardContent } from '@/components/ui/Card';
+import { ProgressBar } from '@/components/ui/ProgressBar';
+import { Skeleton } from '@/components/ui/Skeleton';
+import { useDashboard } from '@/hooks/use-api';
+import { useTranslation } from '@/lib/useTranslation';
+import { formatCurrency, calculateProgress, formatPercentage } from '@/lib/utils';
+
 
 interface SavingsOverviewProps {
   showTotalSavings?: boolean
@@ -29,9 +31,9 @@ export function SavingsOverview({
   showGoalProgress = true,
   animateOnLoad = true,
 }: SavingsOverviewProps) {
-  const { t } = useTranslation(['dashboard'])
-  const [isAnimated, setIsAnimated] = useState(!animateOnLoad)
-  const { data: dashboardData, loading, error } = useDashboard()
+  const { t } = useTranslation(['dashboard']);
+  const [isAnimated, setIsAnimated] = useState(!animateOnLoad);
+  const { data: dashboardData, loading, error } = useDashboard();
 
   // Calculate savings data from dashboard
   const savingsData = {
@@ -41,19 +43,19 @@ export function SavingsOverview({
     previousMonth: dashboardData?.previousMonthSavings || 0,
     annualGoal: dashboardData?.annualSavingsGoal || 15000,
     growthRate: dashboardData?.savingsGrowthRate || 0,
-  }
+  };
 
-  const monthlyProgress = calculateProgress(savingsData.monthlySaved, savingsData.monthlyGoal)
-  const annualProgress = calculateProgress(savingsData.totalSavings, savingsData.annualGoal)
-  const monthlyChange = savingsData.monthlySaved - savingsData.previousMonth
-  const isPositiveChange = monthlyChange >= 0
+  const monthlyProgress = calculateProgress(savingsData.monthlySaved, savingsData.monthlyGoal);
+  const annualProgress = calculateProgress(savingsData.totalSavings, savingsData.annualGoal);
+  const monthlyChange = savingsData.monthlySaved - savingsData.previousMonth;
+  const isPositiveChange = monthlyChange >= 0;
 
   useEffect(() => {
     if (animateOnLoad && !loading) {
-      const timer = setTimeout(() => setIsAnimated(true), 100)
-      return () => clearTimeout(timer)
+      const timer = setTimeout(() => setIsAnimated(true), 100);
+      return () => clearTimeout(timer);
     }
-  }, [animateOnLoad, loading])
+  }, [animateOnLoad, loading]);
 
   if (loading) {
     return (
@@ -82,7 +84,7 @@ export function SavingsOverview({
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   if (error) {
@@ -95,7 +97,7 @@ export function SavingsOverview({
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   return (
@@ -112,9 +114,9 @@ export function SavingsOverview({
                   {t('dashboard:savingsOverview.totalSavings', { defaultValue: 'Total Savings' })}
                 </h3>
                 <p className="text-secondary-growth-green-light text-sm">
-                  {t('dashboard:savingsOverview.growingAnnually', { 
+                  {t('dashboard:savingsOverview.growingAnnually', {
                     rate: formatPercentage(savingsData.growthRate),
-                    defaultValue: `Growing at ${formatPercentage(savingsData.growthRate)} annually`
+                    defaultValue: `Growing at ${formatPercentage(savingsData.growthRate)} annually`,
                   })}
                 </p>
               </div>
@@ -124,7 +126,7 @@ export function SavingsOverview({
 
           {showTotalSavings && (
             <div className="mb-6">
-              <div 
+              <div
                 className={`text-3xl font-bold transition-all duration-1000 ${
                   isAnimated ? 'opacity-100 transform-none' : 'opacity-0 transform translate-y-4'
                 }`}
@@ -141,9 +143,9 @@ export function SavingsOverview({
                     <ArrowDownIcon className="h-4 w-4 mr-1" />
                   )}
                   <span>
-                    {t('dashboard:savingsOverview.fromLastMonth', { 
+                    {t('dashboard:savingsOverview.fromLastMonth', {
                       amount: formatCurrency(Math.abs(monthlyChange)),
-                      defaultValue: `${formatCurrency(Math.abs(monthlyChange))} from last month`
+                      defaultValue: `${formatCurrency(Math.abs(monthlyChange))} from last month`,
                     })}
                   </span>
                 </div>
@@ -167,14 +169,14 @@ export function SavingsOverview({
                     {formatCurrency(savingsData.monthlySaved)} / {formatCurrency(savingsData.monthlyGoal)}
                   </div>
                   <div className="text-sm text-neutral-gray">
-                    {t('dashboard:savingsOverview.remaining', { 
+                    {t('dashboard:savingsOverview.remaining', {
                       amount: formatCurrency(monthlyProgress.remaining),
-                      defaultValue: `${formatCurrency(monthlyProgress.remaining)} remaining`
+                      defaultValue: `${formatCurrency(monthlyProgress.remaining)} remaining`,
                     })}
                   </div>
                 </div>
               </div>
-              
+
               <ProgressBar
                 value={savingsData.monthlySaved}
                 max={savingsData.monthlyGoal}
@@ -182,7 +184,7 @@ export function SavingsOverview({
                 animated={isAnimated}
                 className="mb-2"
               />
-              
+
               <div className="flex justify-between text-sm text-neutral-gray">
                 <span>{formatPercentage(monthlyProgress.percentage)} {t('dashboard:savingsOverview.complete', { defaultValue: 'complete' })}</span>
                 <span>{Math.ceil((30 * monthlyProgress.remaining) / savingsData.monthlyGoal)} {t('dashboard:savingsOverview.daysAtCurrentRate', { defaultValue: 'days at current rate' })}</span>
@@ -205,14 +207,14 @@ export function SavingsOverview({
                   </div>
                 </div>
               </div>
-              
+
               <ProgressBar
                 value={savingsData.totalSavings}
                 max={savingsData.annualGoal}
                 color="primary"
                 animated={isAnimated}
               />
-              
+
               <div className="mt-3 grid grid-cols-3 gap-4 text-center">
                 <div className="bg-neutral-light-gray rounded-lg p-3">
                   <div className="text-sm font-medium text-neutral-dark-gray">
@@ -244,5 +246,5 @@ export function SavingsOverview({
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

@@ -1,7 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/database';
-import { hashPassword } from '@/lib/auth';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { z } from 'zod';
+
+import { hashPassword } from '@/lib/auth';
+import { query } from '@/lib/database';
 import { createErrorResponse, createValidationError } from '@/lib/error-handling';
 import { rateLimiter } from '@/lib/redis';
 
@@ -11,19 +13,19 @@ const resetPasswordSchema = z.object({
   confirmPassword: z.string().min(1, 'Password confirmation is required'),
 }).refine((data) => data.newPassword === data.confirmPassword, {
   message: "Passwords don't match",
-  path: ["confirmPassword"],
+  path: ['confirmPassword'],
 });
 
 export async function POST(request: NextRequest) {
   const requestId = crypto.randomUUID();
-  
+
   try {
     // Rate limiting for password reset attempts
     const identifier = request.ip || request.headers.get('x-forwarded-for') || 'anonymous';
     const rateLimitResult = await rateLimiter.checkRateLimit(identifier, {
       windowMs: 60 * 60 * 1000, // 1 hour
       maxRequests: 5, // Maximum 5 password reset attempts per hour
-      message: 'Too many password reset attempts, please try again later'
+      message: 'Too many password reset attempts, please try again later',
     });
 
     if (!rateLimitResult.allowed) {
@@ -33,19 +35,19 @@ export async function POST(request: NextRequest) {
           error: {
             code: 'RATE_LIMIT_EXCEEDED',
             message: 'Too many password reset attempts, please try again later',
-            retryAfter: rateLimitResult.retryAfter
+            retryAfter: rateLimitResult.retryAfter,
           },
-          requestId
+          requestId,
         },
-        { 
+        {
           status: 429,
           headers: {
             'Retry-After': rateLimitResult.retryAfter?.toString() || '3600',
             'X-RateLimit-Limit': '5',
             'X-RateLimit-Remaining': '0',
-            'X-RateLimit-Reset': new Date(rateLimitResult.resetTime).toISOString()
-          }
-        }
+            'X-RateLimit-Reset': new Date(rateLimitResult.resetTime).toISOString(),
+          },
+        },
       );
     }
 
@@ -53,8 +55,8 @@ export async function POST(request: NextRequest) {
     const { token, newPassword, confirmPassword } = resetPasswordSchema.parse(body);
 
     // Hash the provided token to compare with stored hash
-    const resetTokenHash = await import('crypto').then(crypto => 
-      crypto.createHash('sha256').update(token).digest('hex')
+    const resetTokenHash = await import('crypto').then(crypto =>
+      crypto.createHash('sha256').update(token).digest('hex'),
     );
 
     // Find valid reset token
@@ -63,7 +65,7 @@ export async function POST(request: NextRequest) {
        FROM password_reset_tokens prt 
        JOIN users u ON prt.user_id = u.id 
        WHERE prt.token_hash = $1 AND prt.expires_at > NOW()`,
-      [resetTokenHash]
+      [resetTokenHash],
     );
 
     if (tokenResult.rows.length === 0) {
@@ -73,11 +75,11 @@ export async function POST(request: NextRequest) {
           error: {
             code: 'INVALID_OR_EXPIRED_TOKEN',
             message: 'Invalid or expired reset token',
-            details: 'The password reset token is invalid or has expired. Please request a new one.'
+            details: 'The password reset token is invalid or has expired. Please request a new one.',
           },
-          requestId
+          requestId,
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -94,13 +96,13 @@ export async function POST(request: NextRequest) {
            password_changed_at = CURRENT_TIMESTAMP, 
            updated_at = CURRENT_TIMESTAMP 
        WHERE id = $2`,
-      [hashedNewPassword, resetToken.user_id]
+      [hashedNewPassword, resetToken.user_id],
     );
 
     // Remove the used reset token
     await query(
       'DELETE FROM password_reset_tokens WHERE user_id = $1',
-      [resetToken.user_id]
+      [resetToken.user_id],
     );
 
     // In production, send confirmation email
@@ -110,11 +112,11 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: { 
+      data: {
         message: 'Password has been reset successfully. You can now log in with your new password.',
-        email: resetToken.email
+        email: resetToken.email,
       },
-      requestId
+      requestId,
     });
 
   } catch (error) {
@@ -126,7 +128,7 @@ export async function POST(request: NextRequest) {
     console.error('Reset password error:', error);
     const errorResponse = createErrorResponse(
       new Error('Failed to reset password'),
-      requestId
+      requestId,
     );
     return NextResponse.json(errorResponse, { status: 500 });
   }

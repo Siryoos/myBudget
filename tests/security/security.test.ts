@@ -1,8 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
-import { NextRequest } from 'next/server';
-import { securityMiddleware, apiRateLimits } from '../../middleware/security';
+import type { NextRequest } from 'next/server';
+
 import { generateToken, verifyToken } from '../../lib/auth';
 import { rateLimiter } from '../../lib/redis';
+import { securityMiddleware, apiRateLimits } from '../../middleware/security';
 
 // Mock Next.js components
 const mockNextRequest = (overrides: Partial<NextRequest> = {}): NextRequest => {
@@ -10,15 +11,15 @@ const mockNextRequest = (overrides: Partial<NextRequest> = {}): NextRequest => {
     ip: '127.0.0.1',
     headers: new Map([
       ['user-agent', 'Jest Test Agent'],
-      ['x-forwarded-for', '127.0.0.1']
+      ['x-forwarded-for', '127.0.0.1'],
     ]),
     nextUrl: {
       pathname: '/api/test',
       protocol: 'https:',
-      host: 'localhost'
+      host: 'localhost',
     },
     method: 'GET',
-    ...overrides
+    ...overrides,
   } as any;
 
   return request;
@@ -29,12 +30,12 @@ const mockNextResponse = () => {
     headers: new Map(),
     set: jest.fn(),
     get: jest.fn(),
-    status: 200
+    status: 200,
   } as any;
 
   response.headers.set = jest.fn();
   response.headers.get = jest.fn();
-  
+
   return response;
 };
 
@@ -49,7 +50,7 @@ beforeEach(() => {
     ALLOWED_ORIGINS: 'http://localhost:3000,https://test.example.com',
     REDIS_HOST: 'localhost',
     REDIS_PORT: '6379',
-    REDIS_PASSWORD: 'test_redis_password_for_testing_only'
+    REDIS_PASSWORD: 'test_redis_password_for_testing_only',
   };
 });
 
@@ -123,7 +124,7 @@ describe('Security Middleware', () => {
 
     it('should handle invalid origins gracefully', () => {
       process.env.ALLOWED_ORIGINS = 'invalid-origin';
-      
+
       // The middleware should handle this gracefully
       expect(() => {
         // This would throw in the actual middleware
@@ -159,7 +160,7 @@ describe('JWT Security', () => {
   const testUser = {
     id: 'test-user-id',
     userId: 'test-user-id',
-    email: 'test@example.com'
+    email: 'test@example.com',
   };
 
   describe('Token Generation', () => {
@@ -183,7 +184,7 @@ describe('JWT Security', () => {
     it('should validate JWT secret at runtime', async () => {
       // Test with invalid secret
       process.env.JWT_SECRET = 'invalid-secret';
-      
+
       await expect(generateToken(testUser)).rejects.toThrow();
     });
   });
@@ -192,7 +193,7 @@ describe('JWT Security', () => {
     it('should verify valid tokens', async () => {
       const token = await generateToken(testUser);
       const decoded = await verifyToken(token);
-      
+
       expect(decoded.userId).toBe(testUser.userId);
     });
 
@@ -200,21 +201,21 @@ describe('JWT Security', () => {
       // Create a token with very short expiration
       process.env.JWT_EXPIRES_IN = '1ms';
       const token = await generateToken(testUser);
-      
+
       // Wait for token to expire
       await new Promise(resolve => setTimeout(resolve, 10));
-      
+
       await expect(verifyToken(token)).rejects.toThrow('JWT token has expired');
     });
 
     it('should reject tokens with invalid signature', async () => {
       const token = await generateToken(testUser);
-      
+
       // Modify the token to invalidate signature
       const parts = token.split('.');
       parts[2] = 'invalid-signature';
       const invalidToken = parts.join('.');
-      
+
       await expect(verifyToken(invalidToken)).rejects.toThrow();
     });
   });
@@ -231,7 +232,7 @@ describe('Rate Limiting', () => {
       const identifier = 'test-identifier';
       const config = {
         windowMs: 60 * 1000, // 1 minute
-        maxRequests: 5
+        maxRequests: 5,
       };
 
       const result = await rateLimiter.checkRateLimit(identifier, config);
@@ -249,7 +250,7 @@ describe('Input Validation', () => {
       // rather than string concatenation
       const queryWithParams = 'SELECT * FROM users WHERE id = $1 AND email = $2';
       const queryWithConcatenation = 'SELECT * FROM users WHERE id = ' + '123';
-      
+
       expect(queryWithParams).toContain('$1');
       expect(queryWithConcatenation).not.toContain('$1');
     });
@@ -276,7 +277,7 @@ describe('Security Configuration', () => {
         'ALLOWED_ORIGINS',
         'REDIS_HOST',
         'REDIS_PORT',
-        'REDIS_PASSWORD'
+        'REDIS_PASSWORD',
       ];
 
       requiredVars.forEach(varName => {
@@ -313,7 +314,7 @@ describe('Security Configuration', () => {
         'Referrer-Policy',
         'Strict-Transport-Security',
         'Content-Security-Policy',
-        'Permissions-Policy'
+        'Permissions-Policy',
       ];
 
       requiredHeaders.forEach(header => {
@@ -338,7 +339,7 @@ describe('Error Handling Security', () => {
   describe('Information Disclosure Prevention', () => {
     it('should not expose internal errors in production', () => {
       process.env.NODE_ENV = 'production';
-      
+
       // In production, error messages should be generic
       // This test ensures our error handling doesn't leak sensitive information
       expect(process.env.NODE_ENV).toBe('production');
@@ -346,7 +347,7 @@ describe('Error Handling Security', () => {
 
     it('should handle errors gracefully without crashing', async () => {
       const request = mockNextRequest();
-      
+
       // Test that the middleware handles errors gracefully
       try {
         await securityMiddleware(request);
@@ -400,7 +401,7 @@ describe('API Security', () => {
   describe('Rate Limiting Implementation', () => {
     it('should enforce rate limits on authentication endpoints', () => {
       const authEndpoints = ['/api/auth/login', '/api/auth/register'];
-      
+
       authEndpoints.forEach(endpoint => {
         const config = apiRateLimits[endpoint];
         expect(config).toBeDefined();
@@ -413,7 +414,7 @@ describe('API Security', () => {
       // Authentication endpoints should have stricter limits
       const authLimit = apiRateLimits['/api/auth/login'];
       const uploadLimit = apiRateLimits['/api/upload'];
-      
+
       expect(authLimit.maxRequests).toBeLessThan(uploadLimit.maxRequests);
       expect(authLimit.windowMs).toBeGreaterThan(uploadLimit.windowMs);
     });
@@ -446,7 +447,7 @@ describe('Security Integration Tests', () => {
       // Verify all security headers are present
       expect(response.headers.get('X-Frame-Options')).toBe('DENY');
       expect(response.headers.get('Content-Security-Policy')).toBeDefined();
-      
+
       // Verify response is secure
       expect(response.status).toBe(200);
     });
@@ -458,12 +459,12 @@ describe('Security Integration Tests', () => {
       const requests = [
         mockNextRequest({ pathname: '/api/auth/login' }),
         mockNextRequest({ pathname: '/api/user/profile' }),
-        mockNextRequest({ pathname: '/api/dashboard' })
+        mockNextRequest({ pathname: '/api/dashboard' }),
       ];
 
       for (const request of requests) {
         const response = await securityMiddleware(request);
-        
+
         // All responses should have security headers
         expect(response.headers.get('X-Frame-Options')).toBe('DENY');
         expect(response.headers.get('Content-Security-Policy')).toBeDefined();

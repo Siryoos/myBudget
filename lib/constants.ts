@@ -4,17 +4,80 @@
 
 // Supported ISO currency codes (major currencies)
 export const SUPPORTED_CURRENCIES = [
-  'USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'CHF', 'CNY', 'INR', 'BRL',
-  'KRW', 'MXN', 'SGD', 'HKD', 'NOK', 'SEK', 'DKK', 'PLN', 'CZK', 'HUF',
-  'RUB', 'TRY', 'ZAR', 'THB', 'MYR', 'IDR', 'PHP', 'VND', 'BDT', 'PKR'
+  'USD',
+'EUR',
+'GBP',
+'JPY',
+'CAD',
+'AUD',
+'CHF',
+'CNY',
+'INR',
+'BRL',
+  'KRW',
+'MXN',
+'SGD',
+'HKD',
+'NOK',
+'SEK',
+'DKK',
+'PLN',
+'CZK',
+'HUF',
+  'RUB',
+'TRY',
+'ZAR',
+'THB',
+'MYR',
+'IDR',
+'PHP',
+'VND',
+'BDT',
+'PKR',
 ] as const;
 
 // Supported language locales (ISO 639-1)
 export const SUPPORTED_LANGUAGES = [
-  'en', 'es', 'fr', 'de', 'it', 'pt', 'ru', 'ja', 'ko', 'zh',
-  'ar', 'hi', 'bn', 'ur', 'fa', 'tr', 'nl', 'sv', 'da', 'no',
-  'fi', 'pl', 'cs', 'hu', 'ro', 'bg', 'hr', 'sk', 'sl', 'et',
-  'lv', 'lt', 'mt', 'el', 'he', 'th', 'vi', 'id', 'ms', 'tl'
+  'en',
+'es',
+'fr',
+'de',
+'it',
+'pt',
+'ru',
+'ja',
+'ko',
+'zh',
+  'ar',
+'hi',
+'bn',
+'ur',
+'fa',
+'tr',
+'nl',
+'sv',
+'da',
+'no',
+  'fi',
+'pl',
+'cs',
+'hu',
+'ro',
+'bg',
+'hr',
+'sk',
+'sl',
+'et',
+  'lv',
+'lt',
+'mt',
+'el',
+'he',
+'th',
+'vi',
+'id',
+'ms',
+'tl',
 ] as const;
 
 // Type definitions for TypeScript
@@ -56,7 +119,7 @@ export const CURRENCY_NAMES: Record<SupportedCurrency, string> = {
   PHP: 'Philippine Peso',
   VND: 'Vietnamese Dong',
   BDT: 'Bangladeshi Taka',
-  PKR: 'Pakistani Rupee'
+  PKR: 'Pakistani Rupee',
 };
 
 // Language display names
@@ -100,5 +163,5 @@ export const LANGUAGE_NAMES: Record<SupportedLanguage, string> = {
   vi: 'Tiếng Việt',
   id: 'Bahasa Indonesia',
   ms: 'Bahasa Melayu',
-  tl: 'Tagalog'
+  tl: 'Tagalog',
 };

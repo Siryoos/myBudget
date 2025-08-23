@@ -1,5 +1,5 @@
-import Redis from 'ioredis';
 import * as dotenv from 'dotenv';
+import Redis from 'ioredis';
 
 dotenv.config();
 
@@ -8,7 +8,7 @@ const validateRedisConfig = (): void => {
   if (!process.env.REDIS_HOST) {
     throw new Error('REDIS_HOST environment variable is required');
   }
-  
+
   const port = parseInt(process.env.REDIS_PORT || '6379');
   if (isNaN(port) || port < 1 || port > 65535) {
     throw new Error(`Invalid Redis port: ${process.env.REDIS_PORT}`);
@@ -58,71 +58,71 @@ export interface RateLimitConfig {
 export class RedisRateLimiter {
   private redis: Redis;
   private secureMode: boolean;
-  
+
   constructor(redisClient: Redis, secureMode: boolean = true) {
     this.redis = redisClient;
     this.secureMode = secureMode;
   }
-  
+
   async checkRateLimit(
     identifier: string,
-    config: RateLimitConfig
+    config: RateLimitConfig,
   ): Promise<{ allowed: boolean; remaining: number; resetTime: number; retryAfter?: number }> {
     const key = `rate_limit:${identifier}`;
     const now = Date.now();
     const windowStart = now - config.windowMs;
-    
+
     try {
       // Check Redis connection health first
       await this.redis.ping();
-      
+
       // Use Redis pipeline for atomic operations
       const pipeline = this.redis.pipeline();
-      
+
       // Remove expired entries
       pipeline.zremrangebyscore(key, 0, windowStart);
-      
+
       // Count current requests in window after cleanup
       pipeline.zcard(key);
-      
+
       // Set expiry on the key (extend TTL)
       pipeline.expire(key, Math.ceil(config.windowMs / 1000));
-      
+
       const results = await pipeline.exec();
-      
+
       if (!results || results.length !== 3) {
         throw new Error('Redis pipeline execution failed or returned unexpected results');
       }
-      
+
       // Check for pipeline errors
       for (let i = 0; i < results.length; i++) {
         if (results[i][0]) {
           throw new Error(`Redis pipeline command ${i} failed: ${results[i][0]}`);
         }
       }
-      
+
       const currentCount = results[1][1] as number;
       const isAllowed = currentCount < config.maxRequests;
-      
+
       if (isAllowed) {
         // Add current request to the set only if allowed
         await this.redis.zadd(key, now, `${now}-${Math.random()}`);
         await this.redis.expire(key, Math.ceil(config.windowMs / 1000));
       }
-      
+
       // Calculate reset time - when the window will reset
       const resetTime = now + config.windowMs;
       const remaining = Math.max(0, config.maxRequests - currentCount - (isAllowed ? 1 : 0));
-      
+
       return {
         allowed: isAllowed,
         remaining,
         resetTime,
-        retryAfter: isAllowed ? undefined : Math.ceil(config.windowMs / 1000)
+        retryAfter: isAllowed ? undefined : Math.ceil(config.windowMs / 1000),
       };
     } catch (error) {
       console.error('Rate limiting error:', error);
-      
+
       // Implement secure fallback behavior based on configuration
       if (this.secureMode) {
         // FAIL CLOSED: Deny the request if Redis is unavailable
@@ -132,21 +132,21 @@ export class RedisRateLimiter {
           allowed: false,
           remaining: 0,
           resetTime: now + config.windowMs,
-          retryAfter: Math.ceil(config.windowMs / 1000)
+          retryAfter: Math.ceil(config.windowMs / 1000),
         };
-      } else {
+      }
         // FAIL OPEN: Allow the request but log the incident
         // This maintains availability but is less secure
         console.warn('Redis unavailable - failing open (allowing request) for availability');
         return {
           allowed: true,
           remaining: config.maxRequests,
-          resetTime: now + config.windowMs
+          resetTime: now + config.windowMs,
         };
-      }
+
     }
   }
-  
+
   async getRateLimitInfo(identifier: string): Promise<{ count: number; resetTime: number } | null> {
     const key = `rate_limit:${identifier}`;
     try {
@@ -154,14 +154,14 @@ export class RedisRateLimiter {
       const count = await this.redis.zcard(key);
       const ttl = await this.redis.ttl(key);
       const resetTime = Date.now() + (ttl * 1000);
-      
+
       return { count, resetTime };
     } catch (error) {
       console.error('Error getting rate limit info:', error);
       return null;
     }
   }
-  
+
   /**
    * Clear rate limit data for a specific identifier
    * Useful for testing or administrative actions
@@ -177,7 +177,7 @@ export class RedisRateLimiter {
       return false;
     }
   }
-  
+
   /**
    * Check Redis connection health
    */
@@ -190,7 +190,7 @@ export class RedisRateLimiter {
       return false;
     }
   }
-  
+
   /**
    * Get Redis connection status and metrics
    */
@@ -204,25 +204,25 @@ export class RedisRateLimiter {
       const start = Date.now();
       await this.redis.ping();
       const latency = Date.now() - start;
-      
+
       const info = await this.redis.info('memory');
       const memoryMatch = info.match(/used_memory_human:([^\r\n]+)/);
       const memory = memoryMatch ? memoryMatch[1] : 'unknown';
-      
+
       const clientsInfo = await this.redis.info('clients');
       const connectionsMatch = clientsInfo.match(/connected_clients:(\d+)/);
       const connections = connectionsMatch ? parseInt(connectionsMatch[1]) : 0;
-      
+
       return {
         status: 'connected',
         latency,
         memory,
-        connections
+        connections,
       };
     } catch (error) {
       console.error('Error getting Redis connection info:', error);
       return {
-        status: 'error'
+        status: 'error',
       };
     }
   }
@@ -232,12 +232,12 @@ export class RedisRateLimiter {
 export class RedisCache {
   private redis: Redis;
   private defaultTTL: number;
-  
+
   constructor(redisClient: Redis, defaultTTL: number = 3600) {
     this.redis = redisClient;
     this.defaultTTL = defaultTTL;
   }
-  
+
   async get<T>(key: string): Promise<T | null> {
     try {
       await this.redis.ping();
@@ -248,7 +248,7 @@ export class RedisCache {
       return null;
     }
   }
-  
+
   async set<T>(key: string, value: T, ttl: number = this.defaultTTL): Promise<boolean> {
     try {
       await this.redis.ping();
@@ -259,7 +259,7 @@ export class RedisCache {
       return false;
     }
   }
-  
+
   async del(key: string): Promise<boolean> {
     try {
       await this.redis.ping();
@@ -270,7 +270,7 @@ export class RedisCache {
       return false;
     }
   }
-  
+
   async exists(key: string): Promise<boolean> {
     try {
       await this.redis.ping();
@@ -280,7 +280,7 @@ export class RedisCache {
       return false;
     }
   }
-  
+
   /**
    * Clear all cache entries (use with caution)
    */
@@ -294,7 +294,7 @@ export class RedisCache {
       return false;
     }
   }
-  
+
   /**
    * Get cache statistics
    */
@@ -309,10 +309,10 @@ export class RedisCache {
       const info = await this.redis.info('memory');
       const memoryMatch = info.match(/used_memory_human:([^\r\n]+)/);
       const memory = memoryMatch ? memoryMatch[1] : 'unknown';
-      
+
       return {
         totalKeys: dbsize,
-        memory
+        memory,
       };
     } catch (error) {
       console.error('Error getting cache stats:', error);
@@ -347,15 +347,15 @@ export const checkRedisHealth = async (): Promise<{
     const start = Date.now();
     await redis.ping();
     const latency = Date.now() - start;
-    
+
     return {
       healthy: true,
-      latency
+      latency,
     };
   } catch (error) {
     return {
       healthy: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
 };

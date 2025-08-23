@@ -1,12 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
-import { apiClient } from './api-client';
-import type { 
-  FinancialInsight, 
-  SavingsGoal, 
+
+import type {
+  FinancialInsight,
+  SavingsGoal,
   DashboardData,
   Notification,
-  ApiResponse 
+  ApiResponse,
 } from '@/types';
+
+import { apiClient } from './api-client';
 
 // Hook for fetching insights with fallback
 export function useInsights(fallbackData: FinancialInsight[] = []) {
@@ -18,10 +20,10 @@ export function useInsights(fallbackData: FinancialInsight[] = []) {
     try {
       setLoading(true);
       setError(null);
-      
+
       // Fetch notifications as insights
       const response = await apiClient.getNotifications(true);
-      
+
       if (response.success && response.data) {
         const apiInsights: FinancialInsight[] = response.data
           .filter(notif => notif.type === 'insight' || notif.type === 'budget_alert')
@@ -30,19 +32,19 @@ export function useInsights(fallbackData: FinancialInsight[] = []) {
             type: notif.type === 'budget_alert' ? 'budget-warning' : 'saving-opportunity',
             title: notif.title,
             description: notif.message,
-            impact: (notif.priority || 'medium') as 'low' | 'medium' | 'high',
+            impact: (notif.priority || 'medium'),
             category: notif.category || 'General',
-            actionable: !!notif.actionUrl,
+            actionable: Boolean(notif.actionUrl),
             actions: notif.actionUrl ? [{
               id: '1',
               label: 'View Details',
               type: 'navigate' as const,
-              target: notif.actionUrl
+              target: notif.actionUrl,
             }] : [],
             createdAt: new Date(notif.createdAt),
-            isRead: notif.isRead
+            isRead: notif.isRead,
           }));
-        
+
         setInsights(apiInsights.length > 0 ? apiInsights : fallbackData);
       } else {
         setInsights(fallbackData);
@@ -84,9 +86,9 @@ export function useDashboardData() {
     try {
       setLoading(true);
       setError(null);
-      
+
       const response = await apiClient.getDashboard();
-      
+
       if (response.success && response.data) {
         setData({
           ...response.data,
@@ -99,7 +101,7 @@ export function useDashboardData() {
           recentTransactions: response.data.recentTransactions || [],
           budgetProgress: response.data.budgetProgress || [],
           goals: response.data.goals || [],
-          insights: response.data.insights || []
+          insights: response.data.insights || [],
         });
       } else {
         throw new Error('Failed to load dashboard data');
@@ -129,9 +131,9 @@ export function useGoals(priority?: 'low' | 'medium' | 'high') {
     try {
       setLoading(true);
       setError(null);
-      
+
       const response = await apiClient.getGoals(priority);
-      
+
       if (response.success && response.data) {
         setGoals(response.data);
       } else {
@@ -159,15 +161,15 @@ export function useGoals(priority?: 'low' | 'medium' | 'high') {
         priority: goalData.priority || 'medium',
         category: goalData.category || 'other',
         icon: goalData.icon,
-        color: goalData.color
+        color: goalData.color,
       });
-      
+
       if (response.success) {
         await fetchGoals(); // Refresh goals list
         return response.data;
-      } else {
-        throw new Error(response.error || 'Failed to create goal');
       }
+        throw new Error(response.error || 'Failed to create goal');
+
     } catch (err) {
       console.error('Failed to create goal:', err);
       throw err;
@@ -177,7 +179,7 @@ export function useGoals(priority?: 'low' | 'medium' | 'high') {
   const updateGoal = async (id: string, updates: Partial<SavingsGoal>) => {
     try {
       const response = await apiClient.updateGoal(id, updates);
-      
+
       if (response.success) {
         await fetchGoals(); // Refresh goals list
       } else {
@@ -192,7 +194,7 @@ export function useGoals(priority?: 'low' | 'medium' | 'high') {
   const deleteGoal = async (id: string) => {
     try {
       const response = await apiClient.deleteGoal(id);
-      
+
       if (response.success) {
         setGoals(prev => prev.filter(g => g.id !== id));
       } else {
@@ -207,7 +209,7 @@ export function useGoals(priority?: 'low' | 'medium' | 'high') {
   const addContribution = async (goalId: string, amount: number) => {
     try {
       const response = await apiClient.addGoalContribution(goalId, amount);
-      
+
       if (response.success) {
         await fetchGoals(); // Refresh to get updated amounts
       } else {
@@ -219,15 +221,15 @@ export function useGoals(priority?: 'low' | 'medium' | 'high') {
     }
   };
 
-  return { 
-    goals, 
-    loading, 
-    error, 
+  return {
+    goals,
+    loading,
+    error,
     refetch: fetchGoals,
     createGoal,
     updateGoal,
     deleteGoal,
-    addContribution
+    addContribution,
   };
 }
 
@@ -241,13 +243,13 @@ export function useAnalytics(startDate?: string, endDate?: string) {
     try {
       setLoading(true);
       setError(null);
-      
+
       const response = await apiClient.getAnalytics({
         startDate,
         endDate,
-        groupBy: 'month'
+        groupBy: 'month',
       });
-      
+
       if (response.success && response.data) {
         setAnalytics(response.data);
       } else {
@@ -271,7 +273,7 @@ export function useAnalytics(startDate?: string, endDate?: string) {
 // Generic API hook for reusable data fetching
 export function useApiData<T>(
   fetchFn: () => Promise<ApiResponse<T>>,
-  deps: any[] = []
+  deps: any[] = [],
 ) {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
@@ -281,9 +283,9 @@ export function useApiData<T>(
     try {
       setLoading(true);
       setError(null);
-      
+
       const response = await fetchFn();
-      
+
       if (response.success && response.data) {
         setData(response.data);
       } else {

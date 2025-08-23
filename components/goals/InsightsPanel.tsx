@@ -1,7 +1,6 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { 
+import {
   ChartBarIcon,
   UsersIcon,
   ArrowTrendingUpIcon,
@@ -10,15 +9,17 @@ import {
   LightBulbIcon,
   ArrowUpIcon,
   ArrowDownIcon,
-  FireIcon
-} from '@heroicons/react/24/outline'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Card, CardContent, CardHeader } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
-import { useTranslation } from '@/lib/useTranslation'
-import { useCurrency } from '@/lib/useCurrency'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
-import type { SavingsGoal, SocialProof, QuickSaveData } from '@/types'
+  FireIcon,
+} from '@heroicons/react/24/outline';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+
+import { Button } from '@/components/ui/Button';
+import { Card, CardContent, CardHeader } from '@/components/ui/Card';
+import { useCurrency } from '@/lib/useCurrency';
+import { useTranslation } from '@/lib/useTranslation';
+import type { SavingsGoal, SocialProof, QuickSaveData } from '@/types';
 
 interface InsightsPanelProps {
   goals?: SavingsGoal[]
@@ -35,10 +36,10 @@ export function InsightsPanel({
   showRiskAwareness = true,
   showTrends = true,
 }: InsightsPanelProps) {
-  const { t, isReady } = useTranslation(['goals', 'insights', 'common'])
-  const { formatCurrency } = useCurrency()
-  const [selectedTimeframe, setSelectedTimeframe] = useState<'weekly' | 'monthly' | 'quarterly'>('monthly')
-  const [activeTab, setActiveTab] = useState<'overview' | 'peer' | 'trends' | 'risks'>('overview')
+  const { t, isReady } = useTranslation(['goals', 'insights', 'common']);
+  const { formatCurrency } = useCurrency();
+  const [selectedTimeframe, setSelectedTimeframe] = useState<'weekly' | 'monthly' | 'quarterly'>('monthly');
+  const [activeTab, setActiveTab] = useState<'overview' | 'peer' | 'trends' | 'risks'>('overview');
 
   if (!isReady) {
     return (
@@ -50,7 +51,7 @@ export function InsightsPanel({
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   // Mock peer comparison data
@@ -68,10 +69,10 @@ export function InsightsPanel({
     },
     userPercentile: {
       emergencyFund: 75, // Top 25%
-      savingsRate: 60,   // Top 40%
+      savingsRate: 60, // Top 40%
       goalCompletion: 80, // Top 20%
-    }
-  }
+    },
+  };
 
   // Mock trend data
   const trendData = {
@@ -95,8 +96,8 @@ export function InsightsPanel({
     quarterly: [
       { quarter: 'Q1', saves: 397, amount: 22100 },
       { quarter: 'Q2', saves: 432, amount: 24600 },
-    ]
-  }
+    ],
+  };
 
   // Mock risk awareness data
   const riskData = {
@@ -123,8 +124,8 @@ export function InsightsPanel({
       recommendation: 'Maintain your current savings rhythm.',
       impact: 'High - Consistent saving builds long-term wealth',
       probability: 'You\'re in the top 25% for consistency',
-    }
-  }
+    },
+  };
 
   // Calculate user statistics
   const userStats = {
@@ -133,36 +134,36 @@ export function InsightsPanel({
     completedGoals: goals.filter(g => !g.isActive).length,
     totalSaved: goals.reduce((sum, g) => sum + g.currentAmount, 0),
     totalTarget: goals.reduce((sum, g) => sum + g.targetAmount, 0),
-    averageProgress: goals.length > 0 
+    averageProgress: goals.length > 0
       ? goals.reduce((sum, g) => sum + (g.currentAmount / g.targetAmount), 0) / goals.length * 100
       : 0,
     emergencyFundProgress: goals.find(g => g.category === 'emergency')?.currentAmount || 0,
     monthlySavings: quickSaveHistory
       .filter(save => {
-        const monthAgo = new Date()
-        monthAgo.setMonth(monthAgo.getMonth() - 1)
-        return save.timestamp > monthAgo
+        const monthAgo = new Date();
+        monthAgo.setMonth(monthAgo.getMonth() - 1);
+        return save.timestamp > monthAgo;
       })
       .reduce((sum, save) => sum + save.amount, 0),
-  }
+  };
 
   const getRiskColor = (risk: string) => {
     switch (risk) {
-      case 'high': return 'text-red-600 bg-red-100'
-      case 'medium': return 'text-yellow-600 bg-yellow-100'
-      case 'low': return 'text-green-600 bg-green-100'
-      default: return 'text-gray-600 bg-gray-100'
+      case 'high': return 'text-red-600 bg-red-100';
+      case 'medium': return 'text-yellow-600 bg-yellow-100';
+      case 'low': return 'text-green-600 bg-green-100';
+      default: return 'text-gray-600 bg-gray-100';
     }
-  }
+  };
 
   const getRiskIcon = (risk: string) => {
     switch (risk) {
-      case 'high': return <ExclamationTriangleIcon className="w-5 h-5 text-red-600" />
-      case 'medium': return <ExclamationTriangleIcon className="w-5 h-5 text-yellow-600" />
-      case 'low': return <ShieldCheckIcon className="w-5 h-5 text-green-600" />
-      default: return <ShieldCheckIcon className="w-5 h-5 text-gray-600" />
+      case 'high': return <ExclamationTriangleIcon className="w-5 h-5 text-red-600" />;
+      case 'medium': return <ExclamationTriangleIcon className="w-5 h-5 text-yellow-600" />;
+      case 'low': return <ShieldCheckIcon className="w-5 h-5 text-green-600" />;
+      default: return <ShieldCheckIcon className="w-5 h-5 text-gray-600" />;
     }
-  }
+  };
 
   const renderOverviewTab = () => (
     <div className="space-y-6">
@@ -243,12 +244,12 @@ export function InsightsPanel({
                 name: goal.name,
                 current: goal.currentAmount,
                 target: goal.targetAmount,
-                progress: (goal.currentAmount / goal.targetAmount) * 100
+                progress: (goal.currentAmount / goal.targetAmount) * 100,
               }))}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" />
                 <YAxis tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`} />
-                <Tooltip 
+                <Tooltip
                   formatter={(value: number) => [`$${value.toLocaleString()}`, 'Amount']}
                   labelFormatter={(label) => `${label}`}
                 />
@@ -260,7 +261,7 @@ export function InsightsPanel({
         </CardContent>
       </Card>
     </div>
-  )
+  );
 
   const renderPeerComparisonTab = () => (
     <div className="space-y-6">
@@ -273,7 +274,7 @@ export function InsightsPanel({
               {t('insights:peer.comparison.title', { defaultValue: 'How You Compare to Peers' })}
             </h3>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="text-center">
               <div className="text-3xl font-bold text-blue-600 mb-2">
@@ -286,7 +287,7 @@ export function InsightsPanel({
                 vs {peerData.peerStats.averageEmergencyFund} avg
               </div>
             </div>
-            
+
             <div className="text-center">
               <div className="text-3xl font-bold text-green-600 mb-2">
                 Top {100 - peerData.userPercentile.savingsRate}%
@@ -298,7 +299,7 @@ export function InsightsPanel({
                 vs {peerData.peerStats.averageSavingsRate}% avg
               </div>
             </div>
-            
+
             <div className="text-center">
               <div className="text-3xl font-bold text-purple-600 mb-2">
                 Top {100 - peerData.userPercentile.goalCompletion}%
@@ -332,7 +333,7 @@ export function InsightsPanel({
                 <div className="text-sm text-gray-600">{peerData.peerStats.topSavingsTime}</div>
               </div>
             </div>
-            
+
             <div className="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
               <FireIcon className="w-5 h-5 text-green-600" />
               <div>
@@ -342,7 +343,7 @@ export function InsightsPanel({
                 <div className="text-sm text-gray-600">{peerData.peerStats.mostPopularGoal}</div>
               </div>
             </div>
-            
+
             <div className="flex items-center space-x-3 p-3 bg-purple-50 rounded-lg">
               <ChartBarIcon className="w-5 h-5 text-purple-600" />
               <div>
@@ -380,7 +381,7 @@ export function InsightsPanel({
         </Card>
       </div>
     </div>
-  )
+  );
 
   const renderTrendsTab = () => (
     <div className="space-y-6">
@@ -393,8 +394,8 @@ export function InsightsPanel({
             size="sm"
             onClick={() => setSelectedTimeframe(timeframe)}
           >
-            {t(`insights:trends.timeframes.${timeframe}`, { 
-              defaultValue: timeframe === 'weekly' ? 'Week' : timeframe === 'monthly' ? 'Month' : 'Quarter' 
+            {t(`insights:trends.timeframes.${timeframe}`, {
+              defaultValue: timeframe === 'weekly' ? 'Week' : timeframe === 'monthly' ? 'Month' : 'Quarter',
             })}
           </Button>
         ))}
@@ -413,11 +414,11 @@ export function InsightsPanel({
               <BarChart data={trendData[selectedTimeframe]}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey={selectedTimeframe === 'weekly' ? 'day' : selectedTimeframe === 'monthly' ? 'month' : 'quarter'} />
-                <YAxis tickFormatter={(value) => selectedTimeframe === 'weekly' ? value.toString() : `$${(value / 1000).toFixed(0)}k`} />
-                <Tooltip 
+                <YAxis tickFormatter={(value) => (selectedTimeframe === 'weekly' ? value.toString() : `$${(value / 1000).toFixed(0)}k`)} />
+                <Tooltip
                   formatter={(value: number) => [
                     selectedTimeframe === 'weekly' ? value.toString() : `$${value.toLocaleString()}`,
-                    selectedTimeframe === 'weekly' ? 'Saves' : 'Amount'
+                    selectedTimeframe === 'weekly' ? 'Saves' : 'Amount',
                   ]}
                 />
                 <Bar dataKey={selectedTimeframe === 'weekly' ? 'saves' : 'amount'} fill="#10b981" />
@@ -448,7 +449,7 @@ export function InsightsPanel({
                   </div>
                 </div>
               </div>
-              
+
               <div className="flex items-center space-x-3">
                 <LightBulbIcon className="w-5 h-5 text-blue-600" />
                 <div>
@@ -480,7 +481,7 @@ export function InsightsPanel({
                   {t('insights:trends.recommendations.consistencyDesc', { defaultValue: 'Your weekly saving pattern is strong. Keep it up!' })}
                 </div>
               </div>
-              
+
               <div className="p-3 bg-green-50 rounded-lg">
                 <div className="font-medium text-green-900">
                   {t('insights:trends.recommendations.increase', { defaultValue: 'Consider Increase' })}
@@ -494,7 +495,7 @@ export function InsightsPanel({
         </Card>
       </div>
     </div>
-  )
+  );
 
   const renderRisksTab = () => (
     <div className="space-y-6">
@@ -507,13 +508,13 @@ export function InsightsPanel({
               {t('insights:risks.summary.title', { defaultValue: 'Financial Risk Assessment' })}
             </h3>
           </div>
-          
+
           <p className="text-gray-700 mb-4">
-            {t('insights:risks.summary.description', { 
-              defaultValue: 'Based on your current financial situation, here\'s an assessment of potential risks and recommendations to improve your financial resilience.' 
+            {t('insights:risks.summary.description', {
+              defaultValue: 'Based on your current financial situation, here\'s an assessment of potential risks and recommendations to improve your financial resilience.',
             })}
           </p>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="text-center p-3 bg-white rounded-lg">
               <div className="text-2xl font-bold text-red-600">1</div>
@@ -556,7 +557,7 @@ export function InsightsPanel({
                   <div className="flex-shrink-0">
                     {getRiskIcon(risk.risk)}
                   </div>
-                  
+
                   <div className="flex-1">
                     <div className="flex items-center space-x-3 mb-2">
                       <h4 className="text-lg font-semibold text-gray-900">{risk.title}</h4>
@@ -564,9 +565,9 @@ export function InsightsPanel({
                         {risk.risk.toUpperCase()} RISK
                       </span>
                     </div>
-                    
+
                     <p className="text-gray-700 mb-3">{risk.message}</p>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <div className="font-medium text-gray-900 mb-1">
@@ -574,7 +575,7 @@ export function InsightsPanel({
                         </div>
                         <p className="text-sm text-gray-600">{risk.recommendation}</p>
                       </div>
-                      
+
                       <div>
                         <div className="font-medium text-gray-900 mb-1">
                           {t('insights:risks.impact', { defaultValue: 'Potential Impact' })}
@@ -582,7 +583,7 @@ export function InsightsPanel({
                         <p className="text-sm text-gray-600">{risk.impact}</p>
                       </div>
                     </div>
-                    
+
                     <div className="mt-3 p-3 bg-gray-50 rounded-lg">
                       <div className="text-sm text-gray-600">
                         <strong>{t('insights:risks.probability', { defaultValue: 'Probability' })}:</strong> {risk.probability}
@@ -596,7 +597,7 @@ export function InsightsPanel({
         ))}
       </div>
     </div>
-  )
+  );
 
   return (
     <div className="space-y-6">
@@ -655,5 +656,5 @@ export function InsightsPanel({
         </motion.div>
       </AnimatePresence>
     </div>
-  )
+  );
 }

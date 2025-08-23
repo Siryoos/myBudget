@@ -1,15 +1,16 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { 
+import {
   PlusIcon,
   XMarkIcon,
   BanknotesIcon,
-  CalendarIcon
-} from '@heroicons/react/24/outline'
-import { Card, CardContent, CardHeader } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
-import { formatCurrency, sanitizeNumberInput } from '@/lib/utils'
+  CalendarIcon,
+} from '@heroicons/react/24/outline';
+import { useState } from 'react';
+
+import { Button } from '@/components/ui/Button';
+import { Card, CardContent, CardHeader } from '@/components/ui/Card';
+import { formatCurrency, sanitizeNumberInput } from '@/lib/utils';
 
 interface IncomeSource {
   id: string
@@ -38,30 +39,28 @@ export function IncomeManager({
       frequency: 'monthly',
       isRegular: true,
     },
-  ])
-  const [showAddForm, setShowAddForm] = useState(false)
+  ]);
+  const [showAddForm, setShowAddForm] = useState(false);
   const [newSource, setNewSource] = useState({
     name: '',
     amount: '',
     frequency: 'monthly' as const,
     isRegular: true,
-  })
+  });
 
   const frequencyMultipliers = {
     weekly: 52,
     biweekly: 26,
     monthly: 12,
     yearly: 1,
-  }
+  };
 
-  const calculateMonthlyAmount = (amount: number, frequency: keyof typeof frequencyMultipliers) => {
-    return (amount * frequencyMultipliers[frequency]) / 12
-  }
+  const calculateMonthlyAmount = (amount: number, frequency: keyof typeof frequencyMultipliers) => (amount * frequencyMultipliers[frequency]) / 12;
 
   const totalMonthlyIncome = incomeSources.reduce(
     (sum, source) => sum + calculateMonthlyAmount(source.amount, source.frequency),
-    0
-  )
+    0,
+  );
 
   const handleAddSource = () => {
     if (newSource.name && newSource.amount) {
@@ -71,17 +70,17 @@ export function IncomeManager({
         amount: sanitizeNumberInput(newSource.amount),
         frequency: newSource.frequency,
         isRegular: newSource.isRegular,
-      }
-      
-      setIncomeSources(prev => [...prev, source])
-      setNewSource({ name: '', amount: '', frequency: 'monthly', isRegular: true })
-      setShowAddForm(false)
+      };
+
+      setIncomeSources(prev => [...prev, source]);
+      setNewSource({ name: '', amount: '', frequency: 'monthly', isRegular: true });
+      setShowAddForm(false);
     }
-  }
+  };
 
   const handleRemoveSource = (id: string) => {
-    setIncomeSources(prev => prev.filter(source => source.id !== id))
-  }
+    setIncomeSources(prev => prev.filter(source => source.id !== id));
+  };
 
   const getFrequencyLabel = (frequency: string) => {
     const labels = {
@@ -89,9 +88,9 @@ export function IncomeManager({
       biweekly: 'Bi-weekly',
       monthly: 'Monthly',
       yearly: 'Yearly',
-    }
-    return labels[frequency as keyof typeof labels] || frequency
-  }
+    };
+    return labels[frequency as keyof typeof labels] || frequency;
+  };
 
   return (
     <Card>
@@ -110,7 +109,7 @@ export function IncomeManager({
               </p>
             </div>
           </div>
-          
+
           {allowMultipleSources && (
             <Button
               variant="outline"
@@ -154,7 +153,7 @@ export function IncomeManager({
                     {source.name}
                   </h4>
                   <span className={`text-xs px-2 py-1 rounded-full ${
-                    source.isRegular 
+                    source.isRegular
                       ? 'bg-secondary-growth-green/10 text-secondary-growth-green'
                       : 'bg-accent-action-orange/10 text-accent-action-orange'
                   }`}>
@@ -172,7 +171,7 @@ export function IncomeManager({
                   </span>
                 </div>
               </div>
-              
+
               {incomeSources.length > 1 && (
                 <button
                   onClick={() => handleRemoveSource(source.id)}
@@ -192,7 +191,7 @@ export function IncomeManager({
             <h4 className="font-medium text-neutral-dark-gray">
               Add Income Source
             </h4>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="source-name" className="block text-sm font-medium text-neutral-dark-gray mb-1">
@@ -207,7 +206,7 @@ export function IncomeManager({
                   className="input-field"
                 />
               </div>
-              
+
               <div>
                 <label htmlFor="source-amount" className="block text-sm font-medium text-neutral-dark-gray mb-1">
                   Amount
@@ -228,7 +227,7 @@ export function IncomeManager({
                   />
                 </div>
               </div>
-              
+
               <div>
                 <label htmlFor="source-frequency" className="block text-sm font-medium text-neutral-dark-gray mb-1">
                   Frequency
@@ -245,7 +244,7 @@ export function IncomeManager({
                   <option value="yearly">Yearly</option>
                 </select>
               </div>
-              
+
               {irregularIncomeSupport && (
                 <div className="flex items-center">
                   <label className="flex items-center cursor-pointer">
@@ -262,14 +261,14 @@ export function IncomeManager({
                 </div>
               )}
             </div>
-            
+
             <div className="flex items-center justify-end space-x-3">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => {
-                  setShowAddForm(false)
-                  setNewSource({ name: '', amount: '', frequency: 'monthly', isRegular: true })
+                  setShowAddForm(false);
+                  setNewSource({ name: '', amount: '', frequency: 'monthly', isRegular: true });
                 }}
               >
                 Cancel
@@ -302,5 +301,5 @@ export function IncomeManager({
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

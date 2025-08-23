@@ -1,19 +1,20 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { 
+import {
   ChartPieIcon,
   BanknotesIcon,
   EnvelopeIcon,
   CalculatorIcon,
   BookOpenIcon,
-  CheckIcon
-} from '@heroicons/react/24/outline'
-import { Card, CardContent } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
-import { getBudgetMethodConfig } from '@/lib/utils'
-import { useTranslation } from '@/lib/useTranslation'
-import type { BudgetMethod } from '@/types'
+  CheckIcon,
+} from '@heroicons/react/24/outline';
+import { useState } from 'react';
+
+import { Button } from '@/components/ui/Button';
+import { Card, CardContent } from '@/components/ui/Card';
+import { useTranslation } from '@/lib/useTranslation';
+import { getBudgetMethodConfig } from '@/lib/utils';
+import type { BudgetMethod } from '@/types';
 
 interface BudgetMethodOption {
   id: BudgetMethod
@@ -26,9 +27,9 @@ interface BudgetMethodOption {
 }
 
 export function BudgetMethodSelector() {
-  const { t, isReady } = useTranslation(['budget', 'common'])
-  const [selectedMethod, setSelectedMethod] = useState<BudgetMethod | null>(null)
-  const [showDetails, setShowDetails] = useState(false)
+  const { t, isReady } = useTranslation(['budget', 'common']);
+  const [selectedMethod, setSelectedMethod] = useState<BudgetMethod | null>(null);
+  const [showDetails, setShowDetails] = useState(false);
 
   if (!isReady) {
     return (
@@ -40,7 +41,7 @@ export function BudgetMethodSelector() {
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   const budgetMethods: BudgetMethodOption[] = [
@@ -54,7 +55,7 @@ export function BudgetMethodSelector() {
       bestFor: [
         t('budget:methods.rule503020.bestFor.newToBudgeting', { defaultValue: 'New to budgeting' }),
         t('budget:methods.rule503020.bestFor.simpleApproach', { defaultValue: 'Simple approach' }),
-        t('budget:methods.rule503020.bestFor.steadyIncome', { defaultValue: 'Steady income' })
+        t('budget:methods.rule503020.bestFor.steadyIncome', { defaultValue: 'Steady income' }),
       ],
     },
     {
@@ -67,7 +68,7 @@ export function BudgetMethodSelector() {
       bestFor: [
         t('budget:methods.payYourselfFirst.bestFor.buildingSavingsHabit', { defaultValue: 'Building savings habit' }),
         t('budget:methods.payYourselfFirst.bestFor.automaticSaving', { defaultValue: 'Automatic saving' }),
-        t('budget:methods.payYourselfFirst.bestFor.longTermGoals', { defaultValue: 'Long-term goals' })
+        t('budget:methods.payYourselfFirst.bestFor.longTermGoals', { defaultValue: 'Long-term goals' }),
       ],
     },
     {
@@ -80,7 +81,7 @@ export function BudgetMethodSelector() {
       bestFor: [
         t('budget:methods.envelope.bestFor.detailedTracking', { defaultValue: 'Detailed tracking' }),
         t('budget:methods.envelope.bestFor.spendingControl', { defaultValue: 'Spending control' }),
-        t('budget:methods.envelope.bestFor.variableIncome', { defaultValue: 'Variable income' })
+        t('budget:methods.envelope.bestFor.variableIncome', { defaultValue: 'Variable income' }),
       ],
     },
     {
@@ -93,7 +94,7 @@ export function BudgetMethodSelector() {
       bestFor: [
         t('budget:methods.zeroBased.bestFor.maximumControl', { defaultValue: 'Maximum control' }),
         t('budget:methods.zeroBased.bestFor.debtPayoff', { defaultValue: 'Debt payoff' }),
-        t('budget:methods.zeroBased.bestFor.irregularExpenses', { defaultValue: 'Irregular expenses' })
+        t('budget:methods.zeroBased.bestFor.irregularExpenses', { defaultValue: 'Irregular expenses' }),
       ],
     },
     {
@@ -106,35 +107,35 @@ export function BudgetMethodSelector() {
       bestFor: [
         t('budget:methods.kakeibo.bestFor.mindfulSpending', { defaultValue: 'Mindful spending' }),
         t('budget:methods.kakeibo.bestFor.selfReflection', { defaultValue: 'Self-reflection' }),
-        t('budget:methods.kakeibo.bestFor.behavioralChange', { defaultValue: 'Behavioral change' })
+        t('budget:methods.kakeibo.bestFor.behavioralChange', { defaultValue: 'Behavioral change' }),
       ],
     },
-  ]
+  ];
 
   const handleMethodSelect = (method: BudgetMethod) => {
-    setSelectedMethod(method)
-    setShowDetails(true)
-  }
+    setSelectedMethod(method);
+    setShowDetails(true);
+  };
 
   const handleConfirmMethod = () => {
     if (selectedMethod) {
-      console.log(`Selected budget method: ${selectedMethod}`)
+      console.log(`Selected budget method: ${selectedMethod}`);
       // This would typically update the user's budget configuration
     }
-  }
+  };
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case 'Beginner':
-        return 'bg-secondary-growth-green/10 text-secondary-growth-green'
+        return 'bg-secondary-growth-green/10 text-secondary-growth-green';
       case 'Intermediate':
-        return 'bg-accent-action-orange/10 text-accent-action-orange'
+        return 'bg-accent-action-orange/10 text-accent-action-orange';
       case 'Advanced':
-        return 'bg-accent-warning-red/10 text-accent-warning-red'
+        return 'bg-accent-warning-red/10 text-accent-warning-red';
       default:
-        return 'bg-neutral-gray/10 text-neutral-gray'
+        return 'bg-neutral-gray/10 text-neutral-gray';
     }
-  }
+  };
 
   return (
     <Card>
@@ -150,9 +151,9 @@ export function BudgetMethodSelector() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
           {budgetMethods.map((method) => {
-            const IconComponent = method.icon
-            const isSelected = selectedMethod === method.id
-            
+            const IconComponent = method.icon;
+            const isSelected = selectedMethod === method.id;
+
             return (
               <button
                 key={method.id}
@@ -165,8 +166,8 @@ export function BudgetMethodSelector() {
               >
                 <div className="flex items-start mb-3">
                   <div className={`p-2 rounded-lg mr-3 ${
-                    isSelected 
-                      ? 'bg-primary-trust-blue text-white' 
+                    isSelected
+                      ? 'bg-primary-trust-blue text-white'
                       : 'bg-neutral-light-gray text-neutral-gray'
                   }`}>
                     <IconComponent className="h-6 w-6" />
@@ -177,14 +178,14 @@ export function BudgetMethodSelector() {
                     </div>
                   )}
                 </div>
-                
+
                 <h3 className="font-semibold text-neutral-dark-gray mb-2">
                   {method.name}
                 </h3>
                 <p className="text-sm text-neutral-gray mb-3">
                   {method.description}
                 </p>
-                
+
                 <div className="flex items-center justify-between">
                   <span className={`text-xs px-2 py-1 rounded-full ${getDifficultyColor(method.difficulty)}`}>
                     {method.difficulty}
@@ -194,7 +195,7 @@ export function BudgetMethodSelector() {
                   </span>
                 </div>
               </button>
-            )
+            );
           })}
         </div>
 
@@ -205,11 +206,11 @@ export function BudgetMethodSelector() {
               <h3 className="text-lg font-semibold text-neutral-dark-gray mb-2">
                 About {budgetMethods.find(m => m.id === selectedMethod)?.name}
               </h3>
-              
+
               {(() => {
-                const config = getBudgetMethodConfig(selectedMethod)
-                const method = budgetMethods.find(m => m.id === selectedMethod)
-                
+                const config = getBudgetMethodConfig(selectedMethod);
+                const method = budgetMethods.find(m => m.id === selectedMethod);
+
                 return (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
@@ -219,7 +220,7 @@ export function BudgetMethodSelector() {
                       <p className="text-sm text-neutral-gray mb-4">
                         {config.description}
                       </p>
-                      
+
                       {config.categories.length > 0 && (
                         <div>
                           <h4 className="font-medium text-neutral-dark-gray mb-2">
@@ -238,7 +239,7 @@ export function BudgetMethodSelector() {
                         </div>
                       )}
                     </div>
-                    
+
                     <div>
                       <h4 className="font-medium text-neutral-dark-gray mb-2">
                         Best for:
@@ -251,7 +252,7 @@ export function BudgetMethodSelector() {
                           </li>
                         ))}
                       </ul>
-                      
+
                       <div className="grid grid-cols-2 gap-4 text-center">
                         <div className="bg-white rounded-lg p-3">
                           <div className="text-sm font-medium text-neutral-dark-gray">
@@ -272,16 +273,16 @@ export function BudgetMethodSelector() {
                       </div>
                     </div>
                   </div>
-                )
+                );
               })()}
             </div>
-            
+
             <div className="flex items-center justify-end space-x-3">
               <Button
                 variant="ghost"
                 onClick={() => {
-                  setSelectedMethod(null)
-                  setShowDetails(false)
+                  setSelectedMethod(null);
+                  setShowDetails(false);
                 }}
               >
                 Choose Different Method
@@ -294,5 +295,5 @@ export function BudgetMethodSelector() {
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

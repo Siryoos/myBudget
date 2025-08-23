@@ -1,9 +1,10 @@
 import { exec } from 'child_process';
-import { promisify } from 'util';
-import { readFile, writeFile, access } from 'fs/promises';
 import { existsSync } from 'fs';
+import { readFile, writeFile } from 'fs/promises';
 import path from 'path';
-import { auditLogger, logSystemEvent, AuditEventType, AuditSeverity } from '../audit-logging';
+import { promisify } from 'util';
+
+import { logSystemEvent, AuditEventType, AuditSeverity } from '../audit-logging';
 
 const execAsync = promisify(exec);
 
@@ -15,6 +16,22 @@ export enum SecurityScanType {
   CONTAINER_SECURITY = 'container_security',
   INFRASTRUCTURE_SECURITY = 'infrastructure_security',
   API_SECURITY = 'api_security'
+}
+
+// Security vulnerability
+export interface SecurityVulnerability {
+  id: string;
+  title: string;
+  description: string;
+  severity: 'critical' | 'high' | 'medium' | 'low' | 'info';
+  cve?: string;
+  cvss?: number;
+  affectedComponent: string;
+  location?: string;
+  lineNumber?: number;
+  recommendation: string;
+  references?: string[];
+  discoveredAt: string;
 }
 
 // Security scan result
@@ -38,24 +55,8 @@ export interface SecurityScanResult {
     tool: string;
     version: string;
     target: string;
-    [key: string]: any;
+    [key: string]: unknown;
   };
-}
-
-// Security vulnerability
-export interface SecurityVulnerability {
-  id: string;
-  title: string;
-  description: string;
-  severity: 'critical' | 'high' | 'medium' | 'low' | 'info';
-  cve?: string;
-  cvss?: number;
-  affectedComponent: string;
-  location?: string;
-  lineNumber?: number;
-  recommendation: string;
-  references?: string[];
-  discoveredAt: string;
 }
 
 // Security scanner configuration
@@ -83,19 +84,19 @@ export interface SecurityScannerConfig {
 // Default configuration
 const DEFAULT_CONFIG: SecurityScannerConfig = {
   enabled: process.env.SECURITY_SCANNING_ENABLED !== 'false',
-  scanInterval: parseInt(process.env.SECURITY_SCAN_INTERVAL || '60'), // 1 hour
+  scanInterval: parseInt(process.env.SECURITY_SCAN_INTERVAL || '60', 10), // 1 hour
   tools: {
     npm: true,
     snyk: process.env.SNYK_TOKEN !== undefined,
     trivy: true,
     sonarqube: process.env.SONAR_TOKEN !== undefined,
-    custom: true
+    custom: true,
   },
   thresholds: {
     critical: 0,
     high: 2,
     medium: 5,
-    low: 10
+    low: 10,
   },
   autoFix: process.env.SECURITY_AUTO_FIX === 'true',
   reportPath: process.env.SECURITY_REPORT_PATH || './security-reports',
@@ -105,28 +106,20 @@ const DEFAULT_CONFIG: SecurityScannerConfig = {
     '.next/**',
     'dist/**',
     'build/**',
-    'coverage/**'
-  ]
+    'coverage/**',
+  ],
 };
 
 // Security scanner service
 export class SecurityScanner {
-  private static instance: SecurityScanner;
   private config: SecurityScannerConfig;
-  private scanTimer: NodeJS.Timeout | null = null;
+  private scanTimer: ReturnType<typeof setInterval> | null = null;
   private isScanning: boolean = false;
   private lastScanResults: Map<SecurityScanType, SecurityScanResult> = new Map();
 
-  private constructor() {
+  constructor() {
     this.config = DEFAULT_CONFIG;
     this.startPeriodicScanning();
-  }
-
-  static getInstance(): SecurityScanner {
-    if (!SecurityScanner.instance) {
-      SecurityScanner.instance = new SecurityScanner();
-    }
-    return SecurityScanner.instance;
   }
 
   // Run comprehensive security scan
@@ -169,8 +162,8 @@ export class SecurityScanner {
           action: 'security_scan_completed',
           scanTypes: typesToScan,
           totalVulnerabilities: results.reduce((sum, r) => sum + r.summary.total, 0),
-          scanDuration: Date.now() - startTime
-        }
+          scanDuration: Date.now() - startTime,
+        },
       );
 
     } finally {
@@ -225,7 +218,7 @@ export class SecurityScanner {
               affectedComponent: packageName,
               recommendation: vuln.recommendation || 'Update to latest version',
               references: vuln.references,
-              discoveredAt: new Date().toISOString()
+              discoveredAt: new Date().toISOString(),
             });
           }
         }
@@ -249,7 +242,7 @@ export class SecurityScanner {
                 location: vuln.from?.join(' > '),
                 recommendation: vuln.fix || 'Review and fix vulnerability',
                 references: vuln.references,
-                discoveredAt: new Date().toISOString()
+                discoveredAt: new Date().toISOString(),
               });
             }
           }
@@ -265,7 +258,7 @@ export class SecurityScanner {
     return this.createScanResult(
       SecurityScanType.DEPENDENCY_VULNERABILITIES,
       vulnerabilities,
-      Date.now() - startTime
+      Date.now() - startTime,
     );
   }
 
@@ -292,7 +285,7 @@ export class SecurityScanner {
                   affectedComponent: result.filePath,
                   lineNumber: message.line,
                   recommendation: 'Fix security issue according to ESLint rule',
-                  discoveredAt: new Date().toISOString()
+                  discoveredAt: new Date().toISOString(),
                 });
               }
             }
@@ -320,7 +313,7 @@ export class SecurityScanner {
     return this.createScanResult(
       SecurityScanType.CODE_SECURITY,
       vulnerabilities,
-      Date.now() - startTime
+      Date.now() - startTime,
     );
   }
 
@@ -336,7 +329,7 @@ export class SecurityScanner {
         /secret\s*=\s*['"][^'"]+['"]/gi,
         /api_key\s*=\s*['"][^'"]+['"]/gi,
         /token\s*=\s*['"][^'"]+['"]/gi,
-        /key\s*=\s*['"][^'"]+['"]/gi
+        /key\s*=\s*['"][^'"]+['"]/gi,
       ];
 
       const filesToScan = [
@@ -346,7 +339,7 @@ export class SecurityScanner {
         'config.js',
         'config.ts',
         '*.config.js',
-        '*.config.ts'
+        '*.config.ts',
       ];
 
       for (const filePattern of filesToScan) {
@@ -357,7 +350,7 @@ export class SecurityScanner {
           for (const file of files) {
             try {
               const content = await readFile(file, 'utf-8');
-              
+
               for (const pattern of secretPatterns) {
                 const matches = content.match(pattern);
                 if (matches) {
@@ -368,7 +361,7 @@ export class SecurityScanner {
                     severity: 'high',
                     affectedComponent: file,
                     recommendation: 'Remove hardcoded secrets and use environment variables',
-                    discoveredAt: new Date().toISOString()
+                    discoveredAt: new Date().toISOString(),
                   });
                   break;
                 }
@@ -389,7 +382,7 @@ export class SecurityScanner {
     return this.createScanResult(
       SecurityScanType.SECRETS_DETECTION,
       vulnerabilities,
-      Date.now() - startTime
+      Date.now() - startTime,
     );
   }
 
@@ -416,7 +409,7 @@ export class SecurityScanner {
                   affectedComponent: vuln.PkgName || 'unknown',
                   recommendation: vuln.FixedVersion ? `Update to ${vuln.FixedVersion}` : 'Review vulnerability',
                   references: vuln.References,
-                  discoveredAt: new Date().toISOString()
+                  discoveredAt: new Date().toISOString(),
                 });
               }
             }
@@ -433,7 +426,7 @@ export class SecurityScanner {
     return this.createScanResult(
       SecurityScanType.CONTAINER_SECURITY,
       vulnerabilities,
-      Date.now() - Date.now()
+      Date.now() - Date.now(),
     );
   }
 
@@ -446,7 +439,7 @@ export class SecurityScanner {
       if (existsSync('docker-compose.yml')) {
         try {
           const content = await readFile('docker-compose.yml', 'utf-8');
-          
+
           // Check for exposed ports
           if (content.includes('ports:')) {
             const portMatches = content.match(/ports:\s*\n\s*-\s*['"]?(\d+):\d+['"]?/g);
@@ -458,7 +451,7 @@ export class SecurityScanner {
                 severity: 'medium',
                 affectedComponent: 'docker-compose.yml',
                 recommendation: 'Review exposed ports and restrict access where possible',
-                discoveredAt: new Date().toISOString()
+                discoveredAt: new Date().toISOString(),
               });
             }
           }
@@ -472,7 +465,7 @@ export class SecurityScanner {
               severity: 'high',
               affectedComponent: 'docker-compose.yml',
               recommendation: 'Use non-root user for containers',
-              discoveredAt: new Date().toISOString()
+              discoveredAt: new Date().toISOString(),
             });
           }
         } catch (error) {
@@ -491,7 +484,7 @@ export class SecurityScanner {
             severity: 'medium',
             affectedComponent: envFile,
             recommendation: 'Ensure environment files are in .gitignore and not committed',
-            discoveredAt: new Date().toISOString()
+            discoveredAt: new Date().toISOString(),
           });
         }
       }
@@ -503,7 +496,7 @@ export class SecurityScanner {
     return this.createScanResult(
       SecurityScanType.INFRASTRUCTURE_SECURITY,
       vulnerabilities,
-      Date.now() - Date.now()
+      Date.now() - Date.now(),
     );
   }
 
@@ -514,7 +507,7 @@ export class SecurityScanner {
     try {
       // Check for common API security issues
       const apiFiles = ['app/api/**/*.ts', 'pages/api/**/*.ts', 'api/**/*.ts'];
-      
+
       for (const pattern of apiFiles) {
         try {
           const { stdout } = await execAsync(`find . -path "${pattern}" -type f`);
@@ -523,7 +516,7 @@ export class SecurityScanner {
           for (const file of files) {
             try {
               const content = await readFile(file, 'utf-8');
-              
+
               // Check for missing authentication
               if (content.includes('export async function') && !content.includes('requireAuth')) {
                 vulnerabilities.push({
@@ -533,7 +526,7 @@ export class SecurityScanner {
                   severity: 'high',
                   affectedComponent: file,
                   recommendation: 'Add authentication middleware to protect API endpoints',
-                  discoveredAt: new Date().toISOString()
+                  discoveredAt: new Date().toISOString(),
                 });
               }
 
@@ -546,7 +539,7 @@ export class SecurityScanner {
                   severity: 'medium',
                   affectedComponent: file,
                   recommendation: 'Add input validation using Zod or similar library',
-                  discoveredAt: new Date().toISOString()
+                  discoveredAt: new Date().toISOString(),
                 });
               }
             } catch (error) {
@@ -565,7 +558,7 @@ export class SecurityScanner {
     return this.createScanResult(
       SecurityScanType.API_SECURITY,
       vulnerabilities,
-      Date.now() - Date.now()
+      Date.now() - Date.now(),
     );
   }
 
@@ -573,7 +566,7 @@ export class SecurityScanner {
   private createScanResult(
     scanType: SecurityScanType,
     vulnerabilities: SecurityVulnerability[],
-    duration: number
+    duration: number,
   ): SecurityScanResult {
     const summary = {
       total: vulnerabilities.length,
@@ -581,7 +574,7 @@ export class SecurityScanner {
       high: vulnerabilities.filter(v => v.severity === 'high').length,
       medium: vulnerabilities.filter(v => v.severity === 'medium').length,
       low: vulnerabilities.filter(v => v.severity === 'low').length,
-      info: vulnerabilities.filter(v => v.severity === 'info').length
+      info: vulnerabilities.filter(v => v.severity === 'info').length,
     };
 
     return {
@@ -597,8 +590,8 @@ export class SecurityScanner {
         tool: 'SecurityScanner',
         version: '1.0.0',
         target: process.cwd(),
-        timestamp: new Date().toISOString()
-      }
+        timestamp: new Date().toISOString(),
+      },
     };
   }
 
@@ -617,23 +610,23 @@ export class SecurityScanner {
         tool: 'SecurityScanner',
         version: '1.0.0',
         target: process.cwd(),
-        error: error.message || String(error)
-      }
+        error: error.message || String(error),
+      },
     };
   }
 
   // Determine scan status
   private determineScanStatus(summary: any): 'success' | 'failed' | 'warning' {
-    if (summary.critical > this.config.thresholds.critical) return 'failed';
-    if (summary.high > this.config.thresholds.high) return 'warning';
-    if (summary.medium > this.config.thresholds.medium) return 'warning';
+    if (summary.critical > this.config.thresholds.critical) {return 'failed';}
+    if (summary.high > this.config.thresholds.high) {return 'warning';}
+    if (summary.medium > this.config.thresholds.medium) {return 'warning';}
     return 'success';
   }
 
   // Generate recommendations
   private generateRecommendations(vulnerabilities: SecurityVulnerability[]): string[] {
     const recommendations = new Set<string>();
-    
+
     for (const vuln of vulnerabilities) {
       if (vuln.recommendation) {
         recommendations.add(vuln.recommendation);
@@ -655,8 +648,8 @@ export class SecurityScanner {
             scanType: result.scanType,
             status: result.status,
             vulnerabilities: result.summary,
-            recommendations: result.recommendations
-          }
+            recommendations: result.recommendations,
+          },
         );
       }
     }
@@ -672,14 +665,14 @@ export class SecurityScanner {
           successfulScans: results.filter(r => r.status === 'success').length,
           failedScans: results.filter(r => r.status === 'failed').length,
           warningScans: results.filter(r => r.status === 'warning').length,
-          totalVulnerabilities: results.reduce((sum, r) => sum + r.summary.total, 0)
+          totalVulnerabilities: results.reduce((sum, r) => sum + r.summary.total, 0),
         },
-        results
+        results,
       };
 
       const reportPath = path.join(this.config.reportPath, `security-scan-${Date.now()}.json`);
       await writeFile(reportPath, JSON.stringify(report, null, 2));
-      
+
       console.log(`Security scan report saved to: ${reportPath}`);
     } catch (error) {
       console.error('Failed to generate combined report:', error);
@@ -706,7 +699,7 @@ export class SecurityScanner {
       'high': 'high',
       'moderate': 'medium',
       'low': 'low',
-      'info': 'info'
+      'info': 'info',
     };
     return mapping[severity.toLowerCase()] || 'medium';
   }
@@ -746,16 +739,12 @@ export class SecurityScanner {
 }
 
 // Singleton instance
-export const securityScanner = SecurityScanner.getInstance();
+export const securityScanner = new SecurityScanner();
 
 // Convenience functions
-export const runSecurityScan = (scanTypes?: SecurityScanType[]): Promise<SecurityScanResult[]> => {
-  return securityScanner.runSecurityScan(scanTypes);
-};
+export const runSecurityScan = (scanTypes?: SecurityScanType[]): Promise<SecurityScanResult[]> => securityScanner.runSecurityScan(scanTypes);
 
-export const getSecurityScanResults = () => {
-  return securityScanner.getLastScanResults();
-};
+export const getSecurityScanResults = () => securityScanner.getLastScanResults();
 
 // Cleanup on process exit
 process.on('exit', () => {

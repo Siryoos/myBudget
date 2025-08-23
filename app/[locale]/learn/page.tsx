@@ -1,11 +1,12 @@
-import { Metadata } from 'next'
-import { EducationHub } from '@/components/education/EducationHub'
-import { TipsFeed } from '@/components/education/TipsFeed'
+import type { Metadata } from 'next';
+
+import { EducationHub } from '@/components/education/EducationHub';
+import { TipsFeed } from '@/components/education/TipsFeed';
 
 export const metadata: Metadata = {
   title: 'Financial Education',
   description: 'Learn and improve your financial knowledge with interactive modules and tips',
-}
+};
 
 export default function LearnPage() {
   return (
@@ -22,14 +23,14 @@ export default function LearnPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Education Hub */}
         <div className="lg:col-span-2">
-          <EducationHub 
+          <EducationHub
             topics={[
               'Budgeting Basics',
               'Emergency Funds',
               'Debt Management',
               'Investment Introduction',
               'Credit Score',
-              'Tax Planning'
+              'Tax Planning',
             ]}
             interactiveContent={true}
             progressTracking={true}
@@ -39,7 +40,7 @@ export default function LearnPage() {
 
         {/* Tips Feed Sidebar */}
         <div>
-          <TipsFeed 
+          <TipsFeed
             personalized={true}
             dailyTips={true}
             contextual={true}
@@ -47,6 +48,6 @@ export default function LearnPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 

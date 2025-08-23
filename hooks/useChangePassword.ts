@@ -1,5 +1,6 @@
-import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+
 import { useAuth } from '@/contexts/AuthContext';
 import type { ApiResponse } from '@/types';
 
@@ -56,7 +57,7 @@ export function useChangePassword() {
 
       // Normal success handling
       setSuccess(result.data?.message || 'Password changed successfully');
-      
+
       // Reset form after successful password change
       setTimeout(() => {
         setSuccess(null);

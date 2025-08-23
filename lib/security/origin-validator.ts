@@ -54,12 +54,12 @@ const DEFAULT_CONFIG: OriginValidationConfig = {
     'vbscript:',
     'about:',
     'chrome:',
-    'moz-extension:'
+    'moz-extension:',
   ],
   maxOriginLength: parseInt(process.env.ORIGIN_VALIDATION_MAX_LENGTH || '2048'),
   validatePorts: process.env.ORIGIN_VALIDATION_VALIDATE_PORTS !== 'false',
   allowedPorts: [80, 443, 3000, 8080, 8443],
-  blockedPorts: [22, 23, 25, 53, 110, 143, 993, 995, 3306, 5432, 6379, 27017]
+  blockedPorts: [22, 23, 25, 53, 110, 143, 993, 995, 3306, 5432, 6379, 27017],
 };
 
 // Origin validator
@@ -169,7 +169,7 @@ export class OriginValidator {
 
       // Try to parse as URL
       const url = new URL(origin);
-      
+
       // Validate protocol
       if (!this.config.allowedProtocols.includes(url.protocol)) {
         throw new Error(`Protocol ${url.protocol} is not allowed`);
@@ -187,10 +187,10 @@ export class OriginValidator {
       // If URL parsing fails, check if it's an IP address
       if (isIP(origin)) {
         // Create a mock URL for IP addresses
-        const mockUrl = new URL('http://' + origin);
+        const mockUrl = new URL(`http://${origin}`);
         return mockUrl;
       }
-      
+
       return null;
     }
   }
@@ -271,7 +271,7 @@ export class OriginValidator {
       pathname: url.pathname,
       isLocalhost,
       isPrivateIP,
-      isReservedIP
+      isReservedIP,
     };
   }
 
@@ -291,8 +291,8 @@ export class OriginValidator {
 
   // Check if IP is private
   private isPrivateIP(hostname: string): boolean {
-    if (!isIPv4(hostname)) return false;
-    
+    if (!isIPv4(hostname)) {return false;}
+
     const parts = hostname.split('.').map(Number);
     return (
       (parts[0] === 10) ||
@@ -305,8 +305,8 @@ export class OriginValidator {
 
   // Check if IP is reserved
   private isReservedIP(hostname: string): boolean {
-    if (!isIPv4(hostname)) return false;
-    
+    if (!isIPv4(hostname)) {return false;}
+
     const parts = hostname.split('.').map(Number);
     return (
       (parts[0] === 0) ||
@@ -343,21 +343,21 @@ export class OriginValidator {
     isValid: boolean,
     isAllowed: boolean,
     reason: string,
-    metadata?: any
+    metadata?: any,
   ): OriginValidationResult {
     return {
       isValid,
       isAllowed,
       reason,
       origin,
-      metadata: metadata || this.extractOriginMetadata(new URL('http://' + origin), origin)
+      metadata: metadata || this.extractOriginMetadata(new URL(`http://${origin}`), origin),
     };
   }
 
   // Add allowed origin
   addAllowedOrigin(origin: string): void {
     this.allowedOrigins.add(origin);
-    
+
     // If it's a pattern, compile it
     if (origin.includes('*') || origin.includes('?')) {
       const pattern = this.convertWildcardToRegex(origin);
@@ -389,7 +389,7 @@ export class OriginValidator {
         .replace(/\./g, '\\.')
         .replace(/\*/g, '.*')
         .replace(/\?/g, '.');
-      
+
       return new RegExp(`^${regexPattern}$`);
     } catch {
       return null;
@@ -443,7 +443,7 @@ export class OriginValidator {
       isValid: errors.length === 0,
       errors,
       warnings,
-      parsedOrigins
+      parsedOrigins,
     };
   }
 
@@ -458,7 +458,7 @@ export class OriginValidator {
       totalAllowedOrigins: this.allowedOrigins.size,
       totalBlockedOrigins: this.blockedOrigins.size,
       totalPatterns: this.originPatterns.length,
-      config: { ...this.config }
+      config: { ...this.config },
     };
   }
 
@@ -484,18 +484,14 @@ export class OriginValidator {
 export const originValidator = OriginValidator.getInstance();
 
 // Convenience functions
-export const validateOrigin = (origin: string): OriginValidationResult => {
-  return originValidator.validateOrigin(origin);
-};
+export const validateOrigin = (origin: string): OriginValidationResult => originValidator.validateOrigin(origin);
 
 export const validateAllowedOriginsFormat = (allowedOrigins: string): {
   isValid: boolean;
   errors: string[];
   warnings: string[];
   parsedOrigins: string[];
-} => {
-  return originValidator.validateAllowedOriginsFormat(allowedOrigins);
-};
+} => originValidator.validateAllowedOriginsFormat(allowedOrigins);
 
 export const addAllowedOrigin = (origin: string): void => {
   originValidator.addAllowedOrigin(origin);

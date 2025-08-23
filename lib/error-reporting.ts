@@ -6,7 +6,7 @@ export interface ErrorContext {
   url?: string;
   component?: string;
   action?: string;
-  extra?: Record<string, any>;
+  extra?: Record<string, unknown>;
 }
 
 export interface ErrorReport {
@@ -18,22 +18,32 @@ export interface ErrorReport {
   fingerprint?: string;
 }
 
+// Sentry configuration interface
+export interface SentryConfig {
+  dsn?: string;
+  environment?: string;
+  userId?: string;
+}
+
+// Extended window interface for Sentry
+interface WindowWithSentry extends Window {
+  Sentry?: {
+    setUser: (user: { id: string; email?: string } | null) => void;
+    captureException: (error: Error, options?: { level?: string; contexts?: { custom?: ErrorContext } }) => void;
+    captureMessage: (message: string, level?: string) => void;
+    addBreadcrumb: (breadcrumb: { message: string; category?: string; data?: Record<string, unknown>; level?: string; timestamp?: number }) => void;
+    captureUserFeedback: (feedback: { event_id: string; name?: string; email?: string; comments: string }) => void;
+  };
+}
+
 export class ErrorReportingService {
-  private static instance: ErrorReportingService;
   private isInitialized = false;
   private userId?: string;
   private queue: ErrorReport[] = [];
-  private flushTimer?: NodeJS.Timeout;
-  
-  private constructor() {}
-  
-  static getInstance(): ErrorReportingService {
-    if (!ErrorReportingService.instance) {
-      ErrorReportingService.instance = new ErrorReportingService();
-    }
-    return ErrorReportingService.instance;
-  }
-  
+  private flushTimer?: ReturnType<typeof setTimeout>;
+
+  constructor() {}
+
   /**
    * Initialize error reporting service
    */
@@ -42,45 +52,45 @@ export class ErrorReportingService {
     environment?: string;
     userId?: string;
   }) {
-    if (this.isInitialized) return;
-    
+    if (this.isInitialized) {return;}
+
     this.userId = config.userId;
-    
+
     // Set up global error handlers
     if (typeof window !== 'undefined') {
       window.addEventListener('error', this.handleWindowError.bind(this));
       window.addEventListener('unhandledrejection', this.handleUnhandledRejection.bind(this));
     }
-    
+
     // Initialize Sentry if DSN is provided
     if (config.dsn && typeof window !== 'undefined') {
       this.initializeSentry(config);
     }
-    
+
     this.isInitialized = true;
   }
-  
+
   /**
    * Initialize Sentry SDK
    */
-  private async initializeSentry(config: any) {
+  private async initializeSentry(config: SentryConfig) {
     try {
       const Sentry = await import('@sentry/nextjs');
-      
+
       Sentry.init({
         dsn: config.dsn,
         environment: config.environment || 'production',
         integrations: [
           // new Sentry.BrowserTracing(), // Disabled for compatibility
-                      // new Sentry.Replay({ // Disabled for compatibility
-            //   maskAllText: true,
-            //   blockAllMedia: true,
-            // }),
+          // new Sentry.Replay({ // Disabled for compatibility
+          //   maskAllText: true,
+          //   blockAllMedia: true,
+          // }),
         ],
         tracesSampleRate: config.environment === 'production' ? 0.1 : 1.0,
         replaysSessionSampleRate: 0.1,
         replaysOnErrorSampleRate: 1.0,
-        beforeSend: (event, hint) => {
+        beforeSend: (event, _hint) => {
           // Sanitize sensitive data
           if (event.request?.cookies) {
             delete event.request.cookies;
@@ -91,7 +101,7 @@ export class ErrorReportingService {
           return event;
         },
       });
-      
+
       if (this.userId) {
         Sentry.setUser({ id: this.userId });
       }
@@ -99,39 +109,39 @@ export class ErrorReportingService {
       console.error('Failed to initialize Sentry:', error);
     }
   }
-  
+
   /**
    * Set user context
    */
   setUser(userId: string, email?: string) {
     this.userId = userId;
-    
-    if (typeof window !== 'undefined' && (window as any).Sentry) {
-      (window as any).Sentry.setUser({
+
+    if (typeof window !== 'undefined' && (window as WindowWithSentry).Sentry) {
+      (window as WindowWithSentry).Sentry.setUser({
         id: userId,
         email: email ? this.hashEmail(email) : undefined,
       });
     }
   }
-  
+
   /**
    * Clear user context
    */
   clearUser() {
     this.userId = undefined;
-    
-    if (typeof window !== 'undefined' && (window as any).Sentry) {
-      (window as any).Sentry.setUser(null);
+
+    if (typeof window !== 'undefined' && (window as WindowWithSentry).Sentry) {
+      (window as WindowWithSentry).Sentry.setUser(null);
     }
   }
-  
+
   /**
    * Capture an error
    */
   captureError(
     error: Error | string,
     context?: ErrorContext,
-    level: 'error' | 'warning' | 'info' = 'error'
+    level: 'error' | 'warning' | 'info' = 'error',
   ) {
     const errorReport: ErrorReport = {
       message: error instanceof Error ? error.message : error,
@@ -146,35 +156,35 @@ export class ErrorReportingService {
       },
       fingerprint: this.generateFingerprint(error),
     };
-    
+
     // Add to queue
     this.queue.push(errorReport);
-    
+
     // Send to Sentry if available
-    if (typeof window !== 'undefined' && (window as any).Sentry) {
+    if (typeof window !== 'undefined' && (window as WindowWithSentry).Sentry) {
       if (error instanceof Error) {
-        (window as any).Sentry.captureException(error, {
+        (window as WindowWithSentry).Sentry.captureException(error, {
           level,
           contexts: {
             custom: context,
           },
         });
       } else {
-        (window as any).Sentry.captureMessage(error, level);
+        (window as WindowWithSentry).Sentry.captureMessage(error, level);
       }
     }
-    
+
     // Log in development
     if (process.env.NODE_ENV === 'development') {
       console.group(`🚨 ${level.toUpperCase()}: ${errorReport.message}`);
       console.error('Error details:', errorReport);
       console.groupEnd();
     }
-    
+
     // Schedule flush
     this.scheduleFlush();
   }
-  
+
   /**
    * Capture an exception (alias for captureError for compatibility)
    */
@@ -182,8 +192,8 @@ export class ErrorReportingService {
     error: Error | string,
     options?: {
       tags?: Record<string, string>;
-      extra?: Record<string, any>;
-    }
+      extra?: Record<string, unknown>;
+    },
   ) {
     const context: ErrorContext = {
       ...options?.extra,
@@ -197,24 +207,24 @@ export class ErrorReportingService {
   captureMessage(message: string, level: 'error' | 'warning' | 'info' = 'info', context?: ErrorContext) {
     this.captureError(message, context, level);
   }
-  
+
   /**
    * Add breadcrumb for debugging
    */
   addBreadcrumb(breadcrumb: {
     message: string;
     category?: string;
-    data?: Record<string, any>;
+    data?: Record<string, unknown>;
     level?: 'debug' | 'info' | 'warning' | 'error';
   }) {
-    if (typeof window !== 'undefined' && (window as any).Sentry) {
-      (window as any).Sentry.addBreadcrumb({
+    if (typeof window !== 'undefined' && (window as WindowWithSentry).Sentry) {
+      (window as WindowWithSentry).Sentry.addBreadcrumb?.({
         ...breadcrumb,
         timestamp: Date.now() / 1000,
       });
     }
   }
-  
+
   /**
    * Capture user feedback
    */
@@ -238,15 +248,15 @@ export class ErrorReportingService {
           },
         }),
       });
-      
+
       // Also send to Sentry if available
-      if (typeof window !== 'undefined' && (window as any).Sentry && feedback.associatedEventId) {
+      if (typeof window !== 'undefined' && (window as WindowWithSentry).Sentry && feedback.associatedEventId) {
         const user = feedback.name || feedback.email ? {
           name: feedback.name,
           email: feedback.email,
         } : undefined;
-        
-        (window as any).Sentry.captureUserFeedback({
+
+        (window as WindowWithSentry).Sentry.captureUserFeedback({
           event_id: feedback.associatedEventId,
           name: user?.name,
           email: user?.email,
@@ -257,42 +267,47 @@ export class ErrorReportingService {
       console.error('Failed to capture user feedback:', error);
     }
   }
-  
+
   /**
    * Handle window error events
    */
   private handleWindowError(event: ErrorEvent) {
-    this.captureError(event.error || event.message, {
-      component: 'window',
-      action: 'error',
-      extra: {
-        filename: event.filename,
-        lineno: event.lineno,
-        colno: event.colno,
+    const error: unknown = event.error;
+    this.captureError(
+      error instanceof Error ? error : event.message,
+      {
+        component: 'window',
+        action: 'error',
+        extra: {
+          filename: event.filename,
+          lineno: event.lineno,
+          colno: event.colno,
+        },
       },
-    });
+    );
   }
-  
+
   /**
    * Handle unhandled promise rejections
    */
   private handleUnhandledRejection(event: PromiseRejectionEvent) {
+    const reason: unknown = event.reason;
     this.captureError(
-      event.reason instanceof Error ? event.reason : new Error(String(event.reason)),
+      reason instanceof Error ? reason : new Error(String(reason as string)),
       {
         component: 'promise',
         action: 'unhandledRejection',
-      }
+      },
     );
   }
-  
+
   /**
    * Generate fingerprint for error deduplication
    */
   private generateFingerprint(error: Error | string): string {
     const message = error instanceof Error ? error.message : error;
     const stack = error instanceof Error ? error.stack : '';
-    
+
     // Simple hash function
     let hash = 0;
     const str = `${message}${stack}`;
@@ -301,29 +316,29 @@ export class ErrorReportingService {
       hash = ((hash << 5) - hash) + char;
       hash = hash & hash; // Convert to 32-bit integer
     }
-    
+
     return Math.abs(hash).toString(36);
   }
-  
+
   /**
    * Hash email for privacy
    */
   private hashEmail(email: string): string {
     // Simple hash for demo - use proper hashing in production
-    return email.split('@')[0].substring(0, 3) + '***@' + email.split('@')[1];
+    return `${email.split('@')[0].substring(0, 3)}***@${email.split('@')[1]}`;
   }
-  
+
   /**
    * Schedule flush of error queue
    */
   private scheduleFlush() {
-    if (this.flushTimer) return;
-    
+    if (this.flushTimer) {return;}
+
     this.flushTimer = setTimeout(() => {
       this.flush();
     }, 5000); // Flush every 5 seconds
   }
-  
+
   /**
    * Flush error queue to backend
    */
@@ -332,10 +347,10 @@ export class ErrorReportingService {
       this.flushTimer = undefined;
       return;
     }
-    
+
     const errors = [...this.queue];
     this.queue = [];
-    
+
     try {
       await apiClient.request('/api/errors/batch', {
         method: 'POST',
@@ -346,10 +361,10 @@ export class ErrorReportingService {
       this.queue.unshift(...errors);
       console.error('Failed to flush error queue:', error);
     }
-    
+
     this.flushTimer = undefined;
   }
-  
+
   /**
    * Manually flush errors
    */
@@ -363,16 +378,16 @@ export class ErrorReportingService {
 }
 
 // Export singleton instance
-export const errorReporter = ErrorReportingService.getInstance();
+export const errorReporter = new ErrorReportingService();
 
 // Export convenience hook
 export function useErrorHandler() {
   return {
-    captureError: (error: Error | string, context?: ErrorContext) => 
+    captureError: (error: Error | string, context?: ErrorContext) =>
       errorReporter.captureError(error, context),
     captureMessage: (message: string, level?: 'error' | 'warning' | 'info', context?: ErrorContext) =>
       errorReporter.captureMessage(message, level, context),
-    addBreadcrumb: (breadcrumb: any) =>
+    addBreadcrumb: (breadcrumb: Parameters<typeof errorReporter.addBreadcrumb>[0]) =>
       errorReporter.addBreadcrumb(breadcrumb),
   };
 }

@@ -1,17 +1,18 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { useTranslation } from '@/lib/useTranslation'
-import { 
-  PlusIcon, 
-  BanknotesIcon, 
-  ChartBarIcon, 
+import {
+  PlusIcon,
+  BanknotesIcon,
+  ChartBarIcon,
   BellIcon,
-  CalendarIcon 
-} from '@heroicons/react/24/outline'
-import { Button } from '@/components/ui/Button'
-import { formatDate } from '@/lib/utils'
-import { formatCurrency } from '@/lib/i18n'
+  CalendarIcon,
+} from '@heroicons/react/24/outline';
+import { useState, useEffect } from 'react';
+
+import { Button } from '@/components/ui/Button';
+import { formatCurrency } from '@/lib/i18n';
+import { useTranslation } from '@/lib/useTranslation';
+import { formatDate } from '@/lib/utils';
 
 interface WelcomeHeaderProps {
   showGreeting?: boolean
@@ -19,28 +20,28 @@ interface WelcomeHeaderProps {
   showQuickActions?: boolean
 }
 
-export function WelcomeHeader({ 
-  showGreeting = true, 
-  showDate = true, 
-  showQuickActions = true 
+export function WelcomeHeader({
+  showGreeting = true,
+  showDate = true,
+  showQuickActions = true,
 }: WelcomeHeaderProps) {
-  const { t, i18n, isReady } = useTranslation(['common', 'dashboard'])
-  const [userName] = useState('Alex') // This would come from user context
-  const [greeting, setGreeting] = useState('morning') // Default to morning
-  const [today, setToday] = useState(new Date())
-  
+  const { t, i18n, isReady } = useTranslation(['common', 'dashboard']);
+  const [userName] = useState('Alex'); // This would come from user context
+  const [greeting, setGreeting] = useState('morning'); // Default to morning
+  const [today, setToday] = useState(new Date());
+
   // Set greeting and date on client side to avoid hydration mismatch
   useEffect(() => {
-    const hour = new Date().getHours()
-    const timeBasedGreeting = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening'
-    setGreeting(timeBasedGreeting)
-    setToday(new Date())
-  }, [])
+    const hour = new Date().getHours();
+    const timeBasedGreeting = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening';
+    setGreeting(timeBasedGreeting);
+    setToday(new Date());
+  }, []);
 
   // Debug logging
   useEffect(() => {
-    console.log('WelcomeHeader i18n state:', { isReady, language: i18n.language, isInitialized: i18n.isInitialized })
-  }, [isReady, i18n.language, i18n.isInitialized])
+    console.log('WelcomeHeader i18n state:', { isReady, language: i18n.language, isInitialized: i18n.isInitialized });
+  }, [isReady, i18n.language, i18n.isInitialized]);
 
   const quickActions = [
     {
@@ -61,7 +62,7 @@ export function WelcomeHeader({
       action: () => console.log('View budget'),
       variant: 'outline' as const,
     },
-  ]
+  ];
 
   return (
     <div className="bg-gradient-to-r from-primary-trust-blue to-primary-trust-blue-light rounded-lg p-6 text-white animate-fade-in">
@@ -72,7 +73,7 @@ export function WelcomeHeader({
               {t(`common:app.greeting.${greeting}`, { defaultValue: `Good ${greeting}` })}, {userName}! 👋
             </h1>
           )}
-          
+
           <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-6 space-y-2 sm:space-y-0">
             {showDate && (
               <div className="flex items-center text-primary-trust-blue-light">
@@ -82,7 +83,7 @@ export function WelcomeHeader({
                 </span>
               </div>
             )}
-            
+
             <div className="flex items-center text-primary-trust-blue-light">
               <BellIcon className="h-5 w-5 mr-2" />
               <span className="text-sm">
@@ -95,7 +96,7 @@ export function WelcomeHeader({
         {showQuickActions && (
           <div className="mt-4 sm:mt-0 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
             {quickActions.map((action, index) => {
-              const IconComponent = action.icon
+              const IconComponent = action.icon;
               return (
                 <Button
                   key={index}
@@ -108,7 +109,7 @@ export function WelcomeHeader({
                   <span className="hidden sm:inline">{action.label}</span>
                   <span className="sm:hidden">{action.label.split(' ')[0]}</span>
                 </Button>
-              )
+              );
             })}
           </div>
         )}
@@ -124,20 +125,20 @@ export function WelcomeHeader({
           </div>
           <div className="ml-3">
             <p className="text-sm font-medium">
-              {t('dashboard:achievements.monthlySaving', { 
+              {t('dashboard:achievements.monthlySaving', {
                 amount: formatCurrency(500, i18n.language),
-                defaultValue: 'You\'ve saved $500 this month!'
+                defaultValue: 'You\'ve saved $500 this month!',
               })}
             </p>
             <p className="text-xs text-primary-trust-blue-light mt-1">
-              {t('dashboard:achievements.goalProgress', { 
+              {t('dashboard:achievements.goalProgress', {
                 percentage: 83,
-                defaultValue: 'You\'re 83% towards your goal!'
+                defaultValue: 'You\'re 83% towards your goal!',
               })}
             </p>
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }

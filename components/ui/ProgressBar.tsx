@@ -1,4 +1,4 @@
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/utils';
 
 interface ProgressBarProps {
   value: number
@@ -21,21 +21,21 @@ export function ProgressBar({
   className,
   animated = true,
 }: ProgressBarProps) {
-  const percentage = Math.min(Math.max((value / max) * 100, 0), 100)
-  
+  const percentage = Math.min(Math.max((value / max) * 100, 0), 100);
+
   const sizeClasses = {
     sm: 'h-2',
     md: 'h-3',
     lg: 'h-4',
-  }
-  
+  };
+
   const colorClasses = {
     primary: 'bg-primary-trust-blue',
     secondary: 'bg-secondary-growth-green',
     success: 'bg-accent-success-emerald',
     warning: 'bg-accent-action-orange',
     danger: 'bg-accent-warning-red',
-  }
+  };
 
   return (
     <div className={cn('w-full', className)}>
@@ -53,11 +53,11 @@ export function ProgressBar({
           )}
         </div>
       )}
-      
-      <div 
+
+      <div
         className={cn(
           'w-full bg-neutral-light-gray rounded-full overflow-hidden',
-          sizeClasses[size]
+          sizeClasses[size],
         )}
         role="progressbar"
         aria-valuenow={value}
@@ -69,17 +69,17 @@ export function ProgressBar({
           className={cn(
             'h-full rounded-full transition-all duration-500 ease-out',
             colorClasses[color],
-            animated && 'animate-pulse-gentle'
+            animated && 'animate-pulse-gentle',
           )}
           style={{ width: `${percentage}%` }}
         />
       </div>
-      
+
       {/* Screen reader only text */}
       <span className="sr-only">
         {label && `${label}: `}
         {value} of {max} ({percentage.toFixed(0)}%)
       </span>
     </div>
-  )
+  );
 }

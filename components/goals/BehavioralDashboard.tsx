@@ -1,24 +1,27 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { 
+import {
   PlusIcon,
   TrophyIcon,
   ChartBarIcon,
   LightBulbIcon,
   FireIcon,
-  UsersIcon
-} from '@heroicons/react/24/outline'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Card, CardContent, CardHeader } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
-import { useTranslation } from '@/lib/useTranslation'
-import { GoalWizard } from './GoalWizard'
-import { GoalProgressTracker } from './GoalProgressTracker'
-import { QuickSaveWidget } from './QuickSaveWidget'
-import { AchievementSystem } from './AchievementSystem'
-import { InsightsPanel } from './InsightsPanel'
-import type { SavingsGoal, QuickSaveData, Achievement } from '@/types'
+  UsersIcon,
+} from '@heroicons/react/24/outline';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect } from 'react';
+
+import { Button } from '@/components/ui/Button';
+import { Card, CardContent, CardHeader } from '@/components/ui/Card';
+import { useTranslation } from '@/lib/useTranslation';
+import type { SavingsGoal, QuickSaveData, Achievement } from '@/types';
+
+import { AchievementSystem } from './AchievementSystem';
+import { GoalProgressTracker } from './GoalProgressTracker';
+import { GoalWizard } from './GoalWizard';
+import { InsightsPanel } from './InsightsPanel';
+import { QuickSaveWidget } from './QuickSaveWidget';
+
 
 interface BehavioralDashboardProps {
   showAllFeatures?: boolean
@@ -33,12 +36,12 @@ export function BehavioralDashboard({
   showSocialProof = true,
   enableNotifications = true,
 }: BehavioralDashboardProps) {
-  const { t, isReady } = useTranslation(['goals', 'dashboard', 'common'])
-  const [goals, setGoals] = useState<SavingsGoal[]>([])
-  const [quickSaveHistory, setQuickSaveHistory] = useState<QuickSaveData[]>([])
-  const [activeTab, setActiveTab] = useState<'goals' | 'quick-save' | 'achievements' | 'insights'>('goals')
-  const [showGoalWizard, setShowGoalWizard] = useState(false)
-  const [recentAchievement, setRecentAchievement] = useState<Achievement | null>(null)
+  const { t, isReady } = useTranslation(['goals', 'dashboard', 'common']);
+  const [goals, setGoals] = useState<SavingsGoal[]>([]);
+  const [quickSaveHistory, setQuickSaveHistory] = useState<QuickSaveData[]>([]);
+  const [activeTab, setActiveTab] = useState<'goals' | 'quick-save' | 'achievements' | 'insights'>('goals');
+  const [showGoalWizard, setShowGoalWizard] = useState(false);
+  const [recentAchievement, setRecentAchievement] = useState<Achievement | null>(null);
 
   // Mock initial goals data - MUST be before any early returns
   useEffect(() => {
@@ -87,9 +90,9 @@ export function BehavioralDashboard({
           { id: '4', amount: 5000, description: 'Full budget ready', isCompleted: false },
         ],
       },
-    ]
-    setGoals(mockGoals)
-  }, [])
+    ];
+    setGoals(mockGoals);
+  }, []);
 
   if (!isReady) {
     return (
@@ -99,7 +102,7 @@ export function BehavioralDashboard({
           <p className="text-neutral-gray">{t('common:status.loading', { defaultValue: 'Loading...' })}</p>
         </div>
       </div>
-    )
+    );
   }
 
   // Handle goal creation
@@ -113,31 +116,31 @@ export function BehavioralDashboard({
       automationRules: [],
       createdAt: new Date(),
       updatedAt: new Date(),
-    } as SavingsGoal
+    } as SavingsGoal;
 
-    setGoals(prev => [...prev, goal])
-    setShowGoalWizard(false)
-  }
+    setGoals(prev => [...prev, goal]);
+    setShowGoalWizard(false);
+  };
 
   // Handle quick save
   const handleQuickSave = (saveData: QuickSaveData) => {
-    setQuickSaveHistory(prev => [saveData, ...prev])
-    
+    setQuickSaveHistory(prev => [saveData, ...prev]);
+
     // Update goal progress if saving towards a specific goal
     if (saveData.goalId) {
-      setGoals(prev => prev.map(goal => 
-        goal.id === saveData.goalId 
+      setGoals(prev => prev.map(goal =>
+        (goal.id === saveData.goalId
           ? { ...goal, currentAmount: goal.currentAmount + saveData.amount }
-          : goal
-      ))
+          : goal),
+      ));
     }
-  }
+  };
 
   // Handle achievement unlocked
   const handleAchievementUnlocked = (achievement: Achievement) => {
-    setRecentAchievement(achievement)
-    setTimeout(() => setRecentAchievement(null), 5000)
-  }
+    setRecentAchievement(achievement);
+    setTimeout(() => setRecentAchievement(null), 5000);
+  };
 
   const tabs = [
     {
@@ -164,7 +167,7 @@ export function BehavioralDashboard({
       icon: LightBulbIcon,
       description: t('dashboard:tabs.insightsDescription', { defaultValue: 'Get personalized financial insights' }),
     },
-  ]
+  ];
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -204,7 +207,7 @@ export function BehavioralDashboard({
               />
             )}
           </div>
-        )
+        );
 
       case 'quick-save':
         return (
@@ -262,7 +265,7 @@ export function BehavioralDashboard({
               </Card>
             )}
           </div>
-        )
+        );
 
       case 'achievements':
         return (
@@ -283,7 +286,7 @@ export function BehavioralDashboard({
               onAchievementUnlocked={handleAchievementUnlocked}
             />
           </div>
-        )
+        );
 
       case 'insights':
         return (
@@ -305,12 +308,12 @@ export function BehavioralDashboard({
               showTrends={true}
             />
           </div>
-        )
+        );
 
       default:
-        return null
+        return null;
     }
-  }
+  };
 
   return (
     <div className="space-y-6">
@@ -327,8 +330,8 @@ export function BehavioralDashboard({
               {t('dashboard:header.title', { defaultValue: 'SmartSave Behavioral Dashboard' })}
             </h1>
             <p className="text-lg text-gray-700 max-w-3xl mx-auto">
-              {t('dashboard:header.subtitle', { 
-                defaultValue: 'Leverage behavioral psychology to build better saving habits. Our platform uses proven techniques like loss aversion, social proof, and gamification to help you achieve your financial goals.' 
+              {t('dashboard:header.subtitle', {
+                defaultValue: 'Leverage behavioral psychology to build better saving habits. Our platform uses proven techniques like loss aversion, social proof, and gamification to help you achieve your financial goals.',
               })}
             </p>
           </div>
@@ -406,32 +409,32 @@ export function BehavioralDashboard({
                   {t('dashboard:psychology.lossAversion.title', { defaultValue: 'Loss Aversion' })}
                 </h3>
                 <p className="text-sm text-gray-600">
-                  {t('dashboard:psychology.lossAversion.description', { 
-                    defaultValue: 'We reframe goals to emphasize avoiding negative outcomes, which is 2-3x more motivating than gaining benefits.' 
+                  {t('dashboard:psychology.lossAversion.description', {
+                    defaultValue: 'We reframe goals to emphasize avoiding negative outcomes, which is 2-3x more motivating than gaining benefits.',
                   })}
                 </p>
               </div>
-              
+
               <div className="text-center">
                 <div className="text-3xl mb-2">👥</div>
                 <h3 className="font-semibold text-gray-900 mb-2">
                   {t('dashboard:psychology.socialProof.title', { defaultValue: 'Social Proof' })}
                 </h3>
                 <p className="text-sm text-gray-600">
-                  {t('dashboard:psychology.socialProof.description', { 
-                    defaultValue: 'See how you compare to peers and join a community of successful savers.' 
+                  {t('dashboard:psychology.socialProof.description', {
+                    defaultValue: 'See how you compare to peers and join a community of successful savers.',
                   })}
                 </p>
               </div>
-              
+
               <div className="text-center">
                 <div className="text-3xl mb-2">🏆</div>
                 <h3 className="font-semibold text-gray-900 mb-2">
                   {t('dashboard:psychology.gamification.title', { defaultValue: 'Gamification' })}
                 </h3>
                 <p className="text-sm text-gray-600">
-                  {t('dashboard:psychology.gamification.description', { 
-                    defaultValue: 'Earn points, badges, and rewards to make saving fun and engaging.' 
+                  {t('dashboard:psychology.gamification.description', {
+                    defaultValue: 'Earn points, badges, and rewards to make saving fun and engaging.',
                   })}
                 </p>
               </div>
@@ -440,13 +443,11 @@ export function BehavioralDashboard({
         </Card>
       )}
     </div>
-  )
+  );
 }
 
 // Helper function to format currency (should be imported from useCurrency hook)
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('en-US', {
+const formatCurrency = (amount: number) => new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
-  }).format(amount)
-}
+  }).format(amount);

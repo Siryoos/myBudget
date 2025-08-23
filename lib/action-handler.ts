@@ -1,5 +1,6 @@
-import { apiClient } from './api-client';
 import type { InsightAction } from '@/types';
+
+import { apiClient } from './api-client';
 
 export interface ActionContext {
   userId?: string;
@@ -21,51 +22,49 @@ export type ActionHandler = (action: InsightAction, context: ActionContext) => P
 // Registry of custom action handlers
 const actionHandlers: Record<string, ActionHandler> = {
   // Goal-related actions
-  'create_goal': async (action, context) => {
-    return {
+  'create_goal': async (action, context) => ({
       success: true,
-      redirectUrl: '/goals/new'
-    };
-  },
-  
+      redirectUrl: '/goals/new',
+    }),
+
   'quick_save': async (action, context) => {
     if (!context.goalId || !context.data?.amount) {
       return {
         success: false,
-        message: 'Goal ID and amount are required'
+        message: 'Goal ID and amount are required',
       };
     }
-    
+
     try {
       const response = await apiClient.addGoalContribution(context.goalId, context.data.amount);
       return {
         success: response.success,
         message: response.success ? 'Contribution added successfully' : response.error,
-        data: response.data
+        data: response.data,
       };
     } catch (error) {
       return {
         success: false,
-        message: 'Failed to add contribution'
+        message: 'Failed to add contribution',
       };
     }
   },
-  
+
   // Budget-related actions
   'set_budget': async (action, context) => {
     if (!context.data?.category || !context.data?.amount) {
       return {
         success: false,
-        message: 'Category and amount are required'
+        message: 'Category and amount are required',
       };
     }
-    
+
     return {
       success: true,
-      redirectUrl: `/budget?category=${context.data.category}&amount=${context.data.amount}`
+      redirectUrl: `/budget?category=${context.data.category}&amount=${context.data.amount}`,
     };
   },
-  
+
   'track_coffee': async (action, context) => {
     // Create a transaction for coffee spending
     try {
@@ -75,81 +74,79 @@ const actionHandlers: Record<string, ActionHandler> = {
         category: 'food',
         description: 'Coffee',
         date: new Date().toISOString(),
-        tags: ['coffee', 'daily-expense']
+        tags: ['coffee', 'daily-expense'],
       });
-      
+
       return {
         success: response.success,
         message: response.success ? 'Coffee expense tracked' : response.error,
-        data: response.data
+        data: response.data,
       };
     } catch (error) {
       return {
         success: false,
-        message: 'Failed to track expense'
+        message: 'Failed to track expense',
       };
     }
   },
-  
+
   // Analytics actions
   'view_spending_analysis': async (action, context) => {
     const category = context.data?.category || 'all';
     return {
       success: true,
-      redirectUrl: `/analytics?category=${category}&view=spending`
+      redirectUrl: `/analytics?category=${category}&view=spending`,
     };
   },
-  
-  'compare_budgets': async (action, context) => {
-    return {
+
+  'compare_budgets': async (action, context) => ({
       success: true,
-      redirectUrl: '/budget/compare'
-    };
-  },
-  
+      redirectUrl: '/budget/compare',
+    }),
+
   // Notification actions
   'dismiss_insight': async (action, context) => {
     if (!context.data?.insightId) {
       return {
         success: false,
-        message: 'Insight ID is required'
+        message: 'Insight ID is required',
       };
     }
-    
+
     try {
       await apiClient.markNotificationRead(context.data.insightId);
       return {
         success: true,
-        message: 'Insight dismissed'
+        message: 'Insight dismissed',
       };
     } catch (error) {
       return {
         success: false,
-        message: 'Failed to dismiss insight'
+        message: 'Failed to dismiss insight',
       };
     }
   },
-  
+
   // Achievement actions
   'claim_reward': async (action, context) => {
     if (!context.data?.achievementId) {
       return {
         success: false,
-        message: 'Achievement ID is required'
+        message: 'Achievement ID is required',
       };
     }
-    
+
     // In a real implementation, this would claim the reward on the backend
     return {
       success: true,
       message: 'Reward claimed!',
       data: {
         points: 100,
-        badge: 'saver-pro'
-      }
+        badge: 'saver-pro',
+      },
     };
   },
-  
+
   // Settings actions
   'enable_notifications': async (action, context) => {
     try {
@@ -157,29 +154,27 @@ const actionHandlers: Record<string, ActionHandler> = {
         notifications: {
           budgetAlerts: true,
           goalReminders: true,
-          achievementUnlocks: true
-        }
+          achievementUnlocks: true,
+        },
       });
-      
+
       return {
         success: response.success,
-        message: response.success ? 'Notifications enabled' : response.error
+        message: response.success ? 'Notifications enabled' : response.error,
       };
     } catch (error) {
       return {
         success: false,
-        message: 'Failed to update settings'
+        message: 'Failed to update settings',
       };
     }
   },
-  
+
   // Automation actions
-  'setup_auto_save': async (action, context) => {
-    return {
+  'setup_auto_save': async (action, context) => ({
       success: true,
-      redirectUrl: '/goals/automation'
-    };
-  }
+      redirectUrl: '/goals/automation',
+    }),
 };
 
 export class ActionHandlerService {
@@ -191,10 +186,10 @@ export class ActionHandlerService {
     if (action.type === 'navigate') {
       return {
         success: true,
-        redirectUrl: action.target
+        redirectUrl: action.target,
       };
     }
-    
+
     // Handle external links
     if (action.type === 'external') {
       if (typeof window !== 'undefined') {
@@ -202,53 +197,53 @@ export class ActionHandlerService {
       }
       return {
         success: true,
-        message: 'Opened external link'
+        message: 'Opened external link',
       };
     }
-    
+
     // Handle custom execute actions
     if (action.type === 'execute') {
       const handler = actionHandlers[action.target];
-      
+
       if (!handler) {
         console.warn(`No handler found for action: ${action.target}`);
         return {
           success: false,
-          message: `Unknown action: ${action.target}`
+          message: `Unknown action: ${action.target}`,
         };
       }
-      
+
       try {
         return await handler(action, context);
       } catch (error) {
         console.error(`Error executing action ${action.target}:`, error);
         return {
           success: false,
-          message: 'Action failed'
+          message: 'Action failed',
         };
       }
     }
-    
+
     return {
       success: false,
-      message: 'Invalid action type'
+      message: 'Invalid action type',
     };
   }
-  
+
   /**
    * Register a custom action handler
    */
   registerHandler(actionId: string, handler: ActionHandler): void {
     actionHandlers[actionId] = handler;
   }
-  
+
   /**
    * Check if an action handler exists
    */
   hasHandler(actionId: string): boolean {
     return actionId in actionHandlers;
   }
-  
+
   /**
    * Get all registered action IDs
    */

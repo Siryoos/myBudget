@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
+
 import { useToast } from './useToast';
 
 export interface UseErrorHandlerOptions {
@@ -15,7 +16,7 @@ export function useErrorHandler(options: UseErrorHandlerOptions = {}) {
   const { toast } = useToast();
   const errorCountRef = useRef(0);
   const lastErrorRef = useRef<string>('');
-  
+
   const handle = useCallback(async (error: unknown) => {
     // Prevent duplicate error handling
     const errorStr = String(error);
@@ -24,15 +25,15 @@ export function useErrorHandler(options: UseErrorHandlerOptions = {}) {
     }
     lastErrorRef.current = errorStr;
     errorCountRef.current = Date.now();
-    
+
     const errorObj = error instanceof Error ? error : new Error(String(error));
     setError(errorObj);
     setIsError(true);
-    
+
     // Get error message
     const message = errorObj.message || 'An unexpected error occurred';
     setErrorMessage(message);
-    
+
     if (showToast) {
       toast({
         title: 'Error',
@@ -40,21 +41,21 @@ export function useErrorHandler(options: UseErrorHandlerOptions = {}) {
         variant: 'error',
       });
     }
-    
+
     options.onError?.(errorObj, message);
   }, [options, showToast, toast]);
-  
+
   const reset = useCallback(() => {
     setError(null);
     setIsError(false);
     setErrorMessage(null);
   }, []);
-  
+
   const throwError = useCallback((error: Error | string) => {
     const errorObj = error instanceof Error ? error : new Error(error);
     handle(errorObj);
   }, [handle]);
-  
+
   return {
     error,
     isError,
@@ -68,7 +69,7 @@ export function useErrorHandler(options: UseErrorHandlerOptions = {}) {
 // Specialized hook for async operations
 export function useAsyncError() {
   const { handle } = useErrorHandler();
-  
+
   return useCallback((error: unknown) => {
     handle(error);
   }, [handle]);

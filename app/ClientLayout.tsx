@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
-import { I18nProvider } from '@/lib/i18n-provider';
+import { useEffect } from 'react';
+
 import { getDirection } from '@/lib/i18n';
+import { I18nProvider } from '@/lib/i18n-provider';
 
 interface ClientLayoutProps {
   children: React.ReactNode;

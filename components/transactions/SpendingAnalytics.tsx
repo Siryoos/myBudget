@@ -1,15 +1,16 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { 
+import {
   ChartBarIcon,
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
   ExclamationTriangleIcon,
-  CalendarIcon
-} from '@heroicons/react/24/outline'
-import { Card, CardContent, CardHeader } from '@/components/ui/Card'
-import { formatCurrency, formatPercentage } from '@/lib/utils'
+  CalendarIcon,
+} from '@heroicons/react/24/outline';
+import { useState } from 'react';
+
+import { Card, CardContent, CardHeader } from '@/components/ui/Card';
+import { formatCurrency, formatPercentage } from '@/lib/utils';
 
 interface SpendingAnalyticsProps {
   timeRanges?: string[]
@@ -24,7 +25,7 @@ export function SpendingAnalytics({
   trendAnalysis = true,
   anomalyDetection = true,
 }: SpendingAnalyticsProps) {
-  const [selectedPeriod, setSelectedPeriod] = useState('month')
+  const [selectedPeriod, setSelectedPeriod] = useState('month');
 
   // Mock analytics data
   const analyticsData = {
@@ -73,35 +74,35 @@ export function SpendingAnalytics({
         { description: 'Unusual large purchase in Shopping', amount: 89.99, severity: 'medium' },
       ],
     },
-  }
+  };
 
-  const currentData = analyticsData[selectedPeriod as keyof typeof analyticsData] || analyticsData.month
-  const spendingChange = ((currentData.totalSpent - currentData.previousPeriod) / currentData.previousPeriod) * 100
-  const isSpendingUp = spendingChange > 0
+  const currentData = analyticsData[selectedPeriod as keyof typeof analyticsData] || analyticsData.month;
+  const spendingChange = ((currentData.totalSpent - currentData.previousPeriod) / currentData.previousPeriod) * 100;
+  const isSpendingUp = spendingChange > 0;
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
       case 'high':
-        return 'text-accent-warning-red bg-accent-warning-red/10 border-accent-warning-red/20'
+        return 'text-accent-warning-red bg-accent-warning-red/10 border-accent-warning-red/20';
       case 'medium':
-        return 'text-accent-action-orange bg-accent-action-orange/10 border-accent-action-orange/20'
+        return 'text-accent-action-orange bg-accent-action-orange/10 border-accent-action-orange/20';
       case 'low':
-        return 'text-secondary-growth-green bg-secondary-growth-green/10 border-secondary-growth-green/20'
+        return 'text-secondary-growth-green bg-secondary-growth-green/10 border-secondary-growth-green/20';
       default:
-        return 'text-neutral-gray bg-neutral-gray/10 border-neutral-gray/20'
+        return 'text-neutral-gray bg-neutral-gray/10 border-neutral-gray/20';
     }
-  }
+  };
 
   const CategoryChart = () => {
-    const maxAmount = Math.max(...currentData.categories.map(cat => cat.amount))
-    
+    const maxAmount = Math.max(...currentData.categories.map(cat => cat.amount));
+
     return (
       <div className="space-y-3">
         {currentData.categories.map((category, index) => (
           <div key={index} className="space-y-1">
             <div className="flex items-center justify-between text-sm">
               <div className="flex items-center">
-                <div 
+                <div
                   className="w-3 h-3 rounded-full mr-2"
                   style={{ backgroundColor: category.color }}
                 />
@@ -119,19 +120,19 @@ export function SpendingAnalytics({
               </div>
             </div>
             <div className="w-full bg-neutral-light-gray rounded-full h-2">
-              <div 
+              <div
                 className="h-2 rounded-full transition-all duration-500"
-                style={{ 
+                style={{
                   width: `${(category.amount / maxAmount) * 100}%`,
-                  backgroundColor: category.color 
+                  backgroundColor: category.color,
                 }}
               />
             </div>
           </div>
         ))}
       </div>
-    )
-  }
+    );
+  };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -152,7 +153,7 @@ export function SpendingAnalytics({
                 </p>
               </div>
             </div>
-            
+
             {/* Time Range Selector */}
             <div className="flex bg-neutral-light-gray rounded-lg p-1">
               {timeRanges.map((range) => (
@@ -190,7 +191,7 @@ export function SpendingAnalytics({
                 {formatPercentage(Math.abs(spendingChange))} vs last {selectedPeriod}
               </div>
             </div>
-            
+
             {currentData.totalIncome > 0 && (
               <div className="text-center bg-neutral-light-gray/50 rounded-lg p-4">
                 <div className="text-2xl font-bold text-secondary-growth-green">
@@ -202,7 +203,7 @@ export function SpendingAnalytics({
                 </div>
               </div>
             )}
-            
+
             <div className="text-center bg-neutral-light-gray/50 rounded-lg p-4">
               <div className="text-2xl font-bold text-primary-trust-blue">
                 {currentData.categories.length}
@@ -212,7 +213,7 @@ export function SpendingAnalytics({
                 Top: {currentData.categories[0]?.name}
               </div>
             </div>
-            
+
             <div className="text-center bg-neutral-light-gray/50 rounded-lg p-4">
               <div className="text-2xl font-bold text-accent-action-orange">
                 {formatCurrency(currentData.totalSpent / (selectedPeriod === 'week' ? 7 : selectedPeriod === 'month' ? 30 : 90))}
@@ -257,8 +258,8 @@ export function SpendingAnalytics({
                   <div key={index} className="flex items-center justify-between p-2 bg-neutral-light-gray/30 rounded-lg">
                     <div className="flex items-center">
                       <div className={`p-1 rounded-full mr-2 ${
-                        trend.isIncrease 
-                          ? 'bg-accent-warning-red/10 text-accent-warning-red' 
+                        trend.isIncrease
+                          ? 'bg-accent-warning-red/10 text-accent-warning-red'
                           : 'bg-secondary-growth-green/10 text-secondary-growth-green'
                       }`}>
                         {trend.isIncrease ? (
@@ -295,8 +296,8 @@ export function SpendingAnalytics({
             <CardContent>
               <div className="space-y-3">
                 {currentData.anomalies.map((anomaly, index) => (
-                  <div 
-                    key={index} 
+                  <div
+                    key={index}
                     className={`p-3 rounded-lg border ${getSeverityColor(anomaly.severity)}`}
                   >
                     <div className="flex items-start">
@@ -348,5 +349,5 @@ export function SpendingAnalytics({
         </Card>
       </div>
     </div>
-  )
+  );
 }

@@ -1,38 +1,40 @@
-'use client'
+'use client';
 
-import React, { useState, useCallback, useEffect, useMemo } from 'react'
-import { 
+import {
   LightBulbIcon,
   ChartBarIcon,
   UserGroupIcon,
   ArrowRightIcon,
-  XMarkIcon
-} from '@heroicons/react/24/outline'
-import { Card, CardContent, CardHeader } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
-import { formatCurrency } from '@/lib/utils'
-import { useTranslation } from '@/lib/useTranslation'
-import type { FinancialInsight } from '@/types'
-import { getMockInsights, getMockSavingTips, getMockPeerComparisons } from './insights-data'
-import { ErrorBoundary } from './ErrorBoundary'
-import type { 
-  TabType, 
-  InsightsPanelProps, 
-  TabButtonProps, 
+  XMarkIcon,
+} from '@heroicons/react/24/outline';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
+
+import { Button } from '@/components/ui/Button';
+import { Card, CardContent, CardHeader } from '@/components/ui/Card';
+import { useTranslation } from '@/lib/useTranslation';
+import { formatCurrency } from '@/lib/utils';
+import type { FinancialInsight } from '@/types';
+
+import { ErrorBoundary } from './ErrorBoundary';
+import { getMockInsights, getMockSavingTips, getMockPeerComparisons } from './insights-data';
+import type {
+  TabType,
+  InsightsPanelProps,
+  TabButtonProps,
   InsightAction,
   ValidationError,
-  ActionError 
-} from './InsightsPanel.types'
+  ActionError,
+} from './InsightsPanel.types';
 
-const TabButton = React.memo(({ 
-  tab, 
-  label, 
+const TabButton = React.memo(({
+  tab,
+  label,
   icon: Icon,
   activeTab,
-  onClick
+  onClick,
 }: TabButtonProps) => {
-  const isRTL = typeof window !== 'undefined' && document.documentElement.dir === 'rtl'
-  
+  const isRTL = typeof window !== 'undefined' && document.documentElement.dir === 'rtl';
+
   return (
     <button
       id={`${tab}-tab`}
@@ -50,29 +52,29 @@ const TabButton = React.memo(({
       <Icon className={`h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0 ${isRTL ? 'ml-1 sm:ml-2' : 'mr-1 sm:mr-2'}`} />
       <span className="truncate text-xs sm:text-sm">{label}</span>
     </button>
-  )
-})
+  );
+});
 
-TabButton.displayName = 'TabButton'
+TabButton.displayName = 'TabButton';
 
 function InsightsPanelContent({
   showSavingTips = true,
   personalizedRecommendations = true,
   comparePeers = true,
 }: InsightsPanelProps) {
-  const [dismissedInsights, setDismissedInsights] = useState<string[]>([])
-  const [activeTab, setActiveTab] = useState<TabType>('tips')
-  const [isLoading, setIsLoading] = useState(false)
-  const [isInitialLoading, setIsInitialLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [announcement, setAnnouncement] = useState<string>('')
-  const { t, isReady } = useTranslation(['dashboard', 'common'])
+  const [dismissedInsights, setDismissedInsights] = useState<string[]>([]);
+  const [activeTab, setActiveTab] = useState<TabType>('tips');
+  const [isLoading, setIsLoading] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [announcement, setAnnouncement] = useState<string>('');
+  const { t, isReady } = useTranslation(['dashboard', 'common']);
 
   // Mock data - in a real app, these would come from API calls
   // Memoize expensive data transformations
-  const insights = useMemo(() => getMockInsights(t), [t])
-  const savingTips = useMemo(() => getMockSavingTips(t), [t])
-  const peerComparisons = useMemo(() => getMockPeerComparisons(t), [t])
+  const insights = useMemo(() => getMockInsights(t), [t]);
+  const savingTips = useMemo(() => getMockSavingTips(t), [t]);
+  const peerComparisons = useMemo(() => getMockPeerComparisons(t), [t]);
 
   // Enhanced error reporting and logging system
   const logError = useCallback((error: unknown, context: string, severity: 'low' | 'medium' | 'high' = 'medium') => {
@@ -83,212 +85,212 @@ function InsightsPanelContent({
       message: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,
       userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : 'server',
-      url: typeof window !== 'undefined' ? window.location.href : 'unknown'
-    }
-    
+      url: typeof window !== 'undefined' ? window.location.href : 'unknown',
+    };
+
     // In production, this would be sent to an error reporting service
     if (process.env.NODE_ENV === 'development') {
-      console.group(`🚨 ${severity.toUpperCase()} Error in ${context}`)
-      console.error('Error Details:', errorInfo)
-      console.groupEnd()
+      console.group(`🚨 ${severity.toUpperCase()} Error in ${context}`);
+      console.error('Error Details:', errorInfo);
+      console.groupEnd();
     }
-    
+
     // For production, you might want to send to a service like Sentry, LogRocket, etc.
     // if (process.env.NODE_ENV === 'production') {
     //   errorReportingService.captureException(error, errorInfo)
     // }
-  }, [])
+  }, []);
 
   // Sanitize error messages to prevent XSS - memoized for performance
   const sanitizeErrorMessage = useCallback((message: string): string => {
-    if (typeof message !== 'string') return 'An error occurred'
-    
+    if (typeof message !== 'string') {return 'An error occurred';}
+
     // Remove HTML tags and dangerous characters
     return message
       .replace(/<[^>]*>/g, '') // Remove HTML tags
       .replace(/javascript:/gi, '') // Remove javascript: protocols
       .replace(/on\w+=/gi, '') // Remove event handlers
       .trim()
-      .substring(0, 200) // Limit length
-  }, [])
+      .substring(0, 200); // Limit length
+  }, []);
 
   // Comprehensive input validation and sanitization
   const validateAndSanitizeInput = useCallback((input: unknown, fieldName: string): string => {
     if (!input || typeof input !== 'string') {
-      throw new Error(`${fieldName} must be a valid string`)
+      throw new Error(`${fieldName} must be a valid string`);
     }
-    
+
     const sanitized = input
       .trim()
       .replace(/<[^>]*>/g, '') // Remove HTML tags
       .replace(/javascript:/gi, '') // Remove javascript: protocols
       .replace(/on\w+=/gi, '') // Remove event handlers
-      .replace(/[<>\"'&]/g, '') // Remove dangerous characters
-    
+      .replace(/[<>\"'&]/g, ''); // Remove dangerous characters
+
     if (sanitized.length === 0) {
-      throw new Error(`${fieldName} cannot be empty`)
+      throw new Error(`${fieldName} cannot be empty`);
     }
-    
+
     if (sanitized.length > 500) {
-      throw new Error(`${fieldName} is too long (max 500 characters)`)
+      throw new Error(`${fieldName} is too long (max 500 characters)`);
     }
-    
-    return sanitized
-  }, [])
+
+    return sanitized;
+  }, []);
 
   // Validate insight data structure
   const validateInsightData = useCallback((insight: unknown): boolean => {
-    if (!insight || typeof insight !== 'object') return false
-    
-    const insightObj = insight as Record<string, unknown>
-    const requiredFields = ['id', 'type', 'title', 'description', 'impact', 'category']
-    
-    return requiredFields.every(field => 
-      insightObj[field] && typeof insightObj[field] === 'string'
-    )
-  }, [])
+    if (!insight || typeof insight !== 'object') {return false;}
+
+    const insightObj = insight as Record<string, unknown>;
+    const requiredFields = ['id', 'type', 'title', 'description', 'impact', 'category'];
+
+    return requiredFields.every(field =>
+      insightObj[field] && typeof insightObj[field] === 'string',
+    );
+  }, []);
 
   const handleDismissInsight = useCallback((insightId: string) => {
     try {
       // Validate and sanitize insight ID
-      const sanitizedId = validateAndSanitizeInput(insightId, 'Insight ID')
-      
+      const sanitizedId = validateAndSanitizeInput(insightId, 'Insight ID');
+
       // Check if insight exists
-      const insightExists = insights.some(insight => insight.id === sanitizedId)
+      const insightExists = insights.some(insight => insight.id === sanitizedId);
       if (!insightExists) {
-        setError(sanitizeErrorMessage(`Insight with ID '${sanitizedId}' not found`))
-        return
+        setError(sanitizeErrorMessage(`Insight with ID '${sanitizedId}' not found`));
+        return;
       }
-      
+
       // Add to dismissed list
-      setDismissedInsights(prev => [...prev, sanitizedId])
-      
+      setDismissedInsights(prev => [...prev, sanitizedId]);
+
       // Announce dismissal to screen readers
-      setAnnouncement('Insight dismissed')
-      
+      setAnnouncement('Insight dismissed');
+
       // In a real app, this would be sent to the backend
       // await api.dismissInsight(sanitizedId)
     } catch (error) {
-      logError(error, 'handleDismissInsight', 'low')
-      setError(sanitizeErrorMessage('Failed to dismiss insight'))
+      logError(error, 'handleDismissInsight', 'low');
+      setError(sanitizeErrorMessage('Failed to dismiss insight'));
     }
-  }, [insights, validateAndSanitizeInput, sanitizeErrorMessage, logError])
+  }, [insights, validateAndSanitizeInput, sanitizeErrorMessage, logError]);
 
   // Handle insight actions (navigate, execute, external)
   const handleInsightAction = useCallback(async (action: InsightAction) => {
-    setIsLoading(true)
-    setError(null)
-    
+    setIsLoading(true);
+    setError(null);
+
     try {
-      const { type, target } = action
-      
+      const { type, target } = action;
+
       // Validate action data
       if (!validateAndSanitizeInput(target, 'Action target')) {
-        throw new Error('Invalid action target')
+        throw new Error('Invalid action target');
       }
-      
+
       switch (type) {
         case 'navigate':
           // Validate navigation target (should be a valid route)
           if (target.trim().length === 0) {
-            throw new Error('Navigation target cannot be empty')
+            throw new Error('Navigation target cannot be empty');
           }
           // In a real app, this would use Next.js router
           // router.push(target)
           // For now, just show a message
-          setAnnouncement(`Navigating to ${target}`)
-          break
+          setAnnouncement(`Navigating to ${target}`);
+          break;
         case 'execute':
           // Validate execute target (should be a valid action identifier)
           if (target.trim().length === 0) {
-            throw new Error('Execute target cannot be empty')
+            throw new Error('Execute target cannot be empty');
           }
           // Execute action via action handler service
-          const { actionHandler } = await import('@/lib/action-handler')
+          const { actionHandler } = await import('@/lib/action-handler');
           const result = await actionHandler.executeAction(action, {
-            data: action.data
-          })
+            data: action.data,
+          });
           if (!result.success) {
-            throw new Error(result.message || 'Action execution failed')
+            throw new Error(result.message || 'Action execution failed');
           }
           if (result.redirectUrl) {
-            setAnnouncement(`Navigating to ${result.redirectUrl}`)
+            setAnnouncement(`Navigating to ${result.redirectUrl}`);
           }
-          break
+          break;
         case 'external':
           // Validate external URL
           try {
-            new URL(target)
+            new URL(target);
           } catch {
-            throw new Error('External target must be a valid URL')
+            throw new Error('External target must be a valid URL');
           }
           // Handle external links
           if (typeof window !== 'undefined') {
-            window.open(target, '_blank', 'noopener,noreferrer')
+            window.open(target, '_blank', 'noopener,noreferrer');
           }
-          break
+          break;
         default:
-          throw new Error(`Unknown action type: ${type}`)
+          throw new Error(`Unknown action type: ${type}`);
       }
     } catch (error) {
-      logError(error, 'handleInsightAction', 'high')
-      setError(sanitizeErrorMessage(error instanceof Error ? error.message : 'An error occurred'))
+      logError(error, 'handleInsightAction', 'high');
+      setError(sanitizeErrorMessage(error instanceof Error ? error.message : 'An error occurred'));
       // In production, this would be logged to a proper logging service
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }, [logError, sanitizeErrorMessage, validateAndSanitizeInput])
+  }, [logError, sanitizeErrorMessage, validateAndSanitizeInput]);
 
   // Memoize filtered insights to avoid recalculation on every render
-  const visibleInsights = useMemo(() => 
+  const visibleInsights = useMemo(() =>
     insights.filter(insight => !dismissedInsights.includes(insight.id)),
-    [insights, dismissedInsights]
-  )
+    [insights, dismissedInsights],
+  );
 
   // Memoize impact color calculation
   const getImpactColor = useCallback((impact: string) => {
     switch (impact) {
       case 'high':
-        return 'text-secondary-growth-green bg-secondary-growth-green/10'
+        return 'text-secondary-growth-green bg-secondary-growth-green/10';
       case 'medium':
-        return 'text-accent-action-orange bg-accent-action-orange/10'
+        return 'text-accent-action-orange bg-accent-action-orange/10';
       case 'low':
-        return 'text-neutral-gray bg-neutral-gray/10'
+        return 'text-neutral-gray bg-neutral-gray/10';
       default:
-        return 'text-neutral-gray bg-neutral-gray/10'
+        return 'text-neutral-gray bg-neutral-gray/10';
     }
-  }, [])
+  }, []);
 
   // Helper function for translation fallbacks - memoized to avoid recalculation
   const getTranslationWithFallback = useCallback((key: string, fallback: string): string => {
-    const translation = t(key)
-    return translation === key ? fallback : translation
-  }, [t])
+    const translation = t(key);
+    return translation === key ? fallback : translation;
+  }, [t]);
 
   // Handle saving tip action
   const handleSavingTipAction = useCallback((tipId: string) => {
     try {
       // In a real app, this would navigate to a detailed tip page or start a challenge
-      setError(null) // Clear any existing errors
-      
+      setError(null); // Clear any existing errors
+
       // Show success feedback
-      const tipElement = document.querySelector(`[data-tip-id="${tipId}"]`)
+      const tipElement = document.querySelector(`[data-tip-id="${tipId}"]`);
       if (tipElement) {
-        tipElement.classList.add('animate-pulse', 'bg-green-50', 'border-green-200')
+        tipElement.classList.add('animate-pulse', 'bg-green-50', 'border-green-200');
         setTimeout(() => {
-          tipElement.classList.remove('animate-pulse', 'bg-green-50', 'border-green-200')
-        }, 2000)
+          tipElement.classList.remove('animate-pulse', 'bg-green-50', 'border-green-200');
+        }, 2000);
       }
-      
+
       // Announce success to screen readers
-      setAnnouncement('Tip action completed successfully')
-      
+      setAnnouncement('Tip action completed successfully');
+
       // For now, just show a success message or navigate
       // This would typically integrate with the app's routing system
     } catch (error) {
-      logError(error, 'handleSavingTipAction', 'low')
+      logError(error, 'handleSavingTipAction', 'low');
     }
-  }, [logError])
+  }, [logError]);
 
   // Handle initial loading state
   useEffect(() => {
@@ -298,53 +300,51 @@ function InsightsPanelContent({
         // Wait for translations to be ready
         if (isReady) {
           // Simulate API call delay
-          await new Promise(resolve => setTimeout(resolve, 500))
-          setIsInitialLoading(false)
+          await new Promise(resolve => setTimeout(resolve, 500));
+          setIsInitialLoading(false);
         }
       } catch (error) {
-        setError(sanitizeErrorMessage('Failed to load initial data'))
-        setIsInitialLoading(false)
+        setError(sanitizeErrorMessage('Failed to load initial data'));
+        setIsInitialLoading(false);
       }
-    }
+    };
 
-    loadInitialData()
-  }, [isReady, sanitizeErrorMessage])
+    loadInitialData();
+  }, [isReady, sanitizeErrorMessage]);
 
   // Announce tab changes to screen readers
   useEffect(() => {
     const tabLabels = {
       tips: getTranslationWithFallback('insights.tabs.tips', 'Tips'),
       recommendations: getTranslationWithFallback('insights.tabs.insights', 'Insights'),
-      compare: getTranslationWithFallback('insights.tabs.compare', 'Compare')
-    }
-    
+      compare: getTranslationWithFallback('insights.tabs.compare', 'Compare'),
+    };
+
     if (!isInitialLoading) {
-      setAnnouncement(`${tabLabels[activeTab]} tab selected`)
+      setAnnouncement(`${tabLabels[activeTab]} tab selected`);
     }
-  }, [activeTab, isInitialLoading, getTranslationWithFallback])
+  }, [activeTab, isInitialLoading, getTranslationWithFallback]);
 
   // Cleanup effect for component unmount
-  useEffect(() => {
-    return () => {
+  useEffect(() => () => {
       // Clear any pending async operations
-      setIsLoading(false)
-      setError(null)
-      
+      setIsLoading(false);
+      setError(null);
+
       // In a real app with i18n resources, you might want to cleanup here
       // This would depend on your i18n implementation
-    }
-  }, [])
+    }, []);
 
   // Announce changes to screen readers
   useEffect(() => {
     if (announcement) {
-      const timeout = setTimeout(() => setAnnouncement(''), 1000)
-      return () => clearTimeout(timeout)
+      const timeout = setTimeout(() => setAnnouncement(''), 1000);
+      return () => clearTimeout(timeout);
     }
-  }, [announcement])
+  }, [announcement]);
 
   // Detect RTL language support
-  const isRTL = typeof window !== 'undefined' && document.documentElement.dir === 'rtl'
+  const isRTL = typeof window !== 'undefined' && document.documentElement.dir === 'rtl';
 
   // Show loading state while initializing
   if (isInitialLoading) {
@@ -374,20 +374,20 @@ function InsightsPanelContent({
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
-  
+
   return (
     <>
       {/* Screen reader announcements */}
-      <div 
-        aria-live="polite" 
-        aria-atomic="true" 
+      <div
+        aria-live="polite"
+        aria-atomic="true"
         className="sr-only"
       >
         {announcement}
       </div>
-      
+
       <Card className="h-fit">
         <CardHeader>
         <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
@@ -405,33 +405,33 @@ function InsightsPanelContent({
         </div>
 
         {/* Tab Navigation */}
-        <div 
-          role="tablist" 
+        <div
+          role="tablist"
           aria-label={getTranslationWithFallback('insights.title', 'Financial Insights')}
           className={`flex flex-col sm:flex-row gap-1 sm:space-x-1 mt-4 bg-neutral-light-gray rounded-lg p-1 overflow-hidden ${isRTL ? 'sm:flex-row-reverse' : ''}`}
         >
           {showSavingTips && (
-            <TabButton 
-              tab="tips" 
-              label={getTranslationWithFallback('insights.tabs.tips', 'Tips')} 
+            <TabButton
+              tab="tips"
+              label={getTranslationWithFallback('insights.tabs.tips', 'Tips')}
               icon={LightBulbIcon}
               activeTab={activeTab}
               onClick={setActiveTab}
             />
           )}
           {personalizedRecommendations && (
-            <TabButton 
-              tab="recommendations" 
-              label={getTranslationWithFallback('insights.tabs.insights', 'Insights')} 
+            <TabButton
+              tab="recommendations"
+              label={getTranslationWithFallback('insights.tabs.insights', 'Insights')}
               icon={ChartBarIcon}
               activeTab={activeTab}
               onClick={setActiveTab}
             />
           )}
           {comparePeers && (
-            <TabButton 
-              tab="compare" 
-              label={getTranslationWithFallback('insights.tabs.compare', 'Compare')} 
+            <TabButton
+              tab="compare"
+              label={getTranslationWithFallback('insights.tabs.compare', 'Compare')}
               icon={UserGroupIcon}
               activeTab={activeTab}
               onClick={setActiveTab}
@@ -455,9 +455,9 @@ function InsightsPanelContent({
         )}
         {/* Saving Tips Tab */}
         {activeTab === 'tips' && showSavingTips && (
-          <div 
-            role="tabpanel" 
-            id="tips-panel" 
+          <div
+            role="tabpanel"
+            id="tips-panel"
             aria-labelledby="tips-tab"
             className="space-y-4 animate-fade-in"
           >
@@ -477,8 +477,8 @@ function InsightsPanelContent({
                     <p className="text-sm text-neutral-gray mb-3">
                       {tip.description}
                     </p>
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       size="sm"
                       onClick={() => handleSavingTipAction(tip.id)}
                     >
@@ -493,9 +493,9 @@ function InsightsPanelContent({
 
         {/* Personalized Recommendations Tab */}
         {activeTab === 'recommendations' && personalizedRecommendations && (
-          <div 
-            role="tabpanel" 
-            id="recommendations-panel" 
+          <div
+            role="tabpanel"
+            id="recommendations-panel"
             aria-labelledby="recommendations-tab"
             className="space-y-4 animate-fade-in"
           >
@@ -558,9 +558,9 @@ function InsightsPanelContent({
 
         {/* Peer Comparison Tab */}
         {activeTab === 'compare' && comparePeers && (
-          <div 
-            role="tabpanel" 
-            id="compare-panel" 
+          <div
+            role="tabpanel"
+            id="compare-panel"
             aria-labelledby="compare-tab"
             className="space-y-4 animate-fade-in"
           >
@@ -577,28 +577,28 @@ function InsightsPanelContent({
                     {comparison.metric}
                   </h4>
                   <div className={`text-sm px-2 py-1 rounded-full ${
-                    comparison.better 
+                    comparison.better
                       ? 'bg-secondary-growth-green/10 text-secondary-growth-green'
                       : 'bg-accent-action-orange/10 text-accent-action-orange'
                   }`}>
                     {comparison.better ? getTranslationWithFallback('comparisons.aboveAverage', 'Above Average') : getTranslationWithFallback('comparisons.belowAverage', 'Below Average')}
                   </div>
                 </div>
-                
+
                 <div className="flex items-center justify-between gap-4">
                   <div className="text-center flex-1">
                     <div className="text-base sm:text-lg font-bold text-neutral-dark-gray">
-                      {comparison.unit === '$' 
+                      {comparison.unit === '$'
                         ? formatCurrency(comparison.userValue)
                         : `${comparison.userValue}${comparison.unit}`
                       }
                     </div>
                     <div className="text-xs text-neutral-gray">{getTranslationWithFallback('comparisons.you', 'You')}</div>
                   </div>
-                  
+
                   <div className="text-center flex-1">
                     <div className="text-base sm:text-lg font-bold text-neutral-gray">
-                      {comparison.unit === '$' 
+                      {comparison.unit === '$'
                         ? formatCurrency(comparison.peerAverage)
                         : `${comparison.peerAverage}${comparison.unit}`
                       }
@@ -619,7 +619,7 @@ function InsightsPanelContent({
       </CardContent>
     </Card>
     </>
-  )
+  );
 }
 
 export function InsightsPanel(props: InsightsPanelProps) {
@@ -627,5 +627,5 @@ export function InsightsPanel(props: InsightsPanelProps) {
     <ErrorBoundary>
       <InsightsPanelContent {...props} />
     </ErrorBoundary>
-  )
+  );
 }

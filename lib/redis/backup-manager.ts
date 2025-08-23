@@ -1,10 +1,13 @@
 import { exec } from 'child_process';
-import { promisify } from 'util';
-import { readFile, writeFile, mkdir, readdir, unlink } from 'fs/promises';
 import { existsSync, statSync } from 'fs';
+import { readFile, writeFile, mkdir, readdir, unlink } from 'fs/promises';
 import path from 'path';
-import Redis from 'ioredis';
+import { promisify } from 'util';
+
+import type Redis from 'ioredis';
+
 import { auditLogger, logSystemEvent, AuditEventType, AuditSeverity } from '../audit-logging';
+
 import { redisConnectionManager } from './connection-manager';
 
 const execAsync = promisify(exec);
@@ -78,11 +81,11 @@ const DEFAULT_BACKUP_CONFIG: BackupConfig = {
   schedule: {
     full: process.env.REDIS_BACKUP_FULL_SCHEDULE || '0 2 * * 0', // Weekly at 2 AM Sunday
     incremental: process.env.REDIS_BACKUP_INCREMENTAL_SCHEDULE || '0 2 * * *', // Daily at 2 AM
-    differential: process.env.REDIS_BACKUP_DIFFERENTIAL_SCHEDULE || '0 2 * * 0' // Weekly at 2 AM Sunday
+    differential: process.env.REDIS_BACKUP_DIFFERENTIAL_SCHEDULE || '0 2 * * 0', // Weekly at 2 AM Sunday
   },
   autoCleanup: process.env.REDIS_BACKUP_AUTO_CLEANUP !== 'false',
   verifyBackups: process.env.REDIS_BACKUP_VERIFY !== 'false',
-  parallelBackups: parseInt(process.env.REDIS_BACKUP_PARALLEL || '3')
+  parallelBackups: parseInt(process.env.REDIS_BACKUP_PARALLEL || '3'),
 };
 
 // Redis backup manager
@@ -145,7 +148,7 @@ export class RedisBackupManager {
       databaseCount: 0,
       keyCount: 0,
       encryptionEnabled: this.config.encryption,
-      tags: [type, 'automated']
+      tags: [type, 'automated'],
     };
 
     try {
@@ -207,8 +210,8 @@ export class RedisBackupManager {
           type: metadata.type,
           filename: metadata.filename,
           sizeBytes: metadata.sizeBytes,
-          checksum: metadata.checksum
-        }
+          checksum: metadata.checksum,
+        },
       );
 
       console.log(`Backup completed successfully: ${filename}`);
@@ -216,7 +219,7 @@ export class RedisBackupManager {
     } catch (error) {
       metadata.status = BackupStatus.FAILED;
       metadata.errorMessage = error instanceof Error ? error.message : String(error);
-      
+
       await logSystemEvent(
         AuditEventType.SYSTEM_ERROR,
         AuditSeverity.MEDIUM,
@@ -224,8 +227,8 @@ export class RedisBackupManager {
           action: 'redis_backup_failed',
           backupId: metadata.id,
           type: metadata.type,
-          error: metadata.errorMessage
-        }
+          error: metadata.errorMessage,
+        },
       );
 
       console.error(`Backup failed: ${metadata.errorMessage}`);
@@ -241,7 +244,7 @@ export class RedisBackupManager {
   private async createFullBackup(metadata: BackupMetadata): Promise<void> {
     // Use Redis SAVE command for full backup
     await this.redis!.save();
-    
+
     // Copy the dump.rdb file
     const dumpPath = await this.getRedisDumpPath();
     if (dumpPath && existsSync(dumpPath)) {
@@ -255,7 +258,7 @@ export class RedisBackupManager {
   private async createIncrementalBackup(metadata: BackupMetadata): Promise<void> {
     // For incremental backup, we'll use Redis BGSAVE and track changes
     await this.redis!.bgsave();
-    
+
     // Wait for background save to complete
     let saveInProgress = true;
     while (saveInProgress) {
@@ -285,7 +288,7 @@ export class RedisBackupManager {
   private async createSnapshotBackup(metadata: BackupMetadata): Promise<void> {
     // Snapshot backup using Redis BGSAVE
     await this.redis!.bgsave();
-    
+
     // Wait for completion
     let saveInProgress = true;
     while (saveInProgress) {
@@ -319,15 +322,15 @@ export class RedisBackupManager {
       const commonPaths = [
         '/var/lib/redis/dump.rdb',
         '/var/redis/dump.rdb',
-        './dump.rdb'
+        './dump.rdb',
       ];
-      
+
       for (const commonPath of commonPaths) {
         if (existsSync(commonPath)) {
           return commonPath;
         }
       }
-      
+
       return null;
     }
   }
@@ -364,10 +367,10 @@ export class RedisBackupManager {
     try {
       const encryptedPath = `${filePath}.enc`;
       await execAsync(`openssl enc -aes-256-cbc -salt -in "${filePath}" -out "${encryptedPath}" -k "${this.config.encryptionKey}"`);
-      
+
       // Remove original file
       await unlink(filePath);
-      
+
       // Update metadata
       const metadata = Array.from(this.activeBackups.values()).find(m => m.filePath === filePath);
       if (metadata) {
@@ -478,8 +481,8 @@ export class RedisBackupManager {
           action: 'redis_backup_restored',
           backupId: metadata.id,
           filename: metadata.filename,
-          targetPath: dumpPath
-        }
+          targetPath: dumpPath,
+        },
       );
 
       console.log(`Restore completed successfully from: ${metadata.filename}`);
@@ -487,15 +490,15 @@ export class RedisBackupManager {
 
     } catch (error) {
       console.error(`Restore failed: ${error}`);
-      
+
       await logSystemEvent(
         AuditEventType.SYSTEM_ERROR,
         AuditSeverity.HIGH,
         {
           action: 'redis_backup_restore_failed',
           backupId,
-          error: error instanceof Error ? error.message : String(error)
-        }
+          error: error instanceof Error ? error.message : String(error),
+        },
       );
 
       return false;
@@ -534,7 +537,7 @@ export class RedisBackupManager {
         if (file.endsWith('.rdb') || file.endsWith('.gz') || file.endsWith('.enc')) {
           const filePath = path.join(this.config.backupDirectory, file);
           const stats = statSync(filePath);
-          
+
           const backup: BackupMetadata = {
             id: crypto.randomUUID(),
             type: this.determineBackupType(file),
@@ -549,7 +552,7 @@ export class RedisBackupManager {
             databaseCount: 0,
             keyCount: 0,
             encryptionEnabled: file.endsWith('.enc'),
-            tags: ['discovered']
+            tags: ['discovered'],
           };
 
           backups.push(backup);
@@ -566,10 +569,10 @@ export class RedisBackupManager {
 
   // Determine backup type from filename
   private determineBackupType(filename: string): BackupType {
-    if (filename.includes('full')) return BackupType.FULL;
-    if (filename.includes('incremental')) return BackupType.INCREMENTAL;
-    if (filename.includes('differential')) return BackupType.DIFFERENTIAL;
-    if (filename.includes('snapshot')) return BackupType.SNAPSHOT;
+    if (filename.includes('full')) {return BackupType.FULL;}
+    if (filename.includes('incremental')) {return BackupType.INCREMENTAL;}
+    if (filename.includes('differential')) {return BackupType.DIFFERENTIAL;}
+    if (filename.includes('snapshot')) {return BackupType.SNAPSHOT;}
     return BackupType.FULL; // Default
   }
 
@@ -600,8 +603,8 @@ export class RedisBackupManager {
           {
             action: 'redis_backup_cleanup',
             cleanedCount,
-            totalBackups: backups.length
-          }
+            totalBackups: backups.length,
+          },
         );
       }
 
@@ -615,7 +618,7 @@ export class RedisBackupManager {
 
   // Start scheduled backups
   private startScheduledBackups(): void {
-    if (!this.config.enabled) return;
+    if (!this.config.enabled) {return;}
 
     // This is a simplified scheduler - in production, use a proper cron library
     setInterval(async () => {
@@ -672,7 +675,7 @@ export class RedisBackupManager {
 
   private extractKeyCount(info: string): number {
     const match = info.match(/keys=(\d+)/g);
-    if (!match) return 0;
+    if (!match) {return 0;}
     return match.reduce((sum, m) => {
       const keyMatch = m.match(/keys=(\d+)/);
       return sum + (keyMatch ? parseInt(keyMatch[1]) : 0);
@@ -705,7 +708,7 @@ export class RedisBackupManager {
       totalBackups: this.activeBackups.size,
       totalSize,
       activeBackups: this.activeBackups.size,
-      lastBackup: lastBackup?.createdAt
+      lastBackup: lastBackup?.createdAt,
     };
   }
 
@@ -721,21 +724,13 @@ export class RedisBackupManager {
 export const redisBackupManager = RedisBackupManager.getInstance();
 
 // Convenience functions
-export const createRedisBackup = (type?: BackupType): Promise<BackupMetadata> => {
-  return redisBackupManager.createBackup(type);
-};
+export const createRedisBackup = (type?: BackupType): Promise<BackupMetadata> => redisBackupManager.createBackup(type);
 
-export const restoreRedisBackup = (backupId: string, targetRedis?: Redis): Promise<boolean> => {
-  return redisBackupManager.restoreFromBackup(backupId, targetRedis);
-};
+export const restoreRedisBackup = (backupId: string, targetRedis?: Redis): Promise<boolean> => redisBackupManager.restoreFromBackup(backupId, targetRedis);
 
-export const listRedisBackups = (): Promise<BackupMetadata[]> => {
-  return redisBackupManager.listBackups();
-};
+export const listRedisBackups = (): Promise<BackupMetadata[]> => redisBackupManager.listBackups();
 
-export const cleanupExpiredRedisBackups = (): Promise<number> => {
-  return redisBackupManager.cleanupExpiredBackups();
-};
+export const cleanupExpiredRedisBackups = (): Promise<number> => redisBackupManager.cleanupExpiredBackups();
 
 // Cleanup on process exit
 process.on('exit', () => {

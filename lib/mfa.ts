@@ -1,8 +1,9 @@
-import { authenticator } from 'otplib';
-import { query } from './database';
-import { createErrorResponse } from './error-handling';
-import { getRedisClient } from './redis';
 import crypto from 'crypto';
+
+import { authenticator } from 'otplib';
+
+import { query } from './database';
+import { getRedisClient } from './redis';
 
 // MFA configuration
 export interface MFAConfig {
@@ -13,13 +14,18 @@ export interface MFAConfig {
   window: number; // tolerance window for TOTP validation
 }
 
+// MFA constants
+const DEFAULT_MFA_DIGITS = 6;
+const DEFAULT_MFA_PERIOD = 30;
+const DEFAULT_MFA_WINDOW = 1;
+
 // Default MFA configuration
 const DEFAULT_MFA_CONFIG: MFAConfig = {
   issuer: 'MyBudget',
   algorithm: 'SHA1',
-  digits: 6,
-  period: 30,
-  window: 1
+  digits: DEFAULT_MFA_DIGITS,
+  period: DEFAULT_MFA_PERIOD,
+  window: DEFAULT_MFA_WINDOW,
 };
 
 // MFA status
@@ -51,22 +57,31 @@ export interface MFAVerificationResponse {
   backupCodesRemaining?: number;
 }
 
+// Type for Redis client
+type RedisClient = ReturnType<typeof getRedisClient>;
+
+// Database result interfaces
+interface UserMFAResult {
+  mfa_enabled: boolean;
+  mfa_verified: boolean;
+}
+
+interface UserSecretResult {
+  mfa_secret: string;
+}
+
+interface BackupCodeResult {
+  code_hash: string;
+}
+
 // MFA service class
 export class MFAService {
-  private static instance: MFAService;
   private config: MFAConfig;
-  private redis: any;
+  private redis: RedisClient;
 
-  private constructor() {
+  constructor() {
     this.config = DEFAULT_MFA_CONFIG;
     this.redis = getRedisClient();
-  }
-
-  static getInstance(): MFAService {
-    if (!MFAService.instance) {
-      MFAService.instance = new MFAService();
-    }
-    return MFAService.instance;
   }
 
   // Generate MFA secret for a user
@@ -74,25 +89,25 @@ export class MFAService {
     try {
       // Generate secret
       const secret = authenticator.generateSecret();
-      
+
       // Generate backup codes
       const backupCodes = this.generateBackupCodes();
-      
+
       // Store secret and backup codes in database
       await this.storeMFASecret(userId, secret, backupCodes);
-      
+
       // Generate QR code URL
       const qrCodeUrl = authenticator.keyuri(
         userEmail,
         this.config.issuer,
-        secret
+        secret,
       );
 
       return {
         secret,
         qrCodeUrl,
         backupCodes,
-        status: MFAStatus.PENDING_VERIFICATION
+        status: MFAStatus.PENDING_VERIFICATION,
       };
     } catch (error) {
       throw new Error('Failed to generate MFA secret');
@@ -111,28 +126,28 @@ export class MFAService {
       // Verify TOTP token
       const isValid = authenticator.verify({
         token,
-        secret: userSecret
+        secret: userSecret,
       });
 
       if (isValid) {
         // Mark MFA as verified
         await this.markMFAVerified(userId);
-        
+
         // Clear any pending verification attempts
         await this.clearVerificationAttempts(userId);
-        
+
         return {
           success: true,
-          status: MFAStatus.ENABLED
+          status: MFAStatus.ENABLED,
         };
       }
 
       // Record failed attempt
       await this.recordFailedAttempt(userId);
-      
+
       return {
         success: false,
-        status: MFAStatus.PENDING_VERIFICATION
+        status: MFAStatus.PENDING_VERIFICATION,
       };
     } catch (error) {
       throw new Error('Failed to verify TOTP');
@@ -149,38 +164,38 @@ export class MFAService {
       }
 
       // Check if backup code is valid
-      const isValidCode = backupCodes.some(code => 
+      const isValidCode = backupCodes.some(code =>
         crypto.timingSafeEqual(
           Buffer.from(code, 'hex'),
-          Buffer.from(backupCode, 'hex')
-        )
+          Buffer.from(backupCode, 'hex'),
+        ),
       );
 
       if (isValidCode) {
         // Remove used backup code
         await this.removeBackupCode(userId, backupCode);
-        
+
         // Mark MFA as verified
         await this.markMFAVerified(userId);
-        
+
         // Clear verification attempts
         await this.clearVerificationAttempts(userId);
-        
+
         const remainingCodes = await this.getBackupCodes(userId);
-        
+
         return {
           success: true,
           status: MFAStatus.ENABLED,
-          backupCodesRemaining: remainingCodes.length
+          backupCodesRemaining: remainingCodes.length,
         };
       }
 
       // Record failed attempt
       await this.recordFailedAttempt(userId);
-      
+
       return {
         success: false,
-        status: MFAStatus.PENDING_VERIFICATION
+        status: MFAStatus.PENDING_VERIFICATION,
       };
     } catch (error) {
       throw new Error('Failed to verify backup code');
@@ -202,15 +217,15 @@ export class MFAService {
     try {
       const result = await query(
         'SELECT mfa_enabled, mfa_verified FROM users WHERE id = $1',
-        [userId]
+        [userId],
       );
 
       if (result.rows.length === 0) {
         return MFAStatus.DISABLED;
       }
 
-      const user = result.rows[0];
-      
+      const user = result.rows[0] as UserMFAResult;
+
       if (!user.mfa_enabled) {
         return MFAStatus.DISABLED;
       }
@@ -230,13 +245,13 @@ export class MFAService {
     try {
       await query(
         'UPDATE users SET mfa_enabled = false, mfa_verified = false, mfa_secret = NULL WHERE id = $1',
-        [userId]
+        [userId],
       );
 
       // Clear backup codes
       await query(
         'DELETE FROM user_backup_codes WHERE user_id = $1',
-        [userId]
+        [userId],
       );
 
       // Clear Redis cache
@@ -250,16 +265,16 @@ export class MFAService {
   async regenerateBackupCodes(userId: string): Promise<string[]> {
     try {
       const newBackupCodes = this.generateBackupCodes();
-      
+
       // Remove old backup codes
       await query(
         'DELETE FROM user_backup_codes WHERE user_id = $1',
-        [userId]
+        [userId],
       );
-      
+
       // Store new backup codes
       await this.storeBackupCodes(userId, newBackupCodes);
-      
+
       return newBackupCodes;
     } catch (error) {
       throw new Error('Failed to regenerate backup codes');
@@ -270,22 +285,22 @@ export class MFAService {
   async hasExceededAttempts(userId: string): Promise<boolean> {
     try {
       const attempts = await this.getVerificationAttempts(userId);
-      const maxAttempts = parseInt(process.env.MFA_MAX_ATTEMPTS || '5');
-      const lockoutDuration = parseInt(process.env.MFA_LOCKOUT_DURATION || '900'); // 15 minutes
-      
+      const maxAttempts = parseInt(process.env.MFA_MAX_ATTEMPTS || '5', 10);
+      const lockoutDuration = parseInt(process.env.MFA_LOCKOUT_DURATION || '900', 10); // 15 minutes
+
       // Check if user is locked out
       if (attempts.length >= maxAttempts) {
         const lastAttempt = attempts[attempts.length - 1];
         const timeSinceLastAttempt = Date.now() - lastAttempt.timestamp;
-        
+
         if (timeSinceLastAttempt < lockoutDuration * 1000) {
           return true; // Still locked out
-        } else {
+        }
           // Clear old attempts
           await this.clearVerificationAttempts(userId);
-        }
+
       }
-      
+
       return false;
     } catch (error) {
       return false;
@@ -307,7 +322,7 @@ export class MFAService {
     // Store MFA secret
     await query(
       'UPDATE users SET mfa_enabled = true, mfa_secret = $1 WHERE id = $2',
-      [secret, userId]
+      [secret, userId],
     );
 
     // Store backup codes
@@ -319,7 +334,7 @@ export class MFAService {
       const hashedCode = crypto.createHash('sha256').update(code).digest('hex');
       await query(
         'INSERT INTO user_backup_codes (user_id, code_hash, used) VALUES ($1, $2, false)',
-        [userId, hashedCode]
+        [userId, hashedCode],
       );
     }
   }
@@ -327,33 +342,34 @@ export class MFAService {
   private async getMFASecret(userId: string): Promise<string | null> {
     const result = await query(
       'SELECT mfa_secret FROM users WHERE id = $1 AND mfa_enabled = true',
-      [userId]
+      [userId],
     );
 
-    return result.rows[0]?.mfa_secret || null;
+    const user = result.rows[0] as UserSecretResult | undefined;
+    return user?.mfa_secret || null;
   }
 
   private async getBackupCodes(userId: string): Promise<string[]> {
     const result = await query(
       'SELECT code_hash FROM user_backup_codes WHERE user_id = $1 AND used = false',
-      [userId]
+      [userId],
     );
 
-    return result.rows.map(row => row.code_hash);
+    return result.rows.map((row: BackupCodeResult) => row.code_hash);
   }
 
   private async removeBackupCode(userId: string, backupCode: string): Promise<void> {
     const hashedCode = crypto.createHash('sha256').update(backupCode).digest('hex');
     await query(
       'UPDATE user_backup_codes SET used = true WHERE user_id = $1 AND code_hash = $2',
-      [userId, hashedCode]
+      [userId, hashedCode],
     );
   }
 
   private async markMFAVerified(userId: string): Promise<void> {
     await query(
       'UPDATE users SET mfa_verified = true WHERE id = $1',
-      [userId]
+      [userId],
     );
   }
 
@@ -366,11 +382,11 @@ export class MFAService {
   private async getVerificationAttempts(userId: string): Promise<Array<{ timestamp: number }>> {
     const attempts = await this.redis.zrange(`mfa_attempts:${userId}`, 0, -1, 'WITHSCORES');
     const result: Array<{ timestamp: number }> = [];
-    
+
     for (let i = 0; i < attempts.length; i += 2) {
       result.push({ timestamp: parseInt(attempts[i + 1]) });
     }
-    
+
     return result;
   }
 
@@ -390,64 +406,58 @@ export class MFAService {
 }
 
 // Singleton instance
-export const mfaService = MFAService.getInstance();
+export const mfaService = new MFAService();
 
 // Convenience functions
-export const generateMFASecret = (userId: string, userEmail: string): Promise<MFASetupResponse> => {
-  return mfaService.generateSecret(userId, userEmail);
-};
+export const generateMFASecret = (userId: string, userEmail: string): Promise<MFASetupResponse> => mfaService.generateSecret(userId, userEmail);
 
-export const verifyMFATOTP = (userId: string, token: string): Promise<MFAVerificationResponse> => {
-  return mfaService.verifyTOTP(userId, token);
-};
+export const verifyMFATOTP = (userId: string, token: string): Promise<MFAVerificationResponse> => mfaService.verifyTOTP(userId, token);
 
-export const verifyMFABackupCode = (userId: string, backupCode: string): Promise<MFAVerificationResponse> => {
-  return mfaService.verifyBackupCode(userId, backupCode);
-};
+export const verifyMFABackupCode = (userId: string, backupCode: string): Promise<MFAVerificationResponse> => mfaService.verifyBackupCode(userId, backupCode);
 
-export const isMFARequired = (userId: string): Promise<boolean> => {
-  return mfaService.isMFARequired(userId);
-};
+export const isMFARequired = (userId: string): Promise<boolean> => mfaService.isMFARequired(userId);
 
-export const disableMFA = (userId: string): Promise<void> => {
-  return mfaService.disableMFA(userId);
-};
+export const disableMFA = (userId: string): Promise<void> => mfaService.disableMFA(userId);
 
-export const regenerateBackupCodes = (userId: string): Promise<string[]> => {
-  return mfaService.regenerateBackupCodes(userId);
-};
+export const regenerateBackupCodes = (userId: string): Promise<string[]> => mfaService.regenerateBackupCodes(userId);
+
+// Request interface for MFA middleware
+interface MFARequest {
+  user?: { id: string };
+  headers: {
+    get(name: string): string | null;
+  };
+}
 
 // MFA middleware
-export const requireMFA = (handler: Function) => {
-  return async (request: any) => {
+export const requireMFA = (handler: (request: MFARequest) => Promise<Response>) => async (request: MFARequest) => {
     const userId = request.user?.id;
-    
+
     if (!userId) {
       return new Response(
         JSON.stringify({ error: 'Authentication required' }),
-        { status: 401, headers: { 'Content-Type': 'application/json' } }
+        { status: 401, headers: { 'Content-Type': 'application/json' } },
       );
     }
 
     // Check if MFA is required
     const mfaRequired = await mfaService.isMFARequired(userId);
-    
+
     if (mfaRequired) {
       // Check if MFA has been verified in this session
       const mfaVerified = request.headers.get('x-mfa-verified') === 'true';
-      
+
       if (!mfaVerified) {
         return new Response(
-          JSON.stringify({ 
+          JSON.stringify({
             error: 'MFA verification required',
             code: 'MFA_REQUIRED',
-            requiresMFA: true
+            requiresMFA: true,
           }),
-          { status: 403, headers: { 'Content-Type': 'application/json' } }
+          { status: 403, headers: { 'Content-Type': 'application/json' } },
         );
       }
     }
 
     return handler(request);
   };
-};

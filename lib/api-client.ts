@@ -1,15 +1,13 @@
-import { 
-  Transaction, 
-  Budget, 
-  BudgetCategory, 
-  SavingsGoal, 
-  Milestone,
+import type { 
+  DashboardData,
+  Transaction,
+  Budget,
+  SavingsGoal,
   Achievement,
   FinancialInsight,
-  ApiResponse
+  ApiResponse 
 } from '@/types';
 import type { Notification } from '@/types/api';
-import type { DashboardData } from '@/types';
 
 interface RequestOptions {
   cache?: boolean;
@@ -17,11 +15,33 @@ interface RequestOptions {
   timeout?: number;
 }
 
+// API error details interface
+interface ApiErrorDetails {
+  parseError?: string;
+  responseData?: unknown;
+  [key: string]: unknown;
+}
+
+// Refresh token response interface
+interface RefreshTokenResponse {
+  data: {
+    token: string;
+    [key: string]: unknown;
+  };
+  [key: string]: unknown;
+}
+
+// Error interface for retry logic
+interface ApiErrorWithStatus {
+  status?: number;
+  message?: string;
+}
+
 class ApiError extends Error {
   constructor(
     message: string,
     public status?: number,
-    public details?: any
+    public details?: ApiErrorDetails,
   ) {
     super(message);
     this.name = 'ApiError';
@@ -29,18 +49,26 @@ class ApiError extends Error {
 }
 
 interface PendingRequest {
-  promise: Promise<any>;
+  promise: Promise<unknown>;
   timestamp: number;
 }
+
+// API client constants
+const CACHE_TIMEOUT_MS = 5000; // 5 seconds cache
+const REQUEST_TIMEOUT_MS = 30000; // 30 seconds
+const MAX_RETRIES = 3;
+const HTTP_STATUS_RATE_LIMIT = 429;
+const HTTP_STATUS_SERVER_ERROR_START = 500;
+const HTTP_STATUS_SERVER_ERROR_END = 600;
 
 export class ApiClient {
   private baseUrl: string;
   private token: string | null = null;
   private refreshPromise: Promise<string> | null = null;
   private requestCache = new Map<string, PendingRequest>();
-  private cacheTimeout = 5000; // 5 seconds cache
-  private maxRetries = 3;
-  private requestTimeout = 30000; // 30 seconds
+  private cacheTimeout = CACHE_TIMEOUT_MS;
+  private maxRetries = MAX_RETRIES;
+  private requestTimeout = REQUEST_TIMEOUT_MS;
 
   constructor(baseUrl: string = '') {
     this.baseUrl = baseUrl;
@@ -58,18 +86,18 @@ export class ApiClient {
     return `${options?.method || 'GET'}-${url}-${JSON.stringify(options?.body || '')}`;
   }
 
-  private shouldRetry(error: any, attempt: number, maxRetries: number): boolean {
-    if (attempt >= maxRetries) return false;
-    
+  private shouldRetry(error: ApiErrorWithStatus, attempt: number, maxRetries: number): boolean {
+    if (attempt >= maxRetries) {return false;}
+
     // Retry on network errors or 5xx server errors
-    if (!error.status) return true; // Network error
-    if (error.status >= 500 && error.status < 600) return true;
-    if (error.status === 429) return true; // Rate limited
-    
+    if (!error.status) {return true;} // Network error
+    if (error.status >= HTTP_STATUS_SERVER_ERROR_START && error.status < HTTP_STATUS_SERVER_ERROR_END) {return true;}
+    if (error.status === HTTP_STATUS_RATE_LIMIT) {return true;} // Rate limited
+
     return false;
   }
 
-  private async delay(ms: number): Promise<void> {
+  private delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
@@ -84,18 +112,18 @@ export class ApiClient {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${this.token}`
-          }
+            'Authorization': `Bearer ${this.token}`,
+          },
         });
 
-        let data: any;
+        let data: unknown;
         try {
           data = await response.json();
         } catch (parseError) {
           throw new ApiError(
             'Failed to parse refresh token response',
             response.status,
-            { parseError: parseError instanceof Error ? parseError.message : 'Unknown parse error' }
+            { parseError: parseError instanceof Error ? parseError.message : 'Unknown parse error' },
           );
         }
 
@@ -103,7 +131,7 @@ export class ApiClient {
           throw new ApiError(
             'Token refresh failed',
             response.status,
-            data
+            data,
           );
         }
 
@@ -112,39 +140,42 @@ export class ApiClient {
           throw new ApiError(
             'Invalid refresh token response format',
             response.status,
-            data
+            data,
           );
         }
 
-        if (!data.data || typeof data.data !== 'object') {
+        // Type guard for refresh response
+        const refreshResponse = data as RefreshTokenResponse;
+        
+        if (!refreshResponse.data || typeof refreshResponse.data !== 'object') {
           throw new ApiError(
             'Missing or invalid data property in refresh response',
             response.status,
-            data
+            data,
           );
         }
 
-        if (!data.data.token || typeof data.data.token !== 'string' || data.data.token.trim() === '') {
+        if (!refreshResponse.data.token || typeof refreshResponse.data.token !== 'string' || refreshResponse.data.token.trim() === '') {
           throw new ApiError(
             'Missing or invalid token in refresh response',
             response.status,
-            data
+            data,
           );
         }
 
-        this.token = data.data.token;
+        this.token = refreshResponse.data.token;
         return this.token;
       } catch (error) {
         // Re-throw ApiError instances, wrap others
         if (error instanceof ApiError) {
           throw error;
         }
-        
+
         // Wrap unexpected errors
         throw new ApiError(
           'Token refresh failed with unexpected error',
           undefined,
-          { originalError: error instanceof Error ? error.message : 'Unknown error' }
+          { originalError: error instanceof Error ? error.message : 'Unknown error' },
         );
       } finally {
         this.refreshPromise = null;
@@ -157,11 +188,11 @@ export class ApiClient {
   public async request<T>(
     url: string,
     options: RequestInit = {},
-    requestOptions: RequestOptions = {}
+    requestOptions: RequestOptions = {},
   ): Promise<T> {
     const fullUrl = `${this.baseUrl}${url}`;
     const cacheKey = this.getCacheKey(fullUrl, options);
-    
+
     // Check cache for GET requests
     if (options.method === 'GET' || !options.method) {
       const cached = this.requestCache.get(cacheKey);
@@ -176,23 +207,23 @@ export class ApiClient {
       const controller = new AbortController();
       const timeoutId = setTimeout(
         () => controller.abort(),
-        requestOptions.timeout ?? this.requestTimeout
+        requestOptions.timeout ?? this.requestTimeout,
       );
-      
+
       try {
         const headers: HeadersInit = {
           'Content-Type': 'application/json',
-          ...options.headers
+          ...options.headers,
         };
 
         if (this.token) {
-          (headers as Record<string, string>)['Authorization'] = `Bearer ${this.token}`;
+          (headers as Record<string, string>).Authorization = `Bearer ${this.token}`;
         }
 
         const response = await fetch(fullUrl, {
           ...options,
           headers,
-          signal: controller.signal
+          signal: controller.signal,
         });
 
         // Handle 401 Unauthorized - try to refresh token once
@@ -207,7 +238,7 @@ export class ApiClient {
           throw new ApiError(
             data.error || 'Request failed',
             response.status,
-            data.details
+            data.details,
           );
         }
 
@@ -235,7 +266,7 @@ export class ApiClient {
     if (options.method === 'GET' || !options.method) {
       this.requestCache.set(cacheKey, {
         promise,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
 
       // Clean up old cache entries
@@ -259,14 +290,14 @@ export class ApiClient {
       '/api/auth/login',
       {
         method: 'POST',
-        body: JSON.stringify({ email, password })
-      }
+        body: JSON.stringify({ email, password }),
+      },
     );
-    
+
     if (response.data?.token) {
       this.setToken(response.data.token);
     }
-    
+
     return response;
   }
 
@@ -283,14 +314,14 @@ export class ApiClient {
       '/api/auth/register',
       {
         method: 'POST',
-        body: JSON.stringify(data)
-      }
+        body: JSON.stringify(data),
+      },
     );
-    
+
     if (response.data?.token) {
       this.setToken(response.data.token);
     }
-    
+
     return response;
   }
 
@@ -315,7 +346,7 @@ export class ApiClient {
   }>): Promise<ApiResponse<any>> {
     return this.request('/api/auth/profile', {
       method: 'PUT',
-      body: JSON.stringify(data)
+      body: JSON.stringify(data),
     });
   }
 
@@ -342,7 +373,7 @@ export class ApiClient {
         }
       });
     }
-    
+
     return this.request(`/api/transactions?${searchParams.toString()}`);
   }
 
@@ -362,20 +393,20 @@ export class ApiClient {
   }): Promise<ApiResponse<Transaction>> {
     return this.request('/api/transactions', {
       method: 'POST',
-      body: JSON.stringify(data)
+      body: JSON.stringify(data),
     });
   }
 
   async updateTransaction(id: string, data: Partial<Transaction>): Promise<ApiResponse<Transaction>> {
     return this.request('/api/transactions', {
       method: 'PUT',
-      body: JSON.stringify({ id, ...data })
+      body: JSON.stringify({ id, ...data }),
     });
   }
 
   async deleteTransaction(id: string): Promise<ApiResponse<{ message: string }>> {
     return this.request(`/api/transactions?id=${id}`, {
-      method: 'DELETE'
+      method: 'DELETE',
     });
   }
 
@@ -405,20 +436,20 @@ export class ApiClient {
   }): Promise<ApiResponse<{ budgetId: string; message: string }>> {
     return this.request('/api/budgets', {
       method: 'POST',
-      body: JSON.stringify(data)
+      body: JSON.stringify(data),
     });
   }
 
   async updateBudget(id: string, data: Partial<Budget>): Promise<ApiResponse<{ message: string }>> {
     return this.request('/api/budgets', {
       method: 'PUT',
-      body: JSON.stringify({ id, ...data })
+      body: JSON.stringify({ id, ...data }),
     });
   }
 
   async deleteBudget(id: string): Promise<ApiResponse<{ message: string }>> {
     return this.request(`/api/budgets?id=${id}`, {
-      method: 'DELETE'
+      method: 'DELETE',
     });
   }
 
@@ -444,27 +475,27 @@ export class ApiClient {
   }): Promise<ApiResponse<{ goalId: string; message: string }>> {
     return this.request('/api/goals', {
       method: 'POST',
-      body: JSON.stringify(data)
+      body: JSON.stringify(data),
     });
   }
 
   async updateGoal(id: string, data: Partial<SavingsGoal>): Promise<ApiResponse<{ message: string }>> {
     return this.request('/api/goals', {
       method: 'PUT',
-      body: JSON.stringify({ id, ...data })
+      body: JSON.stringify({ id, ...data }),
     });
   }
 
   async deleteGoal(id: string): Promise<ApiResponse<{ message: string }>> {
     return this.request(`/api/goals?id=${id}`, {
-      method: 'DELETE'
+      method: 'DELETE',
     });
   }
 
   async addGoalContribution(goalId: string, amount: number): Promise<ApiResponse<{ message: string }>> {
     return this.request(`/api/goals/${goalId}/contribute`, {
       method: 'POST',
-      body: JSON.stringify({ amount })
+      body: JSON.stringify({ amount }),
     });
   }
 
@@ -475,13 +506,13 @@ export class ApiClient {
   }): Promise<ApiResponse<{ milestoneId: string; message: string }>> {
     return this.request(`/api/goals/${goalId}/milestones`, {
       method: 'POST',
-      body: JSON.stringify(data)
+      body: JSON.stringify(data),
     });
   }
 
   async completeMilestone(goalId: string, milestoneId: string): Promise<ApiResponse<{ message: string }>> {
     return this.request(`/api/goals/${goalId}/milestones/${milestoneId}/complete`, {
-      method: 'POST'
+      method: 'POST',
     });
   }
 
@@ -499,7 +530,7 @@ export class ApiClient {
         }
       });
     }
-    
+
     return this.request(`/api/analytics?${searchParams.toString()}`);
   }
 
@@ -511,13 +542,13 @@ export class ApiClient {
 
   async markNotificationRead(id: string): Promise<ApiResponse<{ message: string }>> {
     return this.request(`/api/notifications/${id}/read`, {
-      method: 'POST'
+      method: 'POST',
     });
   }
 
   async markAllNotificationsRead(): Promise<ApiResponse<{ message: string }>> {
     return this.request('/api/notifications/read-all', {
-      method: 'POST'
+      method: 'POST',
     });
   }
 
@@ -551,7 +582,7 @@ export class ApiClient {
   }): Promise<ApiResponse<{ message: string }>> {
     return this.request('/api/settings', {
       method: 'PUT',
-      body: JSON.stringify(data)
+      body: JSON.stringify(data),
     });
   }
 
@@ -580,13 +611,13 @@ export class ApiClient {
     offset?: number;
   }): Promise<ApiResponse<FinancialInsight[]>> {
     const searchParams = new URLSearchParams();
-    if (params?.type) searchParams.append('type', params.type);
-    if (params?.category) searchParams.append('category', params.category);
-    if (params?.priority) searchParams.append('priority', params.priority);
-    if (params?.isRead !== undefined) searchParams.append('isRead', params.isRead.toString());
-    if (params?.limit) searchParams.append('limit', params.limit.toString());
-    if (params?.offset) searchParams.append('offset', params.offset.toString());
-    
+    if (params?.type) {searchParams.append('type', params.type);}
+    if (params?.category) {searchParams.append('category', params.category);}
+    if (params?.priority) {searchParams.append('priority', params.priority);}
+    if (params?.isRead !== undefined) {searchParams.append('isRead', params.isRead.toString());}
+    if (params?.limit) {searchParams.append('limit', params.limit.toString());}
+    if (params?.offset) {searchParams.append('offset', params.offset.toString());}
+
     return this.request(`/api/insights?${searchParams.toString()}`);
   }
 
@@ -601,7 +632,7 @@ export class ApiClient {
   }): Promise<ApiResponse<any>> {
     return this.request('/api/insights', {
       method: 'POST',
-      body: JSON.stringify(insightData)
+      body: JSON.stringify(insightData),
     });
   }
 
@@ -620,7 +651,7 @@ export class ApiClient {
   }>> {
     return this.request('/api/upload/presigned', {
       method: 'POST',
-      body: JSON.stringify(data)
+      body: JSON.stringify(data),
     });
   }
 
@@ -634,7 +665,7 @@ export class ApiClient {
   }): Promise<ApiResponse<any>> {
     return this.request('/api/upload/complete', {
       method: 'POST',
-      body: JSON.stringify(data)
+      body: JSON.stringify(data),
     });
   }
 }

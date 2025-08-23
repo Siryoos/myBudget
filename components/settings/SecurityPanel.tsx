@@ -1,17 +1,18 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { 
+import {
   ShieldCheckIcon,
   KeyIcon,
   DevicePhoneMobileIcon,
   ComputerDesktopIcon,
   EyeIcon,
-  EyeSlashIcon
-} from '@heroicons/react/24/outline'
-import { Card, CardContent, CardHeader } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
-import { useChangePassword } from '@/hooks/useChangePassword'
+  EyeSlashIcon,
+} from '@heroicons/react/24/outline';
+import { useState } from 'react';
+
+import { Button } from '@/components/ui/Button';
+import { Card, CardContent, CardHeader } from '@/components/ui/Card';
+import { useChangePassword } from '@/hooks/useChangePassword';
 
 interface SecurityPanelProps {
   twoFactor?: boolean
@@ -24,18 +25,18 @@ export function SecurityPanel({
   biometric = true,
   sessionManagement = true,
 }: SecurityPanelProps) {
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
-  const [showNewPassword, setShowNewPassword] = useState(false)
-  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false)
-  const [biometricEnabled, setBiometricEnabled] = useState(true)
-  
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
+  const [biometricEnabled, setBiometricEnabled] = useState(true);
+
   // Password change form state
-  const [currentPassword, setCurrentPassword] = useState('')
-  const [newPassword, setNewPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
   // Password change hook
-  const { changePassword, isLoading, error, success, resetState } = useChangePassword()
+  const { changePassword, isLoading, error, success, resetState } = useChangePassword();
 
   // Mock active sessions
   const activeSessions = [
@@ -63,43 +64,43 @@ export function SecurityPanel({
       current: false,
       browser: 'Edge 118.0',
     },
-  ]
+  ];
 
   // Handle password change form submission
   const handlePasswordChange = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
+    e.preventDefault();
+
     // Clear any existing errors
-    resetState()
-    
+    resetState();
+
     // Basic validation
     if (!currentPassword || !newPassword || !confirmPassword) {
-      return
+      return;
     }
-    
+
     if (newPassword !== confirmPassword) {
       // This validation is handled by the form, but we can add a custom error here if needed
-      return
+      return;
     }
-    
+
     if (newPassword.length < 8) {
-      return
+      return;
     }
-    
+
     await changePassword({
       currentPassword,
       newPassword,
       confirmPassword,
-    })
-  }
+    });
+  };
 
   // Reset form after successful password change
   const handleSuccessReset = () => {
-    setCurrentPassword('')
-    setNewPassword('')
-    setConfirmPassword('')
-    resetState()
-  }
+    setCurrentPassword('');
+    setNewPassword('');
+    setConfirmPassword('');
+    resetState();
+  };
 
   return (
     <div className="space-y-6">
@@ -129,7 +130,7 @@ export function SecurityPanel({
                 <p className="text-sm text-red-600">{error}</p>
               </div>
             )}
-            
+
             {success && (
               <div className="bg-green-50 border border-green-200 rounded-lg p-3">
                 <div className="flex items-center justify-between">
@@ -171,7 +172,7 @@ export function SecurityPanel({
                 </button>
               </div>
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-neutral-dark-gray mb-1">
                 New Password
@@ -180,8 +181,8 @@ export function SecurityPanel({
                 <input
                   type={showNewPassword ? 'text' : 'password'}
                   className={`input-field pr-10 ${
-                    newPassword && newPassword.length < 8 
-                      ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
+                    newPassword && newPassword.length < 8
+                      ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
                       : ''
                   }`}
                   placeholder="Enter new password"
@@ -206,7 +207,7 @@ export function SecurityPanel({
                 <p className="text-sm text-red-600 mt-1">Password must be at least 8 characters long</p>
               )}
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-neutral-dark-gray mb-1">
                 Confirm New Password
@@ -214,8 +215,8 @@ export function SecurityPanel({
               <input
                 type="password"
                 className={`input-field ${
-                  confirmPassword && newPassword !== confirmPassword 
-                    ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
+                  confirmPassword && newPassword !== confirmPassword
+                    ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
                     : ''
                 }`}
                 placeholder="Confirm new password"
@@ -227,17 +228,17 @@ export function SecurityPanel({
                 <p className="text-sm text-red-600 mt-1">Passwords do not match</p>
               )}
             </div>
-            
-            <Button 
-              type="submit" 
-              variant="primary" 
+
+            <Button
+              type="submit"
+              variant="primary"
               size="sm"
               disabled={
-                isLoading || 
-                !currentPassword || 
-                !newPassword || 
-                !confirmPassword || 
-                newPassword.length < 8 || 
+                isLoading ||
+                !currentPassword ||
+                !newPassword ||
+                !confirmPassword ||
+                newPassword.length < 8 ||
                 newPassword !== confirmPassword
               }
             >
@@ -265,7 +266,7 @@ export function SecurityPanel({
                   </p>
                 </div>
               </div>
-              
+
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
                   type="checkbox"
@@ -292,7 +293,7 @@ export function SecurityPanel({
                     Your account is protected with two-factor authentication using your phone.
                   </p>
                 </div>
-                
+
                 <div className="flex space-x-3">
                   <Button variant="outline" size="sm">
                     View Recovery Codes
@@ -307,7 +308,7 @@ export function SecurityPanel({
                 <p className="text-sm text-neutral-gray">
                   Enable two-factor authentication to secure your account with your phone or authenticator app.
                 </p>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="border border-neutral-gray/20 rounded-lg p-4 hover:bg-neutral-light-gray/30 cursor-pointer transition-colors">
                     <div className="flex items-center mb-2">
@@ -318,7 +319,7 @@ export function SecurityPanel({
                       Receive codes via text message
                     </p>
                   </div>
-                  
+
                   <div className="border border-neutral-gray/20 rounded-lg p-4 hover:bg-neutral-light-gray/30 cursor-pointer transition-colors">
                     <div className="flex items-center mb-2">
                       <ShieldCheckIcon className="h-5 w-5 text-primary-trust-blue mr-2" />
@@ -353,7 +354,7 @@ export function SecurityPanel({
                   </p>
                 </div>
               </div>
-              
+
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
                   type="checkbox"
@@ -394,7 +395,7 @@ export function SecurityPanel({
                   </p>
                 </div>
               </div>
-              
+
               <Button variant="outline" size="sm">
                 Sign Out All
               </Button>
@@ -432,7 +433,7 @@ export function SecurityPanel({
                       </div>
                     </div>
                   </div>
-                  
+
                   {!session.current && (
                     <Button variant="ghost" size="sm">
                       Sign Out
@@ -445,5 +446,5 @@ export function SecurityPanel({
         </Card>
       )}
     </div>
-  )
+  );
 }

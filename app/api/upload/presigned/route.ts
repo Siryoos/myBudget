@@ -1,13 +1,16 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getStorageProvider, validateFileType, validateFileSize } from '@/lib/cloud-storage';
-import { verifyToken } from '@/lib/auth';
-import { 
-  RequestValidator, 
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
+import { z } from 'zod';
+
+import {
+  RequestValidator,
   createValidationErrorResponse,
   REQUEST_LIMITS,
-  commonSchemas 
+  commonSchemas,
 } from '@/lib/api-validation';
-import { z } from 'zod';
+import { verifyToken } from '@/lib/auth';
+import { getStorageProvider, validateFileType, validateFileSize } from '@/lib/cloud-storage';
+
 
 // File upload validation schema
 const uploadRequestSchema = z.object({
@@ -38,17 +41,17 @@ export async function POST(request: NextRequest) {
     const validator = new RequestValidator(request, REQUEST_LIMITS.UPLOAD_BODY_SIZE);
     await validator.validateRequestSize();
     validator.validateHeaders();
-    
+
     // Validate user authentication
     const authHeader = request.headers.get('authorization');
     if (!authHeader?.startsWith('Bearer ')) {
       return NextResponse.json(
-        { 
+        {
           success: false,
           error: 'Unauthorized',
-          message: 'Missing or invalid authorization header'
+          message: 'Missing or invalid authorization header',
         },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -56,12 +59,12 @@ export async function POST(request: NextRequest) {
     const user = await verifyToken(token);
     if (!user) {
       return NextResponse.json(
-        { 
+        {
           success: false,
           error: 'Unauthorized',
-          message: 'Invalid or expired token'
+          message: 'Invalid or expired token',
         },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -72,24 +75,24 @@ export async function POST(request: NextRequest) {
     // Validate file type
     if (!validateFileType(mimeType, ALLOWED_FILE_TYPES)) {
       return NextResponse.json(
-        { 
+        {
           success: false,
           error: 'Invalid file type',
-          message: 'Allowed types: JPEG, PNG, GIF, WebP'
+          message: 'Allowed types: JPEG, PNG, GIF, WebP',
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // Validate file size
     if (!validateFileSize(fileSize, MAX_FILE_SIZE)) {
       return NextResponse.json(
-        { 
+        {
           success: false,
           error: 'Invalid file size',
-          message: `File size must be between 1 byte and ${MAX_FILE_SIZE / 1024 / 1024}MB`
+          message: `File size must be between 1 byte and ${MAX_FILE_SIZE / 1024 / 1024}MB`,
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -102,8 +105,8 @@ export async function POST(request: NextRequest) {
       folder: folder || 'goals',
       metadata: {
         userId: user.id,
-        uploadedAt: new Date().toISOString()
-      }
+        uploadedAt: new Date().toISOString(),
+      },
     });
 
     // Log upload request (in production, save to database)
@@ -112,7 +115,7 @@ export async function POST(request: NextRequest) {
       fileName,
       mimeType,
       fileSize,
-      publicId: presignedData.publicId
+      publicId: presignedData.publicId,
     });
 
     // Return presigned URL data
@@ -124,23 +127,23 @@ export async function POST(request: NextRequest) {
         publicId: presignedData.publicId,
         fileKey: presignedData.fileKey,
         expiresAt: presignedData.expiresAt,
-        headers: presignedData.headers
-      }
+        headers: presignedData.headers,
+      },
     });
 
   } catch (error) {
     if (error instanceof Error && error.message.includes('Validation failed')) {
       return createValidationErrorResponse(error);
     }
-    
+
     console.error('[Upload] Error generating presigned URL:', error);
     return NextResponse.json(
-      { 
+      {
         success: false,
         error: 'Failed to generate upload URL',
-        message: error instanceof Error ? error.message : 'Unknown error'
+        message: error instanceof Error ? error.message : 'Unknown error',
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

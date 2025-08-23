@@ -16,7 +16,7 @@ export function PermissionGate({
   requiredRoles,
   requiredPermissions,
   fallback = null,
-  requireAll = true
+  requireAll = true,
 }: PermissionGateProps) {
   const { user, hasPermission, hasRole } = useAuth();
 
@@ -37,7 +37,7 @@ export function PermissionGate({
     const permissionCheck = requireAll
       ? requiredPermissions.every(permission => hasPermission(permission))
       : requiredPermissions.some(permission => hasPermission(permission));
-    
+
     if (!permissionCheck) {
       return <>{fallback}</>;
     }

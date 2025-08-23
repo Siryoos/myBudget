@@ -12,32 +12,32 @@ export enum Permission {
   VIEW_DASHBOARD = 'view_dashboard',
   VIEW_INSIGHTS = 'view_insights',
   VIEW_PEER_COMPARISON = 'view_peer_comparison',
-  
+
   // Transaction permissions
   VIEW_TRANSACTIONS = 'view_transactions',
   CREATE_TRANSACTION = 'create_transaction',
   EDIT_TRANSACTION = 'edit_transaction',
   DELETE_TRANSACTION = 'delete_transaction',
   EXPORT_TRANSACTIONS = 'export_transactions',
-  
+
   // Budget permissions
   VIEW_BUDGETS = 'view_budgets',
   CREATE_BUDGET = 'create_budget',
   EDIT_BUDGET = 'edit_budget',
   DELETE_BUDGET = 'delete_budget',
-  
+
   // Goals permissions
   VIEW_GOALS = 'view_goals',
   CREATE_GOAL = 'create_goal',
   EDIT_GOAL = 'edit_goal',
   DELETE_GOAL = 'delete_goal',
   UPLOAD_GOAL_PHOTO = 'upload_goal_photo',
-  
+
   // Advanced features
   USE_AI_INSIGHTS = 'use_ai_insights',
   VIEW_ADVANCED_ANALYTICS = 'view_advanced_analytics',
   USE_AUTOMATION = 'use_automation',
-  
+
   // Admin permissions
   VIEW_ALL_USERS = 'view_all_users',
   MANAGE_USERS = 'manage_users',
@@ -89,8 +89,8 @@ export const rolePermissions: Record<UserRole, Permission[]> = {
   ],
   [UserRole.ADMIN]: [
     // All permissions
-    ...Object.values(Permission)
-  ]
+    ...Object.values(Permission),
+  ],
 };
 
 // User interface with role

@@ -64,7 +64,7 @@ export const DEFAULT_RATE_LIMIT_CONFIG: RateLimitConfig = {
     windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000'), // 15 minutes
     maxRequests: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100'),
     message: 'Too many requests, please try again later.',
-    statusCode: 429
+    statusCode: 429,
   },
   endpoints: {
     // Authentication endpoints - stricter limits
@@ -74,7 +74,7 @@ export const DEFAULT_RATE_LIMIT_CONFIG: RateLimitConfig = {
       message: 'Too many login attempts, please try again later.',
       statusCode: 429,
       adaptive: true,
-      userSpecific: true
+      userSpecific: true,
     },
     '/api/auth/forgot-password': {
       windowMs: 3600000, // 1 hour
@@ -82,7 +82,7 @@ export const DEFAULT_RATE_LIMIT_CONFIG: RateLimitConfig = {
       message: 'Too many password reset requests, please try again later.',
       statusCode: 429,
       adaptive: true,
-      userSpecific: true
+      userSpecific: true,
     },
     '/api/auth/reset-password': {
       windowMs: 900000, // 15 minutes
@@ -90,7 +90,7 @@ export const DEFAULT_RATE_LIMIT_CONFIG: RateLimitConfig = {
       message: 'Too many password reset attempts, please try again later.',
       statusCode: 429,
       adaptive: true,
-      userSpecific: true
+      userSpecific: true,
     },
     '/api/auth/refresh': {
       windowMs: 900000, // 15 minutes
@@ -98,61 +98,61 @@ export const DEFAULT_RATE_LIMIT_CONFIG: RateLimitConfig = {
       message: 'Too many token refresh attempts, please try again later.',
       statusCode: 429,
       adaptive: true,
-      userSpecific: true
+      userSpecific: true,
     },
     // API endpoints - standard limits
     '/api/budget': {
       windowMs: 900000, // 15 minutes
       maxRequests: 50,
       adaptive: true,
-      userSpecific: true
+      userSpecific: true,
     },
     '/api/transactions': {
       windowMs: 900000, // 15 minutes
       maxRequests: 100,
       adaptive: true,
-      userSpecific: true
+      userSpecific: true,
     },
     '/api/categories': {
       windowMs: 900000, // 15 minutes
       maxRequests: 30,
       adaptive: true,
-      userSpecific: true
+      userSpecific: true,
     },
     // Health and monitoring - higher limits
     '/api/health': {
       windowMs: 60000, // 1 minute
       maxRequests: 1000,
       adaptive: false,
-      bypass: true
+      bypass: true,
     },
     '/api/metrics': {
       windowMs: 60000, // 1 minute
       maxRequests: 500,
       adaptive: false,
-      bypass: true
-    }
+      bypass: true,
+    },
   },
   trustedIPs: process.env.TRUSTED_IPS ? process.env.TRUSTED_IPS.split(',') : [
     '127.0.0.1',
     '::1',
     '10.0.0.0/8',
     '172.16.0.0/12',
-    '192.168.0.0/16'
+    '192.168.0.0/16',
   ],
   adaptiveLimiting: {
     enabled: process.env.ADAPTIVE_RATE_LIMITING === 'true',
     learningPeriod: parseInt(process.env.ADAPTIVE_LEARNING_PERIOD || '86400000'), // 24 hours
     adjustmentFactor: parseFloat(process.env.ADAPTIVE_ADJUSTMENT_FACTOR || '0.1'),
     minLimit: parseInt(process.env.ADAPTIVE_MIN_LIMIT || '10'),
-    maxLimit: parseInt(process.env.ADAPTIVE_MAX_LIMIT || '1000')
+    maxLimit: parseInt(process.env.ADAPTIVE_MAX_LIMIT || '1000'),
   },
   headers: {
     enabled: process.env.RATE_LIMIT_HEADERS !== 'false',
     remaining: 'X-RateLimit-Remaining',
     reset: 'X-RateLimit-Reset',
     limit: 'X-RateLimit-Limit',
-    retryAfter: 'Retry-After'
+    retryAfter: 'Retry-After',
   },
   storage: {
     type: (process.env.RATE_LIMIT_STORAGE || 'redis') as 'memory' | 'redis',
@@ -160,8 +160,8 @@ export const DEFAULT_RATE_LIMIT_CONFIG: RateLimitConfig = {
       host: process.env.REDIS_HOST || 'localhost',
       port: parseInt(process.env.REDIS_PORT || '6379'),
       password: process.env.REDIS_PASSWORD,
-      db: parseInt(process.env.RATE_LIMIT_REDIS_DB || '1')
-    }
+      db: parseInt(process.env.RATE_LIMIT_REDIS_DB || '1'),
+    },
   },
   bypass: {
     enabled: process.env.RATE_LIMIT_BYPASS === 'true',
@@ -169,13 +169,13 @@ export const DEFAULT_RATE_LIMIT_CONFIG: RateLimitConfig = {
       '/health',
       '/metrics',
       '/status',
-      '/ping'
+      '/ping',
     ],
     headers: [
       'X-RateLimit-Bypass',
-      'X-API-Key'
-    ]
-  }
+      'X-API-Key',
+    ],
+  },
 };
 
 // Configuration validation
@@ -212,7 +212,7 @@ export function validateRateLimitConfig(config: RateLimitConfig): string[] {
 // Configuration loader
 export function loadRateLimitConfig(): RateLimitConfig {
   const config = { ...DEFAULT_RATE_LIMIT_CONFIG };
-  
+
   // Load from environment variables
   if (process.env.RATE_LIMIT_CONFIG_FILE) {
     try {

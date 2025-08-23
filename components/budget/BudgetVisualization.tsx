@@ -1,14 +1,15 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { 
+import {
   ChartPieIcon,
   ChartBarIcon,
   ArrowsRightLeftIcon,
-  EyeIcon
-} from '@heroicons/react/24/outline'
-import { Card, CardContent, CardHeader } from '@/components/ui/Card'
-import { formatCurrency, formatPercentage } from '@/lib/utils'
+  EyeIcon,
+} from '@heroicons/react/24/outline';
+import { useState } from 'react';
+
+import { Card, CardContent, CardHeader } from '@/components/ui/Card';
+import { formatCurrency, formatPercentage } from '@/lib/utils';
 
 interface BudgetVisualizationProps {
   chartTypes?: string[]
@@ -21,8 +22,8 @@ export function BudgetVisualization({
   interactive = true,
   showComparison: showComparisonProp = true,
 }: BudgetVisualizationProps) {
-  const [activeChart, setActiveChart] = useState<'pie' | 'bar' | 'sankey'>('pie')
-  const [showComparison, setShowComparison] = useState(showComparisonProp)
+  const [activeChart, setActiveChart] = useState<'pie' | 'bar' | 'sankey'>('pie');
+  const [showComparison, setShowComparison] = useState(showComparisonProp);
 
   // Mock budget data
   const budgetData = [
@@ -34,48 +35,48 @@ export function BudgetVisualization({
     { name: 'Entertainment', allocated: 324, color: '#FF6B35', essential: false },
     { name: 'Personal', allocated: 162, color: '#10B981', essential: false },
     { name: 'Other', allocated: 108, color: '#6C757D', essential: false },
-  ]
+  ];
 
-  const totalBudget = budgetData.reduce((sum, item) => sum + item.allocated, 0)
-  const essentialSpending = budgetData.filter(item => item.essential).reduce((sum, item) => sum + item.allocated, 0)
-  const nonEssentialSpending = budgetData.filter(item => !item.essential).reduce((sum, item) => sum + item.allocated, 0)
+  const totalBudget = budgetData.reduce((sum, item) => sum + item.allocated, 0);
+  const essentialSpending = budgetData.filter(item => item.essential).reduce((sum, item) => sum + item.allocated, 0);
+  const nonEssentialSpending = budgetData.filter(item => !item.essential).reduce((sum, item) => sum + item.allocated, 0);
 
   // Recommended budget percentages (50/30/20 rule)
   const recommendations = {
     needs: totalBudget * 0.5,
     wants: totalBudget * 0.3,
     savings: totalBudget * 0.2,
-  }
+  };
 
   const PieChart = () => {
-    const centerX = 120
-    const centerY = 120
-    const radius = 80
-    let cumulativePercentage = 0
+    const centerX = 120;
+    const centerY = 120;
+    const radius = 80;
+    let cumulativePercentage = 0;
 
     const createArc = (percentage: number, color: string, offset: number) => {
-      const angle = (percentage / 100) * 360
-      const startAngle = (offset / 100) * 360 - 90
-      const endAngle = startAngle + angle
-      
-      const x1 = centerX + radius * Math.cos((startAngle * Math.PI) / 180)
-      const y1 = centerY + radius * Math.sin((startAngle * Math.PI) / 180)
-      const x2 = centerX + radius * Math.cos((endAngle * Math.PI) / 180)
-      const y2 = centerY + radius * Math.sin((endAngle * Math.PI) / 180)
-      
-      const largeArcFlag = angle > 180 ? 1 : 0
-      
-      return `M ${centerX} ${centerY} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2} Z`
-    }
+      const angle = (percentage / 100) * 360;
+      const startAngle = (offset / 100) * 360 - 90;
+      const endAngle = startAngle + angle;
+
+      const x1 = centerX + radius * Math.cos((startAngle * Math.PI) / 180);
+      const y1 = centerY + radius * Math.sin((startAngle * Math.PI) / 180);
+      const x2 = centerX + radius * Math.cos((endAngle * Math.PI) / 180);
+      const y2 = centerY + radius * Math.sin((endAngle * Math.PI) / 180);
+
+      const largeArcFlag = angle > 180 ? 1 : 0;
+
+      return `M ${centerX} ${centerY} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2} Z`;
+    };
 
     return (
       <div className="flex flex-col items-center">
         <svg width="240" height="240" className="mb-4">
           {budgetData.map((item, index) => {
-            const percentage = (item.allocated / totalBudget) * 100
-            const path = createArc(percentage, item.color, cumulativePercentage)
-            cumulativePercentage += percentage
-            
+            const percentage = (item.allocated / totalBudget) * 100;
+            const path = createArc(percentage, item.color, cumulativePercentage);
+            cumulativePercentage += percentage;
+
             return (
               <path
                 key={index}
@@ -84,9 +85,9 @@ export function BudgetVisualization({
                 className="hover:opacity-80 transition-opacity cursor-pointer"
                 aria-label={`${item.name}: ${formatPercentage(percentage)}`}
               />
-            )
+            );
           })}
-          
+
           {/* Center circle with total */}
           <circle cx={centerX} cy={centerY} r={40} fill="white" className="drop-shadow-sm" />
           <text x={centerX} y={centerY - 5} textAnchor="middle" className="text-xs font-medium fill-neutral-gray">
@@ -96,12 +97,12 @@ export function BudgetVisualization({
             {formatCurrency(totalBudget)}
           </text>
         </svg>
-        
+
         {/* Legend */}
         <div className="grid grid-cols-2 gap-2 text-sm">
           {budgetData.map((item, index) => (
             <div key={index} className="flex items-center">
-              <div 
+              <div
                 className="w-3 h-3 rounded-full mr-2"
                 style={{ backgroundColor: item.color }}
               />
@@ -112,17 +113,17 @@ export function BudgetVisualization({
           ))}
         </div>
       </div>
-    )
-  }
+    );
+  };
 
   const BarChart = () => {
-    const maxValue = Math.max(...budgetData.map(item => item.allocated))
-    
+    const maxValue = Math.max(...budgetData.map(item => item.allocated));
+
     return (
       <div className="space-y-3">
         {budgetData.map((item, index) => {
-          const percentage = (item.allocated / maxValue) * 100
-          
+          const percentage = (item.allocated / maxValue) * 100;
+
           return (
             <div key={index} className="flex items-center space-x-3">
               <div className="w-20 text-sm font-medium text-neutral-dark-gray truncate">
@@ -130,11 +131,11 @@ export function BudgetVisualization({
               </div>
               <div className="flex-1 flex items-center">
                 <div className="flex-1 bg-neutral-light-gray rounded-full h-6 relative overflow-hidden">
-                  <div 
+                  <div
                     className="h-full rounded-full transition-all duration-500 flex items-center justify-end pr-2"
-                    style={{ 
-                      width: `${percentage}%`, 
-                      backgroundColor: item.color 
+                    style={{
+                      width: `${percentage}%`,
+                      backgroundColor: item.color,
                     }}
                   >
                     <span className="text-xs font-medium text-white">
@@ -147,14 +148,13 @@ export function BudgetVisualization({
                 </div>
               </div>
             </div>
-          )
+          );
         })}
       </div>
-    )
-  }
+    );
+  };
 
-  const SankeyDiagram = () => {
-    return (
+  const SankeyDiagram = () => (
       <div className="space-y-6">
         {/* Income flow */}
         <div className="text-center">
@@ -163,7 +163,7 @@ export function BudgetVisualization({
             <div className="text-xl font-bold">{formatCurrency(totalBudget)}</div>
           </div>
         </div>
-        
+
         {/* Flow arrows and categories */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Needs */}
@@ -181,7 +181,7 @@ export function BudgetVisualization({
               ))}
             </div>
           </div>
-          
+
           {/* Wants */}
           <div className="text-center">
             <div className="bg-accent-action-orange text-white rounded-lg p-3 mb-2">
@@ -197,7 +197,7 @@ export function BudgetVisualization({
               ))}
             </div>
           </div>
-          
+
           {/* Savings */}
           <div className="text-center">
             <div className="bg-secondary-growth-green text-white rounded-lg p-3 mb-2">
@@ -212,28 +212,27 @@ export function BudgetVisualization({
           </div>
         </div>
       </div>
-    )
-  }
+    );
 
   const chartComponents = {
     pie: PieChart,
     bar: BarChart,
     sankey: SankeyDiagram,
-  }
+  };
 
   const chartIcons = {
     pie: ChartPieIcon,
     bar: ChartBarIcon,
     sankey: ArrowsRightLeftIcon,
-  }
+  };
 
   const chartLabels = {
     pie: 'Pie Chart',
     bar: 'Bar Chart',
     sankey: 'Flow Diagram',
-  }
+  };
 
-  const ActiveChartComponent = chartComponents[activeChart]
+  const ActiveChartComponent = chartComponents[activeChart];
 
   return (
     <Card>
@@ -247,14 +246,14 @@ export function BudgetVisualization({
               Visual representation of your budget allocation
             </p>
           </div>
-          
+
           <div className="flex items-center space-x-2">
             {showComparison && (
               <button
                 onClick={() => setShowComparison(!showComparison)}
                 className={`p-2 rounded-lg transition-colors ${
-                  showComparison 
-                    ? 'bg-primary-trust-blue text-white' 
+                  showComparison
+                    ? 'bg-primary-trust-blue text-white'
                     : 'bg-neutral-light-gray text-neutral-gray hover:text-neutral-dark-gray'
                 }`}
                 title="Compare with recommendations"
@@ -262,11 +261,11 @@ export function BudgetVisualization({
                 <EyeIcon className="h-4 w-4" />
               </button>
             )}
-            
+
             {interactive && (
               <div className="flex bg-neutral-light-gray rounded-lg p-1">
                 {chartTypes.map((type) => {
-                  const IconComponent = chartIcons[type as keyof typeof chartIcons]
+                  const IconComponent = chartIcons[type as keyof typeof chartIcons];
                   return (
                     <button
                       key={type}
@@ -280,7 +279,7 @@ export function BudgetVisualization({
                     >
                       <IconComponent className="h-4 w-4" />
                     </button>
-                  )
+                  );
                 })}
               </div>
             )}
@@ -328,8 +327,8 @@ export function BudgetVisualization({
                   {formatCurrency(recommendations.needs)}
                 </div>
                 <div className={`text-xs ${
-                  essentialSpending <= recommendations.needs 
-                    ? 'text-secondary-growth-green' 
+                  essentialSpending <= recommendations.needs
+                    ? 'text-secondary-growth-green'
                     : 'text-accent-warning-red'
                 }`}>
                   Current: {formatCurrency(essentialSpending)}
@@ -341,8 +340,8 @@ export function BudgetVisualization({
                   {formatCurrency(recommendations.wants)}
                 </div>
                 <div className={`text-xs ${
-                  nonEssentialSpending <= recommendations.wants 
-                    ? 'text-secondary-growth-green' 
+                  nonEssentialSpending <= recommendations.wants
+                    ? 'text-secondary-growth-green'
                     : 'text-accent-warning-red'
                 }`}>
                   Current: {formatCurrency(nonEssentialSpending)}
@@ -354,8 +353,8 @@ export function BudgetVisualization({
                   {formatCurrency(recommendations.savings)}
                 </div>
                 <div className={`text-xs ${
-                  (budgetData.find(item => item.name === 'Savings')?.allocated || 0) >= recommendations.savings 
-                    ? 'text-secondary-growth-green' 
+                  (budgetData.find(item => item.name === 'Savings')?.allocated || 0) >= recommendations.savings
+                    ? 'text-secondary-growth-green'
                     : 'text-accent-warning-red'
                 }`}>
                   Current: {formatCurrency(budgetData.find(item => item.name === 'Savings')?.allocated || 0)}
@@ -366,5 +365,5 @@ export function BudgetVisualization({
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

@@ -1,6 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getStorageProvider } from '@/lib/cloud-storage';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
+
 import { getAuthenticatedUser } from '@/lib/auth-middleware';
+import { getStorageProvider } from '@/lib/cloud-storage';
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,7 +17,7 @@ export async function POST(request: NextRequest) {
     if (!publicId || !url || !size || !mimeType || !originalName) {
       return NextResponse.json(
         { error: 'Missing required fields' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -27,13 +29,13 @@ export async function POST(request: NextRequest) {
       thumbnailUrl,
       size,
       mimeType,
-      originalName
+      originalName,
     });
 
     if (!isValid) {
       return NextResponse.json(
         { error: 'Upload validation failed' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -50,7 +52,7 @@ export async function POST(request: NextRequest) {
     // Update database with upload information
     // In production, save to database:
     // await query(`
-    //   UPDATE file_uploads 
+    //   UPDATE file_uploads
     //   SET url = $1, thumbnail_url = $2, status = 'completed', completed_at = NOW()
     //   WHERE public_id = $3 AND user_id = $4
     // `, [url, finalThumbnailUrl, publicId, user.id]);
@@ -61,7 +63,7 @@ export async function POST(request: NextRequest) {
       publicId,
       originalName,
       size,
-      mimeType
+      mimeType,
     });
 
     // Return success response
@@ -72,18 +74,18 @@ export async function POST(request: NextRequest) {
         url,
         thumbnailUrl: finalThumbnailUrl,
         uploadedAt: new Date().toISOString(),
-        message: 'File uploaded successfully'
-      }
+        message: 'File uploaded successfully',
+      },
     });
 
   } catch (error) {
     console.error('[Upload] Error completing upload:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to complete upload',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        details: error instanceof Error ? error.message : 'Unknown error',
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -101,7 +103,7 @@ export async function DELETE(request: NextRequest) {
     if (!fileKey) {
       return NextResponse.json(
         { error: 'File key is required' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -112,29 +114,29 @@ export async function DELETE(request: NextRequest) {
     // Update database
     // In production:
     // await query(`
-    //   UPDATE file_uploads 
+    //   UPDATE file_uploads
     //   SET status = 'deleted', deleted_at = NOW()
     //   WHERE file_key = $1 AND user_id = $2
     // `, [fileKey, user.id]);
 
     console.log('[Upload] File deleted:', {
       userId: user.id,
-      fileKey
+      fileKey,
     });
 
     return NextResponse.json({
       success: true,
-      message: 'File deleted successfully'
+      message: 'File deleted successfully',
     });
 
   } catch (error) {
     console.error('[Upload] Error deleting file:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to delete file',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        details: error instanceof Error ? error.message : 'Unknown error',
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

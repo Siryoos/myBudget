@@ -6,32 +6,32 @@ export enum ErrorCode {
   VALIDATION_ERROR = 'VALIDATION_ERROR',
   INVALID_INPUT = 'INVALID_INPUT',
   MISSING_REQUIRED_FIELD = 'MISSING_REQUIRED_FIELD',
-  
+
   // Authentication errors
   UNAUTHORIZED = 'UNAUTHORIZED',
   INVALID_CREDENTIALS = 'INVALID_CREDENTIALS',
   TOKEN_EXPIRED = 'TOKEN_EXPIRED',
   TOKEN_INVALID = 'TOKEN_INVALID',
   INSUFFICIENT_PERMISSIONS = 'INSUFFICIENT_PERMISSIONS',
-  
+
   // Database errors
   DATABASE_ERROR = 'DATABASE_ERROR',
   RECORD_NOT_FOUND = 'RECORD_NOT_FOUND',
   DUPLICATE_RECORD = 'DUPLICATE_RECORD',
   CONSTRAINT_VIOLATION = 'CONSTRAINT_VIOLATION',
-  
+
   // Rate limiting
   RATE_LIMIT_EXCEEDED = 'RATE_LIMIT_EXCEEDED',
-  
+
   // Server errors
   INTERNAL_SERVER_ERROR = 'INTERNAL_SERVER_ERROR',
   SERVICE_UNAVAILABLE = 'SERVICE_UNAVAILABLE',
-  
+
   // Security errors
   SECURITY_VIOLATION = 'SECURITY_VIOLATION',
   CSRF_VIOLATION = 'CSRF_VIOLATION',
   XSS_ATTEMPT = 'XSS_ATTEMPT',
-  
+
   // Business logic errors
   BUSINESS_RULE_VIOLATION = 'BUSINESS_RULE_VIOLATION',
   INSUFFICIENT_FUNDS = 'INSUFFICIENT_FUNDS',
@@ -67,7 +67,7 @@ export class AppError extends Error {
     details?: any,
     requestId?: string,
     userAgent?: string,
-    ipAddress?: string
+    ipAddress?: string,
   ) {
     super(message);
     this.name = 'AppError';
@@ -189,11 +189,11 @@ export class ErrorHandler {
         code: error.code,
         message: this.isDevelopment ? error.message : this.getProductionMessage(error.code),
         details: this.isDevelopment ? error.details : undefined,
-        retryAfter: error.details?.retryAfter
+        retryAfter: error.details?.retryAfter,
       },
       timestamp: error.timestamp.toISOString(),
       requestId: error.requestId || 'unknown',
-      path: error.details?.path
+      path: error.details?.path,
     };
   }
 
@@ -201,7 +201,7 @@ export class ErrorHandler {
     const validationError = new ValidationError(
       'Validation failed',
       error.flatten(),
-      requestId
+      requestId,
     );
 
     return this.handleAppError(validationError);
@@ -215,7 +215,7 @@ export class ErrorHandler {
       ErrorSeverity.HIGH,
       false,
       this.isDevelopment ? { originalError: error.message, stack: error.stack } : undefined,
-      requestId
+      requestId,
     );
 
     return this.handleAppError(appError);
@@ -244,7 +244,7 @@ export class ErrorHandler {
       [ErrorCode.XSS_ATTEMPT]: 'Potential XSS attempt detected',
       [ErrorCode.BUSINESS_RULE_VIOLATION]: 'Business rule violation',
       [ErrorCode.INSUFFICIENT_FUNDS]: 'Insufficient funds for this operation',
-      [ErrorCode.GOAL_ALREADY_EXISTS]: 'A goal with this name already exists'
+      [ErrorCode.GOAL_ALREADY_EXISTS]: 'A goal with this name already exists',
     };
 
     return productionMessages[code] || 'An error occurred';
@@ -262,7 +262,7 @@ export class ErrorHandler {
       userAgent: error.userAgent,
       ipAddress: error.ipAddress,
       stack: error.stack,
-      details: error.details
+      details: error.details,
     };
 
     if (error.severity === ErrorSeverity.CRITICAL) {
@@ -293,10 +293,10 @@ export const createErrorResponse = (
   error: Error | AppError,
   requestId?: string,
   userAgent?: string,
-  ipAddress?: string
+  ipAddress?: string,
 ): ErrorResponse => {
   const errorHandler = ErrorHandler.getInstance();
-  
+
   if (error instanceof AppError) {
     // Create a new error instance with the additional context instead of modifying the existing one
     const enhancedError = new AppError(
@@ -308,17 +308,17 @@ export const createErrorResponse = (
       error.details,
       requestId || error.requestId,
       userAgent || error.userAgent,
-      ipAddress || error.ipAddress
+      ipAddress || error.ipAddress,
     );
     return errorHandler.handleError(enhancedError, requestId);
   }
-  
+
   return errorHandler.handleError(error, requestId);
 };
 
 export const createValidationError = (
   error: ZodError,
-  requestId?: string
+  requestId?: string,
 ): ErrorResponse => {
   const errorHandler = ErrorHandler.getInstance();
   return errorHandler.handleError(error, requestId);
@@ -326,7 +326,7 @@ export const createValidationError = (
 
 export const createDatabaseError = (
   error: Error,
-  requestId?: string
+  requestId?: string,
 ): ErrorResponse => {
   const dbError = new AppError(
     'Database operation failed',
@@ -335,9 +335,9 @@ export const createDatabaseError = (
     ErrorSeverity.HIGH,
     true,
     process.env.NODE_ENV === 'development' ? { originalError: error.message } : undefined,
-    requestId
+    requestId,
   );
-  
+
   const errorHandler = ErrorHandler.getInstance();
   return errorHandler.handleError(dbError);
 };

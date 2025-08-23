@@ -1,4 +1,5 @@
-import { Pool, PoolClient } from 'pg';
+import type { Pool, PoolClient } from 'pg';
+
 import { getPool } from './database';
 
 // Transaction options
@@ -9,16 +10,23 @@ export interface TransactionOptions {
   backoffMs?: number;
 }
 
+// Transaction constants
+const DEFAULT_TIMEOUT_MS = 30000; // 30 seconds
+const DEFAULT_RETRIES = 3;
+const DEFAULT_BACKOFF_MS = 100;
+const TIMEOUT_MS = 60000; // 60 seconds
+const CRITICAL_RETRIES = 5;
+
 // Default transaction options
 const DEFAULT_OPTIONS: Required<TransactionOptions> = {
   isolationLevel: 'READ COMMITTED',
-  timeout: 30000, // 30 seconds
-  retries: 3,
-  backoffMs: 100
+  timeout: DEFAULT_TIMEOUT_MS,
+  retries: DEFAULT_RETRIES,
+  backoffMs: DEFAULT_BACKOFF_MS,
 };
 
 // Transaction result
-export interface TransactionResult<T = any> {
+export interface TransactionResult<T = unknown> {
   success: boolean;
   data?: T;
   error?: Error;
@@ -26,7 +34,20 @@ export interface TransactionResult<T = any> {
 }
 
 // Transaction callback type
-export type TransactionCallback<T = any> = (client: PoolClient) => Promise<T>;
+export type TransactionCallback<T = unknown> = (client: PoolClient) => Promise<T>;
+
+// Error interface for retry logic
+interface DatabaseError {
+  message?: string;
+  code?: string;
+}
+
+// Pool statistics interface
+interface PoolStats {
+  totalCount: number;
+  idleCount: number;
+  waitingCount?: number;
+}
 
 // Database transaction manager
 export class TransactionManager {
@@ -39,9 +60,9 @@ export class TransactionManager {
   /**
    * Execute a function within a database transaction
    */
-  async executeTransaction<T = any>(
+  async executeTransaction<T = unknown>(
     callback: TransactionCallback<T>,
-    options: TransactionOptions = {}
+    options: TransactionOptions = {},
   ): Promise<TransactionResult<T>> {
     const opts = { ...DEFAULT_OPTIONS, ...options };
     let client: PoolClient | null = null;
@@ -51,27 +72,27 @@ export class TransactionManager {
       try {
         // Get client from pool
         client = await this.pool.connect();
-        
+
         // Set transaction timeout
         await client.query(`SET LOCAL statement_timeout = ${opts.timeout}`);
-        
+
         // Begin transaction with specified isolation level
         await client.query(`BEGIN TRANSACTION ISOLATION LEVEL ${opts.isolationLevel}`);
-        
+
         // Execute the transaction callback
         const result = await callback(client);
-        
+
         // Commit transaction
         await client.query('COMMIT');
-        
+
         return {
           success: true,
-          data: result
+          data: result,
         };
 
       } catch (error) {
         attempts++;
-        
+
         // Rollback transaction if client exists
         if (client) {
           try {
@@ -84,11 +105,11 @@ export class TransactionManager {
         // Check if we should retry
         if (this.shouldRetry(error) && attempts < opts.retries) {
           console.warn(`Transaction attempt ${attempts} failed, retrying...`, error);
-          
+
           // Wait before retrying with exponential backoff
           const backoffTime = opts.backoffMs * Math.pow(2, attempts - 1);
           await this.sleep(backoffTime);
-          
+
           continue;
         }
 
@@ -96,7 +117,7 @@ export class TransactionManager {
         return {
           success: false,
           error: error instanceof Error ? error : new Error(String(error)),
-          rollbackReason: `Transaction failed after ${attempts} attempts`
+          rollbackReason: `Transaction failed after ${attempts} attempts`,
         };
 
       } finally {
@@ -110,7 +131,7 @@ export class TransactionManager {
     return {
       success: false,
       error: new Error(`Transaction failed after ${opts.retries} attempts`),
-      rollbackReason: 'Maximum retry attempts exceeded'
+      rollbackReason: 'Maximum retry attempts exceeded',
     };
   }
 
@@ -119,11 +140,11 @@ export class TransactionManager {
    */
   async executeBatchTransaction<T = any>(
     operations: Array<{ name: string; operation: TransactionCallback<T> }>,
-    options: TransactionOptions = {}
+    options: TransactionOptions = {},
   ): Promise<TransactionResult<T[]>> {
     return this.executeTransaction(async (client) => {
       const results: T[] = [];
-      
+
       for (const { name, operation } of operations) {
         try {
           console.log(`Executing operation: ${name}`);
@@ -135,7 +156,7 @@ export class TransactionManager {
           throw new Error(`Operation ${name} failed: ${error instanceof Error ? error.message : String(error)}`);
         }
       }
-      
+
       return results;
     }, options);
   }
@@ -143,14 +164,14 @@ export class TransactionManager {
   /**
    * Execute a read-only transaction (optimized for read operations)
    */
-  async executeReadTransaction<T = any>(
+  async executeReadTransaction<T = unknown>(
     callback: TransactionCallback<T>,
-    options: TransactionOptions = {}
+    options: TransactionOptions = {},
   ): Promise<TransactionResult<T>> {
     const readOptions: TransactionOptions = {
       ...options,
       isolationLevel: 'READ COMMITTED', // Optimized for reads
-      timeout: options.timeout || 60000 // Longer timeout for reads
+      timeout: options.timeout || TIMEOUT_MS, // Longer timeout for reads
     };
 
     return this.executeTransaction(callback, readOptions);
@@ -159,15 +180,15 @@ export class TransactionManager {
   /**
    * Execute a critical write transaction with extra safety measures
    */
-  async executeCriticalTransaction<T = any>(
+  async executeCriticalTransaction<T = unknown>(
     callback: TransactionCallback<T>,
-    options: TransactionOptions = {}
+    options: TransactionOptions = {},
   ): Promise<TransactionResult<T>> {
     const criticalOptions: TransactionOptions = {
       ...options,
       isolationLevel: 'SERIALIZABLE', // Highest isolation for critical operations
-      timeout: options.timeout || 60000, // Longer timeout
-      retries: options.retries || 5 // More retries for critical operations
+      timeout: options.timeout || TIMEOUT_MS, // Longer timeout
+      retries: options.retries || CRITICAL_RETRIES, // More retries for critical operations
     };
 
     return this.executeTransaction(callback, criticalOptions);
@@ -176,11 +197,12 @@ export class TransactionManager {
   /**
    * Check if an error should trigger a retry
    */
-  private shouldRetry(error: any): boolean {
-    if (!error) return false;
+  private shouldRetry(error: unknown): boolean {
+    if (!error) {return false;}
 
-    const errorMessage = error.message || String(error);
-    const errorCode = error.code;
+    const dbError = error as DatabaseError;
+    const errorMessage = dbError.message || String(error);
+    const errorCode = dbError.code;
 
     // Retry on deadlock, timeout, or connection issues
     const retryableErrors = [
@@ -193,12 +215,12 @@ export class TransactionManager {
       'timeout',
       'ECONNRESET',
       'ENOTFOUND',
-      'ETIMEDOUT'
+      'ETIMEDOUT',
     ];
 
-    return retryableErrors.some(retryable => 
+    return retryableErrors.some(retryable =>
       errorMessage.toLowerCase().includes(retryable.toLowerCase()) ||
-      errorCode === retryable
+      errorCode === retryable,
     );
   }
 
@@ -218,13 +240,13 @@ export class TransactionManager {
     totalConnections: number;
     waitingClients: number;
   }> {
-    const pool = this.pool as any;
-    
+    const pool = this.pool as PoolStats;
+
     return {
       activeConnections: pool.totalCount - pool.idleCount,
       idleConnections: pool.idleCount,
       totalConnections: pool.totalCount,
-      waitingClients: pool.waitingCount || 0
+      waitingClients: pool.waitingCount || 0,
     };
   }
 }
@@ -233,33 +255,25 @@ export class TransactionManager {
 export const transactionManager = new TransactionManager();
 
 // Convenience functions for common transaction patterns
-export const withTransaction = <T = any>(
+export const withTransaction = <T = unknown>(
   callback: TransactionCallback<T>,
-  options?: TransactionOptions
-): Promise<TransactionResult<T>> => {
-  return transactionManager.executeTransaction(callback, options);
-};
+  options?: TransactionOptions,
+): Promise<TransactionResult<T>> => transactionManager.executeTransaction(callback, options);
 
-export const withReadTransaction = <T = any>(
+export const withReadTransaction = <T = unknown>(
   callback: TransactionCallback<T>,
-  options?: TransactionOptions
-): Promise<TransactionResult<T>> => {
-  return transactionManager.executeReadTransaction(callback, options);
-};
+  options?: TransactionOptions,
+): Promise<TransactionResult<T>> => transactionManager.executeReadTransaction(callback, options);
 
-export const withCriticalTransaction = <T = any>(
+export const withCriticalTransaction = <T = unknown>(
   callback: TransactionCallback<T>,
-  options?: TransactionOptions
-): Promise<TransactionResult<T>> => {
-  return transactionManager.executeCriticalTransaction(callback, options);
-};
+  options?: TransactionOptions,
+): Promise<TransactionResult<T>> => transactionManager.executeCriticalTransaction(callback, options);
 
-export const withBatchTransaction = <T = any>(
+export const withBatchTransaction = <T = unknown>(
   operations: Array<{ name: string; operation: TransactionCallback<T> }>,
-  options?: TransactionOptions
-): Promise<TransactionResult<T[]>> => {
-  return transactionManager.executeBatchTransaction(operations, options);
-};
+  options?: TransactionOptions,
+): Promise<TransactionResult<T[]>> => transactionManager.executeBatchTransaction(operations, options);
 
 // Example usage:
 /*
@@ -269,14 +283,14 @@ const result = await withTransaction(async (client) => {
     'INSERT INTO users (email, name) VALUES ($1, $2) RETURNING id',
     ['user@example.com', 'John Doe']
   );
-  
+
   const userId = userResult.rows[0].id;
-  
+
   await client.query(
     'INSERT INTO user_profiles (user_id, bio) VALUES ($1, $2)',
     [userId, 'New user profile']
   );
-  
+
   return { userId, email: 'user@example.com' };
 });
 
@@ -285,7 +299,7 @@ const criticalResult = await withCriticalTransaction(async (client) => {
   // Critical financial operation
   await client.query('UPDATE accounts SET balance = balance - $1 WHERE id = $2', [amount, accountId]);
   await client.query('UPDATE accounts SET balance = balance + $1 WHERE id = $2', [amount, targetAccountId]);
-  
+
   return { success: true };
 });
 */

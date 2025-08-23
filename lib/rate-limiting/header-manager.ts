@@ -1,5 +1,7 @@
+import type { NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
+
 import { rateLimitConfig } from './config';
-import { NextRequest, NextResponse } from 'next/server';
 
 // Rate limit header types
 export interface RateLimitHeaders {
@@ -41,12 +43,12 @@ export class RateLimitHeaderManager {
     currentCount: number,
     limit: number,
     windowMs: number,
-    options: HeaderGenerationOptions = {}
+    options: HeaderGenerationOptions = {},
   ): RateLimitHeaders {
     const headers: RateLimitHeaders = {
       'X-RateLimit-Limit': limit.toString(),
       'X-RateLimit-Remaining': Math.max(0, limit - currentCount).toString(),
-      'X-RateLimit-Reset': this.calculateResetTime(windowMs).toISOString()
+      'X-RateLimit-Reset': this.calculateResetTime(windowMs).toISOString(),
     };
 
     // Add optional headers based on configuration and options
@@ -80,20 +82,20 @@ export class RateLimitHeaderManager {
   generateExceededHeaders(
     limit: number,
     windowMs: number,
-    options: HeaderGenerationOptions = {}
+    options: HeaderGenerationOptions = {},
   ): RateLimitHeaders & { 'Retry-After': string } {
     const baseHeaders = this.generateHeaders(limit, limit, windowMs, options);
-    
+
     return {
       ...baseHeaders,
-      'Retry-After': this.calculateRetryAfter(windowMs).toString()
+      'Retry-After': this.calculateRetryAfter(windowMs).toString(),
     };
   }
 
   // Apply headers to Next.js response
   applyHeaders(
     response: NextResponse,
-    headers: RateLimitHeaders
+    headers: RateLimitHeaders,
   ): NextResponse {
     Object.entries(headers).forEach(([key, value]) => {
       if (value !== undefined) {
@@ -107,11 +109,11 @@ export class RateLimitHeaderManager {
   // Apply headers to existing headers object
   applyToHeaders(
     existingHeaders: Record<string, string>,
-    headers: RateLimitHeaders
+    headers: RateLimitHeaders,
   ): Record<string, string> {
     return {
       ...existingHeaders,
-      ...headers
+      ...headers,
     };
   }
 
@@ -119,7 +121,7 @@ export class RateLimitHeaderManager {
   generateEndpointHeaders(
     endpoint: string,
     currentCount: number,
-    options: HeaderGenerationOptions = {}
+    options: HeaderGenerationOptions = {},
   ): RateLimitHeaders {
     const endpointConfig = rateLimitConfig.endpoints[endpoint];
     const limit = endpointConfig?.maxRequests || rateLimitConfig.defaultLimits.maxRequests;
@@ -127,7 +129,7 @@ export class RateLimitHeaderManager {
 
     return this.generateHeaders(currentCount, limit, windowMs, {
       ...options,
-      includeEndpointInfo: true
+      includeEndpointInfo: true,
     });
   }
 
@@ -136,7 +138,7 @@ export class RateLimitHeaderManager {
     userId: string,
     endpoint: string,
     currentCount: number,
-    options: HeaderGenerationOptions = {}
+    options: HeaderGenerationOptions = {},
   ): RateLimitHeaders {
     const endpointConfig = rateLimitConfig.endpoints[endpoint];
     const limit = endpointConfig?.maxRequests || rateLimitConfig.defaultLimits.maxRequests;
@@ -148,8 +150,8 @@ export class RateLimitHeaderManager {
       includeEndpointInfo: true,
       customHeaders: {
         'X-RateLimit-User': userId,
-        'X-RateLimit-Endpoint': endpoint
-      }
+        'X-RateLimit-Endpoint': endpoint,
+      },
     });
   }
 
@@ -157,12 +159,12 @@ export class RateLimitHeaderManager {
   generateTrustedIPHeaders(
     ip: string,
     bypassLevel: 'full' | 'partial',
-    options: HeaderGenerationOptions = {}
+    options: HeaderGenerationOptions = {},
   ): Record<string, string> {
     const headers: Record<string, string> = {
       'X-Trusted-IP': 'true',
       'X-Bypass-Level': bypassLevel,
-      'X-Trusted-IP-Address': ip
+      'X-Trusted-IP-Address': ip,
     };
 
     if (bypassLevel === 'full') {
@@ -189,14 +191,14 @@ export class RateLimitHeaderManager {
     baseLimit: number,
     adjustedLimit: number,
     windowMs: number,
-    options: HeaderGenerationOptions = {}
+    options: HeaderGenerationOptions = {},
   ): RateLimitHeaders & { 'X-RateLimit-Adjusted': string; 'X-RateLimit-Base': string } {
     const baseHeaders = this.generateHeaders(currentCount, adjustedLimit, windowMs, options);
-    
+
     return {
       ...baseHeaders,
       'X-RateLimit-Adjusted': adjustedLimit.toString(),
-      'X-RateLimit-Base': baseLimit.toString()
+      'X-RateLimit-Base': baseLimit.toString(),
     };
   }
 
@@ -217,7 +219,7 @@ export class RateLimitHeaderManager {
   private formatWindowTime(windowMs: number): string {
     const minutes = Math.floor(windowMs / 60000);
     const seconds = Math.floor((windowMs % 60000) / 1000);
-    
+
     if (minutes > 0) {
       return `${minutes}m ${seconds}s`;
     }
@@ -285,10 +287,10 @@ export class RateLimitHeaderManager {
     const reset = response.headers.get('X-RateLimit-Reset');
     const retryAfter = response.headers.get('Retry-After');
 
-    if (limit) headers['X-RateLimit-Limit'] = limit;
-    if (remaining) headers['X-RateLimit-Remaining'] = remaining;
-    if (reset) headers['X-RateLimit-Reset'] = reset;
-    if (retryAfter) headers['Retry-After'] = retryAfter;
+    if (limit) {headers['X-RateLimit-Limit'] = limit;}
+    if (remaining) {headers['X-RateLimit-Remaining'] = remaining;}
+    if (reset) {headers['X-RateLimit-Reset'] = reset;}
+    if (retryAfter) {headers['Retry-After'] = retryAfter;}
 
     return headers;
   }
@@ -311,7 +313,7 @@ export class RateLimitHeaderManager {
       limit: parseInt(headers['X-RateLimit-Limit']),
       remaining: parseInt(headers['X-RateLimit-Remaining']),
       reset: new Date(headers['X-RateLimit-Reset']),
-      retryAfter: headers['Retry-After'] ? parseInt(headers['Retry-After']) : undefined
+      retryAfter: headers['Retry-After'] ? parseInt(headers['Retry-After']) : undefined,
     };
   }
 
@@ -333,7 +335,7 @@ export class RateLimitHeaderManager {
     const timeUntilReset = this.getTimeUntilReset(headers);
     const minutes = Math.floor(timeUntilReset / 60000);
     const seconds = Math.floor((timeUntilReset % 60000) / 1000);
-    
+
     if (minutes > 0) {
       return `${minutes}m ${seconds}s`;
     }
@@ -349,31 +351,23 @@ export const generateRateLimitHeaders = (
   currentCount: number,
   limit: number,
   windowMs: number,
-  options?: HeaderGenerationOptions
-): RateLimitHeaders => {
-  return rateLimitHeaderManager.generateHeaders(currentCount, limit, windowMs, options);
-};
+  options?: HeaderGenerationOptions,
+): RateLimitHeaders => rateLimitHeaderManager.generateHeaders(currentCount, limit, windowMs, options);
 
 export const generateEndpointHeaders = (
   endpoint: string,
   currentCount: number,
-  options?: HeaderGenerationOptions
-): RateLimitHeaders => {
-  return rateLimitHeaderManager.generateEndpointHeaders(endpoint, currentCount, options);
-};
+  options?: HeaderGenerationOptions,
+): RateLimitHeaders => rateLimitHeaderManager.generateEndpointHeaders(endpoint, currentCount, options);
 
 export const generateUserHeaders = (
   userId: string,
   endpoint: string,
   currentCount: number,
-  options?: HeaderGenerationOptions
-): RateLimitHeaders => {
-  return rateLimitHeaderManager.generateUserHeaders(userId, endpoint, currentCount, options);
-};
+  options?: HeaderGenerationOptions,
+): RateLimitHeaders => rateLimitHeaderManager.generateUserHeaders(userId, endpoint, currentCount, options);
 
 export const applyHeadersToResponse = (
   response: NextResponse,
-  headers: RateLimitHeaders
-): NextResponse => {
-  return rateLimitHeaderManager.applyHeaders(response, headers);
-};
+  headers: RateLimitHeaders,
+): NextResponse => rateLimitHeaderManager.applyHeaders(response, headers);

@@ -57,20 +57,20 @@ export class S3Provider extends CloudStorageProvider {
     // In production, use AWS SDK
     // import { S3Client } from "@aws-sdk/client-s3";
     // return new S3Client({ region: this.config.region, credentials: ... });
-    
+
     // Mock implementation for development
     return {
       presignUrl: async (params: any) => {
         const mockUrl = `https://${this.config.defaultBucket}.s3.${this.config.region}.amazonaws.com/${params.Key}?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Expires=${params.Expires}`;
         return mockUrl;
-      }
+      },
     };
   }
 
   async generatePresignedUrl(options: PresignedUrlOptions): Promise<PresignedUrlResponse> {
     const fileKey = this.generateFileKey(options);
     const expiresIn = options.expiresIn || 3600; // 1 hour default
-    
+
     // In production:
     // const command = new PutObjectCommand({
     //   Bucket: this.config.defaultBucket,
@@ -84,7 +84,7 @@ export class S3Provider extends CloudStorageProvider {
     const uploadUrl = await this.getS3Client().presignUrl({
       Bucket: this.config.defaultBucket,
       Key: fileKey,
-      Expires: expiresIn
+      Expires: expiresIn,
     });
 
     return {
@@ -95,8 +95,8 @@ export class S3Provider extends CloudStorageProvider {
       expiresAt: new Date(Date.now() + expiresIn * 1000).toISOString(),
       headers: {
         'Content-Type': options.mimeType,
-        'Content-Length': options.fileSize.toString()
-      }
+        'Content-Length': options.fileSize.toString(),
+      },
     };
   }
 
@@ -107,7 +107,7 @@ export class S3Provider extends CloudStorageProvider {
     //   Key: fileKey
     // });
     // await s3Client.send(command);
-    
+
     console.log(`[S3] Deleting file: ${fileKey}`);
   }
 
@@ -141,7 +141,7 @@ export class CloudinaryProvider extends CloudStorageProvider {
   async generatePresignedUrl(options: PresignedUrlOptions): Promise<PresignedUrlResponse> {
     const timestamp = Math.floor(Date.now() / 1000);
     const publicId = this.generatePublicId(options);
-    
+
     // In production, use Cloudinary SDK
     // const signature = cloudinary.utils.api_sign_request({
     //   timestamp,
@@ -156,7 +156,7 @@ export class CloudinaryProvider extends CloudStorageProvider {
       .digest('hex');
 
     const uploadUrl = `https://api.cloudinary.com/v1_1/${this.config.credentials.cloudName}/image/upload`;
-    
+
     return {
       uploadUrl,
       publicUrl: `https://res.cloudinary.com/${this.config.credentials.cloudName}/image/upload/${publicId}`,
@@ -164,8 +164,8 @@ export class CloudinaryProvider extends CloudStorageProvider {
       fileKey: publicId,
       expiresAt: new Date(Date.now() + 3600000).toISOString(), // 1 hour
       headers: {
-        'X-Requested-With': 'XMLHttpRequest'
-      }
+        'X-Requested-With': 'XMLHttpRequest',
+      },
     };
   }
 
@@ -210,16 +210,16 @@ export function createStorageProvider(config: CloudStorageConfig): CloudStorageP
 // Default configuration (from environment variables)
 export function getDefaultStorageConfig(): CloudStorageConfig {
   const provider = process.env.STORAGE_PROVIDER as CloudStorageConfig['provider'] || 'aws-s3';
-  
+
   if (provider === 'aws-s3') {
     return {
       provider: 'aws-s3',
       credentials: {
         accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || ''
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
       },
       defaultBucket: process.env.AWS_S3_BUCKET || 'smartsave-uploads',
-      region: process.env.AWS_REGION || 'us-east-1'
+      region: process.env.AWS_REGION || 'us-east-1',
     };
   } else if (provider === 'cloudinary') {
     return {
@@ -227,11 +227,11 @@ export function getDefaultStorageConfig(): CloudStorageConfig {
       credentials: {
         cloudName: process.env.CLOUDINARY_CLOUD_NAME || '',
         apiKey: process.env.CLOUDINARY_API_KEY || '',
-        apiSecret: process.env.CLOUDINARY_API_SECRET || ''
-      }
+        apiSecret: process.env.CLOUDINARY_API_SECRET || '',
+      },
     };
   }
-  
+
   throw new Error('Invalid storage provider configuration');
 }
 
@@ -250,7 +250,7 @@ export function validateFileType(mimeType: string, allowedTypes: string[]): bool
   return allowedTypes.some(type => {
     if (type.endsWith('/*')) {
       const category = type.slice(0, -2);
-      return mimeType.startsWith(category + '/');
+      return mimeType.startsWith(`${category}/`);
     }
     return mimeType === type;
   });
@@ -262,9 +262,9 @@ export function validateFileSize(size: number, maxSize: number): boolean {
 
 // Export types for use in other modules
 // Export types (avoiding conflicts with existing declarations)
-export type { 
-  CloudStorageConfig as CloudStorageConfigType, 
-  PresignedUrlOptions as PresignedUrlOptionsType, 
-  PresignedUrlResponse as PresignedUrlResponseType, 
-  UploadCompleteData as UploadCompleteDataType 
+export type {
+  CloudStorageConfig as CloudStorageConfigType,
+  PresignedUrlOptions as PresignedUrlOptionsType,
+  PresignedUrlResponse as PresignedUrlResponseType,
+  UploadCompleteData as UploadCompleteDataType,
 };

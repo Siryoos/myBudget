@@ -1,15 +1,17 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/database';
-import { requireAuth } from '@/lib/auth-middleware';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import type { AuthenticatedRequest } from '@/types/auth';
-import { 
-  commonSchemas, 
-  RequestValidator, 
+
+import {
+  commonSchemas,
+  RequestValidator,
   createValidationErrorResponse,
   REQUEST_LIMITS,
-  withRequestSizeLimit 
+  withRequestSizeLimit,
 } from '@/lib/api-validation';
+import { requireAuth } from '@/lib/auth-middleware';
+import { query } from '@/lib/database';
+import type { AuthenticatedRequest } from '@/types/auth';
 
 const transactionSchema = z.object({
   amount: commonSchemas.amount,
@@ -43,7 +45,7 @@ const querySchema = z.object({
     }
     return true;
   },
-  { message: 'Start date must be before or equal to end date' }
+  { message: 'Start date must be before or equal to end date' },
 );
 
 export const GET = requireAuth(async (request: AuthenticatedRequest) => {
@@ -52,10 +54,10 @@ export const GET = requireAuth(async (request: AuthenticatedRequest) => {
     const validator = new RequestValidator(request as unknown as NextRequest, REQUEST_LIMITS.SEARCH_BODY_SIZE);
     await validator.validateRequestSize();
     validator.validateHeaders();
-    
+
     // Validate and sanitize query parameters
     const queryParams = validator.validateQueryParams(querySchema);
-    
+
     const user = request.user;
     const { page = 1, limit = 20, category, type, startDate, endDate, budgetCategoryId } = queryParams;
     const offset = (page - 1) * limit;
@@ -99,7 +101,7 @@ export const GET = requireAuth(async (request: AuthenticatedRequest) => {
     // Get total count
     const countResult = await query(
       `SELECT COUNT(*) FROM transactions t ${whereClause}`,
-      params
+      params,
     );
     const total = parseInt(countResult.rows[0].count);
 
@@ -111,7 +113,7 @@ export const GET = requireAuth(async (request: AuthenticatedRequest) => {
        ${whereClause}
        ORDER BY t.date DESC, t.created_at DESC
        LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`,
-      [...params, limit, offset]
+      [...params, limit, offset],
     );
 
     return NextResponse.json({
@@ -122,24 +124,24 @@ export const GET = requireAuth(async (request: AuthenticatedRequest) => {
           page,
           limit,
           total,
-          pages: Math.ceil(total / limit)
-        }
-      }
+          pages: Math.ceil(total / limit),
+        },
+      },
     });
 
   } catch (error) {
     if (error instanceof Error && error.message.includes('Validation failed')) {
       return createValidationErrorResponse(error);
     }
-    
+
     console.error('Error fetching transactions:', error);
     return NextResponse.json(
-      { 
-        success: false, 
+      {
+        success: false,
         error: 'Failed to fetch transactions',
-        message: error instanceof Error ? error.message : 'Unknown error'
+        message: error instanceof Error ? error.message : 'Unknown error',
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 });
@@ -150,10 +152,10 @@ export const POST = requireAuth(async (request: AuthenticatedRequest) => {
     const validator = new RequestValidator(request as unknown as NextRequest, REQUEST_LIMITS.DEFAULT_BODY_SIZE);
     await validator.validateRequestSize();
     validator.validateHeaders();
-    
+
     // Validate and parse request body
     const body = await validator.validateAndParseBody(transactionSchema);
-    
+
     const user = request.user;
     const { amount, description, category, date, type, account, tags, isRecurring, budgetCategoryId } = body;
 
@@ -161,16 +163,16 @@ export const POST = requireAuth(async (request: AuthenticatedRequest) => {
     if (budgetCategoryId) {
       const budgetCategoryResult = await query(
         'SELECT id FROM budget_categories WHERE id = $1 AND user_id = $2',
-        [budgetCategoryId, user.id]
+        [budgetCategoryId, user.id],
       );
-      
+
       if (budgetCategoryResult.rows.length === 0) {
         return NextResponse.json(
-          { 
-            success: false, 
-            error: 'Invalid budget category' 
+          {
+            success: false,
+            error: 'Invalid budget category',
           },
-          { status: 400 }
+          { status: 400 },
         );
       }
     }
@@ -182,27 +184,27 @@ export const POST = requireAuth(async (request: AuthenticatedRequest) => {
         account, tags, is_recurring, budget_category_id, created_at
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())
       RETURNING *`,
-      [user.id, amount, description, category, date, type, account, tags, isRecurring, budgetCategoryId]
+      [user.id, amount, description, category, date, type, account, tags, isRecurring, budgetCategoryId],
     );
 
     return NextResponse.json({
       success: true,
-      data: result.rows[0]
+      data: result.rows[0],
     }, { status: 201 });
 
   } catch (error) {
     if (error instanceof Error && error.message.includes('Validation failed')) {
       return createValidationErrorResponse(error);
     }
-    
+
     console.error('Error creating transaction:', error);
     return NextResponse.json(
-      { 
-        success: false, 
+      {
+        success: false,
         error: 'Failed to create transaction',
-        message: error instanceof Error ? error.message : 'Unknown error'
+        message: error instanceof Error ? error.message : 'Unknown error',
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 });
@@ -216,13 +218,13 @@ export const PUT = requireAuth(async (request: AuthenticatedRequest) => {
     // Check if transaction exists and belongs to user
     const existingTransaction = await query(
       'SELECT id, amount, type, budget_category_id FROM transactions WHERE id = $1 AND user_id = $2',
-      [updateData.id, user.id]
+      [updateData.id, user.id],
     );
 
     if (existingTransaction.rows.length === 0) {
       return NextResponse.json(
         { error: 'Transaction not found' },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -278,7 +280,7 @@ export const PUT = requireAuth(async (request: AuthenticatedRequest) => {
         updateValues.push(updateData.id);
         await query(
           `UPDATE transactions SET ${updateFields.join(', ')}, updated_at = CURRENT_TIMESTAMP WHERE id = $${paramIndex}`,
-          updateValues
+          updateValues,
         );
       }
 
@@ -290,7 +292,7 @@ export const PUT = requireAuth(async (request: AuthenticatedRequest) => {
             `UPDATE budget_categories 
              SET spent = spent - $1 
              WHERE id = $2`,
-            [oldTransaction.amount, oldTransaction.budget_category_id]
+            [oldTransaction.amount, oldTransaction.budget_category_id],
           );
         }
 
@@ -304,7 +306,7 @@ export const PUT = requireAuth(async (request: AuthenticatedRequest) => {
             `UPDATE budget_categories 
              SET spent = spent + $1 
              WHERE id = $2`,
-            [newAmount, newBudgetCategoryId]
+            [newAmount, newBudgetCategoryId],
           );
         }
       }
@@ -313,7 +315,7 @@ export const PUT = requireAuth(async (request: AuthenticatedRequest) => {
 
       return NextResponse.json({
         success: true,
-        data: { message: 'Transaction updated successfully' }
+        data: { message: 'Transaction updated successfully' },
       });
 
     } catch (error) {
@@ -323,17 +325,17 @@ export const PUT = requireAuth(async (request: AuthenticatedRequest) => {
 
   } catch (error) {
     console.error('Update transaction error:', error);
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Validation failed', details: error.errors },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     return NextResponse.json(
       { error: 'Failed to update transaction' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 });
@@ -347,20 +349,20 @@ export const DELETE = requireAuth(async (request: AuthenticatedRequest) => {
     if (!transactionId) {
       return NextResponse.json(
         { error: 'Transaction ID is required' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // Check if transaction exists and belongs to user
     const existingTransaction = await query(
       'SELECT id, amount, type, budget_category_id FROM transactions WHERE id = $1 AND user_id = $2',
-      [transactionId, user.id]
+      [transactionId, user.id],
     );
 
     if (existingTransaction.rows.length === 0) {
       return NextResponse.json(
         { error: 'Transaction not found' },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -376,7 +378,7 @@ export const DELETE = requireAuth(async (request: AuthenticatedRequest) => {
           `UPDATE budget_categories 
            SET spent = spent - $1 
            WHERE id = $2`,
-          [transaction.amount, transaction.budget_category_id]
+          [transaction.amount, transaction.budget_category_id],
         );
       }
 
@@ -387,7 +389,7 @@ export const DELETE = requireAuth(async (request: AuthenticatedRequest) => {
 
       return NextResponse.json({
         success: true,
-        data: { message: 'Transaction deleted successfully' }
+        data: { message: 'Transaction deleted successfully' },
       });
 
     } catch (error) {
@@ -399,7 +401,7 @@ export const DELETE = requireAuth(async (request: AuthenticatedRequest) => {
     console.error('Delete transaction error:', error);
     return NextResponse.json(
       { error: 'Failed to delete transaction' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 });

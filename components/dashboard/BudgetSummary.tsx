@@ -1,19 +1,20 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { 
+import {
   ExclamationTriangleIcon,
   ChartPieIcon,
-  ArrowRightIcon
-} from '@heroicons/react/24/outline'
-import { Card, CardContent, CardHeader } from '@/components/ui/Card'
-import { ProgressBar } from '@/components/ui/ProgressBar'
-import { Button } from '@/components/ui/Button'
-import { Skeleton } from '@/components/ui/Skeleton'
-import { formatCurrency, formatPercentage, getBudgetCategoryColor } from '@/lib/utils'
-import { useTranslation } from '@/lib/useTranslation'
-import { useBudgets } from '@/hooks/use-api'
-import type { BudgetCategory } from '@/types'
+  ArrowRightIcon,
+} from '@heroicons/react/24/outline';
+import { useState } from 'react';
+
+import { Button } from '@/components/ui/Button';
+import { Card, CardContent, CardHeader } from '@/components/ui/Card';
+import { ProgressBar } from '@/components/ui/ProgressBar';
+import { Skeleton } from '@/components/ui/Skeleton';
+import { useBudgets } from '@/hooks/use-api';
+import { useTranslation } from '@/lib/useTranslation';
+import { formatCurrency, formatPercentage, getBudgetCategoryColor } from '@/lib/utils';
+import type { BudgetCategory } from '@/types';
 
 interface BudgetSummaryProps {
   showCategories?: boolean
@@ -26,48 +27,48 @@ export function BudgetSummary({
   showSpendingAlerts = true,
   visualType = 'donutChart',
 }: BudgetSummaryProps) {
-  const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month'>('month')
-  const { t } = useTranslation(['dashboard', 'budget'])
-  const { data: budgets, loading, error } = useBudgets()
+  const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month'>('month');
+  const { t } = useTranslation(['dashboard', 'budget']);
+  const { data: budgets, loading, error } = useBudgets();
 
   // Get the active budget (first one for now, or the current period budget)
-  const activeBudget = budgets?.[0]
-  const budgetData = activeBudget?.categories || []
+  const activeBudget = budgets?.[0];
+  const budgetData = activeBudget?.categories || [];
 
-  const totalAllocated = budgetData.reduce((sum, cat) => sum + cat.allocated, 0)
-  const totalSpent = budgetData.reduce((sum, cat) => sum + cat.spent, 0)
-  const totalRemaining = totalAllocated - totalSpent
-  const overBudgetCategories = budgetData.filter(cat => cat.spent > cat.allocated)
+  const totalAllocated = budgetData.reduce((sum, cat) => sum + cat.allocated, 0);
+  const totalSpent = budgetData.reduce((sum, cat) => sum + cat.spent, 0);
+  const totalRemaining = totalAllocated - totalSpent;
+  const overBudgetCategories = budgetData.filter(cat => cat.spent > cat.allocated);
 
   const DonutChart = () => {
-    const centerX = 80
-    const centerY = 80
-    const radius = 60
-    let cumulativePercentage = 0
+    const centerX = 80;
+    const centerY = 80;
+    const radius = 60;
+    let cumulativePercentage = 0;
 
     const createArc = (percentage: number, color: string, offset: number) => {
-      const angle = (percentage / 100) * 360
-      const startAngle = (offset / 100) * 360 - 90
-      const endAngle = startAngle + angle
-      
-      const x1 = centerX + radius * Math.cos((startAngle * Math.PI) / 180)
-      const y1 = centerY + radius * Math.sin((startAngle * Math.PI) / 180)
-      const x2 = centerX + radius * Math.cos((endAngle * Math.PI) / 180)
-      const y2 = centerY + radius * Math.sin((endAngle * Math.PI) / 180)
-      
-      const largeArcFlag = angle > 180 ? 1 : 0
-      
-      return `M ${centerX} ${centerY} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2} Z`
-    }
+      const angle = (percentage / 100) * 360;
+      const startAngle = (offset / 100) * 360 - 90;
+      const endAngle = startAngle + angle;
+
+      const x1 = centerX + radius * Math.cos((startAngle * Math.PI) / 180);
+      const y1 = centerY + radius * Math.sin((startAngle * Math.PI) / 180);
+      const x2 = centerX + radius * Math.cos((endAngle * Math.PI) / 180);
+      const y2 = centerY + radius * Math.sin((endAngle * Math.PI) / 180);
+
+      const largeArcFlag = angle > 180 ? 1 : 0;
+
+      return `M ${centerX} ${centerY} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2} Z`;
+    };
 
     return (
       <div className="flex items-center justify-center">
         <svg width="160" height="160" className="transform -rotate-90">
           {budgetData.map((category, index) => {
-            const percentage = (category.spent / totalSpent) * 100
-            const path = createArc(percentage, category.color, cumulativePercentage)
-            cumulativePercentage += percentage
-            
+            const percentage = (category.spent / totalSpent) * 100;
+            const path = createArc(percentage, category.color, cumulativePercentage);
+            cumulativePercentage += percentage;
+
             return (
               <path
                 key={category.id}
@@ -76,7 +77,7 @@ export function BudgetSummary({
                 className="hover:opacity-80 transition-opacity cursor-pointer"
                 aria-label={`${category.name}: ${formatPercentage(percentage)}`}
               />
-            )
+            );
           })}
           {/* Center circle */}
           <circle
@@ -106,8 +107,8 @@ export function BudgetSummary({
           </text>
         </svg>
       </div>
-    )
-  }
+    );
+  };
 
   if (loading) {
     return (
@@ -140,7 +141,7 @@ export function BudgetSummary({
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   if (error || !activeBudget) {
@@ -157,7 +158,7 @@ export function BudgetSummary({
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   return (
@@ -177,7 +178,7 @@ export function BudgetSummary({
               </p>
             </div>
           </div>
-          
+
           <Button variant="outline" size="sm">
             {t('dashboard:quickActions.viewBudget', { defaultValue: 'View Full Budget' })}
             <ArrowRightIcon className="h-4 w-4 ml-1" />
@@ -305,5 +306,5 @@ export function BudgetSummary({
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

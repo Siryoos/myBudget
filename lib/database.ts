@@ -1,5 +1,6 @@
-import { Pool, PoolClient, QueryResult, QueryResultRow } from 'pg';
 import * as dotenv from 'dotenv';
+import type { PoolClient, QueryResult, QueryResultRow } from 'pg';
+import { Pool } from 'pg';
 
 dotenv.config();
 
@@ -7,11 +8,11 @@ dotenv.config();
 const validateDatabaseConfig = (): void => {
   const requiredVars = ['DB_USER', 'DB_HOST', 'DB_NAME', 'DB_PASSWORD'];
   const missingVars = requiredVars.filter(varName => !process.env[varName]);
-  
+
   if (missingVars.length > 0) {
     throw new Error(`Missing required database environment variables: ${missingVars.join(', ')}`);
   }
-  
+
   // Validate database port
   const port = parseInt(process.env.DB_PORT || '5432');
   if (isNaN(port) || port < 1 || port > 65535) {

@@ -1,4 +1,5 @@
 import { renderHook, act } from '@testing-library/react';
+
 import { useErrorHandler } from '../../hooks/useErrorHandler';
 import { ValidationError } from '../../lib/error-handling';
 import * as errorReporting from '../../lib/error-reporting';
@@ -86,7 +87,7 @@ describe('useErrorHandler', () => {
 
   it('should reset error state', () => {
     const { result } = renderHook(() => useErrorHandler());
-    
+
     act(() => {
       result.current.throwError('Test error');
     });

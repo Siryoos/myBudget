@@ -1,21 +1,22 @@
-import { Metadata } from 'next'
-import { WelcomeHeader } from '@/components/dashboard/WelcomeHeader'
-import { SavingsOverview } from '@/components/dashboard/SavingsOverview'
-import { BudgetSummary } from '@/components/dashboard/BudgetSummary'
-import { QuickSaveWidget } from '@/components/dashboard/QuickSaveWidget'
-import { RecentTransactions } from '@/components/dashboard/RecentTransactions'
-import { InsightsPanel } from '@/components/dashboard/InsightsPanel'
+import type { Metadata } from 'next';
+
+import { BudgetSummary } from '@/components/dashboard/BudgetSummary';
+import { InsightsPanel } from '@/components/dashboard/InsightsPanel';
+import { QuickSaveWidget } from '@/components/dashboard/QuickSaveWidget';
+import { RecentTransactions } from '@/components/dashboard/RecentTransactions';
+import { SavingsOverview } from '@/components/dashboard/SavingsOverview';
+import { WelcomeHeader } from '@/components/dashboard/WelcomeHeader';
 
 export const metadata: Metadata = {
   title: 'Dashboard',
   description: 'Your financial overview and insights',
-}
+};
 
 export default function DashboardPage() {
   return (
     <div className="space-y-6" id="main-content">
       {/* Welcome Header */}
-      <WelcomeHeader 
+      <WelcomeHeader
         showGreeting={true}
         showDate={true}
         showQuickActions={true}
@@ -26,7 +27,7 @@ export default function DashboardPage() {
         {/* Left Column - Primary Widgets */}
         <div className="lg:col-span-2 space-y-6">
           {/* Savings Overview */}
-          <SavingsOverview 
+          <SavingsOverview
             showTotalSavings={true}
             showMonthlyProgress={true}
             showGoalProgress={true}
@@ -34,14 +35,14 @@ export default function DashboardPage() {
           />
 
           {/* Budget Summary */}
-          <BudgetSummary 
+          <BudgetSummary
             showCategories={true}
             showSpendingAlerts={true}
             visualType="donutChart"
           />
 
           {/* Recent Transactions */}
-          <RecentTransactions 
+          <RecentTransactions
             limit={5}
             showCategories={true}
             showAmounts={true}
@@ -51,14 +52,14 @@ export default function DashboardPage() {
         {/* Right Column - Secondary Widgets */}
         <div className="space-y-6">
           {/* Quick Save Widget */}
-          <QuickSaveWidget 
+          <QuickSaveWidget
             defaultAmounts={[10, 25, 50, 100]}
             customAmountEnabled={true}
             celebrationAnimation={true}
           />
 
           {/* Insights Panel */}
-          <InsightsPanel 
+          <InsightsPanel
             showSavingTips={true}
             personalizedRecommendations={true}
             comparePeers={true}
@@ -66,6 +67,6 @@ export default function DashboardPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 

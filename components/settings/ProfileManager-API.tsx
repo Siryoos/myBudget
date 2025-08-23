@@ -1,17 +1,18 @@
-'use client'
+'use client';
 
-import React, { useState, useEffect } from 'react'
-import { useTranslation } from '@/lib/useTranslation'
-import { useAuth } from '@/contexts/AuthContext'
-import { apiClient } from '@/lib/api-client'
-import { 
-  UserIcon, 
-  CurrencyDollarIcon, 
+import {
+  UserIcon,
+  CurrencyDollarIcon,
   GlobeAltIcon,
   CheckIcon,
   PencilIcon,
-  XMarkIcon
-} from '@heroicons/react/24/outline'
+  XMarkIcon,
+} from '@heroicons/react/24/outline';
+import React, { useState, useEffect } from 'react';
+
+import { useAuth } from '@/contexts/AuthContext';
+import { apiClient } from '@/lib/api-client';
+import { useTranslation } from '@/lib/useTranslation';
 
 interface ProfileManagerProps {
   personalInfo?: boolean
@@ -24,13 +25,13 @@ export function ProfileManager({
   financialProfile = true,
   preferences = true,
 }: ProfileManagerProps) {
-  const { t } = useTranslation(['settings', 'common'])
-  const { user, updateProfile } = useAuth()
-  const [editingSection, setEditingSection] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [errors, setErrors] = useState<Record<string, string>>({})
-  const [successMessage, setSuccessMessage] = useState<string | null>(null)
-  
+  const { t } = useTranslation(['settings', 'common']);
+  const { user, updateProfile } = useAuth();
+  const [editingSection, setEditingSection] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
   const [profileData, setProfileData] = useState({
     name: user?.name || '',
     email: user?.email || '',
@@ -42,7 +43,7 @@ export function ProfileManager({
     currency: user?.currency || 'USD',
     language: user?.language || 'en',
     timezone: 'America/New_York',
-  })
+  });
 
   // Sync with user data when it changes
   useEffect(() => {
@@ -55,98 +56,98 @@ export function ProfileManager({
         monthlyIncome: user.monthlyIncome || prev.monthlyIncome,
         currency: user.currency || prev.currency,
         language: user.language || prev.language,
-      }))
+      }));
     }
-  }, [user])
+  }, [user]);
 
   const validateSection = (section: string): boolean => {
-    const newErrors: Record<string, string> = {}
-    
+    const newErrors: Record<string, string> = {};
+
     switch (section) {
       case 'personal':
         if (!profileData.name.trim()) {
-          newErrors.name = t('errors.nameRequired')
+          newErrors.name = t('errors.nameRequired');
         }
         if (!profileData.email.trim()) {
-          newErrors.email = t('errors.emailRequired')
+          newErrors.email = t('errors.emailRequired');
         } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(profileData.email)) {
-          newErrors.email = t('errors.emailInvalid')
+          newErrors.email = t('errors.emailInvalid');
         }
-        break
-        
+        break;
+
       case 'financial':
         if (profileData.monthlyIncome < 0) {
-          newErrors.monthlyIncome = t('errors.incomeInvalid')
+          newErrors.monthlyIncome = t('errors.incomeInvalid');
         }
         if (profileData.savingsRate < 0 || profileData.savingsRate > 100) {
-          newErrors.savingsRate = t('errors.savingsRateInvalid')
+          newErrors.savingsRate = t('errors.savingsRateInvalid');
         }
-        break
+        break;
     }
-    
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSave = async (section: string) => {
     if (!validateSection(section)) {
-      return
+      return;
     }
-    
-    setLoading(true)
-    setSuccessMessage(null)
-    
+
+    setLoading(true);
+    setSuccessMessage(null);
+
     try {
-      let updateData: any = {}
-      
+      let updateData: any = {};
+
       switch (section) {
         case 'personal':
           updateData = {
             name: profileData.name,
             email: profileData.email,
             dateOfBirth: profileData.dateOfBirth,
-          }
-          break
-          
+          };
+          break;
+
         case 'financial':
           updateData = {
             monthlyIncome: profileData.monthlyIncome,
-          }
-          
+          };
+
           // Note: savingsRate and dependents are part of FinancialProfile, not UserPreferences
           // These would need to be saved to a separate financial profile endpoint
-          break
-          
+          break;
+
         case 'preferences':
           updateData = {
             currency: profileData.currency,
             language: profileData.language,
-          }
-          
+          };
+
           // Save timezone to settings
           await apiClient.updateSettings({
             preferences: {
               // timezone: profileData.timezone, // Not supported in current preferences schema
-            }
-          })
-          break
+            },
+          });
+          break;
       }
-      
+
       // Update profile via auth context
-      await updateProfile(updateData)
-      
-      setEditingSection(null)
-      setSuccessMessage(t('messages.profileUpdated'))
-      
+      await updateProfile(updateData);
+
+      setEditingSection(null);
+      setSuccessMessage(t('messages.profileUpdated'));
+
       // Clear success message after 3 seconds
-      setTimeout(() => setSuccessMessage(null), 3000)
+      setTimeout(() => setSuccessMessage(null), 3000);
     } catch (error) {
-      console.error('Failed to save profile:', error)
-      setErrors({ general: t('errors.saveFailed') })
+      console.error('Failed to save profile:', error);
+      setErrors({ general: t('errors.saveFailed') });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleCancel = (section: string) => {
     // Reset to original user data
@@ -159,11 +160,11 @@ export function ProfileManager({
         monthlyIncome: user.monthlyIncome || prev.monthlyIncome,
         currency: user.currency || prev.currency,
         language: user.language || prev.language,
-      }))
+      }));
     }
-    setEditingSection(null)
-    setErrors({})
-  }
+    setEditingSection(null);
+    setErrors({});
+  };
 
   return (
     <div className="space-y-6">
@@ -173,7 +174,7 @@ export function ProfileManager({
           <span className="text-sm text-secondary-growth-green">{successMessage}</span>
         </div>
       )}
-      
+
       {errors.general && (
         <div className="bg-accent-coral-red/10 border border-accent-coral-red/30 rounded-lg p-4">
           <span className="text-sm text-accent-coral-red">{errors.general}</span>
@@ -216,7 +217,7 @@ export function ProfileManager({
               </button>
             )}
           </div>
-          
+
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-neutral-gray mb-1">
@@ -240,7 +241,7 @@ export function ProfileManager({
                 <p className="text-neutral-charcoal">{profileData.name}</p>
               )}
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-neutral-gray mb-1">
                 {t('profile.personalInfo.email')}
@@ -263,7 +264,7 @@ export function ProfileManager({
                 <p className="text-neutral-charcoal">{profileData.email}</p>
               )}
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-neutral-gray mb-1">
                 {t('profile.personalInfo.dateOfBirth')}
@@ -321,7 +322,7 @@ export function ProfileManager({
               </button>
             )}
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-neutral-gray mb-1">
@@ -347,7 +348,7 @@ export function ProfileManager({
                 <p className="text-neutral-charcoal">${profileData.monthlyIncome.toLocaleString()}</p>
               )}
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-neutral-gray mb-1">
                 {t('profile.financialProfile.savingsRate')}
@@ -373,7 +374,7 @@ export function ProfileManager({
                 <p className="text-neutral-charcoal">{profileData.savingsRate}%</p>
               )}
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-neutral-gray mb-1">
                 {t('profile.financialProfile.riskTolerance')}
@@ -392,7 +393,7 @@ export function ProfileManager({
                 <p className="text-neutral-charcoal capitalize">{profileData.riskTolerance}</p>
               )}
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-neutral-gray mb-1">
                 {t('profile.financialProfile.dependents')}
@@ -450,7 +451,7 @@ export function ProfileManager({
               </button>
             )}
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-neutral-gray mb-1">
@@ -473,7 +474,7 @@ export function ProfileManager({
                 <p className="text-neutral-charcoal">{profileData.currency}</p>
               )}
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-neutral-gray mb-1">
                 {t('profile.preferences.language')}
@@ -493,7 +494,7 @@ export function ProfileManager({
                 </select>
               ) : (
                 <p className="text-neutral-charcoal">
-                  {profileData.language === 'en' ? 'English' : 
+                  {profileData.language === 'en' ? 'English' :
                    profileData.language === 'es' ? 'Español' :
                    profileData.language === 'fr' ? 'Français' :
                    profileData.language === 'de' ? 'Deutsch' :
@@ -502,7 +503,7 @@ export function ProfileManager({
                 </p>
               )}
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-neutral-gray mb-1">
                 {t('profile.preferences.timezone')}
@@ -530,5 +531,5 @@ export function ProfileManager({
         </div>
       )}
     </div>
-  )
+  );
 }

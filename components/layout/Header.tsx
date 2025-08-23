@@ -1,45 +1,46 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { 
-  Bars3Icon, 
-  BellIcon, 
+import { Menu, Transition } from '@headlessui/react';
+import {
+  Bars3Icon,
+  BellIcon,
   MagnifyingGlassIcon,
   UserCircleIcon,
-  ChevronDownIcon
-} from '@heroicons/react/24/outline'
-import { Menu, Transition } from '@headlessui/react'
-import { Fragment } from 'react'
-import { cn } from '@/lib/utils'
-import { useTranslation } from '@/lib/useTranslation'
-import { useI18n } from '@/lib/i18n-provider'
-import LanguageSwitcher from './LanguageSwitcher'
+  ChevronDownIcon,
+} from '@heroicons/react/24/outline';
+import { useState, useEffect , Fragment } from 'react';
+
+import { useI18n } from '@/lib/i18n-provider';
+import { useTranslation } from '@/lib/useTranslation';
+import { cn } from '@/lib/utils';
+
+import LanguageSwitcher from './LanguageSwitcher';
 
 interface HeaderProps {
   onMenuToggle?: () => void
 }
 
 export function Header({ onMenuToggle }: HeaderProps) {
-  const [searchQuery, setSearchQuery] = useState('')
-  const [greetingKey, setGreetingKey] = useState('app.greeting.morning') // Default to morning
-  const { t, isReady } = useTranslation('common')
-  const { locale } = useI18n()
-  
+  const [searchQuery, setSearchQuery] = useState('');
+  const [greetingKey, setGreetingKey] = useState('app.greeting.morning'); // Default to morning
+  const { t, isReady } = useTranslation('common');
+  const { locale } = useI18n();
+
   // Set greeting based on current time (client-side only to avoid hydration mismatch)
   useEffect(() => {
-    const hour = new Date().getHours()
-    const timeBasedKey = hour < 12 ? 'app.greeting.morning' : hour < 17 ? 'app.greeting.afternoon' : 'app.greeting.evening'
-    setGreetingKey(timeBasedKey)
-  }, [])
-  
-  const greeting = t(greetingKey)
+    const hour = new Date().getHours();
+    const timeBasedKey = hour < 12 ? 'app.greeting.morning' : hour < 17 ? 'app.greeting.afternoon' : 'app.greeting.evening';
+    setGreetingKey(timeBasedKey);
+  }, []);
+
+  const greeting = t(greetingKey);
 
   const userMenuItems = [
     { name: t('navigation.profile'), href: `/${locale}/profile` },
     { name: t('navigation.settings'), href: `/${locale}/settings` },
     { name: t('support.help'), href: `/${locale}/support` },
     { name: t('navigation.logout'), href: `/${locale}/logout` },
-  ]
+  ];
 
   return (
     <header className="bg-white shadow-sm border-b border-neutral-gray/10 sticky top-0 z-40">
@@ -55,14 +56,14 @@ export function Header({ onMenuToggle }: HeaderProps) {
             >
               <Bars3Icon className="h-6 w-6" />
             </button>
-            
+
             <div className="flex items-center ml-4 lg:ml-0">
               <div className="flex-shrink-0">
                 <h1 className="text-xl font-bold text-primary-trust-blue">
                   {t('app.name')}
                 </h1>
               </div>
-              
+
               {/* Greeting - hidden on mobile */}
               <div className="hidden md:block ml-6">
                 <p className="text-sm text-neutral-gray">
@@ -141,7 +142,7 @@ export function Header({ onMenuToggle }: HeaderProps) {
                               'block px-4 py-2 text-sm transition-colors',
                               active
                                 ? 'bg-neutral-light-gray text-neutral-dark-gray'
-                                : 'text-neutral-gray hover:bg-neutral-light-gray hover:text-neutral-dark-gray'
+                                : 'text-neutral-gray hover:bg-neutral-light-gray hover:text-neutral-dark-gray',
                             )}
                           >
                             {item.name}
@@ -157,5 +158,5 @@ export function Header({ onMenuToggle }: HeaderProps) {
         </div>
       </div>
     </header>
-  )
+  );
 }

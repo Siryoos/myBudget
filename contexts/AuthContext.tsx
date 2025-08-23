@@ -1,17 +1,20 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import type { ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+
 import { api } from '@/lib/api';
-import { useApp } from './AppContext';
-import type { 
-  User, 
-  UserRole, 
-  Permission, 
-  AuthContextType, 
-  RegisterData
+import type {
+  User,
+  UserRole,
+  Permission,
+  AuthContextType,
+  RegisterData,
 } from '@/types/auth';
 import { rolePermissions } from '@/types/auth';
+
+import { useApp } from './AppContext';
 
 // Re-export AuthContextType for backward compatibility
 type AuthContextValue = AuthContextType;
@@ -66,18 +69,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       const { user, token } = response.data!;
-      
+
       // Save token
       localStorage.setItem('authToken', token);
       api.utils.setToken(token);
-      
+
       // Update state
       setUser(user);
       dispatch({ type: 'SET_USER', payload: user });
-      
+
       // Sync data after login
       await syncData();
-      
+
       // Redirect to dashboard
       router.push('/dashboard');
     } catch (error) {
@@ -95,15 +98,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       const { user, token } = response.data!;
-      
+
       // Save token
       localStorage.setItem('authToken', token);
       api.utils.setToken(token);
-      
+
       // Update state
       setUser(user);
       dispatch({ type: 'SET_USER', payload: user });
-      
+
       // Redirect to onboarding or dashboard
       router.push('/onboarding');
     } catch (error) {
@@ -121,12 +124,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       // Explicitly remove the stored JWT token first
       localStorage.removeItem('authToken');
-      
+
       // Clear all user data
       setUser(null);
       clearUserData();
       clearAuthTokens();
-      
+
       // Redirect to login
       router.push('/login');
     }
@@ -141,7 +144,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         createdAt: data.createdAt instanceof Date ? data.createdAt.toISOString() : data.createdAt,
         updatedAt: data.updatedAt instanceof Date ? data.updatedAt.toISOString() : data.updatedAt,
       };
-      
+
       const response = await api.auth.updateProfile(apiData);
       if (!response.success) {
         throw new Error(response.error || 'Profile update failed');
@@ -177,42 +180,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // RBAC helper functions
   const hasPermission = useCallback((permission: Permission): boolean => {
-    if (!user) return false;
+    if (!user) {return false;}
     const userPermissions = (rolePermissions as any)[user.role] || [];
     return userPermissions.includes(permission);
   }, [user]);
 
   const hasRole = useCallback((role: UserRole): boolean => {
-    if (!user) return false;
+    if (!user) {return false;}
     return user.role === role;
   }, [user]);
 
   const canAccess = useCallback(
     (requiredRoles?: UserRole[], requiredPermissions?: Permission[]): boolean => {
-      if (!user) return false;
-      
+      if (!user) {return false;}
+
       // Check roles
       if (requiredRoles && requiredRoles.length > 0) {
         const hasRequiredRole = requiredRoles.includes(user.role);
-        if (!hasRequiredRole) return false;
+        if (!hasRequiredRole) {return false;}
       }
-      
+
       // Check permissions
       if (requiredPermissions && requiredPermissions.length > 0) {
-        const hasAllPermissions = requiredPermissions.every(permission => 
-          hasPermission(permission)
+        const hasAllPermissions = requiredPermissions.every(permission =>
+          hasPermission(permission),
         );
-        if (!hasAllPermissions) return false;
+        if (!hasAllPermissions) {return false;}
       }
-      
+
       return true;
     },
-    [user, hasPermission]
+    [user, hasPermission],
   );
 
   const value: AuthContextValue = {
     user,
-    isAuthenticated: !!user,
+    isAuthenticated: Boolean(user),
     isLoading,
     login,
     register,
@@ -238,12 +241,12 @@ export function useAuth() {
 // HOC for protecting routes with RBAC
 export function withAuth<P extends object>(
   Component: React.ComponentType<P>,
-  options: { 
-    redirectTo?: string; 
+  options: {
+    redirectTo?: string;
     requiredRoles?: UserRole[];
     requiredPermissions?: Permission[];
     fallback?: React.ReactNode;
-  } = {}
+  } = {},
 ) {
   return function AuthenticatedComponent(props: P) {
     const { isAuthenticated, isLoading, canAccess } = useAuth();

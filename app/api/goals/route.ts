@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { query, withTransaction } from '@/lib/database';
+
 import { requireAuth } from '@/lib/auth-middleware';
+import { query, withTransaction } from '@/lib/database';
 import type { SavingsGoal, GoalCategory } from '@/types';
 import type { AuthenticatedRequest } from '@/types/auth';
 
@@ -33,10 +34,10 @@ export const GET = requireAuth(async (request: AuthenticatedRequest) => {
   try {
     const user = request.user;
     const { searchParams } = new URL(request.url);
-    
+
     // Parse and validate query parameters
     const queryParams = goalQuerySchema.parse(Object.fromEntries(searchParams));
-    
+
     let sql = `
       SELECT 
         id, name, description, target_amount as "targetAmount", 
@@ -48,32 +49,32 @@ export const GET = requireAuth(async (request: AuthenticatedRequest) => {
       FROM savings_goals 
       WHERE user_id = $1
     `;
-    
+
     const params: (string | boolean | number)[] = [user.id];
     let paramIndex = 2;
-    
+
     if (queryParams.priority) {
       sql += ` AND priority = $${paramIndex}`;
       params.push(queryParams.priority);
       paramIndex++;
     }
-    
+
     if (queryParams.category) {
       sql += ` AND category = $${paramIndex}`;
       params.push(queryParams.category);
       paramIndex++;
     }
-    
+
     if (queryParams.isActive !== undefined) {
       sql += ` AND is_active = $${paramIndex}`;
       params.push(queryParams.isActive);
       paramIndex++;
     }
-    
-    sql += ` ORDER BY priority DESC, created_at DESC`;
-    
+
+    sql += ' ORDER BY priority DESC, created_at DESC';
+
     const result = await query(sql, params);
-    
+
     // Parse dates and transform data
     const goals: SavingsGoal[] = result.rows.map(row => ({
       ...row,
@@ -82,26 +83,26 @@ export const GET = requireAuth(async (request: AuthenticatedRequest) => {
       updatedAt: new Date(row.updatedAt),
       milestones: [], // Will be populated separately if needed
     }));
-    
+
     return NextResponse.json({
       success: true,
       data: goals,
-      count: goals.length
+      count: goals.length,
     });
-    
+
   } catch (error) {
     console.error('Failed to fetch goals:', error);
-    
+
     if (error instanceof Error && error.message.includes('Unauthorized')) {
       return NextResponse.json(
         { success: false, error: 'Authentication required' },
-        { status: 401 }
+        { status: 401 },
       );
     }
-    
+
     return NextResponse.json(
       { success: false, error: 'Failed to fetch goals' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 });
@@ -110,10 +111,10 @@ export const POST = requireAuth(async (request: AuthenticatedRequest) => {
   try {
     const user = request.user;
     const body = await request.json();
-    
+
     // Validate request body
     const validatedData = createGoalSchema.parse(body);
-    
+
     // Create goal with transaction
     const result = await withTransaction(async (client) => {
       const sql = `
@@ -130,7 +131,7 @@ export const POST = requireAuth(async (request: AuthenticatedRequest) => {
           achievement_description as "achievementDescription", photo_url as "photoUrl",
           icon, color, created_at as "createdAt", updated_at as "updatedAt"
       `;
-      
+
       const values = [
         user.id,
         validatedData.name,
@@ -147,16 +148,16 @@ export const POST = requireAuth(async (request: AuthenticatedRequest) => {
         validatedData.achievementDescription || null,
         validatedData.photoUrl || null,
       ];
-      
+
       const result = await client.query(sql, values);
       const goal = result.rows[0];
-      
+
       // Create default milestones
       const milestoneSql = `
         INSERT INTO milestones (goal_id, amount, description, is_completed)
         VALUES ($1, $2, $3, false), ($1, $4, $5, false), ($1, $6, $7, false), ($1, $8, $9, false)
       `;
-      
+
       const milestoneValues = [
         goal.id,
         Math.round(validatedData.targetAmount * 0.25),
@@ -166,11 +167,11 @@ export const POST = requireAuth(async (request: AuthenticatedRequest) => {
         Math.round(validatedData.targetAmount * 0.75),
         '75% of goal',
         validatedData.targetAmount,
-        '100% of goal'
+        '100% of goal',
       ];
-      
+
       await client.query(milestoneSql, milestoneValues);
-      
+
       return {
         ...goal,
         targetDate: new Date(goal.targetDate),
@@ -179,33 +180,33 @@ export const POST = requireAuth(async (request: AuthenticatedRequest) => {
         milestones: [], // Will be populated separately if needed
       };
     });
-    
+
     return NextResponse.json({
       success: true,
       data: result,
-      message: 'Goal created successfully'
+      message: 'Goal created successfully',
     });
-    
+
   } catch (error) {
     console.error('Failed to create goal:', error);
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { success: false, error: 'Validation failed', details: error.errors },
-        { status: 400 }
+        { status: 400 },
       );
     }
-    
+
     if (error instanceof Error && error.message.includes('Unauthorized')) {
       return NextResponse.json(
         { success: false, error: 'Authentication required' },
-        { status: 401 }
+        { status: 401 },
       );
     }
-    
+
     return NextResponse.json(
       { success: false, error: 'Failed to create goal' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 });

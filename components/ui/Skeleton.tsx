@@ -1,5 +1,6 @@
-import { HTMLAttributes } from 'react'
-import { cn } from '@/lib/utils'
+import type { HTMLAttributes } from 'react';
+
+import { cn } from '@/lib/utils';
 
 interface SkeletonProps extends HTMLAttributes<HTMLDivElement> {
   variant?: 'text' | 'circular' | 'rectangular'
@@ -15,14 +16,14 @@ export function Skeleton({
   const animationClasses = {
     pulse: 'motion-safe:animate-pulse motion-reduce:animate-none',
     wave: 'motion-safe:animate-shimmer motion-reduce:animate-none bg-gradient-to-r from-neutral-gray/20 via-neutral-light-gray/40 to-neutral-gray/20 bg-[length:200%_100%]',
-    none: ''
-  }
+    none: '',
+  };
 
   const variantClasses = {
     text: 'rounded',
     circular: 'rounded-full',
-    rectangular: 'rounded-md'
-  }
+    rectangular: 'rounded-md',
+  };
 
   return (
     <div
@@ -30,19 +31,19 @@ export function Skeleton({
         animation === 'wave' ? '' : 'bg-neutral-gray/20',
         animationClasses[animation],
         variantClasses[variant],
-        className
+        className,
       )}
       aria-hidden="true"
       tabIndex={-1}
       {...props}
     />
-  )
+  );
 }
 
-export function SkeletonText({ 
-  lines = 3, 
+export function SkeletonText({
+  lines = 3,
   className,
-  ...props 
+  ...props
 }: SkeletonProps & { lines?: number }) {
   return (
     <div className={cn('space-y-2', className)}>
@@ -51,24 +52,24 @@ export function SkeletonText({
           key={i}
           className={cn(
             'h-4 w-full',
-            i === lines - 1 && 'w-4/5' // Last line is shorter
+            i === lines - 1 && 'w-4/5', // Last line is shorter
           )}
           {...props}
         />
       ))}
     </div>
-  )
+  );
 }
 
-export function SkeletonCard({ 
+export function SkeletonCard({
   className,
-  ...props 
+  ...props
 }: SkeletonProps) {
   return (
-    <div 
+    <div
       className={cn(
         'rounded-lg border border-neutral-light-gray bg-white p-6',
-        className
+        className,
       )}
       {...props}
     >
@@ -79,5 +80,5 @@ export function SkeletonCard({
         <Skeleton className="h-10 w-24" />
       </div>
     </div>
-  )
+  );
 }

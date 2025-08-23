@@ -1,7 +1,9 @@
-import { NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
+
+import type { AuthenticatedUser, AuthenticatedRequest, AuthenticatedHandler } from '@/types/auth';
+
 import { verifyToken } from './auth';
 import { query } from './database';
-import type { AuthenticatedUser, AuthenticatedRequest, AuthenticatedHandler } from '@/types/auth';
 
 export async function authenticateRequest(request: NextRequest): Promise<{
   user?: AuthenticatedUser;
@@ -24,7 +26,7 @@ export async function authenticateRequest(request: NextRequest): Promise<{
 
     const payload = await verifyToken(token);
     const result = await query('SELECT id, email, name, token_version, password_changed_at FROM users WHERE id = $1', [payload.userId]);
-    
+
     if (result.rows.length === 0) {
       return { error: 'Invalid token' };
     }
@@ -36,15 +38,15 @@ export async function authenticateRequest(request: NextRequest): Promise<{
 }
 
 export function withAuth<T = any>(
-  handler: (request: AuthenticatedRequest, context?: T) => Promise<Response>
+  handler: (request: AuthenticatedRequest, context?: T) => Promise<Response>,
 ): (request: NextRequest, context?: T) => Promise<Response> {
   return async (request: NextRequest, context?: T) => {
     const auth = await authenticateRequest(request);
-    
+
     if (auth.error) {
       return Response.json(
         { error: auth.error },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -52,7 +54,7 @@ export function withAuth<T = any>(
     const authenticatedRequest = request as unknown as AuthenticatedRequest;
     authenticatedRequest.user = auth.user!;
     authenticatedRequest.userId = auth.user!.id;
-    
+
     return handler(authenticatedRequest);
   };
 }
@@ -63,29 +65,29 @@ export const requireAuth = withAuth;
 // Direct authentication function that returns user or throws
 export async function getAuthenticatedUser(request: NextRequest): Promise<AuthenticatedUser> {
   const auth = await authenticateRequest(request);
-  
+
   if (auth.error) {
     throw new Error('Unauthorized');
   }
-  
+
   return auth.user!;
 }
 
 // Helper function for optional authentication (useful for endpoints that work with or without auth)
 export function optionalAuth<T extends NextRequest | AuthenticatedRequest>(
-  handler: (request: T) => Promise<Response>
+  handler: (request: T) => Promise<Response>,
 ): (request: NextRequest) => Promise<Response> {
   return async (request: NextRequest) => {
     const auth = await authenticateRequest(request);
-    
+
     if (auth.user) {
       // User is authenticated, create typed request
       const authenticatedRequest = request as unknown as AuthenticatedRequest;
       authenticatedRequest.user = auth.user;
       return handler(authenticatedRequest as T);
-    } else {
+    }
       // No authentication, use original request
       return handler(request as T);
-    }
+
   };
 }

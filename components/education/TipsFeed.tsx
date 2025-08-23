@@ -1,16 +1,17 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { 
+import {
   LightBulbIcon,
   HeartIcon,
   XMarkIcon,
   BookmarkIcon,
   ShareIcon,
-  ClockIcon
-} from '@heroicons/react/24/outline'
-import { Card, CardContent, CardHeader } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
+  ClockIcon,
+} from '@heroicons/react/24/outline';
+import { useState } from 'react';
+
+import { Button } from '@/components/ui/Button';
+import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 
 interface FinancialTip {
   id: string
@@ -103,49 +104,49 @@ export function TipsFeed({
       isBookmarked: true,
       createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000),
     },
-  ])
+  ]);
 
-  const [filter, setFilter] = useState<'all' | 'personalized' | 'bookmarked'>('all')
-  const [dismissedTips, setDismissedTips] = useState<string[]>([])
+  const [filter, setFilter] = useState<'all' | 'personalized' | 'bookmarked'>('all');
+  const [dismissedTips, setDismissedTips] = useState<string[]>([]);
 
   const filteredTips = tips
     .filter(tip => !dismissedTips.includes(tip.id))
     .filter(tip => {
       switch (filter) {
         case 'personalized':
-          return tip.isPersonalized
+          return tip.isPersonalized;
         case 'bookmarked':
-          return tip.isBookmarked
+          return tip.isBookmarked;
         default:
-          return true
+          return true;
       }
-    })
+    });
 
   const handleLike = (tipId: string) => {
     setTips(prev =>
       prev.map(tip =>
-        tip.id === tipId
+        (tip.id === tipId
           ? {
               ...tip,
               isLiked: !tip.isLiked,
               likes: tip.isLiked ? tip.likes - 1 : tip.likes + 1,
             }
-          : tip
-      )
-    )
-  }
+          : tip),
+      ),
+    );
+  };
 
   const handleBookmark = (tipId: string) => {
     setTips(prev =>
       prev.map(tip =>
-        tip.id === tipId ? { ...tip, isBookmarked: !tip.isBookmarked } : tip
-      )
-    )
-  }
+        (tip.id === tipId ? { ...tip, isBookmarked: !tip.isBookmarked } : tip),
+      ),
+    );
+  };
 
   const handleDismiss = (tipId: string) => {
-    setDismissedTips(prev => [...prev, tipId])
-  }
+    setDismissedTips(prev => [...prev, tipId]);
+  };
 
   const getCategoryColor = (category: string) => {
     const colors = {
@@ -154,9 +155,9 @@ export function TipsFeed({
       investing: 'bg-accent-action-orange/10 text-accent-action-orange',
       debt: 'bg-accent-warning-red/10 text-accent-warning-red',
       general: 'bg-neutral-gray/10 text-neutral-gray',
-    }
-    return colors[category as keyof typeof colors] || colors.general
-  }
+    };
+    return colors[category as keyof typeof colors] || colors.general;
+  };
 
   const getCategoryIcon = (category: string) => {
     const icons = {
@@ -165,23 +166,23 @@ export function TipsFeed({
       investing: '📈',
       debt: '💳',
       general: '💡',
-    }
-    return icons[category as keyof typeof icons] || icons.general
-  }
+    };
+    return icons[category as keyof typeof icons] || icons.general;
+  };
 
   const formatTimeAgo = (date: Date) => {
-    const now = new Date()
-    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60))
-    
-    if (diffInHours < 1) return 'Just now'
-    if (diffInHours < 24) return `${diffInHours}h ago`
-    
-    const diffInDays = Math.floor(diffInHours / 24)
-    if (diffInDays < 7) return `${diffInDays}d ago`
-    
-    const diffInWeeks = Math.floor(diffInDays / 7)
-    return `${diffInWeeks}w ago`
-  }
+    const now = new Date();
+    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+
+    if (diffInHours < 1) {return 'Just now';}
+    if (diffInHours < 24) {return `${diffInHours}h ago`;}
+
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays < 7) {return `${diffInDays}d ago`;}
+
+    const diffInWeeks = Math.floor(diffInDays / 7);
+    return `${diffInWeeks}w ago`;
+  };
 
   return (
     <Card>
@@ -245,7 +246,7 @@ export function TipsFeed({
               No tips found
             </h4>
             <p className="text-neutral-gray">
-              {filter === 'bookmarked' 
+              {filter === 'bookmarked'
                 ? 'Bookmark some tips to see them here!'
                 : 'Check back later for new financial insights.'
               }
@@ -287,7 +288,7 @@ export function TipsFeed({
                       </div>
                     </div>
                   </div>
-                  
+
                   <button
                     onClick={() => handleDismiss(tip.id)}
                     className="p-1 rounded-full hover:bg-neutral-light-gray text-neutral-gray hover:text-neutral-dark-gray transition-colors duration-200"
@@ -315,7 +316,7 @@ export function TipsFeed({
                       <HeartIcon className={`h-4 w-4 ${tip.isLiked ? 'fill-current' : ''}`} />
                       <span className="text-sm">{tip.likes}</span>
                     </button>
-                    
+
                     <button
                       onClick={() => handleBookmark(tip.id)}
                       className={`p-1 rounded-full transition-colors duration-200 ${
@@ -326,12 +327,12 @@ export function TipsFeed({
                     >
                       <BookmarkIcon className={`h-4 w-4 ${tip.isBookmarked ? 'fill-current' : ''}`} />
                     </button>
-                    
+
                     <button className="p-1 rounded-full hover:bg-neutral-light-gray text-neutral-gray hover:text-neutral-dark-gray transition-colors duration-200">
                       <ShareIcon className="h-4 w-4" />
                     </button>
                   </div>
-                  
+
                   <Button variant="outline" size="sm">
                     Read More
                   </Button>
@@ -363,5 +364,5 @@ export function TipsFeed({
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

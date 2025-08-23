@@ -1,7 +1,6 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { 
+import {
   TrophyIcon,
   FireIcon,
   StarIcon,
@@ -9,13 +8,15 @@ import {
   UsersIcon,
   CheckCircleIcon,
   SparklesIcon,
-  GiftIcon
-} from '@heroicons/react/24/outline'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Card, CardContent, CardHeader } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
-import { useTranslation } from '@/lib/useTranslation'
-import type { Achievement, UserAchievement, SavingsGoal } from '@/types'
+  GiftIcon,
+} from '@heroicons/react/24/outline';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect } from 'react';
+
+import { Button } from '@/components/ui/Button';
+import { Card, CardContent, CardHeader } from '@/components/ui/Card';
+import { useTranslation } from '@/lib/useTranslation';
+import type { Achievement, UserAchievement, SavingsGoal } from '@/types';
 
 // Base achievements data - moved outside component to prevent recreation on each render
 const baseAchievements: Achievement[] = [
@@ -158,7 +159,7 @@ const baseAchievements: Achievement[] = [
     progress: 0,
     maxProgress: 5,
   },
-]
+];
 
 interface AchievementSystemProps {
   goals?: SavingsGoal[]
@@ -173,13 +174,13 @@ export function AchievementSystem({
   enableNotifications = true,
   onAchievementUnlocked,
 }: AchievementSystemProps) {
-  const { t, isReady } = useTranslation(['goals', 'achievements', 'common'])
-  const [selectedCategory, setSelectedCategory] = useState<string>('all')
-  const [showUnlockedOnly, setShowUnlockedOnly] = useState(false)
-  const [unlockAnimation, setUnlockAnimation] = useState<string | null>(null)
+  const { t, isReady } = useTranslation(['goals', 'achievements', 'common']);
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [showUnlockedOnly, setShowUnlockedOnly] = useState(false);
+  const [unlockAnimation, setUnlockAnimation] = useState<string | null>(null);
 
   // Keep achievements in state and update immutably
-  const [achievements, setAchievements] = useState<Achievement[]>(baseAchievements)
+  const [achievements, setAchievements] = useState<Achievement[]>(baseAchievements);
 
   // Mock user achievements (derived from current state)
   const userAchievements: UserAchievement[] = achievements.map(achievement => ({
@@ -190,12 +191,12 @@ export function AchievementSystem({
     unlockedDate: achievement.unlockedDate instanceof Date ? achievement.unlockedDate : achievement.unlockedDate ? new Date(achievement.unlockedDate) : undefined,
     progress: achievement.progress || 0,
     maxProgress: achievement.maxProgress || 1,
-  }))
+  }));
 
   // Calculate total points - derived from achievements state
   const totalPoints = achievements
     .filter(a => a.isUnlocked)
-    .reduce((sum, a) => sum + a.points, 0)
+    .reduce((sum, a) => sum + a.points, 0);
 
   // Calculate progress for each achievement based on goals - using immutable updates
   useEffect(() => {
@@ -203,54 +204,54 @@ export function AchievementSystem({
       prev.map(a => {
         switch (a.id) {
           case 'first-goal': {
-            const unlocked = goals.some(g => !g.isActive)
-            return unlocked ? { ...a, isUnlocked: true, progress: 1 } : a
+            const unlocked = goals.some(g => !g.isActive);
+            return unlocked ? { ...a, isUnlocked: true, progress: 1 } : a;
           }
           case 'goal-crusher': {
-            const completedGoals = goals.filter(g => !g.isActive).length
-            const progress = Math.min(completedGoals, a.maxProgress ?? 5)
-            const isUnlocked = completedGoals >= (a.maxProgress ?? 5)
-            return { ...a, progress, isUnlocked: a.isUnlocked || isUnlocked }
+            const completedGoals = goals.filter(g => !g.isActive).length;
+            const progress = Math.min(completedGoals, a.maxProgress ?? 5);
+            const isUnlocked = completedGoals >= (a.maxProgress ?? 5);
+            return { ...a, progress, isUnlocked: a.isUnlocked || isUnlocked };
           }
           case 'emergency-master': {
-            const emergencyGoal = goals.find(g => g.category === 'emergency' && g.isActive)
-            if (!emergencyGoal) return a
+            const emergencyGoal = goals.find(g => g.category === 'emergency' && g.isActive);
+            if (!emergencyGoal) {return a;}
             const ratio = emergencyGoal.targetAmount > 0
               ? emergencyGoal.currentAmount / emergencyGoal.targetAmount
-              : 0
-            const isUnlocked = ratio >= 1
-            return { ...a, progress: isUnlocked ? 1 : 0, isUnlocked: a.isUnlocked || isUnlocked }
+              : 0;
+            const isUnlocked = ratio >= 1;
+            return { ...a, progress: isUnlocked ? 1 : 0, isUnlocked: a.isUnlocked || isUnlocked };
           }
           default:
-            return a
+            return a;
         }
-      })
-    )
-  }, [goals]) // Only depend on goals, not achievements
+      }),
+    );
+  }, [goals]); // Only depend on goals, not achievements
 
   // Trigger unlock animation
   const triggerUnlock = (achievementId: string) => {
-    setUnlockAnimation(achievementId)
-    setTimeout(() => setUnlockAnimation(null), 3000)
-    
+    setUnlockAnimation(achievementId);
+    setTimeout(() => setUnlockAnimation(null), 3000);
+
     if (onAchievementUnlocked) {
-      const achievement = achievements.find(a => a.id === achievementId)
+      const achievement = achievements.find(a => a.id === achievementId);
       if (achievement) {
-        onAchievementUnlocked(achievement)
+        onAchievementUnlocked(achievement);
       }
     }
-  }
+  };
 
   // Filter achievements based on selection
   const filteredAchievements = achievements.filter(achievement => {
     if (selectedCategory !== 'all' && achievement.category !== selectedCategory) {
-      return false
+      return false;
     }
     if (showUnlockedOnly && !achievement.isUnlocked) {
-      return false
+      return false;
     }
-    return true
-  })
+    return true;
+  });
 
   const categories = [
     { id: 'all', name: t('achievements:categories.all', { defaultValue: 'All' }), icon: '🏆' },
@@ -258,23 +259,23 @@ export function AchievementSystem({
     { id: 'goal-achievement', name: t('achievements:categories.goalAchievement', { defaultValue: 'Goal Achievement' }), icon: '🎯' },
     { id: 'financial-education', name: t('achievements:categories.financialEducation', { defaultValue: 'Financial Education' }), icon: '📚' },
     { id: 'social', name: t('achievements:categories.social', { defaultValue: 'Social' }), icon: '🤝' },
-  ]
+  ];
 
   const renderAchievementCard = (achievement: Achievement) => {
-    const userAchievement = userAchievements.find(ua => ua.achievementId === achievement.id)
-    
+    const userAchievement = userAchievements.find(ua => ua.achievementId === achievement.id);
+
     // Safely calculate progress percentage with proper bounds checking
-    const progressValue = userAchievement?.progress ?? 0
-    const maxValue = userAchievement?.maxProgress ?? 0
-    let percent = 0
-    
+    const progressValue = userAchievement?.progress ?? 0;
+    const maxValue = userAchievement?.maxProgress ?? 0;
+    let percent = 0;
+
     if (maxValue > 0) {
-      percent = (progressValue / maxValue) * 100
+      percent = (progressValue / maxValue) * 100;
       // Clamp percentage between 0 and 100
-      percent = Math.max(0, Math.min(100, percent))
+      percent = Math.max(0, Math.min(100, percent));
     }
-    
-    const isUnlocked = achievement.isUnlocked
+
+    const isUnlocked = achievement.isUnlocked;
 
     return (
       <motion.div
@@ -286,8 +287,8 @@ export function AchievementSystem({
         className="relative"
       >
         <Card className={`h-full transition-all duration-300 ${
-          isUnlocked 
-            ? 'bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-300' 
+          isUnlocked
+            ? 'bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-300'
             : 'hover:shadow-lg'
         }`}>
           <CardContent className="p-6">
@@ -307,7 +308,7 @@ export function AchievementSystem({
                   </motion.div>
                 )}
               </div>
-              
+
               <div className="flex-1">
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-lg font-semibold text-gray-900">{achievement.name}</h3>
@@ -320,9 +321,9 @@ export function AchievementSystem({
                     )}
                   </div>
                 </div>
-                
+
                 <p className="text-sm text-gray-600 mb-2">{achievement.description}</p>
-                
+
                 {/* Category Badge */}
                 <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
                   achievement.category === 'savings-streak' ? 'bg-red-100 text-red-800' :
@@ -345,7 +346,7 @@ export function AchievementSystem({
                   {userAchievement?.progress || 0} / {userAchievement?.maxProgress || 1}
                 </span>
               </div>
-              
+
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <motion.div
                   className={`h-2 rounded-full ${
@@ -353,7 +354,7 @@ export function AchievementSystem({
                   }`}
                   initial={{ width: 0 }}
                   animate={{ width: `${percent}%` }}
-                  transition={{ duration: 1, ease: "easeOut" }}
+                  transition={{ duration: 1, ease: 'easeOut' }}
                 />
               </div>
             </div>
@@ -361,8 +362,8 @@ export function AchievementSystem({
             {/* Requirement */}
             <div className="text-sm text-gray-600 mb-4">
               <strong>{t('achievements:requirement', { defaultValue: 'Requirement' })}:</strong> {
-                typeof achievement.requirement === 'string' 
-                  ? achievement.requirement 
+                typeof achievement.requirement === 'string'
+                  ? achievement.requirement
                   : achievement.requirement.description
               }
             </div>
@@ -403,8 +404,8 @@ export function AchievementSystem({
           )}
         </AnimatePresence>
       </motion.div>
-    )
-  }
+    );
+  };
 
   return (
     <>
@@ -429,7 +430,7 @@ export function AchievementSystem({
             {t('achievements:subtitle', { defaultValue: 'Earn badges and points for your financial progress' })}
           </p>
         </div>
-        
+
         <div className="flex items-center space-x-4">
           {/* Total Points Display */}
           <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-4 py-2 rounded-lg">
@@ -440,14 +441,14 @@ export function AchievementSystem({
               </div>
             </div>
           </div>
-          
+
           {/* Show Unlocked Only Toggle */}
           <Button
             variant="outline"
             size="sm"
             onClick={() => setShowUnlockedOnly(!showUnlockedOnly)}
           >
-            {showUnlockedOnly 
+            {showUnlockedOnly
               ? t('achievements:showAll', { defaultValue: 'Show All' })
               : t('achievements:showUnlocked', { defaultValue: 'Show Unlocked' })
             }
@@ -521,7 +522,7 @@ export function AchievementSystem({
                   <div className="text-sm text-gray-500">15 achievements</div>
                 </div>
               </div>
-              
+
               <div className="flex items-center justify-between p-3 bg-white rounded-lg">
                 <div className="flex items-center space-x-3">
                   <span className="text-2xl">🥈</span>
@@ -535,7 +536,7 @@ export function AchievementSystem({
                   <div className="text-sm text-gray-500">12 achievements</div>
                 </div>
               </div>
-              
+
               <div className="flex items-center justify-between p-3 bg-white rounded-lg">
                 <div className="flex items-center space-x-3">
                   <span className="text-2xl">🥉</span>
@@ -550,7 +551,7 @@ export function AchievementSystem({
                 </div>
               </div>
             </div>
-            
+
             <div className="mt-4 text-center">
               <Button variant="outline" size="sm">
                 {t('achievements:leaderboard.viewFull', { defaultValue: 'View Full Leaderboard' })}
@@ -562,5 +563,5 @@ export function AchievementSystem({
         </div>
       )}
     </>
-  )
+  );
 }

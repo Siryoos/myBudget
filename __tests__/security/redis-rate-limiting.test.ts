@@ -52,7 +52,7 @@ describe('Redis Rate Limiting', () => {
     // Get the mocked RedisRateLimiter
     const { RedisRateLimiter } = require('../../lib/redis');
     rateLimiter = new RedisRateLimiter();
-    
+
     // Set up the mock methods
     rateLimiter.checkRateLimit.mockResolvedValue({
       allowed: true,
@@ -62,7 +62,7 @@ describe('Redis Rate Limiting', () => {
     rateLimiter.getRateLimitInfo = jest.fn();
     rateLimiter.clearRateLimit = jest.fn();
     rateLimiter.isHealthy = jest.fn();
-    
+
     config = {
       windowMs: 60000, // 1 minute
       maxRequests: 5,

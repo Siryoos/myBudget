@@ -1,11 +1,12 @@
-import { Metadata } from 'next'
-import { TransactionTable } from '@/components/transactions/TransactionTable'
-import { SpendingAnalytics } from '@/components/transactions/SpendingAnalytics'
+import type { Metadata } from 'next';
+
+import { SpendingAnalytics } from '@/components/transactions/SpendingAnalytics';
+import { TransactionTable } from '@/components/transactions/TransactionTable';
 
 export const metadata: Metadata = {
   title: 'Transactions',
   description: 'View and analyze your transaction history',
-}
+};
 
 export default function TransactionsPage() {
   return (
@@ -19,7 +20,7 @@ export default function TransactionsPage() {
       </div>
 
       {/* Analytics Overview */}
-      <SpendingAnalytics 
+      <SpendingAnalytics
         timeRanges={['week', 'month', 'quarter', 'year']}
         categoryBreakdown={true}
         trendAnalysis={true}
@@ -27,7 +28,7 @@ export default function TransactionsPage() {
       />
 
       {/* Transaction Table */}
-      <TransactionTable 
+      <TransactionTable
         sortable={true}
         filterable={true}
         searchable={true}
@@ -35,6 +36,6 @@ export default function TransactionsPage() {
         categoryEditing={true}
       />
     </div>
-  )
+  );
 }
 

@@ -1,56 +1,66 @@
-import { NextRequest, NextResponse } from 'next/server';
 import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
+
+
 const ALLOWED_LOCALES = ['en', 'fa', 'ar'] as const;
 const ALLOWED_NAMESPACES = [
-  'common', 'dashboard', 'budget', 'goals', 
-  'transactions', 'education', 'settings', 'auth', 'errors'
+  'common',
+'dashboard',
+'budget',
+'goals',
+  'transactions',
+'education',
+'settings',
+'auth',
+'errors',
 ] as const;
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { lng: string; ns: string } }
+  { params }: { params: { lng: string; ns: string } },
 ) {
   const { lng, ns } = params;
-  
+
   // Validate locale and namespace
   if (!ALLOWED_LOCALES.includes(lng as any) || !ALLOWED_NAMESPACES.includes(ns as any)) {
     return NextResponse.json(
-      { error: 'Invalid locale or namespace' }, 
-      { 
+      { error: 'Invalid locale or namespace' },
+      {
         status: 404,
         headers: {
           'Access-Control-Allow-Origin': '*',
           'Access-Control-Allow-Methods': 'GET',
           'Access-Control-Allow-Headers': 'Content-Type',
-        }
-      }
+        },
+      },
     );
   }
-  
+
   try {
     const filePath = join(process.cwd(), 'public', 'locales', lng, `${ns}.json`);
-    
+
     // Check if file exists before trying to read it
     if (!existsSync(filePath)) {
       console.warn(`Translation file not found: ${lng}/${ns}.json`);
       return NextResponse.json(
-        { error: 'Translation file not found' }, 
-        { 
+        { error: 'Translation file not found' },
+        {
           status: 404,
           headers: {
             'Access-Control-Allow-Origin': '*',
             'Access-Control-Allow-Methods': 'GET',
             'Access-Control-Allow-Headers': 'Content-Type',
-          }
-        }
+          },
+        },
       );
     }
-    
+
     const fileContent = readFileSync(filePath, 'utf8');
     const translations = JSON.parse(fileContent);
-    
+
     return NextResponse.json(translations, {
       headers: {
         'Content-Type': 'application/json',
@@ -65,15 +75,15 @@ export async function GET(
   } catch (error) {
     console.error(`Failed to load translation file: ${lng}/${ns}.json`, error);
     return NextResponse.json(
-      { error: 'Failed to parse translation file' }, 
-      { 
+      { error: 'Failed to parse translation file' },
+      {
         status: 500,
         headers: {
           'Access-Control-Allow-Origin': '*',
           'Access-Control-Allow-Methods': 'GET',
           'Access-Control-Allow-Headers': 'Content-Type',
-        }
-      }
+        },
+      },
     );
   }
 }

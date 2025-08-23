@@ -21,32 +21,32 @@ const validateEnvironment = () => {
     'ALLOWED_ORIGINS',
     'REDIS_HOST',
     'REDIS_PORT',
-    'REDIS_PASSWORD'
+    'REDIS_PASSWORD',
   ];
-  
+
   const missingVars = requiredVars.filter(varName => !process.env[varName]);
-  
+
   if (missingVars.length > 0) {
     console.error('Missing required environment variables:', missingVars);
     throw new Error(`Missing required environment variables: ${missingVars.join(', ')}`);
   }
-  
+
   // Validate ALLOWED_ORIGINS format
   if (process.env.ALLOWED_ORIGINS) {
     const origins = process.env.ALLOWED_ORIGINS.split(',');
     const invalidOrigins = origins.filter(origin => {
       const trimmed = origin.trim();
-      return !trimmed || 
-             !trimmed.startsWith('http') || 
+      return !trimmed ||
+             !trimmed.startsWith('http') ||
              !trimmed.match(/^https?:\/\/[^\s\/]+(\/.*)?$/);
     });
-    
+
     if (invalidOrigins.length > 0) {
       console.error('Invalid origins in ALLOWED_ORIGINS:', invalidOrigins);
       throw new Error('ALLOWED_ORIGINS must contain valid HTTP/HTTPS URLs');
     }
   }
-  
+
   // Validate Redis configuration
   const redisPort = parseInt(process.env.REDIS_PORT || '6379');
   if (isNaN(redisPort) || redisPort < 1 || redisPort > 65535) {
@@ -77,7 +77,7 @@ const getSecurityHeaders = () => {
   const externalDomains = process.env.EXTERNAL_DOMAINS?.split(',').map(d => d.trim()).filter(Boolean) || [];
   const sentryDomain = process.env.SENTRY_DSN ? 'https://sentry.io' : '';
   const apiDomain = process.env.API_DOMAIN || '';
-  
+
   // Validate external domains format
   const validatedExternalDomains = externalDomains.filter(domain => {
     try {
@@ -88,7 +88,7 @@ const getSecurityHeaders = () => {
       return false;
     }
   });
-  
+
   // Build CSP dynamically based on configuration
   const cspDirectives = [
     "default-src 'self'",
@@ -103,29 +103,29 @@ const getSecurityHeaders = () => {
     "base-uri 'self'",
     "form-action 'self'",
     "frame-ancestors 'none'",
-    "upgrade-insecure-requests"
+    'upgrade-insecure-requests',
   ];
-  
+
   // Add validated external domains if configured
   if (sentryDomain && isValidDomain(sentryDomain)) {
-    cspDirectives.push("script-src 'self' 'nonce-{NONCE}' " + sentryDomain);
-    cspDirectives.push("img-src 'self' " + sentryDomain);
-    cspDirectives.push("font-src 'self' " + sentryDomain);
-    cspDirectives.push("connect-src 'self' " + sentryDomain);
+    cspDirectives.push(`script-src 'self' 'nonce-{NONCE}' ${sentryDomain}`);
+    cspDirectives.push(`img-src 'self' ${sentryDomain}`);
+    cspDirectives.push(`font-src 'self' ${sentryDomain}`);
+    cspDirectives.push(`connect-src 'self' ${sentryDomain}`);
   }
-  
+
   if (apiDomain && isValidDomain(apiDomain)) {
-    cspDirectives.push("connect-src 'self' " + apiDomain);
+    cspDirectives.push(`connect-src 'self' ${apiDomain}`);
   }
-  
+
   if (validatedExternalDomains.length > 0) {
-    cspDirectives.push("img-src 'self' " + validatedExternalDomains.join(' '));
+    cspDirectives.push(`img-src 'self' ${validatedExternalDomains.join(' ')}`);
   }
-  
+
   return {
     // Content Security Policy - Secure by default
     'Content-Security-Policy': cspDirectives.join('; '),
-    
+
     // Other security headers
     'X-DNS-Prefetch-Control': 'on',
     'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
@@ -136,7 +136,7 @@ const getSecurityHeaders = () => {
     'X-XSS-Protection': '1; mode=block',
     'Cross-Origin-Embedder-Policy': 'require-corp',
     'Cross-Origin-Opener-Policy': 'same-origin',
-    'Cross-Origin-Resource-Policy': 'same-origin'
+    'Cross-Origin-Resource-Policy': 'same-origin',
   };
 };
 
@@ -155,7 +155,7 @@ export function securityMiddleware(request: NextRequest): NextResponse {
   try {
     // Get the response
     const response = NextResponse.next();
-    
+
     // Security monitoring and logging
     const securityLog = {
       timestamp: new Date().toISOString(),
@@ -163,9 +163,9 @@ export function securityMiddleware(request: NextRequest): NextResponse {
       userAgent: request.headers.get('user-agent') || 'unknown',
       method: request.method,
       path: request.nextUrl.pathname,
-      origin: request.headers.get('origin') || 'unknown'
+      origin: request.headers.get('origin') || 'unknown',
     };
-    
+
     // Request validation with improved logic
     const contentLength = request.headers.get('content-length');
     if (contentLength) {
@@ -176,16 +176,16 @@ export function securityMiddleware(request: NextRequest): NextResponse {
         return new NextResponse(
           JSON.stringify({
             success: false,
-            error: 'Request too large'
+            error: 'Request too large',
           }),
           {
             status: 413,
-            headers: { 'Content-Type': 'application/json' }
-          }
+            headers: { 'Content-Type': 'application/json' },
+          },
         );
       }
     }
-    
+
     // Improved content type validation for POST/PUT requests
     if (request.method === 'POST' || request.method === 'PUT') {
       const contentType = request.headers.get('content-type');
@@ -195,28 +195,28 @@ export function securityMiddleware(request: NextRequest): NextResponse {
         return new NextResponse(
           JSON.stringify({
             success: false,
-            error: 'Invalid content type. Expected application/json'
+            error: 'Invalid content type. Expected application/json',
           }),
           {
             status: 400,
-            headers: { 'Content-Type': 'application/json' }
-          }
+            headers: { 'Content-Type': 'application/json' },
+          },
         );
       }
     }
-    
+
     // Log suspicious requests
-    if (securityLog.userAgent.includes('curl') || 
+    if (securityLog.userAgent.includes('curl') ||
         securityLog.userAgent.includes('wget') ||
         securityLog.userAgent.includes('python') ||
         securityLog.userAgent.includes('bot')) {
       securityMonitor.recordRequest('suspiciousRequests');
       console.warn('Suspicious request detected:', securityLog);
     }
-    
+
     // Handle CORS - consolidated logic to avoid duplication
     const origin = request.headers.get('origin');
-    
+
     if (origin && ALLOWED_ORIGINS.includes(origin)) {
       response.headers.set('Access-Control-Allow-Origin', origin);
       response.headers.set('Access-Control-Allow-Credentials', 'true');
@@ -225,42 +225,42 @@ export function securityMiddleware(request: NextRequest): NextResponse {
       securityMonitor.recordRequest('unauthorizedOrigins');
       console.warn('Unauthorized origin attempt:', securityLog);
     }
-    
+
     // Handle preflight requests
     if (request.method === 'OPTIONS') {
       // Create a new 204 response for preflight requests
       const preflightResponse = new NextResponse(null, { status: 204 });
-      
+
       // Set CORS preflight headers
       preflightResponse.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
       preflightResponse.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
       preflightResponse.headers.set('Access-Control-Max-Age', '86400'); // 24 hours
-      
+
       // Add Vary header to prevent incorrect caching by intermediaries
       preflightResponse.headers.set('Vary', 'Origin');
-      
+
       // Set origin-specific CORS headers if origin is allowed
       if (origin && ALLOWED_ORIGINS.includes(origin)) {
         preflightResponse.headers.set('Access-Control-Allow-Origin', origin);
         preflightResponse.headers.set('Access-Control-Allow-Credentials', 'true');
       }
-      
+
       return preflightResponse;
     }
-    
+
     // Apply security headers
     const securityHeaders = getSecurityHeaders();
     Object.entries(securityHeaders).forEach(([key, value]) => {
       response.headers.set(key, value);
     });
-    
+
     // Add nonce for inline scripts if needed
     if (process.env.NODE_ENV === 'production') {
       try {
         // Generate cryptographically secure random bytes using Web Crypto API
         // Fallback to Node.js crypto if Web Crypto API is not available
         let randomBytes: Uint8Array;
-        
+
         if (typeof globalThis.crypto !== 'undefined' && globalThis.crypto.getRandomValues) {
           randomBytes = globalThis.crypto.getRandomValues(new Uint8Array(32));
         } else if (typeof require !== 'undefined') {
@@ -274,15 +274,15 @@ export function securityMiddleware(request: NextRequest): NextResponse {
             randomBytes[i] = Math.floor(Math.random() * 256);
           }
         }
-        
+
         // Convert to base64 using proper encoding
         const base64String = btoa(String.fromCharCode.apply(null, Array.from(randomBytes)));
-        
+
         // Clean the nonce to ensure it's safe for CSP
         const nonce = base64String.replace(/[^a-zA-Z0-9+/=]/g, '');
-        
+
         response.headers.set('X-Nonce', nonce);
-        
+
         // Update CSP with nonce
         const csp = response.headers.get('Content-Security-Policy') || '';
         const updatedCsp = csp.replace(/{NONCE}/g, nonce);
@@ -296,7 +296,7 @@ export function securityMiddleware(request: NextRequest): NextResponse {
         response.headers.set('Content-Security-Policy', updatedCsp);
       }
     }
-    
+
     return response;
   } catch (error) {
     console.error('Security middleware error:', error);
@@ -304,12 +304,12 @@ export function securityMiddleware(request: NextRequest): NextResponse {
     return new NextResponse(
       JSON.stringify({
         success: false,
-        error: 'Internal server error'
+        error: 'Internal server error',
       }),
       {
         status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      }
+        headers: { 'Content-Type': 'application/json' },
+      },
     );
   }
 }
@@ -319,23 +319,23 @@ export const apiRateLimits: Record<string, any> = {
   '/api/auth/login': {
     windowMs: 15 * 60 * 1000, // 15 minutes
     maxRequests: 5,
-    message: 'Too many login attempts, please try again later'
+    message: 'Too many login attempts, please try again later',
   },
   '/api/auth/register': {
     windowMs: 60 * 60 * 1000, // 1 hour
     maxRequests: 3,
-    message: 'Too many registration attempts, please try again later'
+    message: 'Too many registration attempts, please try again later',
   },
   '/api/upload': {
     windowMs: 60 * 1000, // 1 minute
     maxRequests: 10,
-    message: 'Too many upload requests, please slow down'
+    message: 'Too many upload requests, please slow down',
   },
   '/api/transactions': {
     windowMs: 60 * 1000, // 1 minute
     maxRequests: 100,
-    message: 'Too many requests, please slow down'
-  }
+    message: 'Too many requests, please slow down',
+  },
 };
 
 // Enhanced security metrics and monitoring with better typing
@@ -355,23 +355,23 @@ class SecurityMonitor {
     suspiciousRequests: 0,
     unauthorizedOrigins: 0,
     largeRequests: 0,
-    invalidContentTypes: 0
+    invalidContentTypes: 0,
   };
-  
+
   recordRequest(type: keyof SecurityMetrics): void {
     this.metrics[type]++;
     this.metrics.totalRequests++;
-    
+
     // Log metrics every 100 requests
     if (this.metrics.totalRequests % 100 === 0) {
       console.log('Security metrics:', this.metrics);
     }
   }
-  
+
   getMetrics(): SecurityMetrics {
     return { ...this.metrics };
   }
-  
+
   resetMetrics(): void {
     this.metrics = {
       totalRequests: 0,
@@ -379,7 +379,7 @@ class SecurityMonitor {
       suspiciousRequests: 0,
       unauthorizedOrigins: 0,
       largeRequests: 0,
-      invalidContentTypes: 0
+      invalidContentTypes: 0,
     };
   }
 }
@@ -400,9 +400,9 @@ function mergeSecurityHeaders(target: Headers, source: Headers): void {
     'Strict-Transport-Security',
     'Access-Control-Allow-Origin',
     'Access-Control-Allow-Credentials',
-    'Vary'
+    'Vary',
   ];
-  
+
   essentialHeaders.forEach(header => {
     const value = source.get(header);
     if (value) {
@@ -415,30 +415,30 @@ function mergeSecurityHeaders(target: Headers, source: Headers): void {
 export async function middleware(request: NextRequest): Promise<NextResponse> {
   try {
     // Apply security headers
-    let response = securityMiddleware(request);
-    
+    const response = securityMiddleware(request);
+
     // Skip rate limiting for preflight and HEAD requests
     if (request.method === 'OPTIONS' || request.method === 'HEAD') {
       return response;
     }
-    
+
     // Apply rate limiting for API routes
     if (request.nextUrl.pathname.startsWith('/api')) {
       const path = request.nextUrl.pathname;
-      
+
       // Find matching rate limit config
-      const rateLimitConfig = Object.entries(apiRateLimits).find(([pattern]) => 
-        path.startsWith(pattern)
+      const rateLimitConfig = Object.entries(apiRateLimits).find(([pattern]) =>
+        path.startsWith(pattern),
       )?.[1];
-      
+
       if (rateLimitConfig) {
         // Get client identifier
         const identifier = request.ip || request.headers.get('x-forwarded-for') || 'anonymous';
-        
+
         try {
           // Check rate limit asynchronously
           const rateLimitResult = await rateLimiter.checkRateLimit(identifier, rateLimitConfig);
-          
+
           if (!rateLimitResult.allowed) {
             // Create rate limit response
             securityMonitor.recordRequest('blockedRequests');
@@ -446,7 +446,7 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
               JSON.stringify({
                 success: false,
                 error: rateLimitConfig.message || 'Too many requests',
-                retryAfter: rateLimitResult.retryAfter
+                retryAfter: rateLimitResult.retryAfter,
               }),
               {
                 status: 429,
@@ -455,41 +455,41 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
                   'X-RateLimit-Limit': rateLimitConfig.maxRequests.toString(),
                   'X-RateLimit-Remaining': '0',
                   'X-RateLimit-Reset': new Date(rateLimitResult.resetTime).toISOString(),
-                  'Retry-After': rateLimitResult.retryAfter?.toString() || '0'
-                }
-              }
+                  'Retry-After': rateLimitResult.retryAfter?.toString() || '0',
+                },
+              },
             );
-            
+
             // Optimized header merging - only copy essential headers
             mergeSecurityHeaders(rateLimitResponse.headers, response.headers);
-            
+
             return rateLimitResponse;
           }
-          
+
           // Add rate limit headers for successful requests
           response.headers.set('X-RateLimit-Limit', rateLimitConfig.maxRequests.toString());
           response.headers.set('X-RateLimit-Remaining', rateLimitResult.remaining.toString());
           response.headers.set('X-RateLimit-Reset', new Date(rateLimitResult.resetTime).toISOString());
-          
+
         } catch (error) {
           console.error('Rate limiting error:', error);
           // Fail securely - return 500 error instead of continuing
           return new NextResponse(
             JSON.stringify({
               success: false,
-              error: 'Internal server error - rate limiting unavailable'
+              error: 'Internal server error - rate limiting unavailable',
             }),
             {
               status: 500,
               headers: {
-                'Content-Type': 'application/json'
-              }
-            }
+                'Content-Type': 'application/json',
+              },
+            },
           );
         }
       }
     }
-    
+
     return response;
   } catch (error) {
     console.error('Middleware error:', error);
@@ -497,14 +497,14 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
     return new NextResponse(
       JSON.stringify({
         success: false,
-        error: 'Internal server error'
+        error: 'Internal server error',
       }),
       {
         status: 500,
         headers: {
-          'Content-Type': 'application/json'
-        }
-      }
+          'Content-Type': 'application/json',
+        },
+      },
     );
   }
 }
@@ -516,12 +516,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
     if (request.nextUrl.pathname === '/api/security/health') {
       const metrics = securityMonitor.getMetrics();
-      
+
       // Check Redis health dynamically (only if Redis is available)
-      let redisHealth: { healthy: boolean; latency?: number; error: string } = { 
-        healthy: false, 
-        latency: undefined, 
-        error: 'Not checked' 
+      let redisHealth: { healthy: boolean; latency?: number; error: string } = {
+        healthy: false,
+        latency: undefined,
+        error: 'Not checked',
       };
       if (rateLimiter) {
         try {
@@ -530,24 +530,24 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
           redisHealth = {
             healthy: healthResult.healthy,
             latency: healthResult.latency,
-            error: healthResult.error || 'Unknown error'
+            error: healthResult.error || 'Unknown error',
           };
         } catch (error) {
           console.error('Failed to check Redis health:', error);
           redisHealth = {
             healthy: false,
             latency: undefined,
-            error: 'Health check failed'
+            error: 'Health check failed',
           };
         }
       } else {
         redisHealth = {
           healthy: false,
           latency: undefined,
-          error: 'Redis not available in Edge Runtime'
+          error: 'Redis not available in Edge Runtime',
         };
       }
-      
+
       const isHealthy = redisHealth.healthy;
       const health = {
         status: isHealthy ? 'healthy' : 'degraded',
@@ -556,24 +556,24 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         environment: {
           nodeEnv: process.env.NODE_ENV,
           allowedOrigins: ALLOWED_ORIGINS.length,
-          secureMode: process.env.REDIS_SECURE_MODE !== 'false'
+          secureMode: process.env.REDIS_SECURE_MODE !== 'false',
         },
         redis: {
           available: redisHealth.healthy,
           latency: redisHealth.latency,
-          error: redisHealth.error
-        }
+          error: redisHealth.error,
+        },
       };
-      
+
       return new NextResponse(JSON.stringify(health), {
         status: isHealthy ? 200 : 503,
         headers: {
           'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache, no-store, must-revalidate'
-        }
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+        },
       });
     }
-    
+
     return NextResponse.next();
   } catch (error) {
     console.error('Health check error:', error);
@@ -581,15 +581,15 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       JSON.stringify({
         status: 'unhealthy',
         error: 'Health check failed',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       }),
       {
         status: 500,
         headers: {
           'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache, no-store, must-revalidate'
-        }
-      }
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+        },
+      },
     );
   }
 }

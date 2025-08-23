@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/database';
-import { requireAuth } from '@/lib/auth-middleware';
 import { z } from 'zod';
+
+import { requireAuth } from '@/lib/auth-middleware';
+import { query } from '@/lib/database';
 import type { AuthenticatedRequest } from '@/types/auth';
 
 const profileUpdateSchema = z.object({
@@ -21,7 +22,7 @@ const profileUpdateSchema = z.object({
 export const GET = requireAuth(async (request: AuthenticatedRequest) => {
   try {
     const user = request.user;
-    
+
     const result = await query(
       `SELECT 
         id, email, name, avatar, currency, language, timezone, date_format,
@@ -29,26 +30,26 @@ export const GET = requireAuth(async (request: AuthenticatedRequest) => {
         credit_score, dependents, created_at, updated_at
       FROM users 
       WHERE id = $1`,
-      [user.id]
+      [user.id],
     );
 
     if (result.rows.length === 0) {
       return NextResponse.json(
         { error: 'User not found' },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
     return NextResponse.json({
       success: true,
-      data: result.rows[0]
+      data: result.rows[0],
     });
 
   } catch (error) {
     console.error('Get profile error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch profile' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 });
@@ -112,7 +113,7 @@ export const PUT = requireAuth(async (request: AuthenticatedRequest) => {
     if (updateFields.length === 0) {
       return NextResponse.json(
         { error: 'No fields to update' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -122,7 +123,7 @@ export const PUT = requireAuth(async (request: AuthenticatedRequest) => {
     // Update user profile
     await query(
       `UPDATE users SET ${updateFields.join(', ')}, updated_at = CURRENT_TIMESTAMP WHERE id = $${paramIndex}`,
-      updateValues
+      updateValues,
     );
 
     // Fetch updated profile
@@ -133,30 +134,30 @@ export const PUT = requireAuth(async (request: AuthenticatedRequest) => {
         credit_score, dependents, created_at, updated_at
       FROM users 
       WHERE id = $1`,
-      [user.id]
+      [user.id],
     );
 
     return NextResponse.json({
       success: true,
       data: {
         message: 'Profile updated successfully',
-        profile: result.rows[0]
-      }
+        profile: result.rows[0],
+      },
     });
 
   } catch (error) {
     console.error('Update profile error:', error);
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Validation failed', details: error.errors },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     return NextResponse.json(
       { error: 'Failed to update profile' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 });
@@ -170,7 +171,7 @@ export const PATCH = requireAuth(async (request: AuthenticatedRequest) => {
     if (!avatar) {
       return NextResponse.json(
         { error: 'Avatar URL is required' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -180,26 +181,26 @@ export const PATCH = requireAuth(async (request: AuthenticatedRequest) => {
     } catch {
       return NextResponse.json(
         { error: 'Invalid avatar URL' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // Update avatar
     await query(
       'UPDATE users SET avatar = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
-      [avatar, user.id]
+      [avatar, user.id],
     );
 
     return NextResponse.json({
       success: true,
-      data: { message: 'Avatar updated successfully' }
+      data: { message: 'Avatar updated successfully' },
     });
 
   } catch (error) {
     console.error('Update avatar error:', error);
     return NextResponse.json(
       { error: 'Failed to update avatar' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 });
