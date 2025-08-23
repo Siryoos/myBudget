@@ -4,9 +4,7 @@ import { format, formatDistance, isToday, isYesterday, isThisWeek, isThisMonth }
 /**
  * Utility function to combine class names
  */
-export const cn = (...inputs: ClassValue[]): string => {
-  return clsx(inputs);
-};
+export const cn = (...inputs: ClassValue[]): string => clsx(inputs);
 
 /**
  * Format currency based on user preferences
@@ -15,14 +13,12 @@ export const formatCurrency = (
   amount: number,
   currency: string = 'USD',
   locale: string = 'en-US',
-): string => {
-  return new Intl.NumberFormat(locale, {
+): string => new Intl.NumberFormat(locale, {
     style: 'currency',
     currency,
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(amount);
-};
 
 /**
  * Format percentage with proper precision
@@ -30,9 +26,7 @@ export const formatCurrency = (
 export const formatPercentage = (
   value: number,
   precision: number = 1,
-): string => {
-  return `${value.toFixed(precision)}%`;
-};
+): string => `${value.toFixed(precision)}%`;
 
 /**
  * Format large numbers with abbreviations (K, M, B)
@@ -40,12 +34,10 @@ export const formatPercentage = (
 export const formatCompactNumber = (
   num: number,
   locale: string = 'en-US',
-): string => {
-  return new Intl.NumberFormat(locale, {
+): string => new Intl.NumberFormat(locale, {
     notation: 'compact',
     maximumFractionDigits: 1,
   }).format(num);
-};
 
 /**
  * Format dates in a user-friendly way
@@ -147,9 +139,9 @@ const ID_START_INDEX = 2;
 /**
  * Generate a random ID
  */
-export const generateId = (): string => {
-  return Math.random().toString(ID_BASE).substring(ID_START_INDEX) + Date.now().toString(ID_BASE);
-};
+export const generateId = (): string => 
+  Math.random().toString(ID_BASE).substring(ID_START_INDEX) + 
+  Date.now().toString(ID_BASE);
 
 /**
  * Validate email format
@@ -245,71 +237,68 @@ export const calculateCompoundInterest = (
   rate: number,
   time: number,
   compoundingFrequency: number = 12,
-): number => {
-  return principal * Math.pow(1 + rate / compoundingFrequency, compoundingFrequency * time);
-};
+): number => principal * Math.pow(1 + rate / compoundingFrequency, compoundingFrequency * time);
+
+/**
+ * Budget method configurations
+ */
+const BUDGET_METHOD_CONFIGS = {
+  '50-30-20': {
+    name: '50/30/20 Rule',
+    description: '50% needs, 30% wants, 20% savings',
+    categories: [
+      { name: 'Needs', percentage: 50, essential: true },
+      { name: 'Wants', percentage: 30, essential: false },
+      { name: 'Savings', percentage: 20, essential: true },
+    ],
+  },
+  'pay-yourself-first': {
+    name: 'Pay Yourself First',
+    description: 'Save 20% first, spend the rest',
+    categories: [
+      { name: 'Savings', percentage: 20, essential: true },
+      { name: 'Living Expenses', percentage: 80, essential: true },
+    ],
+  },
+  envelope: {
+    name: 'Digital Envelope System',
+    description: 'Allocate funds to specific categories',
+    categories: [
+      { name: 'Housing', percentage: 25, essential: true },
+      { name: 'Transportation', percentage: 15, essential: true },
+      { name: 'Food', percentage: 12, essential: true },
+      { name: 'Utilities', percentage: 8, essential: true },
+      { name: 'Savings', percentage: 20, essential: true },
+      { name: 'Entertainment', percentage: 10, essential: false },
+      { name: 'Other', percentage: 10, essential: false },
+    ],
+  },
+  'zero-based': {
+    name: 'Zero-Based Budget',
+    description: 'Every dollar has a purpose',
+    categories: [], // User defines all categories
+  },
+  kakeibo: {
+    name: 'Kakeibo Method',
+    description: 'Mindful spending with reflection',
+    categories: [
+      { name: 'Survival', percentage: 40, essential: true },
+      { name: 'Optional', percentage: 30, essential: false },
+      { name: 'Culture', percentage: 15, essential: false },
+      { name: 'Unexpected', percentage: 15, essential: true },
+    ],
+  },
+} as const;
 
 /**
  * Get budget method configuration
  */
-export const getBudgetMethodConfig = (method: string) => {
-  const configs = {
-    '50-30-20': {
-      name: '50/30/20 Rule',
-      description: '50% needs, 30% wants, 20% savings',
-      categories: [
-        { name: 'Needs', percentage: 50, essential: true },
-        { name: 'Wants', percentage: 30, essential: false },
-        { name: 'Savings', percentage: 20, essential: true },
-      ],
-    },
-    'pay-yourself-first': {
-      name: 'Pay Yourself First',
-      description: 'Save 20% first, spend the rest',
-      categories: [
-        { name: 'Savings', percentage: 20, essential: true },
-        { name: 'Living Expenses', percentage: 80, essential: true },
-      ],
-    },
-    envelope: {
-      name: 'Digital Envelope System',
-      description: 'Allocate funds to specific categories',
-      categories: [
-        { name: 'Housing', percentage: 25, essential: true },
-        { name: 'Transportation', percentage: 15, essential: true },
-        { name: 'Food', percentage: 12, essential: true },
-        { name: 'Utilities', percentage: 8, essential: true },
-        { name: 'Savings', percentage: 20, essential: true },
-        { name: 'Entertainment', percentage: 10, essential: false },
-        { name: 'Other', percentage: 10, essential: false },
-      ],
-    },
-    'zero-based': {
-      name: 'Zero-Based Budget',
-      description: 'Every dollar has a purpose',
-      categories: [], // User defines all categories
-    },
-    kakeibo: {
-      name: 'Kakeibo Method',
-      description: 'Mindful spending with reflection',
-      categories: [
-        { name: 'Survival', percentage: 40, essential: true },
-        { name: 'Optional', percentage: 30, essential: false },
-        { name: 'Culture', percentage: 15, essential: false },
-        { name: 'Unexpected', percentage: 15, essential: true },
-      ],
-    },
-  };
-
-  return configs[method as keyof typeof configs] || configs['50-30-20'];
-}
+export const getBudgetMethodConfig = (method: string) => BUDGET_METHOD_CONFIGS[method as keyof typeof BUDGET_METHOD_CONFIGS] || BUDGET_METHOD_CONFIGS['50-30-20'];
 
 /**
  * Check if device supports touch
  */
-export const isTouchDevice = (): boolean => {
-  return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-};
+export const isTouchDevice = (): boolean => 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
 /**
  * Get safe area insets for mobile devices

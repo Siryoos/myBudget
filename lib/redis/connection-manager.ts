@@ -1,6 +1,6 @@
 import Redis, { Cluster } from 'ioredis';
 
-import { AuditEventType, AuditSeverity , logSystemEvent } from '@/lib/audit-logging';
+import { AuditEventType, AuditSeverity, logSystemEvent } from '@/lib/audit-logging';
 
 // Connection state enum
 enum ConnectionState {
@@ -109,23 +109,25 @@ export class RedisConnectionManager {
       this.setupEventHandlers();
       this.connectionState = ConnectionState.CONNECTED;
 
-      await logSystemEvent(
-        AuditEventType.CONFIGURATION_CHANGE,
-        AuditSeverity.LOW,
-        'Redis connection initialized successfully',
-        {
-          config: this.config,
-          clusterMode: Boolean(clusterConfig),
-        },
-      );
+          await logSystemEvent({
+      eventType: AuditEventType.CONFIGURATION_CHANGE,
+      severity: AuditSeverity.LOW,
+      details: {
+        message: 'Redis connection initialized successfully',
+        config: this.config,
+        clusterMode: Boolean(clusterConfig),
+      },
+    });
     } catch (error) {
       this.connectionState = ConnectionState.ERROR;
-      await logSystemEvent(
-        AuditEventType.CONFIGURATION_CHANGE,
-        AuditSeverity.HIGH,
-        'Failed to initialize Redis connection',
-        { error: error instanceof Error ? error.message : String(error) },
-      );
+      await logSystemEvent({
+        eventType: AuditEventType.CONFIGURATION_CHANGE,
+        severity: AuditSeverity.HIGH,
+        details: {
+          message: 'Failed to initialize Redis connection',
+          error: error instanceof Error ? error.message : String(error),
+        },
+      });
       throw error;
     }
   }
@@ -247,15 +249,16 @@ export class RedisConnectionManager {
     this.connectionState = ConnectionState.ERROR;
     console.error('Redis connection error:', error);
 
-    await logSystemEvent(
-      AuditEventType.SYSTEM_ERROR,
-      AuditSeverity.MEDIUM,
-      {
+    await logSystemEvent({
+      eventType: AuditEventType.SYSTEM_ERROR,
+      severity: AuditSeverity.MEDIUM,
+      details: {
+        message: 'Redis connection error occurred',
         action: 'redis_connection_error',
         error: error.message,
         connectionState: this.connectionState,
       },
-    );
+    });
 
     // Attempt reconnection if not in production
     if (!this.isProduction && this.reconnectAttempts < this.maxReconnectAttempts) {
@@ -267,14 +270,15 @@ export class RedisConnectionManager {
     this.connectionState = ConnectionState.DISCONNECTED;
     console.warn('Redis connection closed');
 
-    await logSystemEvent(
-      AuditEventType.SYSTEM_ERROR,
-      AuditSeverity.LOW,
-      {
+    await logSystemEvent({
+      eventType: AuditEventType.SYSTEM_ERROR,
+      severity: AuditSeverity.LOW,
+      details: {
+        message: 'Redis connection closed',
         action: 'redis_connection_closed',
         connectionState: this.connectionState,
       },
-    );
+    });
   }
 
   private async handleReconnecting(): Promise<void> {
@@ -282,15 +286,16 @@ export class RedisConnectionManager {
     this.reconnectAttempts++;
     console.log(`Redis reconnecting... (attempt ${this.reconnectAttempts})`);
 
-    await logSystemEvent(
-      AuditEventType.SYSTEM_ERROR,
-      AuditSeverity.LOW,
-      {
+    await logSystemEvent({
+      eventType: AuditEventType.SYSTEM_ERROR,
+      severity: AuditSeverity.LOW,
+      details: {
+        message: 'Redis reconnecting',
         action: 'redis_reconnecting',
         attempt: this.reconnectAttempts,
         connectionState: this.connectionState,
       },
-    );
+    });
   }
 
   private handleConnect(): void {
@@ -303,14 +308,15 @@ export class RedisConnectionManager {
     this.reconnectAttempts = 0;
     console.log('Redis connection ready');
 
-    await logSystemEvent(
-      AuditEventType.CONFIGURATION_CHANGE,
-      AuditSeverity.LOW,
-      {
+    await logSystemEvent({
+      eventType: AuditEventType.CONFIGURATION_CHANGE,
+      severity: AuditSeverity.LOW,
+      details: {
+        message: 'Redis connection ready',
         action: 'redis_connection_ready',
         connectionState: this.connectionState,
       },
-    );
+    });
   }
 
   // Attempt reconnection
