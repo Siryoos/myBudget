@@ -1,4 +1,4 @@
-import crypto from 'crypto';
+import * as crypto from 'crypto';
 
 import { logSystemEvent, AuditEventType, AuditSeverity } from './audit-logging';
 import { query } from './database';

@@ -1,7 +1,7 @@
 import { exec } from 'child_process';
 import { existsSync } from 'fs';
 import { readFile, writeFile } from 'fs/promises';
-import path from 'path';
+import * as path from 'path';
 import { promisify } from 'util';
 
 import { logSystemEvent, AuditEventType, AuditSeverity } from '../audit-logging';
