@@ -1,7 +1,7 @@
 import { exec } from 'child_process';
 import { existsSync } from 'fs';
 import { readFile, writeFile } from 'fs/promises';
-import path from 'path';
+import * as path from 'path';
 import { promisify } from 'util';
 
 import { logSystemEvent, AuditEventType, AuditSeverity } from '../audit-logging';
@@ -155,16 +155,16 @@ export class SecurityScanner {
       await this.checkThresholdsAndAlert(results);
 
       // Log scan completion
-      await logSystemEvent(
-        AuditEventType.CONFIGURATION_CHANGE,
-        AuditSeverity.MEDIUM,
-        {
+      await logSystemEvent({
+        eventType: AuditEventType.CONFIGURATION_CHANGE,
+        severity: AuditSeverity.MEDIUM,
+        details: {
           action: 'security_scan_completed',
           scanTypes: typesToScan,
           totalVulnerabilities: results.reduce((sum, r) => sum + r.summary.total, 0),
           scanDuration: Date.now() - startTime,
         },
-      );
+      });
 
     } finally {
       this.isScanning = false;
@@ -640,17 +640,17 @@ export class SecurityScanner {
   private async checkThresholdsAndAlert(results: SecurityScanResult[]): Promise<void> {
     for (const result of results) {
       if (result.status === 'failed' || result.status === 'warning') {
-        await logSystemEvent(
-          AuditEventType.SUSPICIOUS_ACTIVITY,
-          AuditSeverity.HIGH,
-          {
+        await logSystemEvent({
+          eventType: AuditEventType.SUSPICIOUS_ACTIVITY,
+          severity: AuditSeverity.HIGH,
+          details: {
             action: 'security_scan_threshold_exceeded',
             scanType: result.scanType,
             status: result.status,
             vulnerabilities: result.summary,
             recommendations: result.recommendations,
           },
-        );
+        });
       }
     }
   }

@@ -1,4 +1,4 @@
-import crypto from 'crypto';
+import * as crypto from 'crypto';
 
 import { logSystemEvent, AuditEventType, AuditSeverity } from './audit-logging';
 import { query } from './database';
@@ -117,16 +117,16 @@ export class SecretsManager {
       await this.storeSecretMetadata(type, name, secret);
 
       // Log secret generation
-      await logSystemEvent(
-        AuditEventType.CONFIGURATION_CHANGE,
-        AuditSeverity.HIGH,
-        {
+      await logSystemEvent({
+        eventType: AuditEventType.CONFIGURATION_CHANGE,
+        severity: AuditSeverity.HIGH,
+        details: {
           action: 'secret_generated',
           secretType: type,
           secretName: name,
           version: await this.getNextVersion(type, name),
         },
-      );
+      });
 
       return secret;
     } catch (error) {
@@ -168,10 +168,10 @@ export class SecretsManager {
       await this.deprecateSecret(type, name, metadata.version);
 
       // Log rotation
-      await logSystemEvent(
-        AuditEventType.CONFIGURATION_CHANGE,
-        AuditSeverity.HIGH,
-        {
+      await logSystemEvent({
+        eventType: AuditEventType.CONFIGURATION_CHANGE,
+        severity: AuditSeverity.HIGH,
+        details: {
           action: 'secret_rotated',
           secretType: type,
           secretName: name,
@@ -179,7 +179,7 @@ export class SecretsManager {
           newVersion: metadata.version + 1,
           force,
         },
-      );
+      });
 
       return {
         oldSecret,
@@ -326,17 +326,17 @@ export class SecretsManager {
       }
 
       // Log emergency rotation
-      await logSystemEvent(
-        AuditEventType.CONFIGURATION_CHANGE,
-        AuditSeverity.CRITICAL,
-        {
+      await logSystemEvent({
+        eventType: AuditEventType.CONFIGURATION_CHANGE,
+        severity: AuditSeverity.CRITICAL,
+        details: {
           action: 'emergency_secret_rotation',
           rotatedCount: rotated.length,
           failedCount: failed.length,
           rotated,
           failed,
         },
-      );
+      });
 
     } catch (error) {
       console.error('Emergency rotation failed:', error);
