@@ -247,8 +247,7 @@ export class RedisConnectionManager {
   // Event handlers
   private async handleError(error: Error): Promise<void> {
     this.connectionState = ConnectionState.ERROR;
-    console.error('Redis connection error:', error);
-
+    
     await logSystemEvent({
       eventType: AuditEventType.SYSTEM_ERROR,
       severity: AuditSeverity.MEDIUM,
@@ -268,8 +267,7 @@ export class RedisConnectionManager {
 
   private async handleClose(): Promise<void> {
     this.connectionState = ConnectionState.DISCONNECTED;
-    console.warn('Redis connection closed');
-
+    
     await logSystemEvent({
       eventType: AuditEventType.SYSTEM_ERROR,
       severity: AuditSeverity.LOW,
@@ -284,8 +282,7 @@ export class RedisConnectionManager {
   private async handleReconnecting(): Promise<void> {
     this.connectionState = ConnectionState.RECONNECTING;
     this.reconnectAttempts++;
-    console.log(`Redis reconnecting... (attempt ${this.reconnectAttempts})`);
-
+    
     await logSystemEvent({
       eventType: AuditEventType.SYSTEM_ERROR,
       severity: AuditSeverity.LOW,
@@ -300,14 +297,12 @@ export class RedisConnectionManager {
 
   private handleConnect(): void {
     this.connectionState = ConnectionState.CONNECTING;
-    console.log('Redis connecting...');
   }
 
   private async handleReady(): Promise<void> {
     this.connectionState = ConnectionState.CONNECTED;
     this.reconnectAttempts = 0;
-    console.log('Redis connection ready');
-
+    
     await logSystemEvent({
       eventType: AuditEventType.CONFIGURATION_CHANGE,
       severity: AuditSeverity.LOW,
@@ -322,7 +317,15 @@ export class RedisConnectionManager {
   // Attempt reconnection
   private async attemptReconnection(): Promise<void> {
     try {
-      console.log('Attempting Redis reconnection...');
+      await logSystemEvent({
+        eventType: AuditEventType.SYSTEM_ERROR,
+        severity: AuditSeverity.LOW,
+        details: {
+          message: 'Attempting Redis reconnection',
+          action: 'redis_reconnection_attempt',
+          attempt: this.reconnectAttempts + 1,
+        },
+      });
 
       if (this.clusterConfig) {
         await this.initializeCluster();
@@ -331,19 +334,61 @@ export class RedisConnectionManager {
       }
 
       this.setupEventHandlers();
-      console.log('Redis reconnection successful');
+      
+      await logSystemEvent({
+        eventType: AuditEventType.CONFIGURATION_CHANGE,
+        severity: AuditSeverity.LOW,
+        details: {
+          message: 'Redis reconnection successful',
+          action: 'redis_reconnection_success',
+        },
+      });
 
     } catch (error) {
-      console.error('Redis reconnection failed:', error);
+      await logSystemEvent({
+        eventType: AuditEventType.SYSTEM_ERROR,
+        severity: AuditSeverity.HIGH,
+        details: {
+          message: 'Redis reconnection failed',
+          action: 'redis_reconnection_failed',
+          error: error instanceof Error ? error.message : String(error),
+          attempt: this.reconnectAttempts,
+        },
+      });
 
       if (this.reconnectAttempts < this.maxReconnectAttempts) {
         const delay = this.getRetryDelay();
-        console.log(`Scheduling reconnection attempt in ${delay}ms`);
+        await logSystemEvent({
+          eventType: AuditEventType.SYSTEM_ERROR,
+          severity: AuditSeverity.LOW,
+          details: {
+            message: `Scheduling reconnection attempt in ${delay}ms`,
+            action: 'redis_reconnection_scheduled',
+            delay,
+          },
+        });
         setTimeout(() => {
-          this.attemptReconnection().catch(console.error);
+          this.attemptReconnection().catch(async (err) => {
+            await logSystemEvent({
+              eventType: AuditEventType.SYSTEM_ERROR,
+              severity: AuditSeverity.HIGH,
+              details: {
+                message: 'Failed to schedule reconnection',
+                error: err instanceof Error ? err.message : String(err),
+              },
+            });
+          });
         }, delay);
       } else {
-        console.error('Max reconnection attempts reached');
+        await logSystemEvent({
+          eventType: AuditEventType.SYSTEM_ERROR,
+          severity: AuditSeverity.CRITICAL,
+          details: {
+            message: 'Max reconnection attempts reached',
+            action: 'redis_reconnection_max_attempts',
+            maxAttempts: this.maxReconnectAttempts,
+          },
+        });
         this.connectionState = ConnectionState.ERROR;
       }
     }
@@ -360,10 +405,26 @@ export class RedisConnectionManager {
             await client.ping();
           }
         } catch (error) {
-          console.warn('Redis health check failed:', error);
+          await logSystemEvent({
+            eventType: AuditEventType.SYSTEM_ERROR,
+            severity: AuditSeverity.LOW,
+            details: {
+              message: 'Redis health check failed',
+              error: error instanceof Error ? error.message : String(error),
+            },
+          });
           this.connectionState = ConnectionState.ERROR;
         }
-      })().catch(console.error);
+      })().catch(async (err) => {
+        await logSystemEvent({
+          eventType: AuditEventType.SYSTEM_ERROR,
+          severity: AuditSeverity.HIGH,
+          details: {
+            message: 'Health check error',
+            error: err instanceof Error ? err.message : String(err),
+          },
+        });
+      });
     }, healthCheckIntervalMs);
   }
 
@@ -382,7 +443,14 @@ export class RedisConnectionManager {
 
   // Graceful shutdown
   async shutdown(): Promise<void> {
-    console.log('Shutting down Redis connection...');
+    await logSystemEvent({
+      eventType: AuditEventType.CONFIGURATION_CHANGE,
+      severity: AuditSeverity.LOW,
+      details: {
+        message: 'Shutting down Redis connection',
+        action: 'redis_shutdown_initiated',
+      },
+    });
 
     if (this.healthCheckInterval) {
       clearInterval(this.healthCheckInterval);
@@ -394,7 +462,15 @@ export class RedisConnectionManager {
     }
 
     this.connectionState = ConnectionState.DISCONNECTED;
-    console.log('Redis connection shut down');
+    
+    await logSystemEvent({
+      eventType: AuditEventType.CONFIGURATION_CHANGE,
+      severity: AuditSeverity.LOW,
+      details: {
+        message: 'Redis connection shut down',
+        action: 'redis_shutdown_complete',
+      },
+    });
   }
 
   // Cleanup

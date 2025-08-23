@@ -249,7 +249,8 @@ export class PerformanceMonitor {
 
   // Send performance alerts
   private alert(level: string, message: string, metrics: PerformanceMetrics): void {
-    const alert = {
+    // Log the alert
+    console.warn(`[PERFORMANCE ${level}] ${message}`, {
       level,
       message,
       timestamp: new Date().toISOString(),
@@ -259,13 +260,42 @@ export class PerformanceMonitor {
         databaseQueries: metrics.databaseQueries,
         memoryUsage: metrics.memoryUsage,
       },
-    };
+    });
 
-    console.warn(`[PERFORMANCE ${level}] ${message}`, alert);
-
-    // In production, send to monitoring service
+    // In production, send to monitoring service with proper PerformanceAlert structure
     if (process.env.NODE_ENV === 'production') {
-      this.sendToMonitoringService(alert);
+      // Create alerts for each metric that exceeded threshold
+      if (message.includes('Response time')) {
+        const threshold = level === 'CRITICAL' ? 
+          this.thresholds.responseTime.critical : 
+          this.thresholds.responseTime.warning;
+        const alert: PerformanceAlert = {
+          type: level === 'CRITICAL' ? 'critical' : 'warning',
+          metric: 'responseTime',
+          value: metrics.responseTime,
+          threshold,
+          timestamp: new Date().toISOString(),
+          requestId: metrics.requestId,
+          endpoint: metrics.endpoint,
+        };
+        this.sendToMonitoringService(alert);
+      }
+      
+      if (message.includes('Database queries')) {
+        const threshold = level === 'CRITICAL' ? 
+          this.thresholds.databaseQueries.critical : 
+          this.thresholds.databaseQueries.warning;
+        const alert: PerformanceAlert = {
+          type: level === 'CRITICAL' ? 'critical' : 'warning',
+          metric: 'databaseQueries',
+          value: metrics.databaseQueries,
+          threshold,
+          timestamp: new Date().toISOString(),
+          requestId: metrics.requestId,
+          endpoint: metrics.endpoint,
+        };
+        this.sendToMonitoringService(alert);
+      }
     }
   }
 

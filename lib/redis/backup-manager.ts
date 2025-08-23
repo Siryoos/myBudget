@@ -6,7 +6,7 @@ import { promisify } from 'util';
 
 import type Redis from 'ioredis';
 
-import { auditLogger, logSystemEvent, AuditEventType, AuditSeverity } from '../audit-logging';
+import { logSystemEvent, AuditEventType, AuditSeverity } from '../audit-logging';
 
 import { redisConnectionManager } from './connection-manager';
 
@@ -201,10 +201,10 @@ export class RedisBackupManager {
       await this.storeBackupMetadata(metadata);
 
       // Log successful backup
-      await logSystemEvent(
-        AuditEventType.BACKUP_CREATED,
-        AuditSeverity.LOW,
-        {
+      await logSystemEvent({
+        eventType: AuditEventType.BACKUP_CREATED,
+        severity: AuditSeverity.LOW,
+        details: {
           action: 'redis_backup_created',
           backupId: metadata.id,
           type: metadata.type,
@@ -212,7 +212,7 @@ export class RedisBackupManager {
           sizeBytes: metadata.sizeBytes,
           checksum: metadata.checksum,
         },
-      );
+      });
 
       console.log(`Backup completed successfully: ${filename}`);
 
@@ -220,16 +220,16 @@ export class RedisBackupManager {
       metadata.status = BackupStatus.FAILED;
       metadata.errorMessage = error instanceof Error ? error.message : String(error);
 
-      await logSystemEvent(
-        AuditEventType.SYSTEM_ERROR,
-        AuditSeverity.MEDIUM,
-        {
+      await logSystemEvent({
+        eventType: AuditEventType.SYSTEM_ERROR,
+        severity: AuditSeverity.MEDIUM,
+        details: {
           action: 'redis_backup_failed',
           backupId: metadata.id,
           type: metadata.type,
           error: metadata.errorMessage,
         },
-      );
+      });
 
       console.error(`Backup failed: ${metadata.errorMessage}`);
     } finally {
@@ -474,16 +474,16 @@ export class RedisBackupManager {
       await execAsync(`cp "${sourceFile}" "${dumpPath}"`);
 
       // Log restore operation
-      await logSystemEvent(
-        AuditEventType.CONFIGURATION_CHANGE,
-        AuditSeverity.HIGH,
-        {
+      await logSystemEvent({
+        eventType: AuditEventType.CONFIGURATION_CHANGE,
+        severity: AuditSeverity.HIGH,
+        details: {
           action: 'redis_backup_restored',
           backupId: metadata.id,
           filename: metadata.filename,
           targetPath: dumpPath,
         },
-      );
+      });
 
       console.log(`Restore completed successfully from: ${metadata.filename}`);
       return true;
@@ -491,15 +491,15 @@ export class RedisBackupManager {
     } catch (error) {
       console.error(`Restore failed: ${error}`);
 
-      await logSystemEvent(
-        AuditEventType.SYSTEM_ERROR,
-        AuditSeverity.HIGH,
-        {
+      await logSystemEvent({
+        eventType: AuditEventType.SYSTEM_ERROR,
+        severity: AuditSeverity.HIGH,
+        details: {
           action: 'redis_backup_restore_failed',
           backupId,
           error: error instanceof Error ? error.message : String(error),
         },
-      );
+      });
 
       return false;
     }
@@ -597,15 +597,15 @@ export class RedisBackupManager {
       }
 
       if (cleanedCount > 0) {
-        await logSystemEvent(
-          AuditEventType.CONFIGURATION_CHANGE,
-          AuditSeverity.LOW,
-          {
+        await logSystemEvent({
+          eventType: AuditEventType.CONFIGURATION_CHANGE,
+          severity: AuditSeverity.LOW,
+          details: {
             action: 'redis_backup_cleanup',
             cleanedCount,
             totalBackups: backups.length,
           },
-        );
+        });
       }
 
       return cleanedCount;

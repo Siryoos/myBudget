@@ -48,8 +48,8 @@ class ApiError extends Error {
   }
 }
 
-interface PendingRequest {
-  promise: Promise<unknown>;
+interface PendingRequest<T = unknown> {
+  promise: Promise<T>;
   timestamp: number;
 }
 
@@ -65,7 +65,7 @@ export class ApiClient {
   private baseUrl: string;
   private token: string | null = null;
   private refreshPromise: Promise<string> | null = null;
-  private requestCache = new Map<string, PendingRequest>();
+  private requestCache = new Map<string, PendingRequest<any>>();
   private cacheTimeout = CACHE_TIMEOUT_MS;
   private maxRetries = MAX_RETRIES;
   private requestTimeout = REQUEST_TIMEOUT_MS;
@@ -131,7 +131,7 @@ export class ApiClient {
           throw new ApiError(
             'Token refresh failed',
             response.status,
-            data,
+            { responseData: data },
           );
         }
 
@@ -140,7 +140,7 @@ export class ApiClient {
           throw new ApiError(
             'Invalid refresh token response format',
             response.status,
-            data,
+            { responseData: data },
           );
         }
 
@@ -151,7 +151,7 @@ export class ApiClient {
           throw new ApiError(
             'Missing or invalid data property in refresh response',
             response.status,
-            data,
+            { responseData: data },
           );
         }
 
@@ -159,7 +159,7 @@ export class ApiClient {
           throw new ApiError(
             'Missing or invalid token in refresh response',
             response.status,
-            data,
+            { responseData: data },
           );
         }
 
@@ -197,7 +197,7 @@ export class ApiClient {
     if (options.method === 'GET' || !options.method) {
       const cached = this.requestCache.get(cacheKey);
       if (cached && Date.now() - cached.timestamp < this.cacheTimeout) {
-        return cached.promise;
+        return cached.promise as Promise<T>;
       }
     }
 
