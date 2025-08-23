@@ -43,15 +43,19 @@ const checkRateLimit = async (request: NextRequest): Promise<{ allowed: boolean;
   }
 
   const identifier = request.ip || request.headers.get('x-forwarded-for') || 'anonymous';
-  const rateLimitResult = await rateLimiter.checkRateLimit(identifier, {
+  const rateLimitConfig = {
     windowMs: RATE_LIMIT_WINDOW_MS,
     maxRequests: RATE_LIMIT_MAX_REQUESTS,
-    message: 'Too many refresh attempts, please try again later',
-  });
+  };
+  const rateLimitResult = await rateLimiter.checkRateLimit(identifier, rateLimitConfig);
 
   return {
     allowed: rateLimitResult.allowed,
-    message: rateLimitResult.message,
+<<<<<<< Current (Your changes)
+    message: rateLimitResult.allowed ? undefined : 'Too many refresh attempts, please try again later',
+=======
+    message: rateLimitResult.allowed ? '' : 'Too many refresh attempts, please try again later',
+>>>>>>> Incoming (Background Agent changes)
   };
 };
 

@@ -1,5 +1,4 @@
-import type { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { z, ZodError } from 'zod';
 
 import { hashPassword, generateToken } from '@/lib/auth';

@@ -15,6 +15,19 @@ export interface TrustedIPBypassResult {
   headers: Record<string, string>;
 }
 
+// Constants
+const IPV4_MAX_PREFIX = 32;
+const IPV6_MAX_PREFIX = 128;
+const IPV4_MASK_BASE = 0xFFFFFFFF;
+const OCTET_BITS = 8;
+const IPV4_PRIVATE_RANGES = {
+  CLASS_A: { network: 10, mask: [10] },
+  CLASS_B: { network: 172, min: 16, max: 31 },
+  CLASS_C: { network: 192, secondary: 168 },
+  LOOPBACK: { network: 127 },
+  ZERO: { network: 0 }
+};
+
 // Trusted IP bypass manager
 export class TrustedIPBypassManager {
   private static instance: TrustedIPBypassManager;
@@ -45,8 +58,6 @@ export class TrustedIPBypassManager {
         this.individualIPs.add(ip);
       }
     }
-
-    console.log(`Initialized ${this.individualIPs.size} individual trusted IPs and ${this.ipRanges.length} IP ranges`);
   }
 
   // Check if IP is trusted and should bypass rate limiting
@@ -54,72 +65,74 @@ export class TrustedIPBypassManager {
     try {
       // Validate IP format
       if (!isIP(ip)) {
-        return {
-          isTrusted: false,
-          reason: 'Invalid IP address format',
-          bypassLevel: 'none',
-          headers: {},
-        };
+        return this.createBypassResult(false, 'Invalid IP address format', 'none');
       }
 
-      // Check if IP is in individual trusted IPs
-      if (this.individualIPs.has(ip)) {
-        return {
-          isTrusted: true,
-          reason: 'IP is in trusted IP list',
-          bypassLevel: 'full',
-          headers: this.generateTrustedHeaders(ip, 'full'),
-        };
+      // Check individual IPs
+      const individualResult = this.checkIndividualIP(ip);
+      if (individualResult) {
+        return individualResult;
       }
 
-      // Check if IP is in trusted IP ranges
-      for (const range of this.ipRanges) {
-        if (this.isIPInRange(ip, range)) {
-          return {
-            isTrusted: true,
-            reason: `IP is in trusted range ${range}`,
-            bypassLevel: 'full',
-            headers: this.generateTrustedHeaders(ip, 'full'),
-          };
-      }
+      // Check IP ranges
+      const rangeResult = this.checkIPRanges(ip);
+      if (rangeResult) {
+        return rangeResult;
       }
 
-      // Check for partial bypass based on endpoint
-      if (endpoint && this.shouldPartialBypass(ip, endpoint)) {
-        return {
-          isTrusted: true,
-          reason: 'Partial bypass for endpoint',
-          bypassLevel: 'partial',
-          headers: this.generateTrustedHeaders(ip, 'partial'),
-        };
+      // Check partial bypass
+      const partialResult = this.checkPartialBypass(ip, endpoint);
+      if (partialResult) {
+        return partialResult;
       }
 
-      // Check for bypass based on headers
-      if (this.shouldBypassByHeaders(ip)) {
-        return {
-          isTrusted: true,
-          reason: 'Bypass by headers',
-          bypassLevel: 'partial',
-          headers: this.generateTrustedHeaders(ip, 'partial'),
-        };
-      }
-
-      return {
-        isTrusted: false,
-        reason: 'IP not in trusted list',
-        bypassLevel: 'none',
-        headers: {},
-      };
+      return this.createBypassResult(false, 'IP not in trusted list', 'none');
 
     } catch (error) {
-      console.error('Error checking trusted IP:', error);
-      return {
-        isTrusted: false,
-        reason: 'Error checking trusted IP',
-        bypassLevel: 'none',
-        headers: {},
-      };
+      return this.createBypassResult(false, 'Error checking trusted IP', 'none');
     }
+  }
+
+  private checkIndividualIP(ip: string): TrustedIPBypassResult | null {
+    if (this.individualIPs.has(ip)) {
+      return this.createBypassResult(true, 'IP is in trusted IP list', 'full', ip);
+    }
+    return null;
+  }
+
+  private checkIPRanges(ip: string): TrustedIPBypassResult | null {
+    for (const range of this.ipRanges) {
+      if (this.isIPInRange(ip, range)) {
+        return this.createBypassResult(true, `IP is in trusted range ${range}`, 'full', ip);
+      }
+    }
+    return null;
+  }
+
+  private checkPartialBypass(ip: string, endpoint?: string): TrustedIPBypassResult | null {
+    if (endpoint && this.shouldPartialBypass(ip, endpoint)) {
+      return this.createBypassResult(true, 'Partial bypass for endpoint', 'partial', ip);
+    }
+
+    if (this.shouldBypassByHeaders(ip)) {
+      return this.createBypassResult(true, 'Bypass by headers', 'partial', ip);
+    }
+
+    return null;
+  }
+
+  private createBypassResult(
+    isTrusted: boolean,
+    reason: string,
+    bypassLevel: 'full' | 'partial' | 'none',
+    ip?: string
+  ): TrustedIPBypassResult {
+    return {
+      isTrusted,
+      reason,
+      bypassLevel,
+      headers: ip && isTrusted && bypassLevel !== 'none' ? this.generateTrustedHeaders(ip, bypassLevel as 'full' | 'partial') : {},
+    };
   }
 
   // Check if string represents an IP range (CIDR notation)
@@ -131,9 +144,10 @@ export class TrustedIPBypassManager {
   private isIPInRange(ip: string, range: string): boolean {
     try {
       const [rangeIP, prefixLength] = range.split('/');
-      const prefix = parseInt(prefixLength);
+      const prefix = parseInt(prefixLength, 10);
 
-      if (isNaN(prefix) || prefix < 0 || prefix > (isIPv6(rangeIP) ? 128 : 32)) {
+      if (isNaN(prefix) || prefix < 0 || 
+          prefix > (isIPv6(rangeIP) ? IPV6_MAX_PREFIX : IPV4_MAX_PREFIX)) {
         return false;
       }
 
@@ -145,7 +159,6 @@ export class TrustedIPBypassManager {
 
       return false;
     } catch (error) {
-      console.warn('Error checking IP range:', error);
       return false;
     }
   }
@@ -154,7 +167,7 @@ export class TrustedIPBypassManager {
   private isIPv4InRange(ip: string, rangeIP: string, prefix: number): boolean {
     const ipNum = this.ipv4ToNumber(ip);
     const rangeNum = this.ipv4ToNumber(rangeIP);
-    const mask = (0xFFFFFFFF << (32 - prefix)) >>> 0;
+    const mask = (IPV4_MASK_BASE << (IPV4_MAX_PREFIX - prefix)) >>> 0;
 
     return (ipNum & mask) === (rangeNum & mask);
   }
@@ -163,12 +176,14 @@ export class TrustedIPBypassManager {
   private isIPv6InRange(ip: string, rangeIP: string, prefix: number): boolean {
     // Simplified IPv6 range checking
     // In production, use a proper IPv6 library
-    return ip.startsWith(rangeIP.split('/')[0].substring(0, Math.floor(prefix / 4)));
+    const prefixChars = Math.floor(prefix / 4);
+    return ip.startsWith(rangeIP.split('/')[0].substring(0, prefixChars));
   }
 
   // Convert IPv4 to number
   private ipv4ToNumber(ip: string): number {
-    return ip.split('.').reduce((acc, octet) => (acc << 8) + parseInt(octet), 0) >>> 0;
+    return ip.split('.')
+      .reduce((acc, octet) => (acc << OCTET_BITS) + parseInt(octet, 10), 0) >>> 0;
   }
 
   // Check if endpoint should have partial bypass
@@ -190,30 +205,40 @@ export class TrustedIPBypassManager {
   // Check if IP is internal
   private isInternalIP(ip: string): boolean {
     if (isIPv4(ip)) {
-      const parts = ip.split('.').map(Number);
-      return (
-        (parts[0] === 10) ||
-        (parts[0] === 172 && parts[1] >= 16 && parts[1] <= 31) ||
-        (parts[0] === 192 && parts[1] === 168) ||
-        (parts[0] === 127) ||
-        (parts[0] === 0)
-      );
+      return this.isInternalIPv4(ip);
     }
 
     if (isIPv6(ip)) {
-      return (
-        ip.startsWith('fe80:') ||
-        ip.startsWith('fc00:') ||
-        ip.startsWith('fd00:') ||
-        ip === '::1'
-      );
+      return this.isInternalIPv6(ip);
     }
 
     return false;
   }
 
+  private isInternalIPv4(ip: string): boolean {
+    const parts = ip.split('.').map(Number);
+    const { CLASS_A, CLASS_B, CLASS_C, LOOPBACK, ZERO } = IPV4_PRIVATE_RANGES;
+    
+    return (
+      (parts[0] === CLASS_A.network) ||
+      (parts[0] === CLASS_B.network && parts[1] >= CLASS_B.min && parts[1] <= CLASS_B.max) ||
+      (parts[0] === CLASS_C.network && parts[1] === CLASS_C.secondary) ||
+      (parts[0] === LOOPBACK.network) ||
+      (parts[0] === ZERO.network)
+    );
+  }
+
+  private isInternalIPv6(ip: string): boolean {
+    return (
+      ip.startsWith('fe80:') ||
+      ip.startsWith('fc00:') ||
+      ip.startsWith('fd00:') ||
+      ip === '::1'
+    );
+  }
+
   // Check if bypass should be allowed based on headers
-  private shouldBypassByHeaders(ip: string): boolean {
+  private shouldBypassByHeaders(_ip: string): boolean {
     // This would be called from middleware with actual headers
     // For now, return false
     return false;
@@ -249,8 +274,6 @@ export class TrustedIPBypassManager {
       } else {
         this.individualIPs.add(ip);
       }
-
-      console.log(`Added trusted IP: ${ip}`);
     }
   }
 
@@ -268,8 +291,6 @@ export class TrustedIPBypassManager {
       } else {
         this.individualIPs.delete(ip);
       }
-
-      console.log(`Removed trusted IP: ${ip}`);
     }
   }
 
@@ -301,7 +322,11 @@ export class TrustedIPBypassManager {
 
   // Validate IP address format
   validateIP(ip: string): boolean {
-    return isIP(ip);
+<<<<<<< Current (Your changes)
+    return Boolean(isIP(ip));
+=======
+    return isIP(ip) !== 0;
+>>>>>>> Incoming (Background Agent changes)
   }
 
   // Validate CIDR range format
@@ -310,13 +335,13 @@ export class TrustedIPBypassManager {
       const [ip, prefix] = cidr.split('/');
       if (!isIP(ip)) {return false;}
 
-      const prefixNum = parseInt(prefix);
+      const prefixNum = parseInt(prefix, 10);
       if (isNaN(prefixNum)) {return false;}
 
       if (isIPv4(ip)) {
-        return prefixNum >= 0 && prefixNum <= 32;
+        return prefixNum >= 0 && prefixNum <= IPV4_MAX_PREFIX;
       } else if (isIPv6(ip)) {
-        return prefixNum >= 0 && prefixNum <= 128;
+        return prefixNum >= 0 && prefixNum <= IPV6_MAX_PREFIX;
       }
 
       return false;
@@ -359,7 +384,10 @@ export class TrustedIPBypassManager {
 export const trustedIPBypassManager = TrustedIPBypassManager.getInstance();
 
 // Convenience functions
-export const checkTrustedIP = (ip: string, endpoint?: string): TrustedIPBypassResult => trustedIPBypassManager.checkTrustedIP(ip, endpoint);
+export const checkTrustedIP = (
+  ip: string, 
+  endpoint?: string
+): TrustedIPBypassResult => trustedIPBypassManager.checkTrustedIP(ip, endpoint);
 
 export const isIPTrusted = (ip: string): boolean => trustedIPBypassManager.isIPTrusted(ip);
 
