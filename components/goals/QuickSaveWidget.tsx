@@ -24,6 +24,22 @@ interface QuickSaveWidgetProps {
   onQuickSave?: (data: QuickSaveData) => void
 }
 
+/**
+ * Renders a "Quick Save" UI for selecting or entering an amount, optionally targeting a savings goal,
+ * showing periodic social-proof messages, and emitting a save payload via a callback.
+ *
+ * This component:
+ * - Suggests default quick amounts (A/B-tested and persisted) and can derive goal-aligned defaults when active goals exist.
+ * - Lets the user choose a quick amount or enter a custom amount and optionally associate the save with a goal.
+ * - Rotates social-proof messages based on save count and optionally displays a brief success banner.
+ * - Exposes A/B test metadata for debugging in development builds and reports a QuickSaveData payload via `onQuickSave`.
+ *
+ * @param goals - Optional list of savings goals; when provided, active goals are used to compute goal-aligned default amounts.
+ * @param showSocialProof - When true, social proof messages may be included in the save payload and displayed in the UI.
+ * @param enableAnchoring - When true, shows the behavioral insights panel and applies A/B-tested default anchoring behavior.
+ * @param onQuickSave - Optional callback invoked with a QuickSaveData payload when the user completes a quick save.
+ * @returns A React element containing the Quick Save widget.
+ */
 export function QuickSaveWidget({
   goals = [],
   showSocialProof = true,

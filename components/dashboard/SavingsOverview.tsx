@@ -25,6 +25,21 @@ interface SavingsOverviewProps {
   animateOnLoad?: boolean
 }
 
+/**
+ * Dashboard card showing savings metrics and progress (total, monthly, and annual).
+ *
+ * Renders a summary header with growth rate and an optional large total savings value, followed by
+ * optional sections for this month's progress and the annual savings goal. Data is sourced from
+ * the `useDashboard` hook; the component shows skeleton placeholders while loading and a simple
+ * error message if data fails to load. Animations for values and progress bars are controlled by
+ * `animateOnLoad`.
+ *
+ * @param showTotalSavings - When true (default), displays the large total savings value and monthly change indicator.
+ * @param showMonthlyProgress - When true (default), displays the monthly progress section including a progress bar and estimates.
+ * @param showGoalProgress - When true (default), displays the annual goal progress section with saved/remaining/monthly-need summaries.
+ * @param animateOnLoad - When true (default), animates numeric values and progress bars after the initial load completes.
+ * @returns A React element representing the SavingsOverview card.
+ */
 export function SavingsOverview({
   showTotalSavings = true,
   showMonthlyProgress = true,

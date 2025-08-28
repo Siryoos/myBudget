@@ -26,6 +26,17 @@ interface BudgetMethodOption {
   bestFor: string[]
 }
 
+/**
+ * Renders an interactive budgeting-method picker that lets the user browse, inspect, and choose a budgeting approach.
+ *
+ * Displays a localized list of predefined budget methods (name, short description, difficulty, time commitment, and icon).
+ * Shows a loading placeholder until translations are ready. Selecting a method opens a details panel with a longer description,
+ * optional category breakdown, "best for" highlights, and action buttons to either choose a different method or confirm the selection.
+ *
+ * The confirmed selection is currently logged to the console (placeholder for persisting/updating user configuration).
+ *
+ * @returns The component's JSX element.
+ */
 export function BudgetMethodSelector() {
   const { t, ready } = useTranslation('budget');
   const [selectedMethod, setSelectedMethod] = useState<BudgetMethod | null>(null);

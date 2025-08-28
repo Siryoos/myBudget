@@ -26,6 +26,21 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const userService = new UserService();
 
+/**
+ * Provides authentication state and actions to descendant components.
+ *
+ * The provider initializes auth state from localStorage, exposes the current
+ * user and loading status, and supplies authentication actions: `login`,
+ * `register`, `logout`, `updateProfile`, and `refreshAuth`, as well as RBAC
+ * helpers (`hasPermission`, `hasRole`, `canAccess`). Actions interact with
+ * the shared UserService and will navigate (router.push) on success where
+ * appropriate (e.g. login -> /dashboard, register -> /onboarding, logout -> /login).
+ *
+ * Note: several actions validate input and delegate to UserService; they will
+ * propagate errors from validation or API calls to the caller.
+ *
+ * @param children - React node(s) that will receive the AuthContext.
+ */
 export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
@@ -187,6 +202,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
+/**
+ * Returns the current AuthContext value.
+ *
+ * Retrieves the authentication context provided by AuthProvider. Throws an error if called outside of an AuthProvider.
+ *
+ * @returns The auth context object (user, isAuthenticated, isLoading, and auth helper methods).
+ * @throws Error if used outside of an AuthProvider.
+ */
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {
@@ -195,7 +218,20 @@ export function useAuth() {
   return context;
 }
 
-// Simplified HOC for protecting routes
+/**
+ * Higher-order component that enforces authentication and optional role/permission checks for a wrapped component.
+ *
+ * While authentication state is loading, renders a centered spinner. If the user is not authenticated the wrapper
+ * redirects to `options.redirectTo` (or `/login`). If authenticated but missing required roles/permissions it
+ * redirects to `options.redirectTo` (or `/unauthorized`) and, when rendering, shows `options.fallback` if provided.
+ *
+ * @param Component - The React component to wrap.
+ * @param options.redirectTo - Optional path to redirect when unauthenticated or unauthorized. Defaults to `'/login'` for auth failures and `'/unauthorized'` for access failures.
+ * @param options.requiredRoles - Optional list of roles required to access the wrapped component.
+ * @param options.requiredPermissions - Optional list of permissions required to access the wrapped component.
+ * @param options.fallback - Optional React node to render when the user is authenticated but lacks the required access.
+ * @returns A component that performs the described authentication and access checks before rendering `Component`.
+ */
 export function withAuth<P extends object>(
   Component: React.ComponentType<P>,
   options: {

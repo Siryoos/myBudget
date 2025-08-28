@@ -30,6 +30,21 @@ interface BehavioralDashboardProps {
   enableNotifications?: boolean
 }
 
+/**
+ * Behavioral dashboard component exposing Goals, Quick Save, Achievements, and Insights panels.
+ *
+ * Renders a four-tab client-side UI that manages local state for savings goals, quick-save history,
+ * and transient achievement notifications. On mount it populates the goals list with mock demo data;
+ * while translation resources are loading it renders a centered loading state. Tabs include interactive
+ * widgets (GoalWizard, QuickSaveWidget, AchievementSystem, InsightsPanel) and an optional behavioral
+ * psychology tips card.
+ *
+ * @param showAllFeatures - When true, displays the behavioral-psychology tips card (loss aversion, social proof, gamification).
+ * @param enableAbtesting - When true, enables anchoring/AB-testing behavior in the Quick Save widget.
+ * @param showSocialProof - When true, enables peer/comparison UI in panels that support social proof.
+ * @param enableNotifications - When true, enables in-app achievement notifications in the Achievements panel.
+ * @returns A JSX element rendering the full BehavioralDashboard.
+ */
 export function BehavioralDashboard({
   showAllFeatures = true,
   enableAbtesting = true,

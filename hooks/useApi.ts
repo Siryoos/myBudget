@@ -12,6 +12,27 @@ interface UseApiOptions {
   onError?: (error: Error) => void;
 }
 
+/**
+ * Manages the lifecycle (loading, data, error) of a single asynchronous API call.
+ *
+ * Executes the provided `apiCall` when `execute()` is invoked (or automatically on mount if `options.immediate` is true),
+ * keeps `data`, `loading`, and `error` in React state, and invokes lifecycle callbacks from `options`.
+ *
+ * Errors thrown by `apiCall` are stored as a string in `error` state; `options.onError` is called with an `Error` instance.
+ *
+ * @param apiCall - A function that performs the async request and resolves with the response of type `T`.
+ * @param options - Optional behavior hooks:
+ *   - `immediate` — if true, the hook calls `execute()` once on mount.
+ *   - `onSuccess` — called with the response `T` after a successful call.
+ *   - `onError` — called with an `Error` when the call throws.
+ * @returns An object containing:
+ *   - `data` — the latest successful response (`T | null`),
+ *   - `loading` — whether a request is in progress,
+ *   - `error` — the error message string (`string | null`),
+ *   - `execute()` — triggers the API call and returns the resolved data,
+ *   - `reset()` — clears `data`, `loading`, and `error` to initial values,
+ *   - `refetch()` — alias for `execute()`.
+ */
 export function useApi<T>(
   apiCall: () => Promise<T>,
   options: UseApiOptions = {}
@@ -58,7 +79,27 @@ export function useApi<T>(
   };
 }
 
-// Hook for paginated data
+/**
+ * Hook for fetching paginated data with built-in page/limit state and controls.
+ *
+ * Calls `apiCall(page, limit)` (expected to return `{ data: T[]; pagination: any }`) and exposes the current list, pagination info, loading/error state, current `page`/`limit`, and helpers to navigate pages.
+ *
+ * The hook automatically fetches on mount with the provided `initialPage` and `initialLimit`. `loadMore()` increments the page only when not loading and `pagination.hasNext` is truthy. `changeLimit()` updates the page size and resets to page 1.
+ *
+ * @param apiCall - Function that fetches a page of data for the given `page` and `limit`.
+ * @param initialPage - Starting page number (default: 1).
+ * @param initialLimit - Starting page size (default: 20).
+ * @returns An object containing:
+ *  - `data` - array of items for the current page,
+ *  - `pagination` - pagination metadata returned by `apiCall`,
+ *  - `loading` - whether the current request is in progress,
+ *  - `error` - error message (if any),
+ *  - `page` - current page number,
+ *  - `limit` - current page size,
+ *  - `loadMore()` - increments the page when possible,
+ *  - `changePage(newPage)` - sets the current page,
+ *  - `changeLimit(newLimit)` - sets the page size and resets to page 1.
+ */
 export function usePaginatedApi<T>(
   apiCall: (page: number, limit: number) => Promise<{ data: T[]; pagination: any }>,
   initialPage: number = 1,
@@ -100,7 +141,23 @@ export function usePaginatedApi<T>(
   };
 }
 
-// Hook for mutation operations (create, update, delete)
+/**
+ * Provides state and helpers for performing an asynchronous mutation (create/update/delete).
+ *
+ * The hook manages `loading`, `error`, and `data` state and returns a `mutate` function to execute
+ * the provided `mutationFn` and a `reset` function to clear state.
+ *
+ * @typeParam TData - The expected shape of a successful mutation result.
+ * @typeParam TVariables - The shape of the variables passed to the mutation function.
+ * @param mutationFn - Async function that performs the mutation and resolves with the mutation result.
+ * @returns An object containing:
+ *  - `data`: the latest successful mutation result or `null`.
+ *  - `loading`: `true` while the mutation is in progress.
+ *  - `error`: an error message string when the last mutation failed, otherwise `null`.
+ *  - `mutate(variables)`: executes the mutation; resolves with the mutation result on success.
+ *    If the mutation throws, the original error is rethrown after state is updated.
+ *  - `reset()`: resets `data`, `loading`, and `error` to their initial values.
+ */
 export function useMutation<TData, TVariables>(
   mutationFn: (variables: TVariables) => Promise<TData>
 ) {
@@ -135,7 +192,25 @@ export function useMutation<TData, TVariables>(
   };
 }
 
-// Hook for optimistic updates
+/**
+ * Hook for performing mutations with optimistic update support.
+ *
+ * Starts a mutation with optional optimistic side effects via `onMutate`, then runs `mutationFn`.
+ * On success it updates internal state, calls `onSuccess` and `onSettled`. On failure it sets an error,
+ * calls `onError` and `onSettled`, and rethrows the original error.
+ *
+ * @param mutationFn - Async function that performs the mutation and returns the resulting data.
+ * @param options - Optional lifecycle callbacks:
+ *   - `onMutate(variables)` invoked immediately for optimistic updates before the mutation runs.
+ *   - `onSuccess(data, variables)` invoked after a successful mutation.
+ *   - `onError(error, variables)` invoked when the mutation throws.
+ *   - `onSettled(dataOrNull, errorOrNull, variables)` invoked after either success or error.
+ * @returns An object with:
+ *   - `data` — the mutation result or `null`.
+ *   - `loading` — `true` while the mutation is in progress.
+ *   - `error` — an error message string or `null`.
+ *   - `mutate(variables)` — function to start the mutation; returns the resolved data or rethrows the error.
+ */
 export function useOptimisticMutation<TData, TVariables>(
   mutationFn: (variables: TVariables) => Promise<TData>,
   options: {

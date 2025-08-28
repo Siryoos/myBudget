@@ -23,6 +23,19 @@ interface AutomationSettingsProps {
   customRules?: boolean
 }
 
+/**
+ * Renders the Savings Automation settings card with configurable tabs and local UI state.
+ *
+ * Displays up to three tabs—Auto Transfer, Round Up, and Smart Rules—controlled by the boolean props.
+ * Uses client-side i18n readiness to show a centered loading spinner until translations are ready.
+ * All interactive controls update local component state; no network requests or external side effects are performed.
+ *
+ * @param autoTransfer - When true, shows the "Auto Transfer" tab (default: true).
+ * @param roundUpSavings - When true, shows the "Round Up" tab (default: true).
+ * @param ruleBasedSaving - When true, shows the "Smart Rules" tab (default: true).
+ * @param customRules - Accepted prop but not currently used to alter rendering (default: true).
+ * @returns The AutomationSettings React element.
+ */
 export function AutomationSettings({
   autoTransfer = true,
   roundUpSavings = true,

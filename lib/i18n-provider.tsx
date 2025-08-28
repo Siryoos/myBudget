@@ -21,6 +21,17 @@ const I18nContext = createContext<{
   changeLanguage: async () => {},
 });
 
+/**
+ * React provider that initializes and manages i18n state, exposes locale controls, and wraps children with i18next context.
+ *
+ * Initializes i18n (via initI18n), synchronizes with the optional `locale` prop, loads critical namespaces, and exposes a `changeLanguage` function through I18nContext. Handles initialization timeouts, a fallback minimal init path, and cleanup of non-critical namespaces on unmount. While initializing a full-screen loading UI is rendered; on initialization failure the provider renders children with a limited i18n context or without i18n if initialization did not complete.
+ *
+ * The provided I18nContext value shape: { locale: string; isLoading: boolean; changeLanguage: (newLocale: string) => Promise<void> }.
+ *
+ * @param children - React nodes to render inside the provider.
+ * @param locale - Initial locale to use (default: 'en'). Should be a locale string recognized by the i18n configuration (e.g., "en", "fr").
+ * @returns A React element that provides i18n context and (when available) an I18nextProvider wrapping `children`.
+ */
 export function I18nProvider({ children, locale = 'en' }: I18nProviderProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [currentLocale, setCurrentLocale] = useState(locale);

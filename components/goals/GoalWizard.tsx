@@ -47,6 +47,22 @@ interface GoalWizardProps {
   onGoalCreated?: (goal: Partial<SavingsGoal>) => void
 }
 
+/**
+ * A two-step modal wizard UI for creating savings goals.
+ *
+ * Step 1 lets the user pick a goal template; step 2 allows customizing framing (achievement vs loss-avoidance),
+ * uploading an optional photo (client-side validated: JPEG/PNG/WebP, ≤5MB), and entering goal details (name, amount, date, priority, description).
+ * On submit a Partial<SavingsGoal> is constructed (converting amount to number and date to Date), passed to `onGoalCreated` if provided,
+ * and the wizard resets.
+ *
+ * The component is localized via the 'goals' translation namespace and shows a loading card until translations are ready.
+ *
+ * Props:
+ * - templates: optional list of template names to show (defaults to common goal types).
+ * - visualGoalSetting: enable visual framing UI.
+ * - milestoneBreakdown: enable milestone features in the UI (when present).
+ * - onGoalCreated: callback invoked with the created Partial<SavingsGoal> after a successful submit.
+ */
 export function GoalWizard({
   templates = ['Emergency Fund', 'Vacation', 'Home Down Payment', 'Car Purchase', 'Wedding', 'Education', 'Retirement', 'Custom'],
   visualGoalSetting = true,

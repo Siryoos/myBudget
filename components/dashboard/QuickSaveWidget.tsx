@@ -18,6 +18,16 @@ interface QuickSaveWidgetProps {
   celebrationAnimation?: boolean
 }
 
+/**
+ * A configurable "Quick Save" card component that lets users pick a preset amount or enter a custom amount and perform a quick save action.
+ *
+ * This component renders preset amount buttons, an optional custom amount input, a save button with loading state, an optional celebration overlay after saving, a motivational tip, and a static list of recent saves. Saving is simulated (1s delay); on success the form resets and the saved amount is logged to console. Input parsing uses `sanitizeNumberInput` and currency display uses `formatCurrency`.
+ *
+ * @param defaultAmounts - Array of preset amounts shown as quick buttons (defaults to [10, 25, 50, 100]).
+ * @param customAmountEnabled - When true, enables the custom amount toggle and input (default: true).
+ * @param celebrationAnimation - When true, displays a brief celebratory overlay after a successful save (default: true).
+ * @returns A React element representing the Quick Save widget.
+ */
 export function QuickSaveWidget({
   defaultAmounts = [10, 25, 50, 100],
   customAmountEnabled = true,

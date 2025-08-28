@@ -35,6 +35,26 @@ interface GoalProgressTrackerProps {
   showFutureProjections?: boolean
 }
 
+/**
+ * Renders a dashboard of savings goals with visual progress displays and optional future projections.
+ *
+ * Displays each goal as a card with current vs target amounts, a selectable visual (progress bar, thermometer, or jar),
+ * optional time-remaining information, milestone list and short celebration animations when milestones are hit.
+ * Also computes simple future projections (1, 5, 10, 20 years using a fixed 5% annual growth) for each goal and can render
+ * an inline projection chart and summaries.
+ *
+ * Props:
+ * - goals: list of SavingsGoal to render (defaults to empty array).
+ * - visualStyles: allowed visual styles; the component exposes a selector to switch between 'progressBar', 'thermometer', and 'jar'.
+ * - showTimeRemaining: when true, displays months remaining until target date for non-completed goals.
+ * - showProjectedCompletion, celebrationAnimations: accepted but not used by the current rendering logic.
+ * - showFutureProjections: when true, enables the per-goal projections UI.
+ *
+ * Side effects:
+ * - Triggers a brief, local celebration (visual) when a milestone is reached (no network calls).
+ *
+ * @returns A JSX element containing the full goal progress tracker UI.
+ */
 export function GoalProgressTracker({
   goals = [],
   visualStyles = ['progressBar', 'thermometer', 'jar'],

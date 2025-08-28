@@ -42,6 +42,16 @@ const FinanceContext = createContext<FinanceContextType | undefined>(undefined);
 const transactionService = new TransactionService();
 const budgetService = new BudgetService();
 
+/**
+ * Provides finance-related state and actions (transactions, budgets, savings goals) to descendant components.
+ *
+ * Wraps children in a FinanceContext.Provider and, when a `userId` is supplied, loads and keeps in sync per-user
+ * data (transactions, budgets, and goals). Exposes loading/error flags, refresh actions (per-domain and all), an
+ * active budget setter, and computed aggregates (totalIncome, totalExpenses, netIncome).
+ *
+ * @param userId - Optional user identifier. When present the provider will automatically load and refresh the user's
+ *                 transactions, budgets, and goals (initial load on mount and whenever `userId` changes).
+ */
 export function FinanceProvider({ children, userId }: { children: ReactNode; userId?: string }) {
   // Transaction state
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -187,6 +197,14 @@ export function FinanceProvider({ children, userId }: { children: ReactNode; use
   return <FinanceContext.Provider value={value}>{children}</FinanceContext.Provider>;
 }
 
+/**
+ * Returns the current finance context.
+ *
+ * Provides access to the finance state, actions, and derived values supplied by FinanceProvider.
+ *
+ * @returns The FinanceContext value.
+ * @throws Error if called outside of a FinanceProvider.
+ */
 export function useFinance() {
   const context = useContext(FinanceContext);
   if (!context) {
@@ -195,22 +213,60 @@ export function useFinance() {
   return context;
 }
 
-// Convenience hooks for specific data
+/**
+ * Returns transactions slice and related state/actions from the finance context.
+ *
+ * @returns An object containing:
+ *  - `transactions`: the current array of Transaction items for the user.
+ *  - `loading`: boolean flag indicating whether transactions are being loaded.
+ *  - `error`: error message string when loading transactions failed, or undefined.
+ *  - `refreshTransactions`: function to re-fetch the user's transactions.
+ */
 export function useTransactions() {
   const { transactions, transactionsLoading, transactionsError, refreshTransactions } = useFinance();
   return { transactions, loading: transactionsLoading, error: transactionsError, refreshTransactions };
 }
 
+/**
+ * Hook exposing budget state and actions from the Finance context.
+ *
+ * Returns the list of budgets, the active budget, loading/error flags for budgets,
+ * and actions to refresh budgets or change the active budget.
+ *
+ * @returns An object containing:
+ * - `budgets`: array of Budget
+ * - `loading`: boolean — whether budgets are being loaded
+ * - `error`: string | undefined — loading error message, if any
+ * - `activeBudget`: Budget | undefined — the currently selected budget
+ * - `refreshBudgets`: () => Promise<void> — reloads budgets for the current user
+ * - `setActiveBudget`: (b: Budget | undefined) => void — sets the active budget
+ */
 export function useBudgets() {
   const { budgets, budgetsLoading, budgetsError, activeBudget, refreshBudgets, setActiveBudget } = useFinance();
   return { budgets, loading: budgetsLoading, error: budgetsError, activeBudget, refreshBudgets, setActiveBudget };
 }
 
+/**
+ * Provides the savings goals slice from the Finance context.
+ *
+ * Returns the current list of goals along with loading and error flags and a function to refresh goals.
+ *
+ * @returns An object containing:
+ * - `goals` — the array of current savings goals.
+ * - `loading` — `true` when goals are being fetched.
+ * - `error` — an error message if loading failed, otherwise `undefined`.
+ * - `refreshGoals` — function to re-fetch the goals for the current user.
+ */
 export function useGoals() {
   const { goals, goalsLoading, goalsError, refreshGoals } = useFinance();
   return { goals, loading: goalsLoading, error: goalsError, refreshGoals };
 }
 
+/**
+ * Returns derived financial totals from the Finance context.
+ *
+ * @returns An object containing `totalIncome`, `totalExpenses`, and `netIncome` (numbers).
+ */
 export function useFinancialSummary() {
   const { totalIncome, totalExpenses, netIncome } = useFinance();
   return { totalIncome, totalExpenses, netIncome };

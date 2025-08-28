@@ -19,6 +19,19 @@ interface BehavioralDashboardProps {
   enableNotifications?: boolean
 }
 
+/**
+ * Renders the Smart Savings multi-tab dashboard (Goals, Quick Save, Achievements, Insights).
+ *
+ * The component coordinates goal creation and contributions via server mutations, shows recent
+ * quick-saves and transient achievement notifications, and exposes a goal creation wizard.
+ * It also handles loading state while translations or goal-related mutations are in progress.
+ *
+ * @param showAllFeatures - When true (default), enables UI elements gated behind feature flags.
+ * @param enableAbtesting - When true (default), enables experimental anchoring behavior in Quick Save.
+ * @param showSocialProof - When true (default), surfaces peer comparison and social proof in widgets.
+ * @param enableNotifications - When true (default), displays transient achievement notifications.
+ * @returns The dashboard React element.
+ */
 export function BehavioralDashboard({
   showAllFeatures = true,
   enableAbtesting = true,

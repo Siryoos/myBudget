@@ -56,11 +56,17 @@ export const getPool = (): Pool => pool;
 export const query = <T extends QueryResultRow = any>(text: string, params?: unknown[]): Promise<QueryResult<T>> => pool.query<T>(text, params);
 
 /**
- * Executes a type-safe database query with runtime type validation
- * @param queryText SQL query text
- * @param params Query parameters
- * @param typeGuard Function to validate the type of each row
- * @returns Promise<TypedQueryResult<T>> Type-safe query result
+ * Executes a SQL query and returns only rows that pass a runtime type guard.
+ *
+ * Runs the given `queryText` with `params`, applies `typeGuard` to each returned row,
+ * and returns a TypedQueryResult containing the validated rows plus reconstructed field metadata.
+ * Rows that do not satisfy the guard are omitted; when any are filtered out a warning is emitted.
+ *
+ * @param queryText - SQL query text to execute.
+ * @param params - Parameters for the query.
+ * @param typeGuard - Runtime predicate that validates whether a row is of type `T`.
+ * @returns A Promise resolving to a TypedQueryResult whose `rows` are the subset that passed `typeGuard`.
+ * @throws Rethrows any error thrown by the underlying query execution.
  */
 export async function executeTypedQuery<T>(
   queryText: string,
