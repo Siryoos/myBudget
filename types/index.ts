@@ -316,6 +316,28 @@ export interface ApiResponse<T = unknown> {
   data?: T
   error?: string
   message?: string
+  timestamp?: string
+  requestId?: string
+}
+
+export interface SuccessResponse<T = unknown> {
+  success: true
+  data: T
+  timestamp: string
+  requestId?: string
+}
+
+export interface ErrorResponse {
+  success: false
+  error: {
+    code: string
+    message: string
+    details?: any
+    retryAfter?: number
+  }
+  timestamp: string
+  requestId?: string
+  path?: string
 }
 
 export interface PaginatedResponse<T = unknown> {
@@ -323,7 +345,9 @@ export interface PaginatedResponse<T = unknown> {
   total: number
   page: number
   limit: number
-  hasMore: boolean
+  totalPages: number
+  hasNext: boolean
+  hasPrev: boolean
 }
 
 // Form types

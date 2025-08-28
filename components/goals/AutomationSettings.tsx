@@ -23,27 +23,36 @@ interface AutomationSettingsProps {
   customRules?: boolean
 }
 
+/**
+ * Renders the Savings Automation settings card with configurable tabs and local UI state.
+ *
+ * Displays up to three tabs—Auto Transfer, Round Up, and Smart Rules—controlled by the boolean props.
+ * Uses client-side i18n readiness to show a centered loading spinner until translations are ready.
+ * All interactive controls update local component state; no network requests or external side effects are performed.
+ *
+ * @param autoTransfer - When true, shows the "Auto Transfer" tab (default: true).
+ * @param roundUpSavings - When true, shows the "Round Up" tab (default: true).
+ * @param ruleBasedSaving - When true, shows the "Smart Rules" tab (default: true).
+ * @param customRules - Accepted prop but not currently used to alter rendering (default: true).
+ * @returns The AutomationSettings React element.
+ */
 export function AutomationSettings({
   autoTransfer = true,
   roundUpSavings = true,
   ruleBasedSaving = true,
   customRules = true,
 }: AutomationSettingsProps) {
-  const { t, isReady } = useTranslation(['goals', 'common']);
+  const { t, ready } = useTranslation('goals');
   const [activeTab, setActiveTab] = useState<'transfers' | 'roundup' | 'rules'>('transfers');
   const [transferAmount, setTransferAmount] = useState('200');
   const [transferFrequency, setTransferFrequency] = useState('weekly');
 
-  if (!isReady) {
+  if (!ready) {
     return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-trust-blue mx-auto mb-4"></div>
-            <p className="text-neutral-gray">{t('common:status.loading', { defaultValue: 'Loading...' })}</p>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="text-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-trust-blue mx-auto mb-4"></div>
+        <p className="text-neutral-gray">Loading automation settings...</p>
+      </div>
     );
   }
 
@@ -82,10 +91,10 @@ export function AutomationSettings({
           </div>
           <div>
             <h3 className="text-lg font-semibold text-neutral-dark-gray">
-              {t('goals:automation.title', { defaultValue: 'Savings Automation' })}
+              {t('automation.title', { defaultValue: 'Savings Automation' })}
             </h3>
             <p className="text-sm text-neutral-gray">
-              {t('goals:automation.subtitle', { defaultValue: 'Set up automatic savings to reach your goals faster' })}
+              {t('automation.subtitle', { defaultValue: 'Set up automatic savings to reach your goals faster' })}
             </p>
           </div>
         </div>
@@ -95,7 +104,7 @@ export function AutomationSettings({
           {autoTransfer && (
             <TabButton
               tab="transfers"
-              label={t('goals:automation.tabs.autoTransfer', { defaultValue: 'Auto Transfer' })}
+              label={t('automation.tabs.autoTransfer', { defaultValue: 'Auto Transfer' })}
               icon={ArrowPathIcon}
               isActive={activeTab === 'transfers'}
               onClick={() => setActiveTab('transfers')}
@@ -104,7 +113,7 @@ export function AutomationSettings({
           {roundUpSavings && (
             <TabButton
               tab="roundup"
-              label={t('goals:automation.tabs.roundUp', { defaultValue: 'Round Up' })}
+              label={t('automation.tabs.roundUp', { defaultValue: 'Round Up' })}
               icon={BoltIcon}
               isActive={activeTab === 'roundup'}
               onClick={() => setActiveTab('roundup')}
@@ -113,7 +122,7 @@ export function AutomationSettings({
           {ruleBasedSaving && (
             <TabButton
               tab="rules"
-              label={t('goals:automation.tabs.smartRules', { defaultValue: 'Smart Rules' })}
+              label={t('automation.tabs.smartRules', { defaultValue: 'Smart Rules' })}
               icon={CogIcon}
               isActive={activeTab === 'rules'}
               onClick={() => setActiveTab('rules')}
@@ -128,31 +137,31 @@ export function AutomationSettings({
           <div className="space-y-6">
             <div>
               <h4 className="font-medium text-neutral-dark-gray mb-3">
-                {t('goals:automation.transfers.title', { defaultValue: 'Automatic Transfers' })}
+                {t('automation.transfers.title', { defaultValue: 'Automatic Transfers' })}
               </h4>
               <p className="text-sm text-neutral-gray mb-4">
-                {t('goals:automation.transfers.description', { defaultValue: 'Set up recurring transfers from your checking to savings account' })}
+                {t('automation.transfers.description', { defaultValue: 'Set up recurring transfers from your checking to savings account' })}
               </p>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-neutral-dark-gray mb-2">
-                    {t('goals:automation.transfers.frequency', { defaultValue: 'Frequency' })}
+                    {t('automation.transfers.frequency', { defaultValue: 'Frequency' })}
                   </label>
                   <select
                     value={transferFrequency}
                     onChange={(e) => setTransferFrequency(e.target.value)}
                     className="w-full px-3 py-2 border border-neutral-gray/30 rounded-lg focus:ring-2 focus:ring-primary-trust-blue focus:border-transparent"
                   >
-                    <option value="weekly">{t('goals:automation.transfers.frequencies.weekly', { defaultValue: 'Weekly' })}</option>
-                    <option value="biweekly">{t('goals:automation.transfers.frequencies.biweekly', { defaultValue: 'Bi-weekly' })}</option>
-                    <option value="monthly">{t('goals:automation.transfers.frequencies.monthly', { defaultValue: 'Monthly' })}</option>
+                    <option value="weekly">{t('automation.transfers.frequencies.weekly', { defaultValue: 'Weekly' })}</option>
+                    <option value="biweekly">{t('automation.transfers.frequencies.biweekly', { defaultValue: 'Bi-weekly' })}</option>
+                    <option value="monthly">{t('automation.transfers.frequencies.monthly', { defaultValue: 'Monthly' })}</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-neutral-dark-gray mb-2">
-                    {t('goals:automation.transfers.amount', { defaultValue: 'Transfer Amount' })}
+                    {t('automation.transfers.amount', { defaultValue: 'Transfer Amount' })}
                   </label>
                   <input
                     type="number"
@@ -167,14 +176,14 @@ export function AutomationSettings({
               </div>
 
               <Button className="mt-4 w-full">
-                {t('goals:automation.transfers.setup', { defaultValue: 'Set Up Auto Transfer' })}
+                {t('automation.transfers.setup', { defaultValue: 'Set Up Auto Transfer' })}
               </Button>
             </div>
 
             {/* Active Transfers */}
             <div>
               <h5 className="font-medium text-neutral-dark-gray mb-3">
-                {t('goals:automation.transfers.active', { defaultValue: 'Active Transfers' })}
+                {t('automation.transfers.active', { defaultValue: 'Active Transfers' })}
               </h5>
               <div className="bg-neutral-light-gray/50 rounded-lg p-4">
                 <div className="flex items-center justify-between">
@@ -185,12 +194,12 @@ export function AutomationSettings({
                         {transferFrequency} ${transferAmount}
                       </div>
                       <div className="text-sm text-neutral-gray">
-                        {t('goals:automation.transfers.nextTransfer', { defaultValue: 'Next transfer: Tomorrow' })}
+                        {t('automation.transfers.nextTransfer', { defaultValue: 'Next transfer: Tomorrow' })}
                       </div>
                     </div>
                   </div>
                   <Button variant="outline" size="sm">
-                    {t('goals:automation.transfers.edit', { defaultValue: 'Edit' })}
+                    {t('automation.transfers.edit', { defaultValue: 'Edit' })}
                   </Button>
                 </div>
               </div>
@@ -203,37 +212,37 @@ export function AutomationSettings({
           <div className="space-y-6">
             <div>
               <h4 className="font-medium text-neutral-dark-gray mb-3">
-                {t('goals:automation.roundUp.title', { defaultValue: 'Round Up Savings' })}
+                {t('automation.roundUp.title', { defaultValue: 'Round Up Savings' })}
               </h4>
               <p className="text-sm text-neutral-gray mb-4">
-                {t('goals:automation.roundUp.description', { defaultValue: 'Automatically round up your purchases and save the difference' })}
+                {t('automation.roundUp.description', { defaultValue: 'Automatically round up your purchases and save the difference' })}
               </p>
 
               <div className="bg-neutral-light-gray/50 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-3">
                   <div className="text-sm text-neutral-gray">
-                    {t('goals:automation.roundUp.example', { defaultValue: 'Example:' })}
+                    {t('automation.roundUp.example', { defaultValue: 'Example:' })}
                   </div>
                   <div className="text-sm text-neutral-gray">
-                    {t('goals:automation.roundUp.coffee', { defaultValue: 'Coffee: $4.67' })}
+                    {t('automation.roundUp.coffee', { defaultValue: 'Coffee: $4.67' })}
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="text-sm text-neutral-gray">
-                    {t('goals:automation.roundUp.rounded', { defaultValue: 'Rounded to:' })}
+                    {t('automation.roundUp.rounded', { defaultValue: 'Rounded to:' })}
                   </div>
                   <div className="text-sm text-neutral-gray">$5.00</div>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="text-sm text-neutral-gray">
-                    {t('goals:automation.roundUp.saved', { defaultValue: 'Saved:' })}
+                    {t('automation.roundUp.saved', { defaultValue: 'Saved:' })}
                   </div>
                   <div className="text-sm font-medium text-secondary-growth-green">$0.33</div>
                 </div>
               </div>
 
               <Button className="mt-4 w-full">
-                {t('goals:automation.roundUp.enable', { defaultValue: 'Enable Round Up' })}
+                {t('automation.roundUp.enable', { defaultValue: 'Enable Round Up' })}
               </Button>
             </div>
           </div>
@@ -244,47 +253,47 @@ export function AutomationSettings({
           <div className="space-y-6">
             <div>
               <h4 className="font-medium text-neutral-dark-gray mb-3">
-                {t('goals:automation.rules.title', { defaultValue: 'Smart Saving Rules' })}
+                {t('automation.rules.title', { defaultValue: 'Smart Saving Rules' })}
               </h4>
               <p className="text-sm text-neutral-gray mb-4">
-                {t('goals:automation.rules.description', { defaultValue: 'Create custom rules to save money automatically based on your spending patterns' })}
+                {t('automation.rules.description', { defaultValue: 'Create custom rules to save money automatically based on your spending patterns' })}
               </p>
 
               <div className="space-y-3">
                 <div className="bg-neutral-light-gray/50 rounded-lg p-4">
                   <div className="flex items-center justify-between mb-2">
                     <h6 className="font-medium text-neutral-dark-gray">
-                      {t('goals:automation.rules.rule1.title', { defaultValue: 'Spend Less, Save More' })}
+                      {t('automation.rules.rule1.title', { defaultValue: 'Spend Less, Save More' })}
                     </h6>
                     <div className="text-xs text-secondary-growth-green">
-                      {t('goals:automation.rules.active', { defaultValue: 'Active' })}
+                      {t('automation.rules.active', { defaultValue: 'Active' })}
                     </div>
                   </div>
                   <p className="text-sm text-neutral-gray mb-2">
-                    {t('goals:automation.rules.rule1.description', { defaultValue: 'When you spend less than your budget, automatically save 50% of the difference' })}
+                    {t('automation.rules.rule1.description', { defaultValue: 'When you spend less than your budget, automatically save 50% of the difference' })}
                   </p>
                   <div className="text-xs text-neutral-gray">
-                    {t('goals:automation.rules.savedThisMonth', { defaultValue: 'Saved this month: $45.20' })}
+                    {t('automation.rules.savedThisMonth', { defaultValue: 'Saved this month: $45.20' })}
                   </div>
                 </div>
 
                 <div className="bg-neutral-light-gray/50 rounded-lg p-4">
                   <div className="flex items-center justify-between mb-2">
                     <h6 className="font-medium text-neutral-dark-gray">
-                      {t('goals:automation.rules.rule2.title', { defaultValue: 'Payday Boost' })}
+                      {t('automation.rules.rule2.title', { defaultValue: 'Payday Boost' })}
                     </h6>
                     <div className="text-xs text-neutral-gray">
-                      {t('goals:automation.rules.inactive', { defaultValue: 'Inactive' })}
+                      {t('automation.rules.inactive', { defaultValue: 'Inactive' })}
                     </div>
                   </div>
                   <p className="text-sm text-neutral-gray mb-2">
-                    {t('goals:automation.rules.rule2.description', { defaultValue: 'Save $100 automatically on every payday' })}
+                    {t('automation.rules.rule2.description', { defaultValue: 'Save $100 automatically on every payday' })}
                   </p>
                 </div>
               </div>
 
               <Button className="mt-4 w-full">
-                {t('goals:automation.rules.createRule', { defaultValue: 'Create New Rule' })}
+                {t('automation.rules.createRule', { defaultValue: 'Create New Rule' })}
               </Button>
             </div>
           </div>

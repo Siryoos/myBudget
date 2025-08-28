@@ -1,103 +1,130 @@
-import i18n from 'i18next';
-import { useEffect, useState, useCallback } from 'react';
-import { useTranslation as useI18nextTranslation } from 'react-i18next';
+import { useCallback, useEffect, useState } from 'react';
+import { useTranslation as useI18nTranslation } from 'react-i18next';
 
-import { useI18n } from './i18n-provider';
-
-export function useTranslation(namespace?: string | string[]) {
-  const [isReady, setIsReady] = useState(false);
-  const [forceUpdate, setForceUpdate] = useState(0);
-  const translation = useI18nextTranslation(namespace);
-  const { locale, changeLanguage } = useI18n();
-
-  const checkReady = useCallback(() => {
-    const namespaces = Array.isArray(namespace) ? namespace : [namespace || 'common'];
-    const allLoaded = namespaces.every(ns => i18n.hasLoadedNamespace(ns));
-
-    console.log('🔍 useTranslation checkReady:', {
-      namespaces,
-      allLoaded,
-      isInitialized: i18n.isInitialized,
-      currentLanguage: i18n.language,
-    });
-
-    if (allLoaded || i18n.isInitialized) {
-      setIsReady(true);
-    }
-  }, [namespace]);
+/**
+ * React hook that wraps react-i18next's translation utilities and exposes a curated i18n API.
+ *
+ * Uses react-i18next's useTranslation(namespace) under the hood and returns a safe translate
+ * function plus helpers for language/resource management.
+ *
+ * @param namespace - Optional namespace to scope translations (passed to react-i18next's hook).
+ * @returns An object containing:
+ *  - `t`: safe translate function that returns the key on error,
+ *  - `i18n`: the underlying i18n instance,
+ *  - `ready`: boolean indicating whether translations are ready,
+ *  - `changeLanguage(language)`: async language switcher,
+ *  - `getCurrentLanguage()`: current language code,
+ *  - `getAvailableLanguages()`: available language codes,
+ *  - resource helpers: `hasResourceBundle`, `loadNamespaces`, `loadLanguages`, `reloadResources`,
+ *    `getDataByLanguage`, `hasLoadedNamespace`, `getResource`, `addResource`, `addResources`,
+ *    `addResourceBundle`, `removeResourceBundle`.
+ */
+export function useTranslation(namespace?: string) {
+  const { t, i18n, ready } = useI18nTranslation(namespace);
+  const [isReady, setIsReady] = useState(ready);
 
   useEffect(() => {
-    // Check immediately
-    checkReady();
+    setIsReady(ready);
+  }, [ready]);
 
-    // Listen for namespace loaded events
-    const handleLoaded = () => {
-      checkReady();
-      setForceUpdate(prev => prev + 1);
-    };
-
-    const handleLanguageChanged = () => {
-      checkReady();
-      setForceUpdate(prev => prev + 1);
-    };
-
-    i18n.on('loaded', handleLoaded);
-    i18n.on('languageChanged', handleLanguageChanged);
-
-    return () => {
-      i18n.off('loaded', handleLoaded);
-      i18n.off('languageChanged', handleLanguageChanged);
-    };
-  }, [checkReady, locale]);
-
-  // Force re-render when language changes
-  useEffect(() => {
-    setForceUpdate(prev => prev + 1);
-  }, [locale]);
-
-  const t: (key: string, options?: Record<string, any>) => string = (key, options) => {
-    // Always try to translate, even if not ready
+  const translate = useCallback((key: string, options?: Record<string, unknown>): string => {
     try {
-      if (translation.t && typeof translation.t === 'function') {
-        const result = (translation.t as unknown as (k: string, o?: any) => string)(key, options);
-        // If translation returns the key, it might not be loaded yet
-        if (result === key && !isReady) {
-          // Return loading placeholder or default value
-          return options?.defaultValue || options?.loadingPlaceholder || '...';
-        }
-        return result;
-      }
+      return t(key, options);
     } catch (error) {
-      console.warn('Translation error:', error);
+      console.error('Translation error:', error);
+      return key;
     }
+  }, [t]);
 
-    // Fallback to default value or key
-    return options?.defaultValue || key;
-  };
-
-  // Enhanced changeLanguage function that ensures all components are updated
-  const enhancedChangeLanguage = useCallback(async (newLocale: string) => {
+  const changeLanguage = useCallback(async (language: string) => {
     try {
-      console.log(`useTranslation: Initiating language change to ${newLocale}`);
-
-      // Use the provider's changeLanguage function
-      await changeLanguage(newLocale);
-
-      // Force a re-render of all components using this hook
-      setForceUpdate(prev => prev + 1);
-
-      console.log(`useTranslation: Language change to ${newLocale} completed`);
+      await i18n.changeLanguage(language);
     } catch (error) {
-      console.error('useTranslation: Failed to change language:', error);
-      throw error; // Re-throw for caller to handle
+      console.error('Language change error:', error);
     }
-  }, [changeLanguage]);
+  }, [i18n]);
+
+  const getCurrentLanguage = useCallback((): string => {
+    return i18n.language;
+  }, [i18n]);
+
+  const getAvailableLanguages = useCallback((): readonly string[] => {
+    return i18n.languages;
+  }, [i18n]);
+
+  const hasResourceBundle = useCallback((language: string, ns: string): boolean => {
+    return i18n.hasResourceBundle(language, ns);
+  }, [i18n]);
+
+  const loadNamespaces = useCallback(async (namespaces: string | string[]) => {
+    try {
+      await i18n.loadNamespaces(namespaces);
+    } catch (error) {
+      console.error('Namespace loading error:', error);
+    }
+  }, [i18n]);
+
+  const loadLanguages = useCallback(async (languages: string | string[]) => {
+    try {
+      await i18n.loadLanguages(languages);
+    } catch (error) {
+      console.error('Language loading error:', error);
+    }
+  }, [i18n]);
+
+  const reloadResources = useCallback(async (languages?: string | string[], namespaces?: string | string[]) => {
+    try {
+      await i18n.reloadResources(languages, namespaces);
+    } catch (error) {
+      console.error('Resource reload error:', error);
+    }
+  }, [i18n]);
+
+  const getDataByLanguage = useCallback((language: string) => {
+    return i18n.getDataByLanguage(language);
+  }, [i18n]);
+
+  const hasLoadedNamespace = useCallback((namespace: string): boolean => {
+    return i18n.hasLoadedNamespace(namespace);
+  }, [i18n]);
+
+  const getResource = useCallback((language: string, namespace: string, key: string, options?: Record<string, unknown>) => {
+    return i18n.getResource(language, namespace, key, options);
+  }, [i18n]);
+
+  const addResource = useCallback((language: string, namespace: string, key: string, value: string, options?: Record<string, unknown>) => {
+    i18n.addResource(language, namespace, key, value, options);
+  }, [i18n]);
+
+  const addResources = useCallback((language: string, namespace: string, resources: Record<string, string>) => {
+    i18n.addResources(language, namespace, resources);
+  }, [i18n]);
+
+  const addResourceBundle = useCallback((language: string, namespace: string, resources: Record<string, unknown>, deep?: boolean, overwrite?: boolean) => {
+    i18n.addResourceBundle(language, namespace, resources, deep, overwrite);
+  }, [i18n]);
+
+  const removeResourceBundle = useCallback((language: string, namespace: string) => {
+    i18n.removeResourceBundle(language, namespace);
+  }, [i18n]);
 
   return {
-    ...translation,
-    isReady,
-    t,
-    changeLanguage: enhancedChangeLanguage,
-    forceUpdate,
+    t: translate,
+    i18n,
+    ready: isReady,
+    changeLanguage,
+    getCurrentLanguage,
+    getAvailableLanguages,
+    hasResourceBundle,
+    loadNamespaces,
+    loadLanguages,
+    reloadResources,
+    getDataByLanguage,
+    hasLoadedNamespace,
+    getResource,
+    addResource,
+    addResources,
+    addResourceBundle,
+    removeResourceBundle,
   };
 }

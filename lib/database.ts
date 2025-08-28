@@ -1,6 +1,7 @@
 import * as dotenv from 'dotenv';
 import type { PoolClient, QueryResult, QueryResultRow } from 'pg';
 import { Pool } from 'pg';
+import type { TypedQueryResult } from './database/types';
 
 dotenv.config();
 
@@ -53,6 +54,55 @@ pool.on('error', (err) => {
 export const getClient = (): Promise<PoolClient> => pool.connect();
 export const getPool = (): Pool => pool;
 export const query = <T extends QueryResultRow = any>(text: string, params?: unknown[]): Promise<QueryResult<T>> => pool.query<T>(text, params);
+
+/**
+ * Executes a SQL query and returns only rows that pass a runtime type guard.
+ *
+ * Runs the given `queryText` with `params`, applies `typeGuard` to each returned row,
+ * and returns a TypedQueryResult containing the validated rows plus reconstructed field metadata.
+ * Rows that do not satisfy the guard are omitted; when any are filtered out a warning is emitted.
+ *
+ * @param queryText - SQL query text to execute.
+ * @param params - Parameters for the query.
+ * @param typeGuard - Runtime predicate that validates whether a row is of type `T`.
+ * @returns A Promise resolving to a TypedQueryResult whose `rows` are the subset that passed `typeGuard`.
+ * @throws Rethrows any error thrown by the underlying query execution.
+ */
+export async function executeTypedQuery<T>(
+  queryText: string,
+  params: unknown[],
+  typeGuard: (obj: unknown) => obj is T,
+): Promise<TypedQueryResult<T>> {
+  try {
+    const result = await pool.query(queryText, params);
+    
+    // Validate each row with the type guard
+    const validatedRows = result.rows.filter(typeGuard);
+    
+    if (validatedRows.length !== result.rows.length) {
+      console.warn(`Type validation failed for ${result.rows.length - validatedRows.length} rows`);
+    }
+    
+    return {
+      rows: validatedRows,
+      rowCount: validatedRows.length,
+      command: result.command,
+      oid: result.oid || 0,
+      fields: result.fields.map(field => ({
+        name: field.name,
+        tableID: field.tableID,
+        columnID: field.columnID,
+        dataTypeID: field.dataTypeID,
+        dataTypeSize: field.dataTypeSize,
+        dataTypeModifier: field.dataTypeModifier,
+        format: field.format,
+      })),
+    };
+  } catch (error) {
+    console.error('Type-safe query execution failed:', error);
+    throw error;
+  }
+}
 
 /**
  * Executes a function within a database transaction

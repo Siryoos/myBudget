@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 
-import { useGoals, useAnalytics } from '@/lib/api-hooks';
+import { useGoals, useMutation, useAuth } from '@/contexts/AppProvider';
+import { GoalsService } from '@/lib/services/goals-service';
 import { useTranslation } from '@/lib/useTranslation';
 import type { SavingsGoal, Achievement, QuickSaveData } from '@/types';
 
@@ -18,15 +19,54 @@ interface BehavioralDashboardProps {
   enableNotifications?: boolean
 }
 
+/**
+ * Renders the Smart Savings multi-tab dashboard (Goals, Quick Save, Achievements, Insights).
+ *
+ * The component coordinates goal creation and contributions via server mutations, shows recent
+ * quick-saves and transient achievement notifications, and exposes a goal creation wizard.
+ * It also handles loading state while translations or goal-related mutations are in progress.
+ *
+ * @param showAllFeatures - When true (default), enables UI elements gated behind feature flags.
+ * @param enableAbtesting - When true (default), enables experimental anchoring behavior in Quick Save.
+ * @param showSocialProof - When true (default), surfaces peer comparison and social proof in widgets.
+ * @param enableNotifications - When true (default), displays transient achievement notifications.
+ * @returns The dashboard React element.
+ */
 export function BehavioralDashboard({
   showAllFeatures = true,
   enableAbtesting = true,
   showSocialProof = true,
   enableNotifications = true,
 }: BehavioralDashboardProps) {
-  const { t, isReady } = useTranslation(['goals', 'dashboard', 'common']);
-  const { goals, loading: goalsLoading, createGoal, addContribution } = useGoals();
-  const { analytics } = useAnalytics();
+  const { t, ready } = useTranslation('goals');
+  const { user } = useAuth();
+  const { goals, loading: goalsLoading, refreshGoals } = useGoals();
+
+  // Mutations for goal operations
+  const createGoalState = useMutation(
+    async (goalData: any) => {
+      if (!user?.id) throw new Error('User not authenticated');
+      const goalsService = new GoalsService();
+      return await goalsService.create(user.id, goalData);
+    },
+    {
+      onSuccess: () => {
+        refreshGoals();
+      },
+    }
+  );
+
+  const addContributionState = useMutation(
+    async ({ goalId, amount }: { goalId: string; amount: number }) => {
+      const goalsService = new GoalsService();
+      return await goalsService.contribute(goalId, amount);
+    },
+    {
+      onSuccess: () => {
+        refreshGoals();
+      },
+    }
+  );
   const [quickSaveHistory, setQuickSaveHistory] = useState<QuickSaveData[]>([]);
   const [activeTab, setActiveTab] = useState<'goals' | 'quick-save' | 'achievements' | 'insights'>('goals');
   const [showGoalWizard, setShowGoalWizard] = useState(false);
@@ -49,7 +89,7 @@ export function BehavioralDashboard({
     }
   }, [analytics]);
 
-  if (!isReady || goalsLoading) {
+  if (!ready || goalsLoading || createGoalState.loading || addContributionState.loading) {
     return (
       <div className="flex items-center justify-center min-h-64">
         <div className="text-center">
@@ -63,7 +103,7 @@ export function BehavioralDashboard({
   // Handle goal creation
   const handleGoalCreated = async (newGoal: Partial<SavingsGoal>) => {
     try {
-      await createGoal(newGoal);
+      await createGoalState.mutate(newGoal);
       setShowGoalWizard(false);
 
       // Show achievement notification
@@ -93,7 +133,7 @@ export function BehavioralDashboard({
     try {
       // Add contribution to the goal if goalId is provided
       if (saveData.goalId) {
-        await addContribution(saveData.goalId, saveData.amount);
+        await addContributionState.mutate({ goalId: saveData.goalId, amount: saveData.amount });
       }
 
       // Update local history
@@ -152,13 +192,13 @@ export function BehavioralDashboard({
       {/* Header */}
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-neutral-charcoal">
-          {t('goals:dashboard.title', { defaultValue: 'Smart Savings Dashboard' })}
+          {t('dashboard.title', { defaultValue: 'Smart Savings Dashboard' })}
         </h2>
         <button
           onClick={() => setShowGoalWizard(true)}
           className="px-4 py-2 bg-primary-trust-blue text-white rounded-lg hover:bg-primary-trust-blue/90 transition-colors"
         >
-          {t('goals:actions.createGoal', { defaultValue: 'Create Goal' })}
+          {t('actions.createGoal', { defaultValue: 'Create Goal' })}
         </button>
       </div>
 
@@ -187,7 +227,7 @@ export function BehavioralDashboard({
                   : 'border-transparent text-neutral-gray hover:text-neutral-charcoal'
               }`}
             >
-              {t(`goals:tabs.${tab}`, { defaultValue: tab.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') })}
+              {t(`tabs.${tab}`, { defaultValue: tab.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') })}
             </button>
           ))}
         </nav>
@@ -209,7 +249,7 @@ export function BehavioralDashboard({
 
                 <div className="mb-4">
                   <div className="flex justify-between text-sm mb-2">
-                    <span className="text-neutral-gray">{t('goals:progress', { defaultValue: 'Progress' })}</span>
+                    <span className="text-neutral-gray">{t('progress', { defaultValue: 'Progress' })}</span>
                     <span className="font-medium text-neutral-charcoal">
                       {Math.round((goal.currentAmount / goal.targetAmount) * 100)}%
                     </span>

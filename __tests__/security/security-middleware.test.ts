@@ -23,6 +23,7 @@ jest.mock('../../lib/redis', () => ({
 
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
+import { securityMiddleware } from '../../middleware/security';
 
 // Instead of importing the problematic middleware, let's test the core security functions
 describe('Security Middleware Core Logic', () => {
@@ -54,7 +55,7 @@ describe('Security Middleware Core Logic', () => {
     it('should detect oversized requests', () => {
       const validateRequestSize = (contentLength: string | null): boolean => {
         if (!contentLength) {return true;}
-        const size = parseInt(contentLength);
+        const size = parseInt(contentLength, 10);
         if (isNaN(size)) {return false;}
         return size <= 10 * 1024 * 1024; // 10MB limit
       };
@@ -69,7 +70,7 @@ describe('Security Middleware Core Logic', () => {
     it('should handle edge cases in size validation', () => {
       const validateRequestSize = (contentLength: string | null): boolean => {
         if (!contentLength) {return true;}
-        const size = parseInt(contentLength);
+        const size = parseInt(contentLength, 10);
         if (isNaN(size)) {return false;}
         return size <= 10 * 1024 * 1024;
       };

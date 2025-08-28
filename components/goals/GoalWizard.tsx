@@ -47,13 +47,29 @@ interface GoalWizardProps {
   onGoalCreated?: (goal: Partial<SavingsGoal>) => void
 }
 
+/**
+ * A two-step modal wizard UI for creating savings goals.
+ *
+ * Step 1 lets the user pick a goal template; step 2 allows customizing framing (achievement vs loss-avoidance),
+ * uploading an optional photo (client-side validated: JPEG/PNG/WebP, ≤5MB), and entering goal details (name, amount, date, priority, description).
+ * On submit a Partial<SavingsGoal> is constructed (converting amount to number and date to Date), passed to `onGoalCreated` if provided,
+ * and the wizard resets.
+ *
+ * The component is localized via the 'goals' translation namespace and shows a loading card until translations are ready.
+ *
+ * Props:
+ * - templates: optional list of template names to show (defaults to common goal types).
+ * - visualGoalSetting: enable visual framing UI.
+ * - milestoneBreakdown: enable milestone features in the UI (when present).
+ * - onGoalCreated: callback invoked with the created Partial<SavingsGoal> after a successful submit.
+ */
 export function GoalWizard({
   templates = ['Emergency Fund', 'Vacation', 'Home Down Payment', 'Car Purchase', 'Wedding', 'Education', 'Retirement', 'Custom'],
   visualGoalSetting = true,
   milestoneBreakdown = true,
   onGoalCreated,
 }: GoalWizardProps) {
-  const { t, isReady } = useTranslation(['goals', 'common']);
+  const { t, ready } = useTranslation('goals');
   const { formatCurrency } = useCurrency();
   const [showWizard, setShowWizard] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
@@ -71,7 +87,7 @@ export function GoalWizard({
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  if (!isReady) {
+  if (!ready) {
     return (
       <Card>
         <CardContent className="p-6">
@@ -87,131 +103,131 @@ export function GoalWizard({
   const goalTemplates: GoalTemplate[] = [
     {
       id: 'emergency',
-      name: t('goals:templates.emergency.name', { defaultValue: 'Emergency Fund' }),
+      name: t('templates.emergency.name', { defaultValue: 'Emergency Fund' }),
       icon: BanknotesIcon,
       suggestedAmount: 10000,
       suggestedTimeframe: 12,
-      description: t('goals:templates.emergency.description', { defaultValue: 'Build a safety net for unexpected expenses' }),
+      description: t('templates.emergency.description', { defaultValue: 'Build a safety net for unexpected expenses' }),
       tips: [
-        t('goals:templates.emergency.tips.amount', { defaultValue: 'Aim for 3-6 months of expenses' }),
-        t('goals:templates.emergency.tips.account', { defaultValue: 'Keep in high-yield savings' }),
-        t('goals:templates.emergency.tips.automate', { defaultValue: 'Automate contributions' }),
+        t('templates.emergency.tips.amount', { defaultValue: 'Aim for 3-6 months of expenses' }),
+        t('templates.emergency.tips.account', { defaultValue: 'Keep in high-yield savings' }),
+        t('templates.emergency.tips.automate', { defaultValue: 'Automate contributions' }),
       ],
-      lossAvoidanceFrame: t('goals:templates.emergency.lossAvoidance', { defaultValue: 'Avoid financial crisis and high-interest debt from unexpected expenses' }),
-      achievementFrame: t('goals:templates.emergency.achievement', { defaultValue: 'Build financial security and peace of mind' }),
-      riskAwareness: t('goals:templates.emergency.risk', { defaultValue: '6 in 10 people face unexpected expenses yearly that could lead to debt' }),
+      lossAvoidanceFrame: t('templates.emergency.lossAvoidance', { defaultValue: 'Avoid financial crisis and high-interest debt from unexpected expenses' }),
+      achievementFrame: t('templates.emergency.achievement', { defaultValue: 'Build financial security and peace of mind' }),
+      riskAwareness: t('templates.emergency.risk', { defaultValue: '6 in 10 people face unexpected expenses yearly that could lead to debt' }),
     },
     {
       id: 'vacation',
-      name: t('goals:templates.vacation.name', { defaultValue: 'Dream Vacation' }),
+      name: t('templates.vacation.name', { defaultValue: 'Dream Vacation' }),
       icon: SparklesIcon,
       suggestedAmount: 3000,
       suggestedTimeframe: 8,
-      description: t('goals:templates.vacation.description', { defaultValue: 'Save for your perfect getaway' }),
+      description: t('templates.vacation.description', { defaultValue: 'Save for your perfect getaway' }),
       tips: [
-        t('goals:templates.vacation.tips.research', { defaultValue: 'Research costs early' }),
-        t('goals:templates.vacation.tips.booking', { defaultValue: 'Book in advance for deals' }),
-        t('goals:templates.vacation.tips.offseason', { defaultValue: 'Consider off-season travel' }),
+        t('templates.vacation.tips.research', { defaultValue: 'Research costs early' }),
+        t('templates.vacation.tips.booking', { defaultValue: 'Book in advance for deals' }),
+        t('templates.vacation.tips.offseason', { defaultValue: 'Consider off-season travel' }),
       ],
-      lossAvoidanceFrame: t('goals:templates.vacation.lossAvoidance', { defaultValue: 'Avoid vacation debt and high-interest credit card charges' }),
-      achievementFrame: t('goals:templates.vacation.achievement', { defaultValue: 'Create unforgettable memories without financial stress' }),
-      riskAwareness: t('goals:templates.vacation.risk', { defaultValue: 'Vacation debt takes 8 months on average to pay off' }),
+      lossAvoidanceFrame: t('templates.vacation.lossAvoidance', { defaultValue: 'Avoid vacation debt and high-interest credit card charges' }),
+      achievementFrame: t('templates.vacation.achievement', { defaultValue: 'Create unforgettable memories without financial stress' }),
+      riskAwareness: t('templates.vacation.risk', { defaultValue: 'Vacation debt takes 8 months on average to pay off' }),
     },
     {
       id: 'home',
-      name: t('goals:templates.home.name', { defaultValue: 'Home Down Payment' }),
+      name: t('templates.home.name', { defaultValue: 'Home Down Payment' }),
       icon: HomeIcon,
       suggestedAmount: 50000,
       suggestedTimeframe: 36,
-      description: t('goals:templates.home.description', { defaultValue: 'Save for your dream home' }),
+      description: t('templates.home.description', { defaultValue: 'Save for your dream home' }),
       tips: [
-        t('goals:templates.home.tips.downpayment', { defaultValue: 'Aim for 20% down payment' }),
-        t('goals:templates.home.tips.closing', { defaultValue: 'Factor in closing costs' }),
-        t('goals:templates.home.tips.programs', { defaultValue: 'Consider first-time buyer programs' }),
+        t('templates.home.tips.downpayment', { defaultValue: 'Aim for 20% down payment' }),
+        t('templates.home.tips.closing', { defaultValue: 'Factor in closing costs' }),
+        t('templates.home.tips.programs', { defaultValue: 'Consider first-time buyer programs' }),
       ],
-      lossAvoidanceFrame: t('goals:templates.home.lossAvoidance', { defaultValue: 'Avoid PMI and higher monthly mortgage payments' }),
-      achievementFrame: t('goals:templates.home.achievement', { defaultValue: 'Build equity and reduce long-term housing costs' }),
-      riskAwareness: t('goals:templates.home.risk', { defaultValue: 'PMI adds $100-200 monthly until 20% equity is reached' }),
+      lossAvoidanceFrame: t('templates.home.lossAvoidance', { defaultValue: 'Avoid PMI and higher monthly mortgage payments' }),
+      achievementFrame: t('templates.home.achievement', { defaultValue: 'Build equity and reduce long-term housing costs' }),
+      riskAwareness: t('templates.home.risk', { defaultValue: 'PMI adds $100-200 monthly until 20% equity is reached' }),
     },
     {
       id: 'car',
-      name: t('goals:templates.car.name', { defaultValue: 'Car Purchase' }),
+      name: t('templates.car.name', { defaultValue: 'Car Purchase' }),
       icon: TruckIcon,
       suggestedAmount: 25000,
       suggestedTimeframe: 18,
-      description: t('goals:templates.car.description', { defaultValue: 'Buy your next vehicle with cash' }),
+      description: t('templates.car.description', { defaultValue: 'Buy your next vehicle with cash' }),
       tips: [
-        t('goals:templates.car.tips.depreciation', { defaultValue: 'Research depreciation rates' }),
-        t('goals:templates.car.tips.certified', { defaultValue: 'Consider certified pre-owned' }),
-        t('goals:templates.car.tips.insurance', { defaultValue: 'Factor in insurance costs' }),
+        t('templates.car.tips.depreciation', { defaultValue: 'Research depreciation rates' }),
+        t('templates.car.tips.certified', { defaultValue: 'Consider certified pre-owned' }),
+        t('templates.car.tips.insurance', { defaultValue: 'Factor in insurance costs' }),
       ],
-      lossAvoidanceFrame: t('goals:templates.car.lossAvoidance', { defaultValue: 'Avoid auto loan interest and negative equity' }),
-      achievementFrame: t('goals:templates.car.achievement', { defaultValue: 'Own your vehicle outright and reduce monthly expenses' }),
-      riskAwareness: t('goals:templates.car.risk', { defaultValue: 'Auto loans average 5-7% interest, adding thousands to total cost' }),
+      lossAvoidanceFrame: t('templates.car.lossAvoidance', { defaultValue: 'Avoid auto loan interest and negative equity' }),
+      achievementFrame: t('templates.car.achievement', { defaultValue: 'Own your vehicle outright and reduce monthly expenses' }),
+      riskAwareness: t('templates.car.risk', { defaultValue: 'Auto loans average 5-7% interest, adding thousands to total cost' }),
     },
     {
       id: 'wedding',
-      name: t('goals:templates.wedding.name', { defaultValue: 'Wedding' }),
+      name: t('templates.wedding.name', { defaultValue: 'Wedding' }),
       icon: HeartIcon,
       suggestedAmount: 15000,
       suggestedTimeframe: 24,
-      description: t('goals:templates.wedding.description', { defaultValue: 'Your special day without financial stress' }),
+      description: t('templates.wedding.description', { defaultValue: 'Your special day without financial stress' }),
       tips: [
-        t('goals:templates.wedding.tips.prioritize', { defaultValue: 'Prioritize what matters most' }),
-        t('goals:templates.wedding.tips.negotiate', { defaultValue: 'Negotiate with vendors' }),
-        t('goals:templates.wedding.tips.alternatives', { defaultValue: 'Consider cost-effective alternatives' }),
+        t('templates.wedding.tips.prioritize', { defaultValue: 'Prioritize what matters most' }),
+        t('templates.wedding.tips.negotiate', { defaultValue: 'Negotiate with vendors' }),
+        t('templates.wedding.tips.alternatives', { defaultValue: 'Consider cost-effective alternatives' }),
       ],
-      lossAvoidanceFrame: t('goals:templates.wedding.lossAvoidance', { defaultValue: 'Avoid starting marriage with wedding debt and stress' }),
-      achievementFrame: t('goals:templates.wedding.achievement', { defaultValue: 'Celebrate your love with financial freedom' }),
-      riskAwareness: t('goals:templates.wedding.risk', { defaultValue: 'Wedding debt can take 2-3 years to pay off' }),
+      lossAvoidanceFrame: t('templates.wedding.lossAvoidance', { defaultValue: 'Avoid starting marriage with wedding debt and stress' }),
+      achievementFrame: t('templates.wedding.achievement', { defaultValue: 'Celebrate your love with financial freedom' }),
+      riskAwareness: t('templates.wedding.risk', { defaultValue: 'Wedding debt can take 2-3 years to pay off' }),
     },
     {
       id: 'education',
-      name: t('goals:templates.education.name', { defaultValue: 'Education' }),
+      name: t('templates.education.name', { defaultValue: 'Education' }),
       icon: AcademicCapIcon,
       suggestedAmount: 25000,
       suggestedTimeframe: 48,
-      description: t('goals:templates.education.description', { defaultValue: 'Invest in your future through learning' }),
+      description: t('templates.education.description', { defaultValue: 'Invest in your future through learning' }),
       tips: [
-        t('goals:templates.education.tips.scholarships', { defaultValue: 'Apply for scholarships and grants' }),
-        t('goals:templates.education.tips.community', { defaultValue: 'Consider community college first' }),
-        t('goals:templates.education.tips.workstudy', { defaultValue: 'Look into work-study programs' }),
+        t('templates.education.tips.scholarships', { defaultValue: 'Apply for scholarships and grants' }),
+        t('templates.education.tips.community', { defaultValue: 'Consider community college first' }),
+        t('templates.education.tips.workstudy', { defaultValue: 'Look into work-study programs' }),
       ],
-      lossAvoidanceFrame: t('goals:templates.education.lossAvoidance', { defaultValue: 'Avoid student loan debt and interest accumulation' }),
-      achievementFrame: t('goals:templates.education.achievement', { defaultValue: 'Invest in skills that increase earning potential' }),
-      riskAwareness: t('goals:templates.education.risk', { defaultValue: 'Student loan interest can double the total cost over time' }),
+      lossAvoidanceFrame: t('templates.education.lossAvoidance', { defaultValue: 'Avoid student loan debt and interest accumulation' }),
+      achievementFrame: t('templates.education.achievement', { defaultValue: 'Invest in skills that increase earning potential' }),
+      riskAwareness: t('templates.education.risk', { defaultValue: 'Student loan interest can double the total cost over time' }),
     },
     {
       id: 'retirement',
-      name: t('goals:templates.retirement.name', { defaultValue: 'Retirement' }),
+      name: t('templates.retirement.name', { defaultValue: 'Retirement' }),
       icon: BeakerIcon,
       suggestedAmount: 1000000,
       suggestedTimeframe: 360,
-      description: t('goals:templates.retirement.description', { defaultValue: 'Secure your golden years' }),
+      description: t('templates.retirement.description', { defaultValue: 'Secure your golden years' }),
       tips: [
-        t('goals:templates.retirement.tips.start', { defaultValue: 'Start early, compound interest is powerful' }),
-        t('goals:templates.retirement.tips.employer', { defaultValue: 'Maximize employer matching' }),
-        t('goals:templates.retirement.tips.diversify', { defaultValue: 'Diversify your investments' }),
+        t('templates.retirement.tips.start', { defaultValue: 'Start early, compound interest is powerful' }),
+        t('templates.retirement.tips.employer', { defaultValue: 'Maximize employer matching' }),
+        t('templates.retirement.tips.diversify', { defaultValue: 'Diversify your investments' }),
       ],
-      lossAvoidanceFrame: t('goals:templates.retirement.lossAvoidance', { defaultValue: 'Avoid working longer than desired or reducing lifestyle in retirement' }),
-      achievementFrame: t('goals:templates.retirement.achievement', { defaultValue: 'Build wealth and financial independence for your future' }),
-      riskAwareness: t('goals:templates.retirement.risk', { defaultValue: 'Starting 10 years late can require 3x the monthly savings' }),
+      lossAvoidanceFrame: t('templates.retirement.lossAvoidance', { defaultValue: 'Avoid working longer than desired or reducing lifestyle in retirement' }),
+      achievementFrame: t('templates.retirement.achievement', { defaultValue: 'Build wealth and financial independence for your future' }),
+      riskAwareness: t('templates.retirement.risk', { defaultValue: 'Starting 10 years late can require 3x the monthly savings' }),
     },
     {
       id: 'custom',
-      name: t('goals:templates.custom.name', { defaultValue: 'Custom Goal' }),
+      name: t('templates.custom.name', { defaultValue: 'Custom Goal' }),
       icon: PlusIcon,
       suggestedAmount: 5000,
       suggestedTimeframe: 12,
-      description: t('goals:templates.custom.description', { defaultValue: 'Create your own personalized goal' }),
+      description: t('templates.custom.description', { defaultValue: 'Create your own personalized goal' }),
       tips: [
-        t('goals:templates.custom.tips.specific', { defaultValue: 'Be specific about what you want' }),
-        t('goals:templates.custom.tips.realistic', { defaultValue: 'Set realistic timelines' }),
-        t('goals:templates.custom.tips.flexible', { defaultValue: 'Stay flexible and adjust as needed' }),
+        t('templates.custom.tips.specific', { defaultValue: 'Be specific about what you want' }),
+        t('templates.custom.tips.realistic', { defaultValue: 'Set realistic timelines' }),
+        t('templates.custom.tips.flexible', { defaultValue: 'Stay flexible and adjust as needed' }),
       ],
-      lossAvoidanceFrame: t('goals:templates.custom.lossAvoidance', { defaultValue: 'Avoid the cost of not planning and missing opportunities' }),
-      achievementFrame: t('goals:templates.custom.achievement', { defaultValue: 'Achieve your personal dreams and aspirations' }),
-      riskAwareness: t('goals:templates.custom.risk', { defaultValue: 'Goals without planning are 3x less likely to be achieved' }),
+      lossAvoidanceFrame: t('templates.custom.lossAvoidance', { defaultValue: 'Avoid the cost of not planning and missing opportunities' }),
+      achievementFrame: t('templates.custom.achievement', { defaultValue: 'Achieve your personal dreams and aspirations' }),
+      riskAwareness: t('templates.custom.risk', { defaultValue: 'Goals without planning are 3x less likely to be achieved' }),
     },
   ];
 
@@ -320,7 +336,7 @@ export function GoalWizard({
         size="lg"
       >
         <PlusIcon className="w-5 h-5 mr-2" />
-        {t('goals:actions.createGoal', { defaultValue: 'Create New Goal' })}
+        {t('actions.createGoal', { defaultValue: 'Create New Goal' })}
       </Button>
 
       <AnimatePresence>
@@ -343,8 +359,8 @@ export function GoalWizard({
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-2xl font-bold text-gray-900">
                     {currentStep === 1
-                      ? t('goals:wizard.step1.title', { defaultValue: 'Choose Your Goal' })
-                      : t('goals:wizard.step2.title', { defaultValue: 'Customize Your Goal' })
+                      ? t('wizard.step1.title', { defaultValue: 'Choose Your Goal' })
+                      : t('wizard.step2.title', { defaultValue: 'Customize Your Goal' })
                     }
                   </h2>
                   <button
@@ -395,7 +411,7 @@ export function GoalWizard({
                     {/* Framing Type Selection */}
                     <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg">
                       <h3 className="font-semibold text-gray-900 mb-3">
-                        {t('goals:wizard.framing.title', { defaultValue: 'How do you want to think about this goal?' })}
+                        {t('wizard.framing.title', { defaultValue: 'How do you want to think about this goal?' })}
                       </h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div
@@ -409,7 +425,7 @@ export function GoalWizard({
                           <div className="flex items-center space-x-2 mb-2">
                             <SparklesIcon className="w-5 h-5 text-green-600" />
                             <span className="font-medium text-gray-900">
-                              {t('goals:wizard.framing.achievement', { defaultValue: 'Achievement Focus' })}
+                              {t('wizard.framing.achievement', { defaultValue: 'Achievement Focus' })}
                             </span>
                           </div>
                           <p className="text-sm text-gray-600">{selectedTemplate.achievementFrame}</p>
@@ -426,7 +442,7 @@ export function GoalWizard({
                           <div className="flex items-center space-x-2 mb-2">
                             <ExclamationTriangleIcon className="w-5 h-5 text-red-600" />
                             <span className="font-medium text-gray-900">
-                              {t('goals:wizard.framing.lossAvoidance', { defaultValue: 'Avoid Loss' })}
+                              {t('wizard.framing.lossAvoidance', { defaultValue: 'Avoid Loss' })}
                             </span>
                           </div>
                           <p className="text-sm text-gray-600">{selectedTemplate.lossAvoidanceFrame}</p>
@@ -438,7 +454,7 @@ export function GoalWizard({
                         <div className="flex items-center space-x-2">
                           <ExclamationTriangleIcon className="w-4 h-4 text-red-600" />
                           <span className="text-sm font-medium text-red-800">
-                            {t('goals:wizard.riskAwareness.title', { defaultValue: 'Did you know?' })}
+                            {t('wizard.riskAwareness.title', { defaultValue: 'Did you know?' })}
                           </span>
                         </div>
                         <p className="text-sm text-red-700 mt-1">{selectedTemplate.riskAwareness}</p>
@@ -448,10 +464,10 @@ export function GoalWizard({
                     {/* Photo Upload */}
                     <div className="space-y-4">
                       <h3 className="font-semibold text-gray-900">
-                        {t('goals:wizard.photo.title', { defaultValue: 'Add a Personal Touch (Optional)' })}
+                        {t('wizard.photo.title', { defaultValue: 'Add a Personal Touch (Optional)' })}
                       </h3>
                       <p className="text-sm text-gray-600">
-                        {t('goals:wizard.photo.description', { defaultValue: 'Upload a photo that represents your goal. This creates an emotional connection and can help motivate you.' })}
+                        {t('wizard.photo.description', { defaultValue: 'Upload a photo that represents your goal. This creates an emotional connection and can help motivate you.' })}
                       </p>
 
                       <div className="flex items-center space-x-4">
@@ -471,8 +487,8 @@ export function GoalWizard({
                           >
                             <PhotoIcon className="w-4 h-4 mr-2" />
                             {isUploading
-                              ? t('goals:wizard.photo.uploading', { defaultValue: 'Uploading...' })
-                              : t('goals:wizard.photo.select', { defaultValue: 'Select Photo' })
+                              ? t('wizard.photo.uploading', { defaultValue: 'Uploading...' })
+                              : t('wizard.photo.select', { defaultValue: 'Select Photo' })
                             }
                           </Button>
                         ) : (
@@ -490,7 +506,7 @@ export function GoalWizard({
                               size="sm"
                             >
                               <XMarkIcon className="w-4 h-4 mr-2" />
-                              {t('goals:wizard.photo.remove', { defaultValue: 'Remove' })}
+                              {t('wizard.photo.remove', { defaultValue: 'Remove' })}
                             </Button>
                           </div>
                         )}
@@ -500,13 +516,13 @@ export function GoalWizard({
                     {/* Goal Details Form */}
                     <div className="space-y-4">
                       <h3 className="font-semibold text-gray-900">
-                        {t('goals:wizard.details.title', { defaultValue: 'Goal Details' })}
+                        {t('wizard.details.title', { defaultValue: 'Goal Details' })}
                       </h3>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
-                            {t('goals:wizard.details.name', { defaultValue: 'Goal Name' })}
+                            {t('wizard.details.name', { defaultValue: 'Goal Name' })}
                           </label>
                           <input
                             type="text"
@@ -518,7 +534,7 @@ export function GoalWizard({
 
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
-                            {t('goals:wizard.details.amount', { defaultValue: 'Target Amount' })}
+                            {t('wizard.details.amount', { defaultValue: 'Target Amount' })}
                           </label>
                           <input
                             type="number"
@@ -530,7 +546,7 @@ export function GoalWizard({
 
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
-                            {t('goals:wizard.details.date', { defaultValue: 'Target Date' })}
+                            {t('wizard.details.date', { defaultValue: 'Target Date' })}
                           </label>
                           <input
                             type="date"
@@ -542,23 +558,23 @@ export function GoalWizard({
 
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
-                            {t('goals:wizard.details.priority', { defaultValue: 'Priority' })}
+                            {t('wizard.details.priority', { defaultValue: 'Priority' })}
                           </label>
                           <select
                             value={goalData.priority}
                             onChange={(e) => setGoalData(prev => ({ ...prev, priority: e.target.value as 'low' | 'medium' | 'high' }))}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-trust-blue"
                           >
-                            <option value="low">{t('goals:wizard.details.priority.low', { defaultValue: 'Low' })}</option>
-                            <option value="medium">{t('goals:wizard.details.priority.medium', { defaultValue: 'Medium' })}</option>
-                            <option value="high">{t('goals:wizard.details.priority.high', { defaultValue: 'High' })}</option>
+                            <option value="low">{t('wizard.details.priority.low', { defaultValue: 'Low' })}</option>
+                            <option value="medium">{t('wizard.details.priority.medium', { defaultValue: 'Medium' })}</option>
+                            <option value="high">{t('wizard.details.priority.high', { defaultValue: 'High' })}</option>
                           </select>
                         </div>
                       </div>
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          {t('goals:wizard.details.description', { defaultValue: 'Description' })}
+                          {t('wizard.details.description', { defaultValue: 'Description' })}
                         </label>
                         <textarea
                           value={goalData.description}
@@ -575,14 +591,14 @@ export function GoalWizard({
                         onClick={() => setCurrentStep(1)}
                         variant="outline"
                       >
-                        {t('goals:wizard.actions.back', { defaultValue: 'Back' })}
+                        {t('wizard.actions.back', { defaultValue: 'Back' })}
                       </Button>
 
                       <Button
                         onClick={handleSubmit}
                         disabled={!goalData.name || !goalData.targetAmount || !goalData.targetDate}
                       >
-                        {t('goals:wizard.actions.create', { defaultValue: 'Create Goal' })}
+                        {t('wizard.actions.create', { defaultValue: 'Create Goal' })}
                       </Button>
                     </div>
                   </motion.div>

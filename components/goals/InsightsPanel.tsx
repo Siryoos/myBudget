@@ -29,6 +29,23 @@ interface InsightsPanelProps {
   showTrends?: boolean
 }
 
+/**
+ * Client-side React component that renders a multi-tab financial insights dashboard.
+ *
+ * Renders Overview, Peer Comparison, Trends, and Risk Assessment tabs with charts, key metrics,
+ * and recommendations. Uses translations (useTranslation) and currency formatting (useCurrency);
+ * shows a centered loading spinner while translations are not ready. Computes summary statistics
+ * from the provided goals and quickSaveHistory and uses internal mock data for peer, trends, and
+ * risk sections. Note: the boolean props for showing sections are accepted but not used to
+ * conditionally hide tabs in the current implementation.
+ *
+ * @param goals - Optional list of savings goals used to compute metrics and populate charts.
+ * @param quickSaveHistory - Optional quick-save entries used to compute recent monthly savings.
+ * @param showPeerComparison - If true (default), the component accepts rendering of the Peer Comparison tab (not currently enforced).
+ * @param showRiskAwareness - If true (default), the component accepts rendering of the Risk Assessment tab (not currently enforced).
+ * @param showTrends - If true (default), the component accepts rendering of the Trends tab (not currently enforced).
+ * @returns JSX element containing the InsightsPanel UI.
+ */
 export function InsightsPanel({
   goals = [],
   quickSaveHistory = [],
@@ -36,21 +53,17 @@ export function InsightsPanel({
   showRiskAwareness = true,
   showTrends = true,
 }: InsightsPanelProps) {
-  const { t, isReady } = useTranslation(['goals', 'insights', 'common']);
+  const { t, ready } = useTranslation('goals');
   const { formatCurrency } = useCurrency();
   const [selectedTimeframe, setSelectedTimeframe] = useState<'weekly' | 'monthly' | 'quarterly'>('monthly');
   const [activeTab, setActiveTab] = useState<'overview' | 'peer' | 'trends' | 'risks'>('overview');
 
-  if (!isReady) {
+  if (!ready) {
     return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-trust-blue mx-auto mb-4"></div>
-            <p className="text-neutral-gray">{t('common:status.loading', { defaultValue: 'Loading...' })}</p>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="text-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-trust-blue mx-auto mb-4"></div>
+        <p className="text-neutral-gray">Loading insights...</p>
+      </div>
     );
   }
 

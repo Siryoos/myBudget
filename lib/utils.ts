@@ -139,8 +139,8 @@ const ID_START_INDEX = 2;
 /**
  * Generate a random ID
  */
-export const generateId = (): string => 
-  Math.random().toString(ID_BASE).substring(ID_START_INDEX) + 
+export const generateId = (): string =>
+  Math.random().toString(ID_BASE).substring(ID_START_INDEX) +
   Date.now().toString(ID_BASE);
 
 /**

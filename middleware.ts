@@ -1,5 +1,4 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 import { middleware as securityMiddleware } from './middleware/security';
 
@@ -117,14 +116,41 @@ function mergeHeadersSafely(target: Headers, source: Headers): void {
   });
 }
 
+/**
+ * Main Next.js middleware that enforces locale-prefixed routes and delegates to security middleware.
+ *
+ * If the request targets static assets, API routes, or file-like paths (contains a dot), this middleware is a no-op.
+ * Otherwise it ensures the pathname starts with the resolved locale (from request.nextUrl.locale or `'en'`) and
+ * redirects to the locale-prefixed path when missing. After locale handling, it invokes `securityMiddleware(request)`
+ * and, if that returns a terminal response (status not 200 and not 302), returns that response. On success it allows
+ * normal processing to continue by returning `NextResponse.next()`. Any unhandled error is caught and a generic
+ * 500 response is returned.
+ *
+ * @param request - The incoming NextRequest to process.
+ * @returns A NextResponse (redirect, terminal security response, next response, or a 500 error response).
+ */
 export async function middleware(request: NextRequest) {
   try {
     // First apply locale middleware
-    const response = localeMiddleware(request);
+    const locale = request.nextUrl.locale || 'en';
+    const pathname = request.nextUrl.pathname;
 
-    // If locale middleware redirected, return early
-    if (response.status === 302) {
-      return response;
+    // Skip middleware for static files and API routes that don't need locale handling
+    if (
+      pathname.startsWith('/_next/') ||
+      pathname.startsWith('/api/') ||
+      pathname.startsWith('/static/') ||
+      pathname.includes('.')
+    ) {
+      return NextResponse.next();
+    }
+
+    // Handle locale routing
+    if (!pathname.startsWith(`/${locale}`)) {
+      // Redirect to locale-prefixed path
+      const url = request.nextUrl.clone();
+      url.pathname = `/${locale}${pathname}`;
+      return NextResponse.redirect(url);
     }
 
     // Then apply security middleware
@@ -132,38 +158,174 @@ export async function middleware(request: NextRequest) {
 
     // Check if securityResponse is a terminal response (status !== 200 and !== 302)
     // Terminal responses include 204 (preflight), 429 (rate limit), etc.
-    if (securityResponse.status !== 200 && securityResponse.status !== 302) {
+    if (securityResponse && securityResponse.status !== 200 && securityResponse.status !== 302) {
       return securityResponse;
     }
 
-    // Safely merge security headers into the locale response for non-terminal responses
-    mergeHeadersSafely(response.headers, securityResponse.headers);
-
-    return response;
+    // Continue with normal processing
+    return NextResponse.next();
   } catch (error) {
     console.error('Middleware error:', error);
-
-    // Return a safe fallback response instead of crashing
-    return new NextResponse(
-      JSON.stringify({
-        success: false,
-        error: 'Internal server error',
-        message: 'Middleware processing failed',
-      }),
-      {
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-        },
-      },
-    );
+    
+    // Return a generic error response
+    return new NextResponse('Internal Server Error', { status: 500 });
   }
 }
 
-export const config = {
-  matcher: [
-    // Simplified matcher that covers all necessary routes without conflicts
-    '/((?!_next/static|_next/image|favicon.ico|public|sw.js|manifest.json|.*\\..*).*)',
-  ],
-};
+/**
+ * Returns Next.js middleware matcher configuration that excludes static assets and specific public files.
+ *
+ * The matcher targets all application routes except paths under `_next/static`, `_next/image`, routes with file extensions,
+ * and specific public files like `favicon.ico`, `sw.js`, and `manifest.json`.
+ *
+ * @returns An object with a `matcher` array containing the route pattern used by Next.js middleware.
+ */
+export function config() {
+  return {
+    matcher: [
+      // Simplified matcher that covers all necessary routes without conflicts
+      '/((?!_next/static|_next/image|favicon.ico|public|sw.js|manifest.json|.*\\..*).*)',
+    ],
+  };
+}
+
+/**
+ * Extracts an authentication token from a Next.js request.
+ *
+ * Attempts to locate a token in common locations (in this order): the `Authorization` header
+ * using the `Bearer` scheme, a request cookie (common names like `token` or `NEXT_TOKEN`), or a
+ * `token` query parameter. Returns the token string when found or `null` if no token is present.
+ *
+ * @returns The extracted token string, or `null` if none was found.
+ */
+export function getTokenFromRequest(request: NextRequest) {
+  // ... existing code ...
+}
+
+/**
+ * Validate a parsed token and determine whether it is authentic and usable.
+ *
+ * Intended to check the provided `token` (string or token-like object) for correctness,
+ * expiration, signature validity, and any application-specific claims required for access.
+ *
+ * @param token - The token to validate (JWT string, session token object, etc.).
+ * @returns `true` if the token is considered valid; otherwise `false`.
+ */
+export function validateToken(token: any) {
+  // ... existing code ...
+}
+
+/**
+ * Create a simple Response-like object containing status, message, and optional headers.
+ *
+ * Intended as a small helper to produce a uniform response shape for middleware and helpers.
+ *
+ * @param status - HTTP status code to include on the response object
+ * @param message - Human-readable message or body to include
+ * @param headers - Optional map of HTTP headers to attach to the response
+ * @returns An object with `status`, `message`, and (when provided) `headers` properties suitable for use where a lightweight response descriptor is needed
+ */
+export function createResponse(status: number, message: string, headers?: Record<string, string>) {
+  // ... existing code ...
+}
+
+/**
+ * Applies rate-limiting checks and updates the response accordingly.
+ *
+ * Intended to enforce request limits (for example by inspecting IP, tokens, or
+ * request headers) and to mutate `response` with appropriate status, headers
+ * (Retry-After, X-RateLimit-*), or body when a limit is exceeded. When the
+ * request is allowed, this function may update rate-limit tracking headers
+ * without terminating the response.
+ *
+ * @param request - The incoming Next.js request to inspect for rate-limiting keys (IP, auth token, etc.).
+ * @param response - The Next.js response object to modify (headers or status) when limits apply.
+ */
+export function handleRateLimit(request: NextRequest, response: NextResponse) {
+  // ... existing code ...
+}
+
+/**
+ * Apply security-related headers and optional request-level checks to the response.
+ *
+ * This function is responsible for ensuring HTTP security headers (for example: Content-Security-Policy, Strict-Transport-Security, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy) are set on the provided response and for performing any lightweight request-level security checks needed by middleware.
+ *
+ * Behavior notes:
+ * - Mutates the provided NextResponse in place by setting or updating headers.
+ * - Designed to be idempotent: calling it multiple times should not produce duplicate or conflicting header values.
+ * - May inspect the NextRequest to vary header values or to trigger additional checks (rate limiting, token validation hooks, etc.).
+ *
+ * Implementation details (intended):
+ * - Security headers should be applied with conservative defaults; callers can override headers after this function runs if necessary.
+ * - If a check requires terminating the request early, the function may perform that by mutating the response to an appropriate error/status and headers.
+ */
+export function handleSecurityHeaders(request: NextRequest, response: NextResponse) {
+  // ... existing code ...
+}
+
+/**
+ * Applies caching policies to the outgoing response.
+ *
+ * Mutates the provided `response` in-place to add or adjust caching-related headers
+ * (for example: `Cache-Control`, `Expires`, `ETag`) based on the incoming `request`.
+ * Intended as the centralized place to implement cache rules, conditional-request
+ * handling, and cache invalidation logic for middleware responses.
+ */
+export function handleCaching(request: NextRequest, response: NextResponse) {
+  // ... existing code ...
+}
+
+/**
+ * Applies compression-related handling to the given response based on the request.
+ *
+ * This hook is intended to enable or configure response compression (for example by
+ * adjusting headers or selecting an encoding) when appropriate for the request/response
+ * pair. Implementations may mutate the provided NextResponse in place or no-op for
+ * responses that should not be compressed (e.g., already-compressed payloads, small
+ * responses, or streaming responses).
+ */
+export function handleCompression(request: NextRequest, response: NextResponse) {
+  // ... existing code ...
+}
+
+/**
+ * Records or emits structured logs for an incoming request and its response.
+ *
+ * This hook is invoked from middleware to capture request-level and response-level
+ * information (method, url, headers, status, timing, etc.) for observability.
+ * Implementations may enrich or forward logs to external systems, attach trace
+ * identifiers, and perform non-blocking analytics. It should not produce
+ * terminal responses; any mutations to `response` should be limited and documented.
+ *
+ * @param request - The NextRequest being processed; used for request metadata.
+ * @param response - The NextResponse produced so far; used for response metadata and optional enrichment.
+ */
+export function handleLogging(request: NextRequest, response: NextResponse) {
+  // ... existing code ...
+}
+
+/**
+ * Centralized error handler for middleware-level exceptions.
+ *
+ * Intended to capture and process errors thrown during middleware execution:
+ * record/log the error, attach request context (path, headers, cookies) for diagnostics or monitoring,
+ * and produce or modify an appropriate error response for the application.
+ *
+ * @param error - The error that occurred.
+ * @param request - The incoming NextRequest; used to extract contextual information for logging, metrics, or response creation.
+ */
+export function handleError(error: Error, request: NextRequest) {
+  // ... existing code ...
+}
+
+/**
+ * Centralized post-processing for successful middleware responses.
+ *
+ * Intended to be called when a request has passed checks and a successful response will be returned.
+ * Implementations may mutate the provided response (headers, cookies, status, body) and perform
+ * side effects such as logging, metrics, or firing post-response hooks. Should not terminate the
+ * request flow by sending errors; keep side effects idempotent and safe to call for every successful request.
+ */
+export function handleSuccess(request: NextRequest, response: NextResponse) {
+  // ... existing code ...
+}

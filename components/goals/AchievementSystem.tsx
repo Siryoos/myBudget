@@ -168,13 +168,26 @@ interface AchievementSystemProps {
   onAchievementUnlocked?: (achievement: Achievement) => void
 }
 
+/**
+ * AchievementSystem React component — displays and manages a user's achievement list, progress, filters, and a leaderboard preview.
+ *
+ * Renders achievement cards with progress bars, category filters, total points, and optional leaderboard. Keeps internal achievement state (initialized from `baseAchievements`) and updates progress/unlock status reactively when `goals` change. Triggers a temporary unlock animation and invokes `onAchievementUnlocked` when an achievement is programmatically unlocked via the UI.
+ *
+ * Props:
+ * - goals: optional array of savings goals used to compute achievement progress and unlocks (e.g., completes, emergency fund ratio).
+ * - showLeaderboard: whether to show the static leaderboard preview.
+ * - enableNotifications: reserved flag (not used for external side effects in this component).
+ * - onAchievementUnlocked: optional callback invoked with the unlocked Achievement when the component triggers an unlock animation.
+ *
+ * @returns The component's JSX element.
+ */
 export function AchievementSystem({
   goals = [],
   showLeaderboard = true,
   enableNotifications = true,
   onAchievementUnlocked,
 }: AchievementSystemProps) {
-  const { t, isReady } = useTranslation(['goals', 'achievements', 'common']);
+  const { t, ready } = useTranslation('goals');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [showUnlockedOnly, setShowUnlockedOnly] = useState(false);
   const [unlockAnimation, setUnlockAnimation] = useState<string | null>(null);
@@ -254,11 +267,11 @@ export function AchievementSystem({
   });
 
   const categories = [
-    { id: 'all', name: t('achievements:categories.all', { defaultValue: 'All' }), icon: '🏆' },
-    { id: 'savings-streak', name: t('achievements:categories.savingsStreak', { defaultValue: 'Savings Streaks' }), icon: '🔥' },
-    { id: 'goal-achievement', name: t('achievements:categories.goalAchievement', { defaultValue: 'Goal Achievement' }), icon: '🎯' },
-    { id: 'financial-education', name: t('achievements:categories.financialEducation', { defaultValue: 'Financial Education' }), icon: '📚' },
-    { id: 'social', name: t('achievements:categories.social', { defaultValue: 'Social' }), icon: '🤝' },
+    { id: 'all', name: t('categories.all', { defaultValue: 'All' }), icon: '🏆' },
+    { id: 'savings-streak', name: t('categories.savingsStreak', { defaultValue: 'Savings Streaks' }), icon: '🔥' },
+    { id: 'goal-achievement', name: t('categories.goalAchievement', { defaultValue: 'Goal Achievement' }), icon: '🎯' },
+    { id: 'financial-education', name: t('categories.financialEducation', { defaultValue: 'Financial Education' }), icon: '📚' },
+    { id: 'social', name: t('categories.social', { defaultValue: 'Social' }), icon: '🤝' },
   ];
 
   const renderAchievementCard = (achievement: Achievement) => {
@@ -340,7 +353,7 @@ export function AchievementSystem({
             <div className="mb-4">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm text-gray-600">
-                  {t('achievements:progress', { defaultValue: 'Progress' })}
+                  {t('progress', { defaultValue: 'Progress' })}
                 </span>
                 <span className="text-sm font-medium text-gray-900">
                   {userAchievement?.progress || 0} / {userAchievement?.maxProgress || 1}
@@ -361,7 +374,7 @@ export function AchievementSystem({
 
             {/* Requirement */}
             <div className="text-sm text-gray-600 mb-4">
-              <strong>{t('achievements:requirement', { defaultValue: 'Requirement' })}:</strong> {
+              <strong>{t('requirement', { defaultValue: 'Requirement' })}:</strong> {
                 typeof achievement.requirement === 'string'
                   ? achievement.requirement
                   : achievement.requirement.description
@@ -372,7 +385,7 @@ export function AchievementSystem({
             {isUnlocked && achievement.unlockedDate && (
               <div className="text-sm text-green-600 mb-4">
                 <CheckCircleIcon className="w-4 h-4 inline mr-1" />
-                {t('achievements:unlocked', { defaultValue: 'Unlocked' })} {(achievement.unlockedDate instanceof Date ? achievement.unlockedDate : new Date(achievement.unlockedDate)).toLocaleDateString()}
+                {t('unlocked', { defaultValue: 'Unlocked' })} {(achievement.unlockedDate instanceof Date ? achievement.unlockedDate : new Date(achievement.unlockedDate)).toLocaleDateString()}
               </div>
             )}
 
@@ -384,7 +397,7 @@ export function AchievementSystem({
                 className="w-full"
                 onClick={() => triggerUnlock(achievement.id)}
               >
-                {t('achievements:actions.workTowards', { defaultValue: 'Work Towards This' })}
+                {t('actions.workTowards', { defaultValue: 'Work Towards This' })}
               </Button>
             )}
           </CardContent>
@@ -409,7 +422,7 @@ export function AchievementSystem({
 
   return (
     <>
-      {!isReady ? (
+      {!ready ? (
         <Card>
           <CardContent className="p-6">
             <div className="text-center">
@@ -424,10 +437,10 @@ export function AchievementSystem({
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">
-            {t('achievements:title', { defaultValue: 'Achievement System' })}
+            {t('title', { defaultValue: 'Achievement System' })}
           </h2>
           <p className="text-gray-600">
-            {t('achievements:subtitle', { defaultValue: 'Earn badges and points for your financial progress' })}
+            {t('subtitle', { defaultValue: 'Earn badges and points for your financial progress' })}
           </p>
         </div>
 
@@ -437,7 +450,7 @@ export function AchievementSystem({
             <div className="text-center">
               <div className="text-2xl font-bold">{totalPoints}</div>
               <div className="text-xs opacity-90">
-                {t('achievements:totalPoints', { defaultValue: 'Total Points' })}
+                {t('totalPoints', { defaultValue: 'Total Points' })}
               </div>
             </div>
           </div>
@@ -449,8 +462,8 @@ export function AchievementSystem({
             onClick={() => setShowUnlockedOnly(!showUnlockedOnly)}
           >
             {showUnlockedOnly
-              ? t('achievements:showAll', { defaultValue: 'Show All' })
-              : t('achievements:showUnlocked', { defaultValue: 'Show Unlocked' })
+              ? t('showAll', { defaultValue: 'Show All' })
+              : t('showUnlocked', { defaultValue: 'Show Unlocked' })
             }
           </Button>
         </div>
@@ -490,10 +503,10 @@ export function AchievementSystem({
         >
           <div className="text-6xl mb-4">🏆</div>
           <h3 className="text-xl font-semibold text-gray-900 mb-2">
-            {t('achievements:empty.title', { defaultValue: 'No achievements found' })}
+            {t('empty.title', { defaultValue: 'No achievements found' })}
           </h3>
           <p className="text-gray-600 mb-6">
-            {t('achievements:empty.description', { defaultValue: 'Try adjusting your filters or start working towards your first achievement!' })}
+            {t('empty.description', { defaultValue: 'Try adjusting your filters or start working towards your first achievement!' })}
           </p>
         </motion.div>
       )}
@@ -504,7 +517,7 @@ export function AchievementSystem({
           <CardHeader>
             <h3 className="text-lg font-semibold text-gray-900 flex items-center">
               <UsersIcon className="w-5 h-5 text-purple-600 mr-2" />
-              {t('achievements:leaderboard.title', { defaultValue: 'Community Leaderboard' })}
+              {t('leaderboard.title', { defaultValue: 'Community Leaderboard' })}
             </h3>
           </CardHeader>
           <CardContent>
@@ -554,7 +567,7 @@ export function AchievementSystem({
 
             <div className="mt-4 text-center">
               <Button variant="outline" size="sm">
-                {t('achievements:leaderboard.viewFull', { defaultValue: 'View Full Leaderboard' })}
+                {t('leaderboard.viewFull', { defaultValue: 'View Full Leaderboard' })}
               </Button>
             </div>
           </CardContent>

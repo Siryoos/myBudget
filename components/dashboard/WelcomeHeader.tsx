@@ -20,12 +20,22 @@ interface WelcomeHeaderProps {
   showQuickActions?: boolean
 }
 
+/**
+ * Renders the dashboard welcome header with a localized greeting, current date, notification insight, quick action buttons, and an achievement summary.
+ *
+ * The component determines a time-based greeting on mount (morning/afternoon/evening) to avoid hydration mismatches, uses the `common` translation namespace for all displayed strings (with defaults), and formats the date and currency according to the current i18n locale.
+ *
+ * @param showGreeting - When true, displays the greeting line with the user's name. Defaults to `true`.
+ * @param showDate - When true, displays the current formatted date. Defaults to `true`.
+ * @param showQuickActions - When true, shows the quick action buttons on the right. Defaults to `true`.
+ * @returns A React element containing the styled welcome header.
+ */
 export function WelcomeHeader({
   showGreeting = true,
   showDate = true,
   showQuickActions = true,
 }: WelcomeHeaderProps) {
-  const { t, i18n, isReady } = useTranslation(['common', 'dashboard']);
+  const { t, i18n, ready } = useTranslation('common');
   const [userName] = useState('Alex'); // This would come from user context
   const [greeting, setGreeting] = useState('morning'); // Default to morning
   const [today, setToday] = useState(new Date());
@@ -40,8 +50,8 @@ export function WelcomeHeader({
 
   // Debug logging
   useEffect(() => {
-    console.log('WelcomeHeader i18n state:', { isReady, language: i18n.language, isInitialized: i18n.isInitialized });
-  }, [isReady, i18n.language, i18n.isInitialized]);
+    console.log('WelcomeHeader i18n state:', { ready, language: i18n.language, isInitialized: i18n.isInitialized });
+  }, [ready, i18n.language, i18n.isInitialized]);
 
   const quickActions = [
     {

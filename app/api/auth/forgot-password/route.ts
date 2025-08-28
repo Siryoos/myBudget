@@ -4,11 +4,34 @@ import { z } from 'zod';
 import { query } from '@/lib/database';
 import { createErrorResponse, createValidationError } from '@/lib/error-handling';
 import { rateLimiter } from '@/lib/redis';
+import { emailService } from '@/lib/email-service';
 
 const forgotPasswordSchema = z.object({
   email: z.string().email().transform(s => s.trim().toLowerCase()),
 });
 
+/**
+ * Handles POST requests for initiating a password-reset (forgot password) flow.
+ *
+ * Validates the request body, enforces per-client rate limits, and if the supplied
+ * email corresponds to a user, generates a one-hour password reset token (stored as
+ * a SHA-256 hash) and attempts to send a password-reset email. For security, the
+ * endpoint always returns a generic success response when an email is supplied,
+ * whether or not a matching user exists.
+ *
+ * Behavior and side effects:
+ * - Enforces a 1-hour window rate limit (max 3 requests per identifier) and returns
+ *   429 with rate-limit headers when exceeded.
+ * - Validates input against `forgotPasswordSchema`; returns a 400 JSON response on validation failure.
+ * - If a user exists for the provided email, stores a hashed reset token with a 1-hour expiry
+ *   in `password_reset_tokens` (upsert by user_id) and calls `emailService.sendPasswordReset`.
+ * - If email sending fails in development, logs the token and reset URL for debugging.
+ * - Returns a JSON response with a `requestId` for tracing; on unexpected errors returns a 500 JSON response.
+ *
+ * @returns A NextResponse JSON body indicating success or error, appropriate HTTP status,
+ *          and traceable `requestId`. (Responses include 200 for accepted requests, 400 for validation errors,
+ *          429 for rate-limit violations, and 500 for internal errors.)
+ */
 export async function POST(request: NextRequest) {
   const requestId = crypto.randomUUID();
 
@@ -82,14 +105,21 @@ export async function POST(request: NextRequest) {
       [user.id, resetTokenHash, expiresAt],
     );
 
-    // In production, send email here
-    // For development, we'll just log the token
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`[DEV] Password reset token for ${email}: ${resetToken}`);
-    }
+    // Send password reset email
+    const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
+    
+    const emailSent = await emailService.sendPasswordReset({
+      email: user.email,
+      name: user.name,
+      resetToken,
+      resetUrl,
+    });
 
-    // TODO: Implement email sending service
-    // await emailService.sendPasswordReset(user.email, resetToken);
+    // Log for development if email fails
+    if (!emailSent && process.env.NODE_ENV === 'development') {
+      console.log(`[DEV] Failed to send email, but here's the reset token for ${email}: ${resetToken}`);
+      console.log(`[DEV] Reset URL: ${resetUrl}`);
+    }
 
     return NextResponse.json({
       success: true,

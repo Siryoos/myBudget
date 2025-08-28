@@ -20,12 +20,29 @@ interface ProfileManagerProps {
   preferences?: boolean
 }
 
+/**
+ * Renders a three-section profile editor (Personal Information, Financial Profile, Preferences)
+ * that allows viewing and inline editing of the current user's profile and preferences.
+ *
+ * The component initializes form state from the authenticated user, validates inputs per-section
+ * (basic email and required checks for "personal"; non-negative income and 0–100 savings rate for "financial"),
+ * and persists changes via the auth context's `updateProfile`. Preferences saving may also invoke
+ * the settings API (timezone support is limited by the current preferences schema).
+ *
+ * On successful save the section exits edit mode and a transient success banner is shown; validation
+ * errors are stored per-field and displayed next to inputs, and a general error banner is shown on save failure.
+ *
+ * @param personalInfo - If true (default), render the Personal Information section.
+ * @param financialProfile - If true (default), render the Financial Profile section.
+ * @param preferences - If true (default), render the Preferences section.
+ * @returns A JSX element containing the profile manager UI.
+ */
 export function ProfileManager({
   personalInfo = true,
   financialProfile = true,
   preferences = true,
 }: ProfileManagerProps) {
-  const { t } = useTranslation(['settings', 'common']);
+  const { t } = useTranslation('settings');
   const { user, updateProfile } = useAuth();
   const [editingSection, setEditingSection] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -402,7 +419,7 @@ export function ProfileManager({
                 <input
                   type="number"
                   value={profileData.dependents}
-                  onChange={(e) => setProfileData(prev => ({ ...prev, dependents: parseInt(e.target.value) || 0 }))}
+                  onChange={(e) => setProfileData(prev => ({ ...prev, dependents: parseInt(e.target.value, 10) || 0 }))}
                   className="w-full px-3 py-2 border border-neutral-gray/30 rounded-lg focus:ring-2 focus:ring-primary-trust-blue focus:border-transparent"
                   min="0"
                   max="20"

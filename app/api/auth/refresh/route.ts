@@ -51,11 +51,7 @@ const checkRateLimit = async (request: NextRequest): Promise<{ allowed: boolean;
 
   return {
     allowed: rateLimitResult.allowed,
-<<<<<<< Current (Your changes)
     message: rateLimitResult.allowed ? undefined : 'Too many refresh attempts, please try again later',
-=======
-    message: rateLimitResult.allowed ? '' : 'Too many refresh attempts, please try again later',
->>>>>>> Incoming (Background Agent changes)
   };
 };
 

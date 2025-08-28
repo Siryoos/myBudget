@@ -10,7 +10,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { useTransactions } from '@/hooks/use-api';
+import { useTransactions } from '@/contexts/AppProvider';
 import { useTranslation } from '@/lib/useTranslation';
 import { formatCurrency, formatRelativeTime } from '@/lib/utils';
 import type { Transaction } from '@/types';
@@ -21,23 +21,29 @@ interface RecentTransactionsProps {
   showAmounts?: boolean
 }
 
+/**
+ * Renders a card showing a list of recent financial transactions with filtering, per-item details, and quick summary stats.
+ *
+ * Displays transactions from the application transactions context, allows switching between "All", "Income", and "Expense" filters,
+ * and shows category badges, amounts, relative dates, and quick totals for the currently visible transactions.
+ *
+ * @param limit - Maximum number of transactions to display (default: 5).
+ * @param showCategories - Whether to render category badges for each transaction (default: true).
+ * @param showAmounts - Whether to render formatted transaction amounts (default: true).
+ */
 export function RecentTransactions({
   limit = 5,
   showCategories = true,
   showAmounts = true,
 }: RecentTransactionsProps) {
   const [filterType, setFilterType] = useState<'all' | 'income' | 'expense'>('all');
-  const { t } = useTranslation(['dashboard', 'transactions', 'common']);
+  const { t } = useTranslation('dashboard');
 
-  // Fetch transactions from API
-  const { data, loading, error } = useTransactions({
-    limit: limit * 2, // Fetch more to account for filtering
-    type: filterType === 'all' ? undefined : filterType,
-  });
+  // Fetch transactions from context
+  const { transactions, loading, error } = useTransactions();
 
-  const allTransactions = data?.transactions || [];
-
-  const filteredTransactions = allTransactions
+  // Filter transactions based on type and limit
+  const filteredTransactions = transactions
     .filter(transaction => filterType === 'all' || transaction.type === filterType)
     .slice(0, limit);
 

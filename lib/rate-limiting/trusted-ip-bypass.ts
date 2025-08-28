@@ -322,11 +322,7 @@ export class TrustedIPBypassManager {
 
   // Validate IP address format
   validateIP(ip: string): boolean {
-<<<<<<< Current (Your changes)
-    return Boolean(isIP(ip));
-=======
     return isIP(ip) !== 0;
->>>>>>> Incoming (Background Agent changes)
   }
 
   // Validate CIDR range format

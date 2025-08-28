@@ -26,88 +26,95 @@ interface BudgetMethodOption {
   bestFor: string[]
 }
 
+/**
+ * Renders an interactive budgeting-method picker that lets the user browse, inspect, and choose a budgeting approach.
+ *
+ * Displays a localized list of predefined budget methods (name, short description, difficulty, time commitment, and icon).
+ * Shows a loading placeholder until translations are ready. Selecting a method opens a details panel with a longer description,
+ * optional category breakdown, "best for" highlights, and action buttons to either choose a different method or confirm the selection.
+ *
+ * The confirmed selection is currently logged to the console (placeholder for persisting/updating user configuration).
+ *
+ * @returns The component's JSX element.
+ */
 export function BudgetMethodSelector() {
-  const { t, isReady } = useTranslation(['budget', 'common']);
+  const { t, ready } = useTranslation('budget');
   const [selectedMethod, setSelectedMethod] = useState<BudgetMethod | null>(null);
   const [showDetails, setShowDetails] = useState(false);
 
-  if (!isReady) {
+  if (!ready) {
     return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-trust-blue mx-auto mb-4"></div>
-            <p className="text-neutral-gray">{t('common:status.loading', { defaultValue: 'Loading...' })}</p>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="text-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-trust-blue mx-auto mb-4"></div>
+        <p className="text-neutral-gray">Loading budget methods...</p>
+      </div>
     );
   }
 
   const budgetMethods: BudgetMethodOption[] = [
     {
       id: '50-30-20',
-      name: t('budget:methods.rule503020.name', { defaultValue: '50/30/20 Rule' }),
-      description: t('budget:methods.rule503020.description', { defaultValue: '50% needs, 30% wants, 20% savings' }),
+      name: t('methods.rule503020.name', { defaultValue: '50/30/20 Rule' }),
+      description: t('methods.rule503020.description', { defaultValue: '50% needs, 30% wants, 20% savings' }),
       icon: ChartPieIcon,
-      difficulty: t('budget:difficulty.beginner', { defaultValue: 'Beginner' }),
+      difficulty: t('difficulty.beginner', { defaultValue: 'Beginner' }),
       timeCommitment: 'Low',
       bestFor: [
-        t('budget:methods.rule503020.bestFor.newToBudgeting', { defaultValue: 'New to budgeting' }),
-        t('budget:methods.rule503020.bestFor.simpleApproach', { defaultValue: 'Simple approach' }),
-        t('budget:methods.rule503020.bestFor.steadyIncome', { defaultValue: 'Steady income' }),
+        t('methods.rule503020.bestFor.newToBudgeting', { defaultValue: 'New to budgeting' }),
+        t('methods.rule503020.bestFor.simpleApproach', { defaultValue: 'Simple approach' }),
+        t('methods.rule503020.bestFor.steadyIncome', { defaultValue: 'Steady income' }),
       ],
     },
     {
       id: 'pay-yourself-first',
-      name: t('budget:methods.payYourselfFirst.name', { defaultValue: 'Pay Yourself First' }),
-      description: t('budget:methods.payYourselfFirst.description', { defaultValue: 'Save 20% first, spend the rest' }),
+      name: t('methods.payYourselfFirst.name', { defaultValue: 'Pay Yourself First' }),
+      description: t('methods.payYourselfFirst.description', { defaultValue: 'Save 20% first, spend the rest' }),
       icon: BanknotesIcon,
-      difficulty: t('budget:difficulty.beginner', { defaultValue: 'Beginner' }),
+      difficulty: t('difficulty.beginner', { defaultValue: 'Beginner' }),
       timeCommitment: 'Low',
       bestFor: [
-        t('budget:methods.payYourselfFirst.bestFor.buildingSavingsHabit', { defaultValue: 'Building savings habit' }),
-        t('budget:methods.payYourselfFirst.bestFor.automaticSaving', { defaultValue: 'Automatic saving' }),
-        t('budget:methods.payYourselfFirst.bestFor.longTermGoals', { defaultValue: 'Long-term goals' }),
+        t('methods.payYourselfFirst.bestFor.buildingSavingsHabit', { defaultValue: 'Building savings habit' }),
+        t('methods.payYourselfFirst.bestFor.automaticSaving', { defaultValue: 'Automatic saving' }),
+        t('methods.payYourselfFirst.bestFor.longTermGoals', { defaultValue: 'Long-term goals' }),
       ],
     },
     {
       id: 'envelope',
-      name: t('budget:methods.envelope.name', { defaultValue: 'Digital Envelope System' }),
-      description: t('budget:methods.envelope.description', { defaultValue: 'Allocate funds to specific categories' }),
+      name: t('methods.envelope.name', { defaultValue: 'Digital Envelope System' }),
+      description: t('methods.envelope.description', { defaultValue: 'Allocate funds to specific categories' }),
       icon: EnvelopeIcon,
-      difficulty: t('budget:difficulty.intermediate', { defaultValue: 'Intermediate' }),
+      difficulty: t('difficulty.intermediate', { defaultValue: 'Intermediate' }),
       timeCommitment: 'Medium',
       bestFor: [
-        t('budget:methods.envelope.bestFor.detailedTracking', { defaultValue: 'Detailed tracking' }),
-        t('budget:methods.envelope.bestFor.spendingControl', { defaultValue: 'Spending control' }),
-        t('budget:methods.envelope.bestFor.variableIncome', { defaultValue: 'Variable income' }),
+        t('methods.envelope.bestFor.detailedTracking', { defaultValue: 'Detailed tracking' }),
+        t('methods.envelope.bestFor.spendingControl', { defaultValue: 'Spending control' }),
+        t('methods.envelope.bestFor.variableIncome', { defaultValue: 'Variable income' }),
       ],
     },
     {
       id: 'zero-based',
-      name: t('budget:methods.zeroBased.name', { defaultValue: 'Zero-Based Budget' }),
-      description: t('budget:methods.zeroBased.description', { defaultValue: 'Every dollar has a purpose' }),
+      name: t('methods.zeroBased.name', { defaultValue: 'Zero-Based Budget' }),
+      description: t('methods.zeroBased.description', { defaultValue: 'Every dollar has a purpose' }),
       icon: CalculatorIcon,
-      difficulty: t('budget:difficulty.advanced', { defaultValue: 'Advanced' }),
+      difficulty: t('difficulty.advanced', { defaultValue: 'Advanced' }),
       timeCommitment: 'High',
       bestFor: [
-        t('budget:methods.zeroBased.bestFor.maximumControl', { defaultValue: 'Maximum control' }),
-        t('budget:methods.zeroBased.bestFor.debtPayoff', { defaultValue: 'Debt payoff' }),
-        t('budget:methods.zeroBased.bestFor.irregularExpenses', { defaultValue: 'Irregular expenses' }),
+        t('methods.zeroBased.bestFor.maximumControl', { defaultValue: 'Maximum control' }),
+        t('methods.zeroBased.bestFor.debtPayoff', { defaultValue: 'Debt payoff' }),
+        t('methods.zeroBased.bestFor.irregularExpenses', { defaultValue: 'Irregular expenses' }),
       ],
     },
     {
       id: 'kakeibo',
-      name: t('budget:methods.kakeibo.name', { defaultValue: 'Kakeibo Method' }),
-      description: t('budget:methods.kakeibo.description', { defaultValue: 'Mindful spending with reflection' }),
+      name: t('methods.kakeibo.name', { defaultValue: 'Kakeibo Method' }),
+      description: t('methods.kakeibo.description', { defaultValue: 'Mindful spending with reflection' }),
       icon: BookOpenIcon,
-      difficulty: t('budget:difficulty.intermediate', { defaultValue: 'Intermediate' }),
+      difficulty: t('difficulty.intermediate', { defaultValue: 'Intermediate' }),
       timeCommitment: 'Medium',
       bestFor: [
-        t('budget:methods.kakeibo.bestFor.mindfulSpending', { defaultValue: 'Mindful spending' }),
-        t('budget:methods.kakeibo.bestFor.selfReflection', { defaultValue: 'Self-reflection' }),
-        t('budget:methods.kakeibo.bestFor.behavioralChange', { defaultValue: 'Behavioral change' }),
+        t('methods.kakeibo.bestFor.mindfulSpending', { defaultValue: 'Mindful spending' }),
+        t('methods.kakeibo.bestFor.selfReflection', { defaultValue: 'Self-reflection' }),
+        t('methods.kakeibo.bestFor.behavioralChange', { defaultValue: 'Behavioral change' }),
       ],
     },
   ];
@@ -142,10 +149,10 @@ export function BudgetMethodSelector() {
       <CardContent className="p-6">
         <div className="mb-6">
           <h2 className="text-2xl font-bold text-neutral-dark-gray mb-2">
-            {t('budget:methodSelector.title', { defaultValue: 'Choose Your Budgeting Method' })}
+            {t('methodSelector.title', { defaultValue: 'Choose Your Budgeting Method' })}
           </h2>
           <p className="text-neutral-gray">
-            {t('budget:methodSelector.subtitle', { defaultValue: 'Select the budgeting approach that best fits your lifestyle and financial goals.' })}
+            {t('methodSelector.subtitle', { defaultValue: 'Select the budgeting approach that best fits your lifestyle and financial goals.' })}
           </p>
         </div>
 

@@ -1,0 +1,191 @@
+config:
+  target: 'http://localhost:3000'
+  phases:
+    - duration: 60
+      arrivalRate: 10
+      name: "Warm up phase"
+    - duration: 120
+      arrivalRate: 50
+      name: "Load testing phase"
+    - duration: 60
+      arrivalRate: 100
+      name: "Stress testing phase"
+    - duration: 60
+      arrivalRate: 10
+      name: "Cool down phase"
+  defaults:
+    headers:
+      Content-Type: 'application/json'
+  processor: './load-test-processor.js'
+
+scenarios:
+  - name: "User Registration Flow"
+    weight: 10
+    flow:
+      - post:
+          url: "/api/auth/register"
+          json:
+            email: "user{{ $randomInt }}{{ $randomInt }}@example.com"
+            name: "Test User {{ $randomInt }}"
+            password: "Password123!"
+            dateOfBirth: "1990-01-01"
+            monthlyIncome: 5000
+            currency: "USD"
+            language: "en"
+          capture:
+            json: "$.data.user.id"
+            as: "userId"
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "user{{ $randomInt }}@example.com"
+            password: "Password123!"
+          capture:
+            json: "$.data.accessToken"
+            as: "accessToken"
+      - get:
+          url: "/api/user/profile"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+
+  - name: "Budget Management"
+    weight: 25
+    flow:
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "test@example.com"
+            password: "Password123!"
+          capture:
+            json: "$.data.accessToken"
+            as: "accessToken"
+      - post:
+          url: "/api/budgets"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+          json:
+            name: "Load Test Budget {{ $randomInt }}"
+            method: "50-30-20"
+            totalIncome: 5000
+            period: "monthly"
+            startDate: "2024-01-01"
+            endDate: "2024-01-31"
+            categories:
+              - name: "Housing"
+                allocated: 1500
+                color: "#FF0000"
+                icon: "home"
+                isEssential: true
+              - name: "Food"
+                allocated: 800
+                color: "#00FF00"
+                icon: "utensils"
+                isEssential: true
+          capture:
+            json: "$.data.id"
+            as: "budgetId"
+      - get:
+          url: "/api/budgets"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+      - put:
+          url: "/api/budgets/{{ budgetId }}"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+          json:
+            name: "Updated Load Test Budget {{ $randomInt }}"
+            totalIncome: 6000
+
+  - name: "Transaction Management"
+    weight: 30
+    flow:
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "test@example.com"
+            password: "Password123!"
+          capture:
+            json: "$.data.accessToken"
+            as: "accessToken"
+      - post:
+          url: "/api/transactions"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+          json:
+            type: "expense"
+            amount: {{ $randomInt * 10 + 10 }}
+            category: "Food"
+            description: "Load test transaction {{ $randomInt }}"
+            date: "2024-01-{{ $randomInt % 28 + 1 }}"
+            budgetCategoryId: "123e4567-e89b-12d3-a456-426614174000"
+            account: "Credit Card"
+            tags: ["load-test"]
+            isRecurring: false
+      - get:
+          url: "/api/transactions?page=1&limit=20"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+      - get:
+          url: "/api/transactions?category=Food&type=expense"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+
+  - name: "Goals Management"
+    weight: 20
+    flow:
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "test@example.com"
+            password: "Password123!"
+          capture:
+            json: "$.data.accessToken"
+            as: "accessToken"
+      - post:
+          url: "/api/goals"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+          json:
+            name: "Load Test Goal {{ $randomInt }}"
+            description: "Testing performance under load"
+            targetAmount: 10000
+            targetDate: "2024-12-31"
+            category: "savings"
+            priority: "high"
+            icon: "🎯"
+            color: "#FF0000"
+          capture:
+            json: "$.data.id"
+            as: "goalId"
+      - get:
+          url: "/api/goals"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+      - post:
+          url: "/api/goals/{{ goalId }}/contribute"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+          json:
+            amount: {{ $randomInt * 5 + 50 }}
+
+  - name: "Health Check"
+    weight: 5
+    flow:
+      - get:
+          url: "/api/health"
+      - get:
+          url: "/api/health"
+      - get:
+          url: "/api/health"
+
+  - name: "Static Assets"
+    weight: 10
+    flow:
+      - get:
+          url: "/_next/static/css/{{ $randomString }}.css"
+          expect:
+            - statusCode: 404
+      - get:
+          url: "/favicon.ico"
+      - get:
+          url: "/robots.txt"

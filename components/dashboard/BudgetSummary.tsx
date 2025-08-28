@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { useBudgets } from '@/hooks/use-api';
+import { useBudgets } from '@/contexts/AppProvider';
 import { useTranslation } from '@/lib/useTranslation';
 import { formatCurrency, formatPercentage, getBudgetCategoryColor } from '@/lib/utils';
 import type { BudgetCategory } from '@/types';
@@ -22,14 +22,25 @@ interface BudgetSummaryProps {
   visualType?: 'donutChart' | 'progressBars' | 'list'
 }
 
+/**
+ * Renders a budget overview card showing totals, category breakdown, alerts, and an optional visual (donut) representation.
+ *
+ * Displays total income, total expenses, and remaining balance calculated from the active budget's categories. Optionally
+ * shows category progress bars, spending alerts for categories over their allocation, and a donut chart visualization.
+ *
+ * @param showCategories - If true, renders the category breakdown and progress bars. Defaults to `true`.
+ * @param showSpendingAlerts - If true, renders alerts for categories where spent > allocated. Defaults to `true`.
+ * @param visualType - Determines the visual representation shown; currently supports `'donutChart'` (default), `'progressBars'`, or `'list'`.
+ * @returns A React element containing the budget summary card.
+ */
 export function BudgetSummary({
   showCategories = true,
   showSpendingAlerts = true,
   visualType = 'donutChart',
 }: BudgetSummaryProps) {
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month'>('month');
-  const { t } = useTranslation(['dashboard', 'budget']);
-  const { data: budgets, loading, error } = useBudgets();
+  const { t } = useTranslation('dashboard');
+  const { budgets, loading, error } = useBudgets();
 
   // Get the active budget (first one for now, or the current period budget)
   const activeBudget = budgets?.[0];

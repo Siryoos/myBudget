@@ -89,13 +89,30 @@ const GOAL_TEMPLATES = [
   },
 ];
 
+/**
+ * Interactive four-step wizard UI for creating a savings goal.
+ *
+ * Guides the user through: (1) selecting a goal template, (2) choosing motivation framing
+ * (loss-avoidance vs. achievement) when enabled, (3) customizing goal details (name, description,
+ * target amount/date), and (4) optionally uploading a goal photo. Steps that are disabled via
+ * props are automatically skipped. On completion the component assembles a Partial<SavingsGoal>
+ * (including framingType, optional lossAvoidanceDescription/achievementDescription from the chosen
+ * template, optional photoUrl, and generated milestones at 25/50/75/100%) and passes it to the
+ * onGoalCreated callback.
+ *
+ * @param onGoalCreated - Callback invoked with the assembled Partial<SavingsGoal> when the user
+ *   finishes the wizard.
+ * @param onClose - Callback invoked to close the wizard (e.g., when the user clicks the close button).
+ * @param enableLossAversion - If false, the framing step (step 2) is omitted and framing defaults to 'achievement'.
+ * @param showPhotoUpload - If false, the photo upload step (step 4) is omitted.
+ */
 export function GoalWizard({
   onGoalCreated,
   onClose,
   enableLossAversion = true,
   showPhotoUpload = true,
 }: GoalWizardProps) {
-  const { t } = useTranslation(['goals', 'common']);
+  const { t } = useTranslation('goals');
   const [step, setStep] = useState(1);
   const [selectedTemplate, setSelectedTemplate] = useState<typeof GOAL_TEMPLATES[0] | null>(null);
   const [framingType, setFramingType] = useState<'loss-avoidance' | 'achievement'>('achievement');

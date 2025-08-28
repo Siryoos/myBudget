@@ -14,8 +14,18 @@ import { RecentTransactions } from './RecentTransactions';
 import { SavingsOverview } from './SavingsOverview';
 import { WelcomeHeader } from './WelcomeHeader';
 
+/**
+ * Renders a translation testing UI that lets a user switch the app locale and preview translated components.
+ *
+ * Displays a loading state until translations are ready, shows the current locale and readiness, and provides
+ * buttons to switch languages (English, Arabic, Persian). Language changes are performed asynchronously via
+ * the i18n changeLanguage function. A toggle button controls visibility of the dashboard components (welcome
+ * header, widgets, panels, and recent transactions) so their translations and layout (including RTL) can be inspected.
+ *
+ * @returns The TranslationTestPage JSX element.
+ */
 export function TranslationTestPage() {
-  const { t, isReady, forceUpdate } = useTranslation(['common', 'dashboard']);
+  const { t, ready } = useTranslation('common');
   const { locale, changeLanguage } = useI18n();
   const [showComponents, setShowComponents] = useState(true);
 
@@ -29,13 +39,11 @@ export function TranslationTestPage() {
     }
   };
 
-  if (!isReady) {
+  if (!ready) {
     return (
-      <div className="min-h-screen bg-neutral-light-gray flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-trust-blue mx-auto mb-4"></div>
-          <p className="text-neutral-gray text-lg">Loading translations...</p>
-        </div>
+      <div className="text-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-trust-blue mx-auto mb-4"></div>
+        <p className="text-neutral-gray">Loading translations...</p>
       </div>
     );
   }
@@ -59,7 +67,7 @@ export function TranslationTestPage() {
                 Current Language: <strong>{locale}</strong>
               </p>
               <p className="text-sm text-neutral-gray">
-                Force Update Count: <strong>{forceUpdate}</strong>
+                Ready: <strong>{ready ? 'Yes' : 'No'}</strong>
               </p>
             </div>
 
@@ -147,7 +155,7 @@ export function TranslationTestPage() {
               {t('common:app.name', { defaultValue: 'SmartSave' })} -
               {t('common:status.success', { defaultValue: 'Translation System Active' })} |
               {t('common:time.today', { defaultValue: 'Language' })}: {locale} |
-              {t('common:status.online', { defaultValue: 'Updates' })}: {forceUpdate}
+              {t('common:status.online', { defaultValue: 'Updates' })}: Ready
             </p>
           </div>
         </CardContent>

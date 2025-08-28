@@ -24,13 +24,29 @@ interface QuickSaveWidgetProps {
   onQuickSave?: (data: QuickSaveData) => void
 }
 
+/**
+ * Renders a "Quick Save" UI for selecting or entering an amount, optionally targeting a savings goal,
+ * showing periodic social-proof messages, and emitting a save payload via a callback.
+ *
+ * This component:
+ * - Suggests default quick amounts (A/B-tested and persisted) and can derive goal-aligned defaults when active goals exist.
+ * - Lets the user choose a quick amount or enter a custom amount and optionally associate the save with a goal.
+ * - Rotates social-proof messages based on save count and optionally displays a brief success banner.
+ * - Exposes A/B test metadata for debugging in development builds and reports a QuickSaveData payload via `onQuickSave`.
+ *
+ * @param goals - Optional list of savings goals; when provided, active goals are used to compute goal-aligned default amounts.
+ * @param showSocialProof - When true, social proof messages may be included in the save payload and displayed in the UI.
+ * @param enableAnchoring - When true, shows the behavioral insights panel and applies A/B-tested default anchoring behavior.
+ * @param onQuickSave - Optional callback invoked with a QuickSaveData payload when the user completes a quick save.
+ * @returns A React element containing the Quick Save widget.
+ */
 export function QuickSaveWidget({
   goals = [],
   showSocialProof = true,
   enableAnchoring = true,
   onQuickSave,
 }: QuickSaveWidgetProps) {
-  const { t, isReady } = useTranslation(['goals', 'common']);
+  const { t, ready } = useTranslation('goals');
   const { formatCurrency } = useCurrency();
   const [selectedAmount, setSelectedAmount] = useState<number>(25);
   const [selectedGoalId, setSelectedGoalId] = useState<string>('');
@@ -192,7 +208,7 @@ export function QuickSaveWidget({
     return socialProofMessages[saveCount % socialProofMessages.length];
   };
 
-  if (!isReady) {
+  if (!ready) {
     return (
       <Card>
         <CardContent className="p-6">
@@ -216,10 +232,10 @@ export function QuickSaveWidget({
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-xl font-semibold text-gray-900">
-                {t('goals:quickSave.title', { defaultValue: 'Quick Save' })}
+                {t('quickSave.title', { defaultValue: 'Quick Save' })}
               </h3>
               <p className="text-sm text-gray-600">
-                {t('goals:quickSave.subtitle', { defaultValue: 'Save money instantly towards your goals' })}
+                {t('quickSave.subtitle', { defaultValue: 'Save money instantly towards your goals' })}
               </p>
             </div>
             <div className="text-4xl">💰</div>
@@ -230,7 +246,7 @@ export function QuickSaveWidget({
           {/* Amount Selection with Anchoring */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-3">
-              {t('goals:quickSave.amount.title', { defaultValue: 'How much would you like to save?' })}
+              {t('quickSave.amount.title', { defaultValue: 'How much would you like to save?' })}
             </label>
 
             {/* Quick Amount Buttons */}
@@ -249,7 +265,7 @@ export function QuickSaveWidget({
                 >
                   <div className="text-lg font-semibold">{formatCurrency(amount)}</div>
                   <div className="text-xs text-gray-500">
-                    {t('goals:quickSave.amount.quick', { defaultValue: 'Quick' })}
+                    {t('quickSave.amount.quick', { defaultValue: 'Quick' })}
                   </div>
                 </motion.button>
               ))}
@@ -276,7 +292,7 @@ export function QuickSaveWidget({
           {goals.length > 0 && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-3">
-                {t('goals:quickSave.goal.title', { defaultValue: 'Save towards a specific goal (optional)' })}
+                {t('quickSave.goal.title', { defaultValue: 'Save towards a specific goal (optional)' })}
               </label>
               <select
                 value={selectedGoalId}
@@ -284,7 +300,7 @@ export function QuickSaveWidget({
                 className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-trust-blue focus:border-transparent"
               >
                 <option value="">
-                  {t('goals:quickSave.goal.select', { defaultValue: 'Select a goal...' })}
+                  {t('quickSave.goal.select', { defaultValue: 'Select a goal...' })}
                 </option>
                 {goals.filter(g => g.isActive).map((goal) => (
                   <option key={goal.id} value={goal.id}>
@@ -330,13 +346,13 @@ export function QuickSaveWidget({
             {isSaving ? (
               <div className="flex items-center space-x-2">
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                <span>{t('goals:quickSave.saving', { defaultValue: 'Saving...' })}</span>
+                <span>{t('quickSave.saving', { defaultValue: 'Saving...' })}</span>
               </div>
             ) : (
               <div className="flex items-center space-x-2">
                 <PlusIcon className="w-5 h-5" />
                 <span>
-                  {t('goals:quickSave.save', { defaultValue: 'Save' })} {formatCurrency(selectedAmount)}
+                  {t('quickSave.save', { defaultValue: 'Save' })} {formatCurrency(selectedAmount)}
                 </span>
               </div>
             )}
@@ -354,11 +370,11 @@ export function QuickSaveWidget({
                 <div className="flex items-center justify-center space-x-2 mb-2">
                   <SparklesIcon className="w-5 h-5 text-green-600" />
                   <span className="font-medium text-green-800">
-                    {t('goals:quickSave.success.title', { defaultValue: 'Great job!' })}
+                    {t('quickSave.success.title', { defaultValue: 'Great job!' })}
                   </span>
                 </div>
                 <p className="text-sm text-green-700">
-                  {t('goals:quickSave.success.message', { defaultValue: 'You\'re building a stronger financial future!' })}
+                  {t('quickSave.success.message', { defaultValue: 'You\'re building a stronger financial future!' })}
                 </p>
               </motion.div>
             )}
@@ -376,10 +392,10 @@ export function QuickSaveWidget({
               </div>
               <div className="flex-1">
                 <h4 className="font-medium text-orange-900 mb-1">
-                  {t('goals:quickSave.insights.title', { defaultValue: 'Smart Defaults' })}
+                  {t('quickSave.insights.title', { defaultValue: 'Smart Defaults' })}
                 </h4>
                 <p className="text-sm text-orange-800 mb-3">
-                  {t('goals:quickSave.insights.description', {
+                  {t('quickSave.insights.description', {
                     defaultValue: 'We\'ve optimized the default amounts based on what works best for people like you. The most popular save amounts are pre-selected to make saving easier.',
                     group: abTestGroup === 'test' ? 'optimized' : 'standard',
                   })}

@@ -1,13 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
+// Size constants
+const KILOBYTE = 1024;
+const MEGABYTE = KILOBYTE * KILOBYTE;
+
 // Request size limits configuration
 export const REQUEST_LIMITS = {
   // General API limits
-  DEFAULT_BODY_SIZE: 1024 * 1024, // 1MB
-  UPLOAD_BODY_SIZE: 10 * 1024 * 1024, // 10MB
-  AUTH_BODY_SIZE: 512 * 1024, // 512KB
-  SEARCH_BODY_SIZE: 256 * 1024, // 256KB
+  DEFAULT_BODY_SIZE: MEGABYTE, // 1MB
+  UPLOAD_BODY_SIZE: 10 * MEGABYTE, // 10MB
+  AUTH_BODY_SIZE: 512 * KILOBYTE, // 512KB
+  SEARCH_BODY_SIZE: 256 * KILOBYTE, // 256KB
 
   // Query parameter limits
   MAX_QUERY_PARAMS: 50,
@@ -144,7 +148,7 @@ export class RequestValidator {
     if (contentLength) {
       const size = parseInt(contentLength);
       if (isNaN(size) || size > this.bodySizeLimit) {
-        throw new Error(`Request body too large. Maximum allowed: ${this.bodySizeLimit / 1024 / 1024}MB`);
+        throw new Error(`Request body too large. Maximum allowed: ${this.bodySizeLimit / MEGABYTE}MB`);
       }
     }
 
@@ -152,7 +156,7 @@ export class RequestValidator {
     if (this.request.method !== 'GET' && this.request.method !== 'HEAD') {
       const body = await this.request.text();
       if (body.length > this.bodySizeLimit) {
-        throw new Error(`Request body too large. Maximum allowed: ${this.bodySizeLimit / 1024 / 1024}MB`);
+        throw new Error(`Request body too large. Maximum allowed: ${this.bodySizeLimit / MEGABYTE}MB`);
       }
       // Reconstruct the request with the body
       this.request = new NextRequest(this.request.url, {

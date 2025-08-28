@@ -1,8 +1,16 @@
 import { FileValidator } from '../../lib/file-validation';
 
+// Constants for file validation tests
+const SHA256_HASH_SIZE = 32;
+const DEFAULT_FILE_SIZE = 1024 * 1024; // 1MB
+const KILOBYTE = 1024;
+const JPEG_SOI_MARKER = [0xFF, 0xD8, 0xFF, 0xE0];
+const MAX_FILENAME_LENGTH = 255;
+const TEST_FILENAME_LENGTH = 300;
+
 // Polyfill TextEncoder for Node.js environment
 if (typeof TextEncoder === 'undefined') {
-  (global as any).TextEncoder = class TextEncoder {
+  (globalThis as unknown as { TextEncoder: typeof TextEncoder }).TextEncoder = class TextEncoder {
     encode(input: string): Uint8Array {
       return new Uint8Array(Buffer.from(input, 'utf8'));
     }
@@ -11,11 +19,11 @@ if (typeof TextEncoder === 'undefined') {
 
 // Polyfill crypto.subtle for Node.js environment
 if (typeof crypto !== 'undefined' && !crypto.subtle) {
-  (crypto as any).subtle = {
+  (crypto as unknown as { subtle: { digest: (algorithm: string, data: ArrayBuffer) => Promise<ArrayBuffer> } }).subtle = {
     digest: async (algorithm: string, data: ArrayBuffer): Promise<ArrayBuffer> => {
       // Simple mock implementation for testing that generates consistent hashes
       const content = new Uint8Array(data);
-      const hash = new Uint8Array(32); // SHA-256 is 32 bytes
+      const hash = new Uint8Array(SHA256_HASH_SIZE); // SHA-256 is 32 bytes
 
       // Generate a deterministic hash based on content
       for (let i = 0; i < hash.length; i++) {
@@ -28,11 +36,22 @@ if (typeof crypto !== 'undefined' && !crypto.subtle) {
 }
 
 // Mock File object methods for Node.js environment
-const createMockFile = (content: string | Uint8Array, name: string, options: { type: string }, customSize?: number) => {
-  const file = new File([content], name, options) as any;
+// eslint-disable-next-line max-params
+const createMockFile = (
+  content: string | Uint8Array,
+  name: string,
+  options: { type: string },
+  customSize?: number,
+) => {
+  const file = new File([content as BlobPart], name, options) as unknown as {
+    size: number;
+    text: jest.MockedFunction<() => Promise<string>>;
+    arrayBuffer: jest.MockedFunction<() => Promise<ArrayBuffer>>;
+    slice: jest.MockedFunction<(start?: number, end?: number) => Blob>;
+  };
 
   // Set size (default 1MB or custom size)
-  const size = customSize || 1024 * 1024;
+  const size = customSize || KILOBYTE * KILOBYTE;
   Object.defineProperty(file, 'size', { value: size, writable: true, configurable: true });
 
   // Mock text() method
@@ -60,15 +79,15 @@ describe('FileValidator', () => {
   describe('validateSize', () => {
     it('should accept files within size limit', () => {
       const file = createMockFile('content', 'test.jpg', { type: 'image/jpeg' });
-      Object.defineProperty(file, 'size', { value: 1024 * 1024 }); // 1MB
+      Object.defineProperty(file, 'size', { value: DEFAULT_FILE_SIZE }); // 1MB
 
-      expect(FileValidator.validateSize(file, 5 * 1024 * 1024)).toBe(true);
+      expect(FileValidator.validateSize(file, 5 * DEFAULT_FILE_SIZE)).toBe(true);
     });
 
     it('should reject files exceeding size limit', () => {
-      const file = createMockFile('content', 'test.jpg', { type: 'image/jpeg' }, 10 * 1024 * 1024); // 10MB
+      const file = createMockFile('content', 'test.jpg', { type: 'image/jpeg' }, 10 * DEFAULT_FILE_SIZE); // 10MB
 
-      expect(FileValidator.validateSize(file, 5 * 1024 * 1024)).toBe(false);
+      expect(FileValidator.validateSize(file, 5 * DEFAULT_FILE_SIZE)).toBe(false);
     });
   });
 
@@ -122,9 +141,9 @@ describe('FileValidator', () => {
     });
 
     it('should handle long filenames', () => {
-      const longName = `${'a'.repeat(300)}.jpg`;
+      const longName = `${'a'.repeat(TEST_FILENAME_LENGTH)}.jpg`;
       const sanitized = FileValidator.sanitizeFilename(longName);
-      expect(sanitized.length).toBeLessThanOrEqual(255);
+      expect(sanitized.length).toBeLessThanOrEqual(MAX_FILENAME_LENGTH);
       expect(sanitized).toContain('.jpg');
     });
   });
@@ -164,11 +183,11 @@ describe('FileValidator', () => {
 
   describe('verifyFileSignature', () => {
     it('should verify JPEG signature', async () => {
-      // JPEG magic numbers: FF D8 FF
-      const jpegData = new Uint8Array([0xFF, 0xD8, 0xFF, 0xE0]);
+      // JPEG magic numbers: FF D8 FF E0
+      const jpegData = new Uint8Array(JPEG_SOI_MARKER);
       const file = createMockFile(jpegData, 'test.jpg', { type: 'image/jpeg' });
 
-      const signatures = { 'image/jpeg': [0xFF, 0xD8, 0xFF] };
+      const signatures = { 'image/jpeg': JPEG_SOI_MARKER.slice(0, 3) };
       const result = await FileValidator.verifyFileSignature(file, signatures);
       expect(result).toBe(true);
     });
@@ -178,7 +197,7 @@ describe('FileValidator', () => {
       const fakeData = new Uint8Array([0x00, 0x00, 0x00, 0x00]);
       const file = createMockFile(fakeData, 'fake.jpg', { type: 'image/jpeg' });
 
-      const signatures = { 'image/jpeg': [0xFF, 0xD8, 0xFF] };
+      const signatures = { 'image/jpeg': JPEG_SOI_MARKER.slice(0, 3) };
       const result = await FileValidator.verifyFileSignature(file, signatures);
       expect(result).toBe(false);
     });

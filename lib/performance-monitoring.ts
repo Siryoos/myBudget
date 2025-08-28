@@ -249,20 +249,6 @@ export class PerformanceMonitor {
 
   // Send performance alerts
   private alert(level: string, message: string, metrics: PerformanceMetrics): void {
-<<<<<<< Current (Your changes)
-    // Create a proper PerformanceAlert object
-    const alert: PerformanceAlert = {
-      type: level === 'CRITICAL' ? 'critical' : 'warning',
-      metric: 'performance',
-      value: metrics.responseTime,
-      threshold: level === 'CRITICAL' ? this.thresholds.responseTime.critical : this.thresholds.responseTime.warning,
-      timestamp: new Date().toISOString(),
-      requestId: metrics.requestId,
-      endpoint: metrics.endpoint,
-    };
-
-    console.warn(`[PERFORMANCE ${level}] ${message}`, alert);
-=======
     // Log the alert
     console.warn(`[PERFORMANCE ${level}] ${message}`, {
       level,
@@ -275,7 +261,6 @@ export class PerformanceMonitor {
         memoryUsage: metrics.memoryUsage,
       },
     });
->>>>>>> Incoming (Background Agent changes)
 
     // In production, send to monitoring service with proper PerformanceAlert structure
     if (process.env.NODE_ENV === 'production') {

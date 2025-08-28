@@ -14,10 +14,10 @@ import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { useAuth } from '@/contexts/AuthContext';
 import { actionHandler } from '@/lib/action-handler';
-import { useInsights, useDashboardData } from '@/lib/api-hooks';
+// Removed old hooks - using mock data for now until insights service is implemented
 import { useTranslation } from '@/lib/useTranslation';
 import { formatCurrency } from '@/lib/utils';
-import type { FinancialInsight } from '@/types';
+import type { FinancialInsight, InsightAction } from '@/types';
 
 import { getMockInsights, getMockSavingTips, getMockPeerComparisons } from './insights-data';
 
@@ -29,33 +29,46 @@ interface InsightsPanelProps {
   comparePeers?: boolean
 }
 
+/**
+ * InsightsPanel — a dashboard panel that displays saving tips, personalized recommendations,
+ * and peer comparisons in three switchable tabs.
+ *
+ * Renders mock data for tips, recommendations, and peer comparisons (used until a real
+ * insights service is available). Handles insight actions (navigate, execute, external)
+ * and provides a dismiss callback for individual insights.
+ *
+ * @param showSavingTips - If true, shows the "Tips" tab (default: true).
+ * @param personalizedRecommendations - If true, shows the "Recommendations" tab (default: true).
+ * @param comparePeers - If true, shows the "Peers" tab (default: true).
+ *
+ * @returns A React element containing the insights card with tabbed content.
+ */
 export function InsightsPanel({
   showSavingTips = true,
   personalizedRecommendations = true,
   comparePeers = true,
 }: InsightsPanelProps) {
   const [activeTab, setActiveTab] = useState<TabType>('tips');
-  const { t, isReady } = useTranslation(['dashboard', 'common']);
+  const { t, ready } = useTranslation('dashboard');
   const router = useRouter();
   const { user } = useAuth();
 
-  // Use API hooks with fallback data
+  // Use mock data for now - insights service will be implemented later
   const mockInsights = useMemo(() => getMockInsights(t), [t]);
-  const { insights, loading: insightsLoading, dismissInsight } = useInsights(mockInsights);
-  const { data: dashboardData, loading: dashboardLoading } = useDashboardData();
+  const insights = mockInsights;
+  const insightsLoading = false;
+  const dashboardLoading = false;
 
-  // Generate dynamic tips and comparisons from dashboard data
-  const savingTips = useMemo(() =>
-    // Analytics not available in current DashboardData, use mock data
-     getMockSavingTips(t)
-  , [t]);
+  // Generate tips and comparisons from mock data
+  const savingTips = useMemo(() => getMockSavingTips(t), [t]);
+  const peerComparisons = useMemo(() => getMockPeerComparisons(t), [t]);
 
-  const peerComparisons = useMemo(() =>
-    // Trends not available in current DashboardData, use mock data
-     getMockPeerComparisons(t)
-  , [t]);
+  // Mock dismiss function
+  const dismissInsight = (id: string) => {
+    console.log('Dismiss insight:', id);
+  };
 
-  const handleInsightAction = useCallback(async (action: any) => {
+  const handleInsightAction = useCallback(async (action: InsightAction) => {
     switch (action.type) {
       case 'navigate':
         router.push(action.target);
@@ -77,7 +90,7 @@ export function InsightsPanel({
   }, [router, user]);
 
   const renderContent = () => {
-    if (!isReady || insightsLoading || dashboardLoading) {
+    if (!ready || insightsLoading || dashboardLoading) {
       return (
         <div className="flex items-center justify-center h-64">
           <div className="text-center">

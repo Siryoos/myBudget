@@ -1,15 +1,15 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { RateLimitConfig as RateLimitConfigType } from '../lib/rate-limiting/config';
 
 // Conditional import for Redis - only import in Node.js runtime
 let rateLimiter: any = null;
-let RateLimitConfig: any = null;
+let rateLimitConfig: any = null;
 
 if (typeof process !== 'undefined' && process.env && process.env.NODE_ENV) {
   try {
     const redisModule = require('@/lib/redis');
     rateLimiter = redisModule.rateLimiter;
-    RateLimitConfig = redisModule.RateLimitConfig;
+    rateLimitConfig = redisModule.RateLimitConfig;
   } catch (error) {
     console.warn('Redis rate limiter not available in Edge Runtime');
   }
@@ -48,7 +48,7 @@ const validateEnvironment = () => {
   }
 
   // Validate Redis configuration
-  const redisPort = parseInt(process.env.REDIS_PORT || '6379');
+  const redisPort = parseInt(process.env.REDIS_PORT || '6379', 10);
   if (isNaN(redisPort) || redisPort < 1 || redisPort > 65535) {
     throw new Error('REDIS_PORT must be a valid port number (1-65535)');
   }
@@ -150,8 +150,26 @@ const isValidDomain = (domain: string): boolean => {
   }
 };
 
-// Enhanced security middleware with proper error boundaries
-export function securityMiddleware(request: NextRequest): NextResponse {
+/**
+ * Enforces request-level security controls and injects security headers for incoming requests.
+ *
+ * Performs request validation (max body size, JSON content-type for POST/PUT), suspicious-user-agent detection,
+ * CORS handling (including preflight OPTIONS responses), applies generated security headers and a CSP nonce
+ * in production, and records relevant metrics to the security monitor.
+ *
+ * Behavior summary:
+ * - Returns 413 when Content-Length exceeds 10 MB.
+ * - Returns 400 for POST/PUT requests with non-JSON content types.
+ * - Returns 204 for CORS preflight (OPTIONS) requests with appropriate CORS headers.
+ * - Sets Access-Control-Allow-Origin and credentials when the Origin header matches configured ALLOWED_ORIGINS.
+ * - Adds security headers from getSecurityHeaders(); in production attempts to generate and add a CSP nonce (X-Nonce)
+ *   and substitutes it into the Content-Security-Policy header; if nonce generation fails, nonce-dependent CSP
+ *   directives are removed.
+ * - Records metrics via securityMonitor (e.g., largeRequests, invalidContentTypes, suspiciousRequests, unauthorizedOrigins).
+ *
+ * @returns A NextResponse representing the allowed response, a CORS preflight response, or an error response (413/400/500).
+ */
+export function securityMiddleware(request: NextRequest) {
   try {
     // Get the response
     const response = NextResponse.next();
@@ -169,7 +187,7 @@ export function securityMiddleware(request: NextRequest): NextResponse {
     // Request validation with improved logic
     const contentLength = request.headers.get('content-length');
     if (contentLength) {
-      const size = parseInt(contentLength);
+      const size = parseInt(contentLength, 10);
       if (isNaN(size) || size > 10 * 1024 * 1024) { // 10MB limit
         securityMonitor.recordRequest('largeRequests');
         console.warn('Large request detected:', { ...securityLog, size });
@@ -389,7 +407,20 @@ const securityMonitor = new SecurityMonitor();
 // Export for external monitoring
 export { securityMonitor, type SecurityMetrics };
 
-// Optimized header merging utility
+/**
+ * Copies a curated set of security and CORS headers from one Headers object into another.
+ *
+ * Only the following headers are transferred if present on `source`: Content-Security-Policy,
+ * X-Frame-Options, X-Content-Type-Options, X-XSS-Protection, Strict-Transport-Security,
+ * Access-Control-Allow-Origin, Access-Control-Allow-Credentials, and Vary.
+ *
+ * This function mutates `target` by setting each header's value (overwriting existing values)
+ * and does nothing for headers that are absent on `source`. Header lookup is performed using
+ * the Headers API (case-insensitive).
+ *
+ * @param target - The Headers object to receive the selected headers.
+ * @param source - The Headers object to copy headers from.
+ */
 function mergeSecurityHeaders(target: Headers, source: Headers): void {
   // Only copy essential security and CORS headers
   const essentialHeaders = [
@@ -411,8 +442,22 @@ function mergeSecurityHeaders(target: Headers, source: Headers): void {
   });
 }
 
-// Enhanced combined middleware with better error handling and async rate limiting
-export async function middleware(request: NextRequest): Promise<NextResponse> {
+/**
+ * Main middleware that enforces security headers and optional per-route API rate limits.
+ *
+ * Applies security middleware to every request, then:
+ * - Bypasses rate limiting for OPTIONS and HEAD requests.
+ * - For requests under /api, looks up a matching rate limit from `apiRateLimits` and, if present,
+ *   checks the limit via the runtime rate limiter.
+ *   - If the request is rate-limited, records a blocked request, returns 429 with JSON body and
+ *     standard rate-limit headers, and copies essential security headers from the base response.
+ *   - If the rate check succeeds, attaches `X-RateLimit-Limit`, `X-RateLimit-Remaining`, and
+ *     `X-RateLimit-Reset` to the response.
+ * - On rate-limiter failures returns a 500 JSON error; unexpected errors also produce a 500 JSON error.
+ *
+ * Returns a NextResponse with appropriate headers and status codes depending on the outcome.
+ */
+export async function middleware(request: NextRequest) {
   try {
     // Apply security headers
     const response = securityMiddleware(request);
@@ -511,8 +556,22 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
 
 // Note: Config is exported from the root middleware.ts file
 
-// Enhanced security health check endpoint with better error handling
-export async function GET(request: NextRequest): Promise<NextResponse> {
+/**
+ * Handles the security health-check endpoint at `/api/security/health`.
+ *
+ * Performs an in-memory metrics snapshot and, when available, a dynamic Redis health check.
+ * Returns a JSON payload with overall status (`healthy` when Redis is healthy, otherwise `degraded`),
+ * timestamp, current security metrics, environment info, and Redis availability/latency/error details.
+ *
+ * If the request path is not `/api/security/health`, the request is delegated to the next handler.
+ * Errors during health evaluation are caught and result in a 500 JSON response describing the failure.
+ *
+ * @returns A NextResponse containing the JSON health object.
+ *          - Status 200: Redis reported healthy.
+ *          - Status 503: Redis reported unhealthy or degraded.
+ *          - Status 500: An internal error occurred during health evaluation.
+ */
+export async function GET(request: NextRequest) {
   try {
     if (request.nextUrl.pathname === '/api/security/health') {
       const metrics = securityMonitor.getMetrics();
