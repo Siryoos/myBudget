@@ -1,20 +1,20 @@
-import { NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 import { RequestValidator, REQUEST_LIMITS } from '@/lib/api-validation';
 import { requireAuth } from '@/lib/auth-middleware';
-import { GoalsService } from '@/lib/services/goals-service';
 import {
   handleApiError,
   createSuccessResponse,
-  generateRequestId
+  generateRequestId,
 } from '@/lib/services/error-handler';
+import { GoalsService } from '@/lib/services/goals-service';
 import type { AuthenticatedRequest } from '@/types/auth';
 
 const goalsService = new GoalsService();
 
 export const POST = requireAuth(async (
   request: AuthenticatedRequest,
-  context?: { params: { id: string; milestoneId: string } }
+  context?: { params: { id: string; milestoneId: string } },
 ) => {
   const requestId = generateRequestId();
 
@@ -35,7 +35,7 @@ export const POST = requireAuth(async (
 
     return createSuccessResponse({
       ...milestone,
-      message: 'Milestone completed successfully'
+      message: 'Milestone completed successfully',
     }, requestId);
 
   } catch (error) {

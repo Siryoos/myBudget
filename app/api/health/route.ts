@@ -1,4 +1,5 @@
-import { NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
+
 import { query } from '@/lib/database';
 import { getHealthData } from '@/lib/middleware/monitoring';
 import { createSuccessResponse, generateRequestId } from '@/lib/services/error-handler';
@@ -40,8 +41,8 @@ export const GET = async (request: NextRequest) => {
                          healthData.status === 'unhealthy' || !databaseHealthy ? 'unhealthy' : 'degraded';
 
     return createSuccessResponse({
-      status: overallStatus,
       ...response,
+      status: overallStatus,
     }, requestId);
 
   } catch (error) {

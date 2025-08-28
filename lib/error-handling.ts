@@ -281,22 +281,22 @@ export class ErrorHandler {
     if (process.env.NODE_ENV === 'production') {
       // Fire and forget - don't block the response
       this.sendToLoggingService(logData).catch(error => {
-        console.error('Failed to send to logging service:', error);
+        console.error('Failed to send to logging service:', error as Error);
       });
     }
   }
 
-  private async sendToLoggingService(logData: any): Promise<void> {
+  private async sendToLoggingService(logData: Record<string, unknown>): Promise<void> {
     try {
       await loggingService.logError(
-        new Error(logData.message || 'Application error'),
+        new Error((logData.message as string) || 'Application error'),
         {
-          component: logData.context?.component || 'ErrorHandler',
-          action: logData.context?.action || 'handleError',
-          requestId: logData.requestId,
-          userId: logData.context?.userId,
-          severity: logData.severity,
-        }
+          component: 'ErrorHandler',
+          action: 'handleError',
+          requestId: logData.requestId as string | undefined,
+          userId: undefined,
+          severity: logData.severity as string | undefined,
+        },
       );
     } catch (error) {
       // Fallback to console if external logging fails
@@ -316,18 +316,19 @@ export const createErrorResponse = (
   const errorHandler = ErrorHandler.getInstance();
 
   if (error instanceof AppError) {
-    // Create a new error instance with the additional context instead of modifying the existing one
-    const enhancedError = new AppError(
-      error.message,
-      error.code,
-      error.statusCode,
-      error.severity,
-      error.isOperational,
-      error.details,
-      requestId || error.requestId,
-      userAgent || error.userAgent,
-      ipAddress || error.ipAddress,
-    );
+      // Create a new error instance with the additional context
+  // instead of modifying the existing one
+  const enhancedError = new AppError(
+    error.message,
+    error.code,
+    error.statusCode,
+    error.severity,
+    error.isOperational,
+    error.details,
+    requestId || error.requestId,
+    userAgent || error.userAgent,
+    ipAddress || error.ipAddress,
+  );
     return errorHandler.handleError(enhancedError, requestId);
   }
 

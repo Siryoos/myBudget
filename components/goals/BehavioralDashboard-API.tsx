@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 
 import { useGoals, useMutation, useAuth } from '@/contexts/AppProvider';
-import { GoalsService } from '@/lib/services/goals-service';
+import { apiClient } from '@/lib/api-client';
 import { useTranslation } from '@/lib/useTranslation';
 import type { SavingsGoal, Achievement, QuickSaveData } from '@/types';
 
@@ -45,49 +45,33 @@ export function BehavioralDashboard({
   // Mutations for goal operations
   const createGoalState = useMutation(
     async (goalData: any) => {
-      if (!user?.id) throw new Error('User not authenticated');
-      const goalsService = new GoalsService();
-      return await goalsService.create(user.id, goalData);
+      if (!user?.id) {throw new Error('User not authenticated');}
+      const result = await apiClient.createGoal({ ...goalData, userId: user.id });
+      refreshGoals(); // Refresh after successful creation
+      return result;
     },
-    {
-      onSuccess: () => {
-        refreshGoals();
-      },
-    }
   );
 
   const addContributionState = useMutation(
     async ({ goalId, amount }: { goalId: string; amount: number }) => {
-      const goalsService = new GoalsService();
-      return await goalsService.contribute(goalId, amount);
+      const result = await apiClient.request(`/goals/${goalId}/contribute`, {
+        method: 'POST',
+        body: JSON.stringify({ amount }),
+      });
+      refreshGoals(); // Refresh after successful contribution
+      return result;
     },
-    {
-      onSuccess: () => {
-        refreshGoals();
-      },
-    }
   );
   const [quickSaveHistory, setQuickSaveHistory] = useState<QuickSaveData[]>([]);
   const [activeTab, setActiveTab] = useState<'goals' | 'quick-save' | 'achievements' | 'insights'>('goals');
   const [showGoalWizard, setShowGoalWizard] = useState(false);
   const [recentAchievement, setRecentAchievement] = useState<Achievement | null>(null);
 
-  // Mock quick save history from analytics if available
+  // Initialize with empty quick save history
   useEffect(() => {
-    if (analytics?.recentTransactions) {
-      const saves = analytics.recentTransactions
-        .filter((t: any) => t.category === 'savings')
-        .map((t: any) => ({
-          id: t.id || `qs-${Date.now()}`,
-          goalId: t.goalId || '1',
-          amount: t.amount,
-          timestamp: new Date(t.date),
-          source: 'manual' as const,
-          isAboveAverage: t.amount > (analytics.averageSaveAmount || 50),
-        }));
-      setQuickSaveHistory(saves);
-    }
-  }, [analytics]);
+    // Quick save history would be loaded from API in production
+    setQuickSaveHistory([]);
+  }, []);
 
   if (!ready || goalsLoading || createGoalState.loading || addContributionState.loading) {
     return (

@@ -1,14 +1,14 @@
-import { NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 import { RequestValidator, REQUEST_LIMITS } from '@/lib/api-validation';
 import { requireAuth } from '@/lib/auth-middleware';
-import { GoalsService } from '@/lib/services/goals-service';
-import { savingsGoalSchemas } from '@/lib/validation-schemas';
 import {
   handleApiError,
   createSuccessResponse,
-  generateRequestId
+  generateRequestId,
 } from '@/lib/services/error-handler';
+import { GoalsService } from '@/lib/services/goals-service';
+import { savingsGoalSchemas } from '@/lib/validation-schemas';
 import type { AuthenticatedRequest } from '@/types/auth';
 
 const goalsService = new GoalsService();
@@ -48,15 +48,11 @@ export const PUT = requireAuth(async (request: AuthenticatedRequest, context?: {
     await validator.validateRequestSize();
     validator.validateHeaders();
 
-    // Parse and validate request body
+    // Parse request body
     const body = await request.json();
-    const { ...updateData } = body;
 
-    // Validate update data
-    const validatedData = goalsService.validateData(savingsGoalSchemas.update, updateData);
-
-    // Update goal using service
-    const goal = await goalsService.update(id, validatedData);
+    // Update goal using service (validation happens inside the service)
+    const goal = await goalsService.update(id, body);
 
     return createSuccessResponse(goal, requestId);
 
@@ -84,7 +80,7 @@ export const DELETE = requireAuth(async (request: AuthenticatedRequest, context?
 
     return createSuccessResponse(
       { message: 'Goal deleted successfully', requestId },
-      requestId
+      requestId,
     );
 
   } catch (error) {

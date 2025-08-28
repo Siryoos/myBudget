@@ -1,6 +1,8 @@
+import { query } from '@/lib/database';
 import { UserService } from '@/lib/services/user-service';
 import { userSchemas } from '@/lib/validation-schemas';
-import { query } from '@/lib/database';
+
+import { createMockQueryResult, createEmptyQueryResult } from '../../test-helpers/db-mocks';
 
 // Mock the database
 jest.mock('@/lib/database', () => ({
@@ -45,16 +47,16 @@ describe('UserService', () => {
         language: 'de' as const,
       };
 
-      mockQuery.mockResolvedValueOnce({
-        rows: [mockUser],
-        rowCount: 1,
-      });
+      // 1) email uniqueness check -> no rows
+      mockQuery.mockResolvedValueOnce(createEmptyQueryResult('SELECT'));
+      // 2) insert -> returns created row
+      mockQuery.mockResolvedValueOnce(createMockQueryResult([mockUser], 'INSERT'));
 
       const result = await userService.create(userData);
 
       expect(mockQuery).toHaveBeenCalledWith(
         expect.stringContaining('INSERT INTO users'),
-        expect.any(Array)
+        expect.any(Array),
       );
       expect(result.email).toBe(userData.email);
       expect(result.name).toBe(userData.name);
@@ -68,10 +70,7 @@ describe('UserService', () => {
         dateOfBirth: '1990-01-01',
       };
 
-      mockQuery.mockResolvedValueOnce({
-        rows: [mockUser],
-        rowCount: 1,
-      });
+      mockQuery.mockResolvedValueOnce(createMockQueryResult([mockUser], 'SELECT'));
 
       await expect(userService.create(userData)).rejects.toThrow('User with this email already exists');
     });
@@ -90,25 +89,19 @@ describe('UserService', () => {
 
   describe('findByEmail', () => {
     it('should find user by email', async () => {
-      mockQuery.mockResolvedValueOnce({
-        rows: [mockUser],
-        rowCount: 1,
-      });
+      mockQuery.mockResolvedValueOnce(createMockQueryResult([mockUser], 'SELECT'));
 
       const result = await userService.findByEmail('test@example.com');
 
       expect(mockQuery).toHaveBeenCalledWith(
         expect.stringContaining('WHERE lower(email) = lower($1)'),
-        ['test@example.com']
+        ['test@example.com'],
       );
       expect(result?.email).toBe('test@example.com');
     });
 
     it('should return null for non-existent email', async () => {
-      mockQuery.mockResolvedValueOnce({
-        rows: [],
-        rowCount: 0,
-      });
+      mockQuery.mockResolvedValueOnce(createEmptyQueryResult('SELECT'));
 
       const result = await userService.findByEmail('nonexistent@example.com');
 
@@ -118,16 +111,13 @@ describe('UserService', () => {
 
   describe('findById', () => {
     it('should find user by id', async () => {
-      mockQuery.mockResolvedValueOnce({
-        rows: [mockUser],
-        rowCount: 1,
-      });
+      mockQuery.mockResolvedValueOnce(createMockQueryResult([mockUser], 'SELECT'));
 
       const result = await userService.findById(mockUser.id);
 
       expect(mockQuery).toHaveBeenCalledWith(
         'SELECT * FROM users WHERE id = $1',
-        [mockUser.id]
+        [mockUser.id],
       );
       expect(result?.id).toBe(mockUser.id);
     });
@@ -140,10 +130,7 @@ describe('UserService', () => {
         monthlyIncome: 6000,
       };
 
-      mockQuery.mockResolvedValueOnce({
-        rows: [{ ...mockUser, name: 'Updated Name', monthly_income: 6000 }],
-        rowCount: 1,
-      });
+      mockQuery.mockResolvedValueOnce(createMockQueryResult([{ ...mockUser, name: 'Updated Name', monthly_income: 6000 }], 'SELECT'));
 
       const result = await userService.update(mockUser.id, updateData);
 
@@ -152,10 +139,7 @@ describe('UserService', () => {
     });
 
     it('should throw error for non-existent user', async () => {
-      mockQuery.mockResolvedValueOnce({
-        rows: [],
-        rowCount: 0,
-      });
+      mockQuery.mockResolvedValueOnce(createEmptyQueryResult('SELECT'));
 
       await expect(userService.update('non-existent-id', { name: 'Test' })).rejects.toThrow('User not found');
     });
@@ -168,10 +152,7 @@ describe('UserService', () => {
         password: 'correctpassword',
       };
 
-      mockQuery.mockResolvedValueOnce({
-        rows: [mockUser],
-        rowCount: 1,
-      });
+      mockQuery.mockResolvedValueOnce(createMockQueryResult([mockUser], 'SELECT'));
 
       // Mock bcrypt.compare to return true
       const bcrypt = require('bcryptjs');
@@ -188,10 +169,7 @@ describe('UserService', () => {
         password: 'wrongpassword',
       };
 
-      mockQuery.mockResolvedValueOnce({
-        rows: [mockUser],
-        rowCount: 1,
-      });
+      mockQuery.mockResolvedValueOnce(createMockQueryResult([mockUser], 'SELECT'));
 
       // Mock bcrypt.compare to return false
       const bcrypt = require('bcryptjs');
@@ -203,10 +181,7 @@ describe('UserService', () => {
     });
 
     it('should return null for non-existent email', async () => {
-      mockQuery.mockResolvedValueOnce({
-        rows: [],
-        rowCount: 0,
-      });
+      mockQuery.mockResolvedValueOnce(createEmptyQueryResult('SELECT'));
 
       const result = await userService.authenticate('nonexistent@example.com', 'password');
 
@@ -216,30 +191,21 @@ describe('UserService', () => {
 
   describe('delete', () => {
     it('should delete user successfully', async () => {
-      mockQuery.mockResolvedValueOnce({
-        rows: [mockUser],
-        rowCount: 1,
-      });
+      mockQuery.mockResolvedValueOnce(createMockQueryResult([mockUser], 'SELECT'));
 
-      mockQuery.mockResolvedValueOnce({
-        rows: [{ id: mockUser.id }],
-        rowCount: 1,
-      });
+      mockQuery.mockResolvedValueOnce(createMockQueryResult([{ id: mockUser.id }], 'SELECT'));
 
       const result = await userService.delete(mockUser.id);
 
       expect(result).toBe(true);
       expect(mockQuery).toHaveBeenCalledWith(
         'DELETE FROM users WHERE id = $1 RETURNING id',
-        [mockUser.id]
+        [mockUser.id],
       );
     });
 
     it('should throw error for non-existent user', async () => {
-      mockQuery.mockResolvedValueOnce({
-        rows: [],
-        rowCount: 0,
-      });
+      mockQuery.mockResolvedValueOnce(createEmptyQueryResult('SELECT'));
 
       await expect(userService.delete('non-existent-id')).rejects.toThrow('User not found');
     });

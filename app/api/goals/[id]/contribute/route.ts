@@ -1,14 +1,14 @@
-import { NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { z } from 'zod';
 
 import { RequestValidator, REQUEST_LIMITS } from '@/lib/api-validation';
 import { requireAuth } from '@/lib/auth-middleware';
-import { GoalsService } from '@/lib/services/goals-service';
-import { z } from 'zod';
 import {
   handleApiError,
   createSuccessResponse,
-  generateRequestId
+  generateRequestId,
 } from '@/lib/services/error-handler';
+import { GoalsService } from '@/lib/services/goals-service';
 import type { AuthenticatedRequest } from '@/types/auth';
 
 const goalsService = new GoalsService();
@@ -41,7 +41,7 @@ export const POST = requireAuth(async (request: AuthenticatedRequest, context?: 
 
     return createSuccessResponse({
       ...updatedGoal,
-      message: `Successfully contributed $${body.amount} to goal`
+      message: `Successfully contributed $${body.amount} to goal`,
     }, requestId);
 
   } catch (error) {

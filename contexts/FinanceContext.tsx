@@ -3,8 +3,7 @@
 import type { ReactNode } from 'react';
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
-import { TransactionService } from '@/lib/services/transaction-service';
-import { BudgetService } from '@/lib/services/budget-service';
+import { apiClient } from '@/lib/api-client';
 import type { Transaction, Budget, SavingsGoal } from '@/types';
 
 interface FinanceContextType {
@@ -39,8 +38,7 @@ interface FinanceContextType {
 
 const FinanceContext = createContext<FinanceContextType | undefined>(undefined);
 
-const transactionService = new TransactionService();
-const budgetService = new BudgetService();
+// API client is used instead of direct service imports
 
 /**
  * Provides finance-related state and actions (transactions, budgets, savings goals) to descendant components.
@@ -71,14 +69,14 @@ export function FinanceProvider({ children, userId }: { children: ReactNode; use
 
   // Load transactions
   const loadTransactions = useCallback(async () => {
-    if (!userId) return;
+    if (!userId) {return;}
 
     setTransactionsLoading(true);
     setTransactionsError(null);
 
     try {
-      const result = await transactionService.findByUserId(userId, {}, { page: 1, limit: 50 });
-      setTransactions(result.data);
+      const transactions = await apiClient.getTransactions(userId);
+      setTransactions(transactions);
     } catch (error) {
       setTransactionsError(error instanceof Error ? error.message : 'Failed to load transactions');
     } finally {
@@ -88,18 +86,18 @@ export function FinanceProvider({ children, userId }: { children: ReactNode; use
 
   // Load budgets
   const loadBudgets = useCallback(async () => {
-    if (!userId) return;
+    if (!userId) {return;}
 
     setBudgetsLoading(true);
     setBudgetsError(null);
 
     try {
-      const budgetsData = await budgetService.findByUserId(userId);
-      setBudgets(budgetsData);
+      const budgetsData = await apiClient.getBudgets(userId);
+      setBudgets(budgetsData as Budget[]);
 
       // Set the most recent budget as active if none is set
       if (budgetsData.length > 0 && !activeBudget) {
-        setActiveBudget(budgetsData[0]);
+        setActiveBudget(budgetsData[0] as Budget);
       }
     } catch (error) {
       setBudgetsError(error instanceof Error ? error.message : 'Failed to load budgets');
@@ -110,7 +108,7 @@ export function FinanceProvider({ children, userId }: { children: ReactNode; use
 
   // Load goals (placeholder - would need a goal service)
   const loadGoals = useCallback(async () => {
-    if (!userId) return;
+    if (!userId) {return;}
 
     setGoalsLoading(true);
     setGoalsError(null);

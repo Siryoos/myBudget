@@ -1,18 +1,19 @@
 import { NextResponse } from 'next/server';
 import { ZodError } from 'zod';
+
 import {
   NotFoundError,
   ValidationError,
   ConflictError,
   UnauthorizedError,
-  ForbiddenError
+  ForbiddenError,
 } from './base-service';
 
-export interface ErrorResponse {
+export interface ServiceErrorResponse {
   success: false;
   error: string;
   code: string;
-  details?: any;
+  details?: Record<string, unknown>;
   requestId?: string;
 }
 
@@ -44,37 +45,25 @@ export class ApiError extends Error {
 }
 
 // Error factory functions
-export const createValidationError = (message: string, details?: any): ApiError => {
-  return new ApiError(message, ERROR_CODES.VALIDATION_ERROR, 400, details);
-};
+export const createValidationError = (message: string, details?: any): ApiError => new ApiError(message, ERROR_CODES.VALIDATION_ERROR, 400, details);
 
 export const createNotFoundError = (resource: string, id?: string): ApiError => {
   const message = id ? `${resource} with id ${id} not found` : `${resource} not found`;
   return new ApiError(message, ERROR_CODES.NOT_FOUND, 404);
 };
 
-export const createConflictError = (message: string, details?: any): ApiError => {
-  return new ApiError(message, ERROR_CODES.CONFLICT, 409, details);
-};
+export const createConflictError = (message: string, details?: any): ApiError => new ApiError(message, ERROR_CODES.CONFLICT, 409, details);
 
-export const createUnauthorizedError = (message: string = 'Unauthorized'): ApiError => {
-  return new ApiError(message, ERROR_CODES.UNAUTHORIZED, 401);
-};
+export const createUnauthorizedError = (message: string = 'Unauthorized'): ApiError => new ApiError(message, ERROR_CODES.UNAUTHORIZED, 401);
 
-export const createForbiddenError = (message: string = 'Forbidden'): ApiError => {
-  return new ApiError(message, ERROR_CODES.FORBIDDEN, 403);
-};
+export const createForbiddenError = (message: string = 'Forbidden'): ApiError => new ApiError(message, ERROR_CODES.FORBIDDEN, 403);
 
-export const createInternalError = (message: string = 'Internal server error', details?: any): ApiError => {
-  return new ApiError(message, ERROR_CODES.INTERNAL_ERROR, 500, details);
-};
+export const createInternalError = (message: string = 'Internal server error', details?: any): ApiError => new ApiError(message, ERROR_CODES.INTERNAL_ERROR, 500, details);
 
-export const createDatabaseError = (message: string = 'Database error', details?: any): ApiError => {
-  return new ApiError(message, ERROR_CODES.DATABASE_ERROR, 500, details);
-};
+export const createDatabaseError = (message: string = 'Database error', details?: any): ApiError => new ApiError(message, ERROR_CODES.DATABASE_ERROR, 500, details);
 
 /**
- * Convert any thrown error into a standardized NextResponse containing an ErrorResponse.
+ * Convert any thrown error into a standardized NextResponse containing a ServiceErrorResponse.
  *
  * Maps known error types to appropriate HTTP status codes and error codes:
  * - ApiError: uses the instance's message, code, details and statusCode.
@@ -86,10 +75,10 @@ export const createDatabaseError = (message: string = 'Database error', details?
  *
  * @param error - The thrown value to normalize (can be any type).
  * @param requestId - Optional request identifier to include in the response.
- * @returns A NextResponse wrapping an ErrorResponse with `success: false`, an error message, an error code,
+ * @returns A NextResponse wrapping a ServiceErrorResponse with `success: false`, an error message, an error code,
  *          optional `details`, optional `requestId`, and the appropriate HTTP status.
  */
-export function handleApiError(error: unknown, requestId?: string): NextResponse<ErrorResponse> {
+export function handleApiError(error: unknown, requestId?: string): NextResponse<ServiceErrorResponse> {
   console.error('API Error:', error);
 
   // Handle ApiError instances
@@ -197,7 +186,7 @@ export function handleApiError(error: unknown, requestId?: string): NextResponse
 export function createSuccessResponse<T>(
   data: T,
   requestId?: string,
-  status: number = 200
+  status: number = 200,
 ): NextResponse<{ success: true; data: T; requestId?: string }> {
   return NextResponse.json({
     success: true,
@@ -232,7 +221,7 @@ export function createPaginatedResponse<T>(
     hasNext: boolean;
     hasPrev: boolean;
   },
-  requestId?: string
+  requestId?: string,
 ): NextResponse<{
   success: true;
   data: T[];

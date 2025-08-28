@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest, NextResponse } from 'next/server';
+
 import { monitoringService } from '@/lib/services/monitoring-service';
 
 export interface MonitoredRequest extends NextRequest {
@@ -28,7 +29,7 @@ export interface MonitoredResponse extends NextResponse {
  * @returns A handler function with identical signature that adds monitoring around the original handler.
  */
 export function withMonitoring(
-  handler: (request: MonitoredRequest) => Promise<NextResponse>
+  handler: (request: MonitoredRequest) => Promise<NextResponse>,
 ) {
   return async (request: MonitoredRequest): Promise<NextResponse> => {
     const startTime = Date.now();
@@ -111,7 +112,7 @@ export function withMonitoring(
  * @returns An async handler that instruments performance and delegates to `handler`.
  */
 export function withPerformanceMonitoring(
-  handler: (request: MonitoredRequest) => Promise<NextResponse>
+  handler: (request: MonitoredRequest) => Promise<NextResponse>,
 ) {
   return async (request: MonitoredRequest): Promise<NextResponse> => {
     const startTime = Date.now();
@@ -168,7 +169,7 @@ export function withPerformanceMonitoring(
  * @returns A handler function with both monitoring and performance instrumentation applied.
  */
 export function withFullMonitoring(
-  handler: (request: MonitoredRequest) => Promise<NextResponse>
+  handler: (request: MonitoredRequest) => Promise<NextResponse>,
 ) {
   return withMonitoring(withPerformanceMonitoring(handler));
 }

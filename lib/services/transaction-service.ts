@@ -1,7 +1,10 @@
 import { query } from '@/lib/database';
-import { BaseService, NotFoundError, ValidationError, PaginatedResult, PaginationOptions } from './base-service';
-import { TransactionCreate, TransactionUpdate, TransactionFilter, transactionSchemas } from '@/lib/validation-schemas';
+import type { TransactionCreate, TransactionUpdate, TransactionFilter } from '@/lib/validation-schemas';
+import { transactionSchemas } from '@/lib/validation-schemas';
 import type { Transaction } from '@/types';
+
+import { BaseService, NotFoundError, ValidationError } from './base-service';
+import type { PaginatedResult, PaginationOptions } from './base-service';
 
 export class TransactionService extends BaseService {
   constructor() {
@@ -29,7 +32,7 @@ export class TransactionService extends BaseService {
       validatedData.account || null,
       validatedData.tags || null,
       validatedData.isRecurring || false,
-      validatedData.recurringFrequency || null
+      validatedData.recurringFrequency || null,
     ]);
 
     return this.mapDbTransactionToTransaction(result.rows[0]);
@@ -43,7 +46,7 @@ export class TransactionService extends BaseService {
   async findByUserId(
     userId: string,
     filters: TransactionFilter = {},
-    pagination?: PaginationOptions
+    pagination?: PaginationOptions,
   ): Promise<PaginatedResult<Transaction>> {
     // Validate filters
     const validatedFilters = this.validateData(transactionSchemas.filter, filters);

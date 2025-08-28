@@ -11,7 +11,7 @@ class Cache<T> {
 
   get(key: string): T | null {
     const item = this.cache.get(key);
-    if (!item) return null;
+    if (!item) {return null;}
 
     if (Date.now() > item.expires) {
       this.cache.delete(key);
@@ -143,11 +143,11 @@ export class QueryOptimizer {
 
   // Batch operations for better performance
   static async batchInsert(tableName: string, records: Record<string, any>[]): Promise<void> {
-    if (records.length === 0) return;
+    if (records.length === 0) {return;}
 
     const columns = Object.keys(records[0]);
     const values = records.map(record =>
-      `(${columns.map((_, i) => `$${i + 1}`).join(', ')})`
+      `(${columns.map((_, i) => `$${i + 1}`).join(', ')})`,
     ).join(', ');
 
     const flattenedValues = records.flatMap(record => columns.map(col => record[col]));
@@ -253,8 +253,8 @@ export class MemoryMonitor {
       const increasing = heapUsage[2] > heapUsage[0] * 1.1; // 10% increase
       const decreasing = heapUsage[2] < heapUsage[0] * 0.9; // 10% decrease
 
-      if (increasing) trend = 'increasing';
-      else if (decreasing) trend = 'decreasing';
+      if (increasing) {trend = 'increasing';}
+      else if (decreasing) {trend = 'decreasing';}
     }
 
     return {
@@ -321,7 +321,7 @@ export class ConnectionPoolMonitor {
         idle: acc.idle + stat.idle,
         waiting: acc.waiting + stat.waiting,
       }),
-      { active: 0, idle: 0, waiting: 0 }
+      { active: 0, idle: 0, waiting: 0 },
     );
 
     const count = this.connectionStats.length;

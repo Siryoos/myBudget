@@ -4,8 +4,7 @@ import { useRouter } from 'next/navigation';
 import type { ReactNode } from 'react';
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
-import { UserService } from '@/lib/services/user-service';
-import { userSchemas } from '@/lib/validation-schemas';
+import { apiClient } from '@/lib/api-client';
 import type { User } from '@/types/auth';
 
 interface AuthContextType {
@@ -24,7 +23,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const userService = new UserService();
+// API client is used instead of direct service imports
 
 /**
  * Provides authentication state and actions to descendant components.
@@ -53,9 +52,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const token = localStorage.getItem('authToken');
         if (token) {
           // Verify token by fetching profile
-          const userProfile = await userService.findById(token); // This would need to be adjusted based on your JWT structure
+          const userProfile = await apiClient.getUserProfile(token); // This would need to be adjusted based on your JWT structure
           if (userProfile) {
-            setUser(userProfile);
+            setUser(userProfile as unknown as User);
           } else {
             localStorage.removeItem('authToken');
           }
@@ -72,17 +71,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string) => {
-    try {
-      // Validate input
-      const validatedData = userService.validateData(userSchemas.login, { email, password });
-
-      // Authenticate user
-      const authenticatedUser = await userService.authenticate(email, password);
+    try { // Authenticate user (validation happens in the service)
+      const authenticatedUser = await apiClient.authenticate(email, password) as unknown as User;
       if (!authenticatedUser) {
         throw new Error('Invalid email or password');
       }
 
-      setUser(authenticatedUser);
+      setUser(authenticatedUser as unknown as User);
       router.push('/dashboard');
     } catch (error) {
       throw error;
@@ -91,13 +86,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = async (data: any) => {
     try {
-      // Validate input
-      const validatedData = userService.validateData(userSchemas.create, data);
+      // Create user (validation happens in the service)
+      const newUser = await apiClient.register(data) as unknown as User;
 
-      // Create user
-      const newUser = await userService.create(validatedData);
-
-      setUser(newUser);
+      setUser(newUser as unknown as User);
       router.push('/onboarding');
     } catch (error) {
       throw error;
@@ -119,14 +111,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error('No user logged in');
     }
 
-    try {
-      // Validate input
-      const validatedData = userService.validateData(userSchemas.update, data);
+    try { // Update user (validation happens in the service)
+      const updatedUser = await apiClient.updateUserProfile(user.id, data as any) as unknown as User;
 
-      // Update user
-      const updatedUser = await userService.update(user.id, validatedData);
-
-      setUser(updatedUser);
+      setUser(updatedUser as unknown as User);
     } catch (error) {
       throw error;
     }
@@ -138,11 +126,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const refreshedUser = await userService.findById(user.id);
+              const refreshedUser = await apiClient.getUserProfile(user.id);
       if (!refreshedUser) {
         throw new Error('User not found');
       }
-      setUser(refreshedUser);
+      setUser(refreshedUser as unknown as User);
     } catch (error) {
       setUser(null);
       router.push('/login');
@@ -152,37 +140,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // RBAC helper functions
   const hasPermission = useCallback((permission: string): boolean => {
-    if (!user) return false;
+    if (!user) {return false;}
     // Implement your permission logic here
     return true; // Placeholder
   }, [user]);
 
   const hasRole = useCallback((role: string): boolean => {
-    if (!user) return false;
+    if (!user) {return false;}
     return user.role === role;
   }, [user]);
 
   const canAccess = useCallback(
     (requiredRoles?: string[], requiredPermissions?: string[]): boolean => {
-      if (!user) return false;
+      if (!user) {return false;}
 
       // Check roles
       if (requiredRoles && requiredRoles.length > 0) {
         const hasRequiredRole = requiredRoles.includes(user.role);
-        if (!hasRequiredRole) return false;
+        if (!hasRequiredRole) {return false;}
       }
 
       // Check permissions
       if (requiredPermissions && requiredPermissions.length > 0) {
         const hasAllPermissions = requiredPermissions.every(permission =>
-          hasPermission(permission)
+          hasPermission(permission),
         );
-        if (!hasAllPermissions) return false;
+        if (!hasAllPermissions) {return false;}
       }
 
       return true;
     },
-    [user, hasPermission]
+    [user, hasPermission],
   );
 
   const value: AuthContextType = {

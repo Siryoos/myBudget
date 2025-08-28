@@ -1,7 +1,8 @@
-import React from 'react';
-import { render, RenderOptions } from '@testing-library/react';
-import type { ReactElement } from 'react';
+import type { RenderOptions } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import type { NextRouter } from 'next/router';
+import React from 'react';
+import type { ReactElement } from 'react';
 
 // Note: These context providers would need to exist
 // For now, we'll create mock versions
@@ -11,7 +12,7 @@ const MockThemeProvider: React.FC<{ children: React.ReactNode; initialTheme?: st
 
 /**
  * Comprehensive Test Utilities for MyBudget Application
- * 
+ *
  * This module provides utilities for:
  * - Component testing with proper context providers
  * - Mock data generation
@@ -47,11 +48,11 @@ interface TestWrapperProps {
  * @param router - Optional partial Next.js router object that can be passed alongside the wrapper (not used directly by the wrapper).
  * @returns A JSX element that wraps `children` with MockThemeProvider, MockAuthProvider, and MockAppProvider.
  */
-export function TestWrapper({ 
-  children, 
-  initialAuthState = {}, 
+export function TestWrapper({
+  children,
+  initialAuthState = {},
   initialAppState = {},
-  router = {}
+  router = {},
 }: TestWrapperProps) {
   return (
     <MockThemeProvider initialTheme={initialAppState.theme || 'light'}>
@@ -82,7 +83,7 @@ export function renderWithProviders(
     initialAuthState?: TestWrapperProps['initialAuthState'];
     initialAppState?: TestWrapperProps['initialAppState'];
     router?: Partial<NextRouter>;
-  } = {}
+  } = {},
 ) {
   const {
     initialAuthState,
@@ -403,14 +404,14 @@ export const componentTestUtils = {
   testComponentStates: (
     Component: React.ComponentType<any>,
     props: any,
-    states: Array<{ name: string; props: any; expectedText?: string }>
+    states: Array<{ name: string; props: any; expectedText?: string }>,
   ) => {
     states.forEach(({ name, props: stateProps, expectedText }) => {
       it(`renders correctly in ${name} state`, () => {
         const { getByText } = renderWithProviders(
-          <Component {...props} {...stateProps} />
+          <Component {...props} {...stateProps} />,
         );
-        
+
         if (expectedText) {
           expect(getByText(expectedText)).toBeInTheDocument();
         }
@@ -426,7 +427,7 @@ export const componentTestUtils = {
       name: string;
       action: (utils: ReturnType<typeof renderWithProviders>) => void;
       assertion: (utils: ReturnType<typeof renderWithProviders>) => void;
-    }>
+    }>,
   ) => {
     interactions.forEach(({ name, action, assertion }) => {
       it(`handles ${name} correctly`, () => {
@@ -452,15 +453,15 @@ export const performanceTestUtils = {
   testReRenders: (
     Component: React.ComponentType<any>,
     props: any,
-    propChanges: any[]
+    propChanges: any[],
   ) => {
     const { rerender } = renderWithProviders(<Component {...props} />);
-    
+
     propChanges.forEach((newProps, index) => {
       const start = performance.now();
       rerender(<Component {...props} {...newProps} />);
       const end = performance.now();
-      
+
       console.log(`Re-render ${index + 1} took ${end - start}ms`);
     });
   },

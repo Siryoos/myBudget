@@ -36,7 +36,7 @@ export class EmailService {
       'SMTP_PORT',
       'SMTP_USER',
       'SMTP_PASSWORD',
-      'SMTP_FROM'
+      'SMTP_FROM',
     ];
 
     return requiredEnvVars.every(varName => process.env[varName]);
@@ -79,7 +79,7 @@ export class EmailService {
       };
 
       const result = await this.transporter.sendMail(mailOptions);
-      
+
       if (process.env.NODE_ENV === 'development') {
         console.log('Email sent successfully:', {
           messageId: result.messageId,
@@ -98,7 +98,7 @@ export class EmailService {
   async sendPasswordReset(data: PasswordResetEmailData): Promise<boolean> {
     const subject = 'Reset Your MyBudget Password';
     const html = this.generatePasswordResetEmail(data);
-    
+
     return this.sendEmail({
       to: data.email,
       subject,
@@ -109,7 +109,7 @@ export class EmailService {
   async sendWelcome(data: WelcomeEmailData): Promise<boolean> {
     const subject = 'Welcome to MyBudget!';
     const html = this.generateWelcomeEmail(data);
-    
+
     return this.sendEmail({
       to: data.email,
       subject,

@@ -1,7 +1,9 @@
 import { query } from '@/lib/database';
-import { BaseService, NotFoundError } from './base-service';
-import { AchievementCreate, AchievementUpdate, UserAchievementUpdate, achievementSchemas, userAchievementSchemas } from '@/lib/validation-schemas';
+import type { AchievementCreate, AchievementUpdate, UserAchievementUpdate } from '@/lib/validation-schemas';
+import { achievementSchemas, userAchievementSchemas } from '@/lib/validation-schemas';
 import type { Achievement, UserAchievement } from '@/types';
+
+import { BaseService, NotFoundError } from './base-service';
 
 export interface AchievementWithProgress extends Achievement {
   userProgress?: {
@@ -55,7 +57,7 @@ export class AchievementsService extends BaseService {
   async findByCategory(category: string): Promise<Achievement[]> {
     const result = await query(
       'SELECT * FROM achievements WHERE category = $1 ORDER BY points DESC',
-      [category]
+      [category],
     );
     return result.rows.map(row => this.mapDbAchievementToAchievement(row));
   }
@@ -160,22 +162,22 @@ export class AchievementsService extends BaseService {
       `, [userId, achievementId]);
 
       return this.mapDbUserAchievementToUserAchievement(result.rows[0]);
-    } else {
+    }
       // Create new user achievement record
       const result = await query(`
         INSERT INTO user_achievements (user_id, achievement_id, is_unlocked, unlocked_date, progress, max_progress)
         VALUES ($1, $2, true, CURRENT_DATE, $3, $3)
         RETURNING *
-      `, [userId, achievementId, achievement.requirementValue]);
+      `, [userId, achievementId, (typeof achievement.requirement === 'object' ? achievement.requirement.value : 0)]);
 
       return this.mapDbUserAchievementToUserAchievement(result.rows[0]);
-    }
+
   }
 
   async updateUserAchievement(
     userId: string,
     achievementId: string,
-    data: UserAchievementUpdate
+    data: UserAchievementUpdate,
   ): Promise<UserAchievement> {
     // Validate input data
     const validatedData = this.validateData(userAchievementSchemas.update, data);
@@ -260,33 +262,37 @@ export class AchievementsService extends BaseService {
     for (const achievement of allAchievements) {
       let shouldUnlock = false;
       let currentProgress = 0;
-      let maxProgress = achievement.requirementValue;
+      let maxProgress = (typeof achievement.requirement === 'object' ? achievement.requirement.value : 0);
 
       // Check if achievement criteria are met based on requirement type
-      switch (achievement.requirementType) {
+      switch ((typeof achievement.requirement === 'object' ? achievement.requirement.type : 'custom')) {
         case 'transaction_count':
+        case 'custom':
           currentProgress = userStats.transactionCount;
-          shouldUnlock = currentProgress >= achievement.requirementValue;
+          shouldUnlock = currentProgress >= (typeof achievement.requirement === 'object' ? achievement.requirement.value : 0);
           break;
 
         case 'saving_streak':
+        case 'consecutive-days':
           // This would require more complex logic to track saving streaks
           // For now, we'll use a simple implementation
           currentProgress = userStats.savingsTransactions;
-          shouldUnlock = currentProgress >= achievement.requirementValue;
+          shouldUnlock = currentProgress >= (typeof achievement.requirement === 'object' ? achievement.requirement.value : 0);
           break;
 
         case 'budget_adherence':
+        case 'custom':
           // Check if user has been within budget limits
           const budgetAdherence = await this.calculateBudgetAdherence(userId);
           currentProgress = Math.floor(budgetAdherence * 100); // Convert to percentage
           maxProgress = 100;
-          shouldUnlock = budgetAdherence >= (achievement.requirementValue / 100);
+          shouldUnlock = budgetAdherence >= ((typeof achievement.requirement === 'object' ? achievement.requirement.value : 0) / 100);
           break;
 
         case 'goal_completion':
+        case 'goal-completion':
           currentProgress = userStats.completedGoals;
-          shouldUnlock = currentProgress >= achievement.requirementValue;
+          shouldUnlock = currentProgress >= (typeof achievement.requirement === 'object' ? achievement.requirement.value : 0);
           break;
       }
 
@@ -312,7 +318,7 @@ export class AchievementsService extends BaseService {
   private async findUserAchievement(userId: string, achievementId: string): Promise<UserAchievement | null> {
     const result = await query(
       'SELECT * FROM user_achievements WHERE user_id = $1 AND achievement_id = $2',
-      [userId, achievementId]
+      [userId, achievementId],
     );
 
     return result.rows.length > 0
@@ -371,9 +377,9 @@ export class AchievementsService extends BaseService {
       description: dbAchievement.description,
       category: dbAchievement.category,
       icon: dbAchievement.icon,
-      requirementType: dbAchievement.requirement_type,
-      requirementValue: dbAchievement.requirement_value,
-      requirementTimeframe: dbAchievement.requirement_timeframe,
+      requirement: { type: dbAchievement.requirement_type, value: dbAchievement.requirement_value, description: dbAchievement.description },
+      // requirement value included in requirement object above
+      // requirementTimeframe is not part of Achievement type
       requirementDescription: dbAchievement.requirement_description,
       points: dbAchievement.points,
       createdAt: dbAchievement.created_at.toISOString(),
@@ -389,7 +395,7 @@ export class AchievementsService extends BaseService {
       unlockedDate: dbUserAchievement.unlocked_date?.toISOString().split('T')[0],
       progress: dbUserAchievement.progress,
       maxProgress: dbUserAchievement.max_progress,
-      createdAt: dbUserAchievement.created_at.toISOString(),
+      // createdAt is not part of UserAchievement type
     };
   }
 }

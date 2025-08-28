@@ -1,15 +1,15 @@
-import { NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 import { RequestValidator, REQUEST_LIMITS } from '@/lib/api-validation';
 import { requireAuth } from '@/lib/auth-middleware';
-import { GoalsService } from '@/lib/services/goals-service';
-import { automationRuleSchemas } from '@/lib/validation-schemas';
 import {
   handleApiError,
   createSuccessResponse,
   createPaginatedResponse,
-  generateRequestId
+  generateRequestId,
 } from '@/lib/services/error-handler';
+import { GoalsService } from '@/lib/services/goals-service';
+import { automationRuleSchemas } from '@/lib/validation-schemas';
 import type { AuthenticatedRequest } from '@/types/auth';
 
 const goalsService = new GoalsService();
@@ -28,7 +28,11 @@ export const GET = requireAuth(async (request: AuthenticatedRequest, context?: {
     // Get goal to verify it exists and get automation rules
     const goal = await goalsService.findById(id);
 
-    return createSuccessResponse(goal.automationRules, requestId);
+    if (!goal) {
+      throw new Error(`Goal not found: ${id}`);
+    }
+
+    return createSuccessResponse(goal.automationRules || [], requestId);
 
   } catch (error) {
     return handleApiError(error, requestId);

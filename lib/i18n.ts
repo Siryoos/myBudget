@@ -1,9 +1,9 @@
-import i18next from 'i18next';
-import { initReactI18next } from 'react-i18next';
-import Backend from 'i18next-http-backend';
-import LanguageDetector from 'i18next-browser-languagedetector';
 import { format, formatDistanceToNow } from 'date-fns';
 import { enUS, ar, faIR } from 'date-fns/locale';
+import i18next from 'i18next';
+import LanguageDetector from 'i18next-browser-languagedetector';
+import Backend from 'i18next-http-backend';
+import { initReactI18next } from 'react-i18next';
 
 // RTL locales
 const RTL_LOCALES = ['fa', 'ar'];

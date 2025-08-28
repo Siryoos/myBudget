@@ -4,7 +4,7 @@ import type { ApiResponse, ErrorResponse, SuccessResponse } from '@/types';
 
 /**
  * Standardized API Response Utility
- * 
+ *
  * This utility ensures all API endpoints return consistent response formats
  * with proper typing, error handling, and metadata.
  */
@@ -55,7 +55,7 @@ export interface BulkOperationSummary {
  */
 export function createSuccessResponse<T>(
   data: T,
-  options: ApiResponseOptions = {}
+  options: ApiResponseOptions = {},
 ): NextResponse<SuccessResponse<T>> {
   const {
     status = 200,
@@ -109,7 +109,7 @@ export function createErrorResponse(
     details?: any;
     retryAfter?: number;
     path?: string;
-  } = {}
+  } = {},
 ): NextResponse<ErrorResponse> {
   const {
     status = 500,
@@ -166,11 +166,11 @@ export function createErrorResponse(
 export function createPaginatedResponse<T>(
   data: T[],
   pagination: PaginationInfo,
-  options: ApiResponseOptions = {}
+  options: ApiResponseOptions = {},
 ): NextResponse<SuccessResponse<{ data: T[]; pagination: PaginationInfo }>> {
   return createSuccessResponse(
     { data, pagination },
-    options
+    options,
   );
 }
 
@@ -188,11 +188,11 @@ export function createPaginatedResponse<T>(
 export function createBulkOperationResponse<T>(
   results: BulkOperationResult<T>[],
   summary: BulkOperationSummary,
-  options: ApiResponseOptions = {}
+  options: ApiResponseOptions = {},
 ): NextResponse<SuccessResponse<{ results: BulkOperationResult<T>[]; summary: BulkOperationSummary }>> {
   return createSuccessResponse(
     { results, summary },
-    options
+    options,
   );
 }
 
@@ -209,7 +209,7 @@ export function createBulkOperationResponse<T>(
  */
 export function createValidationErrorResponse(
   errors: any[],
-  options: ApiResponseOptions & { requestId?: string } = {}
+  options: ApiResponseOptions & { requestId?: string } = {},
 ): NextResponse<ErrorResponse> {
   return createErrorResponse(
     'Validation failed',
@@ -218,7 +218,7 @@ export function createValidationErrorResponse(
       code: 'VALIDATION_ERROR',
       details: errors,
       ...options,
-    }
+    },
   );
 }
 
@@ -232,7 +232,7 @@ export function createValidationErrorResponse(
  */
 export function createAuthenticationErrorResponse(
   message: string = 'Authentication required',
-  options: ApiResponseOptions = {}
+  options: ApiResponseOptions = {},
 ): NextResponse<ErrorResponse> {
   return createErrorResponse(
     message,
@@ -240,7 +240,7 @@ export function createAuthenticationErrorResponse(
       status: 401,
       code: 'AUTHENTICATION_ERROR',
       ...options,
-    }
+    },
   );
 }
 
@@ -255,7 +255,7 @@ export function createAuthenticationErrorResponse(
  */
 export function createAuthorizationErrorResponse(
   message: string = 'Insufficient permissions',
-  options: ApiResponseOptions = {}
+  options: ApiResponseOptions = {},
 ): NextResponse<ErrorResponse> {
   return createErrorResponse(
     message,
@@ -263,7 +263,7 @@ export function createAuthorizationErrorResponse(
       status: 403,
       code: 'AUTHORIZATION_ERROR',
       ...options,
-    }
+    },
   );
 }
 
@@ -276,7 +276,7 @@ export function createAuthorizationErrorResponse(
  */
 export function createNotFoundErrorResponse(
   resource: string = 'Resource',
-  options: ApiResponseOptions = {}
+  options: ApiResponseOptions = {},
 ): NextResponse<ErrorResponse> {
   return createErrorResponse(
     `${resource} not found`,
@@ -284,7 +284,7 @@ export function createNotFoundErrorResponse(
       status: 404,
       code: 'NOT_FOUND',
       ...options,
-    }
+    },
   );
 }
 
@@ -299,7 +299,7 @@ export function createNotFoundErrorResponse(
  */
 export function createConflictErrorResponse(
   message: string = 'Resource conflict',
-  options: ApiResponseOptions = {}
+  options: ApiResponseOptions = {},
 ): NextResponse<ErrorResponse> {
   return createErrorResponse(
     message,
@@ -307,7 +307,7 @@ export function createConflictErrorResponse(
       status: 409,
       code: 'CONFLICT',
       ...options,
-    }
+    },
   );
 }
 
@@ -324,7 +324,7 @@ export function createConflictErrorResponse(
  */
 export function createRateLimitErrorResponse(
   retryAfter: number,
-  options: ApiResponseOptions = {}
+  options: ApiResponseOptions = {},
 ): NextResponse<ErrorResponse> {
   return createErrorResponse(
     'Too many requests. Please try again later.',
@@ -333,7 +333,7 @@ export function createRateLimitErrorResponse(
       code: 'RATE_LIMIT_EXCEEDED',
       retryAfter,
       ...options,
-    }
+    },
   );
 }
 
@@ -346,7 +346,7 @@ export function createRateLimitErrorResponse(
  */
 export function createCreatedResponse<T>(
   data: T,
-  options: Omit<ApiResponseOptions, 'status'> = {}
+  options: Omit<ApiResponseOptions, 'status'> = {},
 ): NextResponse<SuccessResponse<T>> {
   return createSuccessResponse(data, { ...options, status: 201 });
 }
@@ -362,7 +362,7 @@ export function createCreatedResponse<T>(
  * @returns A NextResponse with no body and status 204.
  */
 export function createNoContentResponse(
-  options: Omit<ApiResponseOptions, 'status'> = {}
+  options: Omit<ApiResponseOptions, 'status'> = {},
 ): NextResponse {
   return new NextResponse(null, {
     status: 204,
@@ -382,7 +382,7 @@ export function createNoContentResponse(
 export function createCachedResponse<T>(
   data: T,
   maxAge: number,
-  options: ApiResponseOptions = {}
+  options: ApiResponseOptions = {},
 ): NextResponse<SuccessResponse<T>> {
   return createSuccessResponse(data, {
     ...options,
@@ -402,7 +402,7 @@ export function createCachedResponse<T>(
  */
 export function createNoCacheResponse<T>(
   data: T,
-  options: ApiResponseOptions = {}
+  options: ApiResponseOptions = {},
 ): NextResponse<SuccessResponse<T>> {
   return createSuccessResponse(data, {
     ...options,
@@ -431,7 +431,7 @@ export function extractRequestId(request: Request): string | undefined {
  */
 export function createResponseOptions(
   request: Request,
-  options: Partial<ApiResponseOptions> = {}
+  options: Partial<ApiResponseOptions> = {},
 ): ApiResponseOptions {
   return {
     requestId: extractRequestId(request),
@@ -459,6 +459,6 @@ export function isSuccessResponse<T>(response: ApiResponse<T>): response is Succ
  * @param response - The API response to test.
  * @returns True if `response` is an `ErrorResponse` (i.e., `success === false`).
  */
-export function isErrorResponse(response: ApiResponse<any>): response is ErrorResponse {
-  return response.success === false;
+export function isErrorResponse(response: any): response is ErrorResponse {
+  return response?.success === false;
 }

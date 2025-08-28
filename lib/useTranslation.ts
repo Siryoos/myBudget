@@ -44,17 +44,11 @@ export function useTranslation(namespace?: string) {
     }
   }, [i18n]);
 
-  const getCurrentLanguage = useCallback((): string => {
-    return i18n.language;
-  }, [i18n]);
+  const getCurrentLanguage = useCallback((): string => i18n.language, [i18n]);
 
-  const getAvailableLanguages = useCallback((): readonly string[] => {
-    return i18n.languages;
-  }, [i18n]);
+  const getAvailableLanguages = useCallback((): readonly string[] => i18n.languages, [i18n]);
 
-  const hasResourceBundle = useCallback((language: string, ns: string): boolean => {
-    return i18n.hasResourceBundle(language, ns);
-  }, [i18n]);
+  const hasResourceBundle = useCallback((language: string, ns: string): boolean => i18n.hasResourceBundle(language, ns), [i18n]);
 
   const loadNamespaces = useCallback(async (namespaces: string | string[]) => {
     try {
@@ -80,17 +74,11 @@ export function useTranslation(namespace?: string) {
     }
   }, [i18n]);
 
-  const getDataByLanguage = useCallback((language: string) => {
-    return i18n.getDataByLanguage(language);
-  }, [i18n]);
+  const getDataByLanguage = useCallback((language: string) => i18n.getDataByLanguage(language), [i18n]);
 
-  const hasLoadedNamespace = useCallback((namespace: string): boolean => {
-    return i18n.hasLoadedNamespace(namespace);
-  }, [i18n]);
+  const hasLoadedNamespace = useCallback((namespace: string): boolean => i18n.hasLoadedNamespace(namespace), [i18n]);
 
-  const getResource = useCallback((language: string, namespace: string, key: string, options?: Record<string, unknown>) => {
-    return i18n.getResource(language, namespace, key, options);
-  }, [i18n]);
+  const getResource = useCallback((language: string, namespace: string, key: string, options?: Record<string, unknown>) => i18n.getResource(language, namespace, key, options), [i18n]);
 
   const addResource = useCallback((language: string, namespace: string, key: string, value: string, options?: Record<string, unknown>) => {
     i18n.addResource(language, namespace, key, value, options);

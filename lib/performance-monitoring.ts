@@ -266,8 +266,8 @@ export class PerformanceMonitor {
     if (process.env.NODE_ENV === 'production') {
       // Create alerts for each metric that exceeded threshold
       if (message.includes('Response time')) {
-        const threshold = level === 'CRITICAL' ? 
-          this.thresholds.responseTime.critical : 
+        const threshold = level === 'CRITICAL' ?
+          this.thresholds.responseTime.critical :
           this.thresholds.responseTime.warning;
         const alert: PerformanceAlert = {
           type: level === 'CRITICAL' ? 'critical' : 'warning',
@@ -280,10 +280,10 @@ export class PerformanceMonitor {
         };
         this.sendToMonitoringService(alert);
       }
-      
+
       if (message.includes('Database queries')) {
-        const threshold = level === 'CRITICAL' ? 
-          this.thresholds.databaseQueries.critical : 
+        const threshold = level === 'CRITICAL' ?
+          this.thresholds.databaseQueries.critical :
           this.thresholds.databaseQueries.warning;
         const alert: PerformanceAlert = {
           type: level === 'CRITICAL' ? 'critical' : 'warning',

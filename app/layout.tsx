@@ -1,7 +1,7 @@
-import React from 'react';
 import type { Metadata } from 'next';
 import { Inter, Roboto, Roboto_Mono } from 'next/font/google';
 import { headers } from 'next/headers';
+import React from 'react';
 import './globals.css';
 
 import { Header } from '@/components/layout/Header';

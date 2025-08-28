@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 
 // Development-specific middleware for enhanced development experience
 
@@ -20,7 +21,7 @@ interface DevRequest extends NextRequest {
  * @returns A handler with the same signature that augments the request and response with development information.
  */
 export function withDevLogging(
-  handler: (request: DevRequest) => Promise<NextResponse>
+  handler: (request: DevRequest) => Promise<NextResponse>,
 ) {
   return async (request: DevRequest): Promise<NextResponse> => {
     const startTime = Date.now();
@@ -89,7 +90,7 @@ export function withDevLogging(
  * For all other requests, delegates to the provided handler and returns its response.
  */
 export function withDevApiDocs(
-  handler: (request: DevRequest) => Promise<NextResponse>
+  handler: (request: DevRequest) => Promise<NextResponse>,
 ) {
   return async (request: DevRequest): Promise<NextResponse> => {
     const url = new URL(request.url);
@@ -121,7 +122,7 @@ export function withDevApiDocs(
  * @returns A new request handler that performs the described performance measurements and returns the original response.
  */
 export function withDevPerformance(
-  handler: (request: DevRequest) => Promise<NextResponse>
+  handler: (request: DevRequest) => Promise<NextResponse>,
 ) {
   return async (request: DevRequest): Promise<NextResponse> => {
     const startTime = Date.now();
@@ -166,7 +167,7 @@ export function withDevPerformance(
  * @returns A new handler that delegates to `handler` and converts thrown errors into a development error page when applicable.
  */
 export function withDevErrorOverlay(
-  handler: (request: DevRequest) => Promise<NextResponse>
+  handler: (request: DevRequest) => Promise<NextResponse>,
 ) {
   return async (request: DevRequest): Promise<NextResponse> => {
     try {
@@ -198,7 +199,7 @@ export function withDevErrorOverlay(
  * @returns A new handler that delegates to the provided `handler` and adds the hot-reload headers in development.
  */
 export function withDevHotReload(
-  handler: (request: DevRequest) => Promise<NextResponse>
+  handler: (request: DevRequest) => Promise<NextResponse>,
 ) {
   return async (request: DevRequest): Promise<NextResponse> => {
     const response = await handler(request);
@@ -221,16 +222,16 @@ export function withDevHotReload(
  * @returns A new handler equivalent to `handler` but augmented with development-only behavior and headers.
  */
 export function withDevEnhancements(
-  handler: (request: DevRequest) => Promise<NextResponse>
+  handler: (request: DevRequest) => Promise<NextResponse>,
 ) {
   return withDevLogging(
     withDevPerformance(
       withDevApiDocs(
         withDevErrorOverlay(
-          withDevHotReload(handler)
-        )
-      )
-    )
+          withDevHotReload(handler),
+        ),
+      ),
+    ),
   );
 }
 

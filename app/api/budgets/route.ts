@@ -1,15 +1,15 @@
-import { NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 import { RequestValidator, REQUEST_LIMITS } from '@/lib/api-validation';
 import { requireAuth } from '@/lib/auth-middleware';
 import { BudgetService } from '@/lib/services/budget-service';
-import { budgetSchemas } from '@/lib/validation-schemas';
 import {
   handleApiError,
   createSuccessResponse,
   createPaginatedResponse,
-  generateRequestId
+  generateRequestId,
 } from '@/lib/services/error-handler';
+import { budgetSchemas } from '@/lib/validation-schemas';
 import type { AuthenticatedRequest } from '@/types/auth';
 
 const budgetService = new BudgetService();
@@ -72,11 +72,8 @@ export const PUT = requireAuth(async (request: AuthenticatedRequest) => {
       throw new Error('Budget ID is required');
     }
 
-    // Validate update data
-    const validatedData = budgetService.validateData(budgetSchemas.update, updateData);
-
-    // Update budget using service
-    const budget = await budgetService.update(id, validatedData);
+    // Update budget using service (validation happens inside the service)
+    const budget = await budgetService.update(id, updateData);
 
     return createSuccessResponse(budget, requestId);
 
@@ -105,7 +102,7 @@ export const DELETE = requireAuth(async (request: AuthenticatedRequest) => {
 
     return createSuccessResponse(
       { message: 'Budget deleted successfully', requestId },
-      requestId
+      requestId,
     );
 
   } catch (error) {

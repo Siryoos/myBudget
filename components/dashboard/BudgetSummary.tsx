@@ -162,7 +162,7 @@ export function BudgetSummary({
           <div className="text-center text-neutral-gray">
             <ChartPieIcon className="h-12 w-12 mx-auto mb-4 text-neutral-gray/50" />
             <p className="mb-2">{t('budget:noActiveBudget', { defaultValue: 'No active budget found' })}</p>
-            <p className="text-sm mb-4">{error?.message || t('budget:createBudgetPrompt', { defaultValue: 'Create a budget to start tracking your expenses' })}</p>
+            <p className="text-sm mb-4">{error || t('budget:createBudgetPrompt', { defaultValue: 'Create a budget to start tracking your expenses' })}</p>
             <Button>
               {t('budget:createBudget', { defaultValue: 'Create Budget' })}
             </Button>

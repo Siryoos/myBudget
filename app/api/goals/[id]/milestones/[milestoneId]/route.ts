@@ -1,14 +1,14 @@
-import { NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 import { RequestValidator, REQUEST_LIMITS } from '@/lib/api-validation';
 import { requireAuth } from '@/lib/auth-middleware';
-import { GoalsService } from '@/lib/services/goals-service';
-import { milestoneSchemas } from '@/lib/validation-schemas';
 import {
   handleApiError,
   createSuccessResponse,
-  generateRequestId
+  generateRequestId,
 } from '@/lib/services/error-handler';
+import { GoalsService } from '@/lib/services/goals-service';
+import { milestoneSchemas } from '@/lib/validation-schemas';
 import type { AuthenticatedRequest } from '@/types/auth';
 
 const goalsService = new GoalsService();
@@ -16,7 +16,7 @@ const goalsService = new GoalsService();
 // PUT - Update milestone
 export const PUT = requireAuth(async (
   request: AuthenticatedRequest,
-  context?: { params: { id: string; milestoneId: string } }
+  context?: { params: { id: string; milestoneId: string } },
 ) => {
   const requestId = generateRequestId();
 
@@ -32,12 +32,11 @@ export const PUT = requireAuth(async (
     await validator.validateRequestSize();
     validator.validateHeaders();
 
-    // Parse and validate request body
+    // Parse request body
     const body = await request.json();
-    const validatedData = goalsService.validateData(milestoneSchemas.update, body);
 
-    // Update milestone using service
-    const milestone = await goalsService.updateMilestone(goalId, milestoneId, validatedData);
+    // Update milestone using service (validation happens inside the service)
+    const milestone = await goalsService.updateMilestone(goalId, milestoneId, body);
 
     return createSuccessResponse(milestone, requestId);
 
@@ -49,7 +48,7 @@ export const PUT = requireAuth(async (
 // DELETE - Delete milestone
 export const DELETE = requireAuth(async (
   request: AuthenticatedRequest,
-  context?: { params: { id: string; milestoneId: string } }
+  context?: { params: { id: string; milestoneId: string } },
 ) => {
   const requestId = generateRequestId();
 
@@ -69,7 +68,7 @@ export const DELETE = requireAuth(async (
 
     return createSuccessResponse(
       { message: 'Milestone deleted successfully', requestId },
-      requestId
+      requestId,
     );
 
   } catch (error) {

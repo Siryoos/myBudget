@@ -1,3 +1,7 @@
+import type { ReactNode } from 'react';
+import type { Milestone as MilestoneFromApi, AutomationRule as AutomationRuleFromApi, RuleCondition as RuleConditionFromApi } from './api';
+import type { UserRole } from './auth';
+
 // Core financial types
 export interface Transaction {
   id: string
@@ -22,6 +26,8 @@ export interface BudgetCategory {
   isEssential: boolean
 }
 
+export type BudgetMethod = '50-30-20' | 'pay-yourself-first' | 'envelope' | 'zero-based' | 'kakeibo'
+
 export interface Budget {
   id: string
   name: string
@@ -33,7 +39,14 @@ export interface Budget {
   endDate: Date | string
 }
 
-export type BudgetMethod = '50-30-20' | 'pay-yourself-first' | 'envelope' | 'zero-based' | 'kakeibo'
+export type GoalCategory = 'emergency' | 'vacation' | 'home' | 'car' | 'wedding' | 'education' | 'retirement' | 'custom'
+
+// Re-export from api.ts to avoid duplication
+export type RuleCondition = RuleConditionFromApi;
+
+// Re-export from api.ts to avoid duplication
+export type Milestone = MilestoneFromApi;
+export type AutomationRule = AutomationRuleFromApi;
 
 export interface SavingsGoal {
   id: string
@@ -58,33 +71,16 @@ export interface SavingsGoal {
   color?: string
 }
 
-export type GoalCategory = 'emergency' | 'vacation' | 'home' | 'car' | 'wedding' | 'education' | 'retirement' | 'custom'
-
-export interface Milestone {
-  id: string
-  amount: number
-  description: string
-  isCompleted: boolean
-  completedDate?: Date
-}
-
-export interface AutomationRule {
-  id: string
-  type: 'fixed' | 'percentage' | 'round-up' | 'remainder'
-  amount?: number
-  percentage?: number
-  frequency: 'daily' | 'weekly' | 'biweekly' | 'monthly'
-  isActive: boolean
-  conditions?: RuleCondition[]
-}
-
-export interface RuleCondition {
-  field: string
-  operator: 'equals' | 'greater_than' | 'less_than' | 'contains'
-  value: string | number
-}
-
 // Behavioral enhancement types
+export type AchievementCategory = 'savings-streak' | 'goal-achievement' | 'financial-education' | 'milestone' | 'social' | 'streak'
+
+export interface AchievementRequirement {
+  type: 'consecutive-days' | 'total-amount' | 'goal-completion' | 'education-modules' | 'custom'
+  value: number
+  timeframe?: 'daily' | 'weekly' | 'monthly' | 'yearly' | 'all-time'
+  description: string
+}
+
 export interface Achievement {
   id: string
   name: string
@@ -98,15 +94,6 @@ export interface Achievement {
   unlockedAt?: Date | string
   progress?: number
   maxProgress?: number
-}
-
-export type AchievementCategory = 'savings-streak' | 'goal-achievement' | 'financial-education' | 'milestone' | 'social' | 'streak'
-
-export interface AchievementRequirement {
-  type: 'consecutive-days' | 'total-amount' | 'goal-completion' | 'education-modules' | 'custom'
-  value: number
-  timeframe?: 'daily' | 'weekly' | 'monthly' | 'yearly' | 'all-time'
-  description: string
 }
 
 export interface UserAchievement {
@@ -277,13 +264,13 @@ export type ChallengeType = 'no-spend' | '52-week' | 'round-up' | 'budget-contro
 // Component props types
 export interface ComponentProps {
   className?: string
-  children?: React.ReactNode
+  children?: ReactNode
 }
 
 export interface CardProps extends ComponentProps {
   title?: string
   subtitle?: string
-  actions?: React.ReactNode
+  actions?: ReactNode
   hoverable?: boolean
 }
 
@@ -310,35 +297,14 @@ export interface TimeSeriesData {
   category?: string
 }
 
-// API response types
-export interface ApiResponse<T = unknown> {
-  success: boolean
-  data?: T
-  error?: string
-  message?: string
-  timestamp?: string
-  requestId?: string
-}
+// Import from error-handling.ts to avoid duplication
+import type { SuccessResponse, ErrorResponse } from '@/lib/error-handling';
 
-export interface SuccessResponse<T = unknown> {
-  success: true
-  data: T
-  timestamp: string
-  requestId?: string
-}
+// Define ApiResponse as a union type
+export type ApiResponse<T = unknown> = SuccessResponse<T> | ErrorResponse;
 
-export interface ErrorResponse {
-  success: false
-  error: {
-    code: string
-    message: string
-    details?: any
-    retryAfter?: number
-  }
-  timestamp: string
-  requestId?: string
-  path?: string
-}
+// Re-export for convenience
+export type { SuccessResponse, ErrorResponse };
 
 export interface PaginatedResponse<T = unknown> {
   data: T[]
@@ -504,7 +470,8 @@ export interface User {
   updatedAt: string
 }
 
-export type UserRole = 'user' | 'admin' | 'premium'
+// Re-export UserRole from auth.ts to avoid duplication
+export type { UserRole }
 
 export interface Notification {
   id: string

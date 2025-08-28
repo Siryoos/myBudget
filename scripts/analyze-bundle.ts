@@ -2,7 +2,7 @@
 
 /**
  * Bundle Analysis and Optimization Script
- * 
+ *
  * This script analyzes the application bundle to:
  * - Identify duplicate dependencies
  * - Find large packages
@@ -10,9 +10,9 @@
  * - Generate bundle reports
  */
 
+import { execSync } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
-import { execSync } from 'child_process';
 
 interface BundleAnalysis {
   totalSize: number;
@@ -91,7 +91,7 @@ class BundleAnalyzer {
 
     // Read package-lock.json to get dependency tree
     const packageLock = JSON.parse(fs.readFileSync(this.packageLockPath, 'utf-8'));
-    
+
     this.analyzeDependencyTree(packageLock.dependencies, duplicates);
 
     // Convert to array format
@@ -112,7 +112,7 @@ class BundleAnalyzer {
   private analyzeDependencyTree(
     dependencies: Record<string, any>,
     duplicates: Record<string, any>,
-    parentPath: string = ''
+    parentPath: string = '',
   ): void {
     for (const [name, info] of Object.entries(dependencies)) {
       const packagePath = path.join(parentPath, 'node_modules', name);
@@ -207,7 +207,7 @@ class BundleAnalyzer {
         for (const item of items) {
           const itemPath = path.join(dirPath, item);
           const stat = fs.statSync(itemPath);
-          
+
           if (stat.isDirectory()) {
             size += calculateDirSize(itemPath);
           } else {
@@ -233,11 +233,11 @@ class BundleAnalyzer {
       const calculateSize = (dirPath: string): number => {
         let dirSize = 0;
         const items = fs.readdirSync(dirPath);
-        
+
         for (const item of items) {
           const itemPath = path.join(dirPath, item);
           const stat = fs.statSync(itemPath);
-          
+
           if (stat.isDirectory()) {
             dirSize += calculateSize(itemPath);
           } else {
@@ -275,7 +275,7 @@ class BundleAnalyzer {
    */
   private generateOptimizationSuggestions(
     duplicates: Array<{ name: string; count: number; totalSize: number; versions: string[] }>,
-    largePackages: Array<{ name: string; size: number; percentage: number }>
+    largePackages: Array<{ name: string; size: number; percentage: number }>,
   ): string[] {
     const suggestions: string[] = [];
 
@@ -283,7 +283,7 @@ class BundleAnalyzer {
     duplicates.forEach(duplicate => {
       if (duplicate.count > 1) {
         suggestions.push(
-          `Consolidate ${duplicate.name} (${duplicate.count} instances, ${this.formatBytes(duplicate.totalSize)})`
+          `Consolidate ${duplicate.name} (${duplicate.count} instances, ${this.formatBytes(duplicate.totalSize)})`,
         );
       }
     });
@@ -292,7 +292,7 @@ class BundleAnalyzer {
     largePackages.forEach(pkg => {
       if (pkg.percentage > 5) {
         suggestions.push(
-          `Consider alternatives to ${pkg.name} (${this.formatBytes(pkg.size)}, ${pkg.percentage.toFixed(1)}% of bundle)`
+          `Consider alternatives to ${pkg.name} (${this.formatBytes(pkg.size)}, ${pkg.percentage.toFixed(1)}% of bundle)`,
         );
       }
     });
@@ -312,11 +312,11 @@ class BundleAnalyzer {
     const iconLibraries = ['@heroicons', 'lucide-react', '@mui/icons-material', 'react-icons'];
     const packageJson = JSON.parse(fs.readFileSync(path.join(this.projectRoot, 'package.json'), 'utf-8'));
     const allDependencies = { ...packageJson.dependencies, ...packageJson.devDependencies };
-    
-    const usedIconLibraries = iconLibraries.filter(lib => 
-      Object.keys(allDependencies).some(dep => dep.includes(lib))
+
+    const usedIconLibraries = iconLibraries.filter(lib =>
+      Object.keys(allDependencies).some(dep => dep.includes(lib)),
     );
-    
+
     return usedIconLibraries.length > 1;
   }
 
@@ -325,7 +325,7 @@ class BundleAnalyzer {
    */
   private generateRecommendations(
     duplicates: Array<{ name: string; count: number; totalSize: number; versions: string[] }>,
-    largePackages: Array<{ name: string; size: number; percentage: number }>
+    largePackages: Array<{ name: string; size: number; percentage: number }>,
   ): string[] {
     const recommendations: string[] = [];
 
@@ -352,14 +352,16 @@ class BundleAnalyzer {
   /**
    * Format bytes to human readable format
    */
-  private formatBytes(bytes: number): string {
-    if (bytes === 0) return '0 Bytes';
-    
+  public formatBytes(bytes: number): string {
+    if (!Number.isFinite(bytes) || bytes <= 0) return '0 Bytes';
+
     const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB'];
+    let i = Math.floor(Math.log(bytes) / Math.log(k));
+    if (i < 0) i = 0;
+    if (i >= sizes.length) i = sizes.length - 1;
+    const value = bytes / Math.pow(k, i);
+    return `${parseFloat(value.toFixed(2))} ${sizes[i]}`;
   }
 
   /**
@@ -367,17 +369,17 @@ class BundleAnalyzer {
    */
   generateReport(analysis: BundleAnalysis): string {
     let report = '# Bundle Analysis Report\n\n';
-    
-    report += `## Summary\n`;
+
+    report += '## Summary\n';
     report += `- **Total Bundle Size**: ${this.formatBytes(analysis.totalSize)}\n`;
     report += `- **Duplicate Packages**: ${analysis.duplicatePackages.length}\n`;
     report += `- **Large Packages**: ${analysis.largePackages.length}\n\n`;
 
     if (analysis.duplicatePackages.length > 0) {
-      report += `## Duplicate Packages\n\n`;
-      report += `| Package | Count | Total Size | Versions |\n`;
-      report += `|---------|-------|------------|----------|\n`;
-      
+      report += '## Duplicate Packages\n\n';
+      report += '| Package | Count | Total Size | Versions |\n';
+      report += '|---------|-------|------------|----------|\n';
+
       analysis.duplicatePackages.forEach(duplicate => {
         report += `| ${duplicate.name} | ${duplicate.count} | ${this.formatBytes(duplicate.totalSize)} | ${duplicate.versions.join(', ')} |\n`;
       });
@@ -385,10 +387,10 @@ class BundleAnalyzer {
     }
 
     if (analysis.largePackages.length > 0) {
-      report += `## Largest Packages\n\n`;
-      report += `| Package | Size | Percentage |\n`;
-      report += `|---------|------|------------|\n`;
-      
+      report += '## Largest Packages\n\n';
+      report += '| Package | Size | Percentage |\n';
+      report += '|---------|------|------------|\n';
+
       analysis.largePackages.forEach(pkg => {
         report += `| ${pkg.name} | ${this.formatBytes(pkg.size)} | ${pkg.percentage.toFixed(1)}% |\n`;
       });
@@ -396,7 +398,7 @@ class BundleAnalyzer {
     }
 
     if (analysis.optimizationSuggestions.length > 0) {
-      report += `## Optimization Suggestions\n\n`;
+      report += '## Optimization Suggestions\n\n';
       analysis.optimizationSuggestions.forEach(suggestion => {
         report += `- ${suggestion}\n`;
       });
@@ -404,7 +406,7 @@ class BundleAnalyzer {
     }
 
     if (analysis.recommendations.length > 0) {
-      report += `## Recommendations\n\n`;
+      report += '## Recommendations\n\n';
       analysis.recommendations.forEach(recommendation => {
         report += `- ${recommendation}\n`;
       });
@@ -435,10 +437,10 @@ class BundleAnalyzer {
     try {
       // Set environment variable for bundle analyzer
       process.env.ANALYZE = 'true';
-      
+
       // Run build with bundle analyzer
       execSync('npm run build', { stdio: 'inherit' });
-      
+
       console.log('✅ Bundle visualization generated');
       console.log('📁 Check the .next/analyze folder for detailed reports');
     } catch (error) {
@@ -450,45 +452,45 @@ class BundleAnalyzer {
 // Main execution
 async function main(): Promise<void> {
   const analyzer = new BundleAnalyzer();
-  
+
   try {
     // Run analysis
     const analysis = await analyzer.analyzeBundle();
-    
+
     // Generate report
     const report = analyzer.generateReport(analysis);
-    
+
     // Save report to file
     const reportPath = path.join(process.cwd(), 'bundle-analysis-report.md');
     fs.writeFileSync(reportPath, report);
-    
+
     console.log('\n📋 Analysis completed!');
     console.log(`📄 Report saved to: ${reportPath}`);
-    
+
     // Display summary
     console.log('\n📊 Bundle Analysis Summary:');
-    console.log(`   Total Size: ${analyzer['formatBytes'](analysis.totalSize)}`);
+    console.log(`   Total Size: ${analyzer.formatBytes(analysis.totalSize)}`);
     console.log(`   Duplicate Packages: ${analysis.duplicatePackages.length}`);
     console.log(`   Large Packages: ${analysis.largePackages.length}`);
-    
+
     if (analysis.duplicatePackages.length > 0) {
       console.log('\n🚨 Duplicate packages found!');
       analysis.duplicatePackages.slice(0, 5).forEach(duplicate => {
         console.log(`   - ${duplicate.name}: ${duplicate.count} instances`);
       });
     }
-    
+
     if (analysis.largePackages.length > 0) {
       console.log('\n⚠️  Large packages detected:');
       analysis.largePackages.slice(0, 5).forEach(pkg => {
-        console.log(`   - ${pkg.name}: ${analyzer['formatBytes'](pkg.size)} (${pkg.percentage.toFixed(1)}%)`);
+        console.log(`   - ${pkg.name}: ${analyzer.formatBytes(pkg.size)} (${pkg.percentage.toFixed(1)}%)`);
       });
     }
-    
+
     // Ask user if they want to run optimizations
     console.log('\n🔧 Would you like to run optimizations?');
     console.log('   Run: npm run bundle:optimize');
-    
+
   } catch (error) {
     console.error('❌ Bundle analysis failed:', error);
     process.exit(1);

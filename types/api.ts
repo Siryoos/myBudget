@@ -1,14 +1,17 @@
+import type { UserRole } from './auth';
+
 // Base API response types
-export interface ApiResponse<T = any> {
+// This is now a lower-level envelope type; use ApiResponse from types/index.ts instead
+export interface ApiEnvelope<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;
-  details?: any;
+  details?: unknown;
   timestamp?: string;
   requestId?: string;
 }
 
-export interface PaginatedResponse<T> extends ApiResponse<T> {
+export interface PaginatedResponse<T> extends ApiEnvelope<T> {
   data?: T;
   pagination: {
     page: number;
@@ -24,7 +27,7 @@ export interface ApiError {
   code: string;
   message: string;
   field?: string;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
 }
 
 // Authentication types
@@ -241,14 +244,23 @@ export interface Contribution {
   source?: string;
 }
 
-export interface AutomationRule {
+export type RuleCondition =
+  | { field: string; operator: 'equals'; value: string | number }
+  | { field: string; operator: 'contains'; value: string }
+  | { field: string; operator: 'greater_than' | 'less_than'; value: number };
+
+type AutomationRuleBase = {
   id: string;
-  type: 'fixed' | 'percentage' | 'round-up';
-  amount?: number;
-  percentage?: number;
-  frequency: 'daily' | 'weekly' | 'monthly';
+  frequency: 'daily' | 'weekly' | 'biweekly' | 'monthly';
   isActive: boolean;
-}
+  conditions?: RuleCondition[];
+};
+
+export type AutomationRule =
+  | (AutomationRuleBase & { type: 'fixed'; amount: number })
+  | (AutomationRuleBase & { type: 'percentage'; percentage: number })
+  | (AutomationRuleBase & { type: 'round-up' })
+  | (AutomationRuleBase & { type: 'remainder' });
 
 export interface CreateGoalRequest {
   name: string;
@@ -465,5 +477,3 @@ export interface PresignedUrlResponse {
   expiresAt: string;
 }
 
-// Import UserRole from auth types
-import type { UserRole } from './auth';

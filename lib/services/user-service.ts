@@ -1,8 +1,11 @@
 import bcrypt from 'bcryptjs';
+
 import { query } from '@/lib/database';
-import { BaseService, NotFoundError, ValidationError, ConflictError } from './base-service';
-import { UserCreate, UserUpdate, userSchemas } from '@/lib/validation-schemas';
+import type { UserCreate, UserUpdate } from '@/lib/validation-schemas';
+import { userSchemas } from '@/lib/validation-schemas';
 import type { User } from '@/types';
+
+import { BaseService, NotFoundError, ValidationError, ConflictError } from './base-service';
 
 export interface UserProfile extends User {
   id: string;
@@ -55,7 +58,7 @@ export class UserService extends BaseService {
       validatedData.monthlyIncome,
       'MM/DD/YYYY',
       'UTC',
-      'moderate'
+      'moderate',
     ]);
 
     const user = result.rows[0];
@@ -65,7 +68,7 @@ export class UserService extends BaseService {
   async findByEmail(email: string): Promise<UserProfile | null> {
     const result = await query(
       'SELECT * FROM users WHERE lower(email) = lower($1)',
-      [email]
+      [email],
     );
 
     if (result.rows.length === 0) {
@@ -140,7 +143,7 @@ export class UserService extends BaseService {
     // Get user with password hash
     const result = await query(
       'SELECT password_hash FROM users WHERE id = $1',
-      [id]
+      [id],
     );
 
     if (result.rows.length === 0) {
@@ -162,7 +165,7 @@ export class UserService extends BaseService {
     // Update password
     await query(
       'UPDATE users SET password_hash = $1 WHERE id = $2',
-      [newPasswordHash, id]
+      [newPasswordHash, id],
     );
   }
 

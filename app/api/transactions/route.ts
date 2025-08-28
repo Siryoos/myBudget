@@ -1,15 +1,15 @@
-import { NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 import { RequestValidator, REQUEST_LIMITS } from '@/lib/api-validation';
 import { requireAuth } from '@/lib/auth-middleware';
-import { TransactionService } from '@/lib/services/transaction-service';
-import { transactionSchemas } from '@/lib/validation-schemas';
 import {
   handleApiError,
   createSuccessResponse,
   createPaginatedResponse,
-  generateRequestId
+  generateRequestId,
 } from '@/lib/services/error-handler';
+import { TransactionService } from '@/lib/services/transaction-service';
+import { transactionSchemas } from '@/lib/validation-schemas';
 import type { AuthenticatedRequest } from '@/types/auth';
 
 const transactionService = new TransactionService();
@@ -37,20 +37,17 @@ export const GET = requireAuth(async (request: AuthenticatedRequest) => {
       maxAmount: searchParams.get('maxAmount') ? parseFloat(searchParams.get('maxAmount')!) : undefined,
     };
 
-    // Validate filters
-    const validatedFilters = transactionService.validateData(transactionSchemas.filter, filters);
-
-    // Get transactions using service
+    // Get transactions using service (validation happens internally)
     const result = await transactionService.findByUserId(
       request.user.id,
-      validatedFilters,
-      { page: validatedFilters.page, limit: validatedFilters.limit }
+      filters,
+      { page: filters.page || 1, limit: filters.limit || 20 },
     );
 
     return createPaginatedResponse(
       result.data.map(tx => ({ ...tx, requestId })),
       result.pagination,
-      requestId
+      requestId,
     );
 
   } catch (error) {
@@ -97,11 +94,8 @@ export const PUT = requireAuth(async (request: AuthenticatedRequest) => {
       throw new Error('Transaction ID is required');
     }
 
-    // Validate update data
-    const validatedData = transactionService.validateData(transactionSchemas.update, updateData);
-
-    // Update transaction using service
-    const transaction = await transactionService.update(id, validatedData);
+    // Update transaction using service (validation happens internally)
+    const transaction = await transactionService.update(id, updateData);
 
     return createSuccessResponse({ ...transaction, requestId }, requestId);
 
@@ -130,7 +124,7 @@ export const DELETE = requireAuth(async (request: AuthenticatedRequest) => {
 
     return createSuccessResponse(
       { message: 'Transaction deleted successfully', requestId },
-      requestId
+      requestId,
     );
 
   } catch (error) {

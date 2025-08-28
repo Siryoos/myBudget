@@ -766,16 +766,16 @@ JSON.stringify(event.metadata),
 export const auditLogger = new AuditLogger();
 
 // Type-safe convenience functions
-export const logAuthEvent = (params: AuthEventParams): Promise<string> => 
+export const logAuthEvent = (params: AuthEventParams): Promise<string> =>
   auditLogger.logAuthEvent(params);
 
-export const logSecurityEvent = (params: SecurityEventParams): Promise<string> => 
+export const logSecurityEvent = (params: SecurityEventParams): Promise<string> =>
   auditLogger.logSecurityEvent(params);
 
-export const logDataEvent = (params: DataEventParams): Promise<string> => 
+export const logDataEvent = (params: DataEventParams): Promise<string> =>
   auditLogger.logDataEvent(params);
 
-export const logSystemEvent = (params: SystemEventParams): Promise<string> => 
+export const logSystemEvent = (params: SystemEventParams): Promise<string> =>
   auditLogger.logSystemEvent(params);
 
 // Cleanup on process exit

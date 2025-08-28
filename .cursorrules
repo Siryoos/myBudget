@@ -1,0 +1,129 @@
+# Cursor Rules for SmartSave Finance Platform
+
+## TypeScript & Type Safety
+
+### Strict Type Usage
+- ALWAYS use proper TypeScript types, avoid `any` unless absolutely necessary
+- When using `any`, add a comment explaining why it's needed
+- Prefer `unknown` over `any` when the type is truly unknown
+- Prefer type guards or schema validation for complex conversions; avoid `as unknown as Type`
+
+### Import Management
+- Use type-only imports when importing types: `import type { User } from './types'`
+- Avoid duplicate imports - check if a module is already imported before adding
+- Keep imports organized: external deps, then internal deps, then types
+- Don't import from barrel exports if it causes circular dependencies
+
+### Type Definitions
+- Define types BEFORE they are used to avoid "used before defined" errors
+- Keep related types in the same file
+- Use consistent naming: interfaces start with uppercase, enums use UPPER_CASE
+- Don't create multiple definitions of the same type (e.g., User, UserRole)
+
+## Testing Best Practices
+
+### Mock Objects
+- Use helper functions for creating mocks (e.g., `createMockQueryResult`)
+- Ensure mock objects have ALL required properties
+- For database mocks, always include: `command`, `oid`, `fields`, `rows`, `rowCount`
+- Import mock helpers at the top of test files
+
+### Jest & Testing Library
+- Ensure @testing-library/jest-dom types are properly configured
+- Create type declaration files for custom matchers if needed
+- Mock File objects must implement the complete File interface
+
+## Code Organization
+
+### Service Layer
+- Services should handle their own validation internally
+- Don't expose `validateData` method from BaseService - it's protected
+- API routes should NOT call service validation methods directly
+- Let services throw appropriate errors for invalid data
+
+### API Routes
+- Parse request body, then pass to service methods
+- Don't validate in routes - services handle validation
+- Use proper error handling with try-catch blocks
+- Return consistent response formats using helper functions
+
+### React Components & Hooks
+- Check hook signatures before using them
+- `useMutation` typically takes only the mutation function, not options
+- Handle success/error cases within the mutation function itself
+- Use proper type casting when needed: `as unknown as Type`
+
+## Error Prevention
+
+### Function Style
+- Use arrow functions assigned to const: `const myFunc = () => {}`
+- Avoid function declarations: `function myFunc() {}`
+- Export functions as named exports with const
+
+### Property Access
+- Check if properties exist before accessing them
+- Use optional chaining: `obj?.property`
+- Don't access protected class members from outside the class
+- Be careful with property names in object literals (no duplicates)
+
+### Async/Promise Handling
+- Always await async functions or mark with `void` if intentionally not awaited
+- Handle promise rejections with `.catch()` or try-catch
+- Don't create promises that are immediately resolved
+
+## Database & Queries
+
+### Query Result Types
+- Use proper QueryResult type from 'pg' package
+- Include all required fields: rows, rowCount, command, oid, fields
+- Use type assertions when mocking: `as any` is acceptable for test mocks
+- Consider creating typed query result helpers
+
+### Migrations & Schema
+- Keep database types in sync with TypeScript types
+- Use consistent naming between DB columns and TS properties
+- Document any naming conversions (e.g., snake_case to camelCase)
+
+## Build & Development
+
+### ESLint Configuration
+- Respect line length limits (max 100 characters)
+- Fix trailing spaces and formatting issues
+- Use single quotes for strings
+- Add trailing commas in multi-line objects/arrays
+
+### TypeScript Configuration
+- Include necessary type packages in tsconfig
+- Set appropriate lib options for the environment
+- Enable strict mode and noImplicitAny
+- Configure paths for module resolution
+
+## Best Practices Summary
+
+1. **Type First**: Define types before using them
+2. **Import Smart**: Use type-only imports, avoid duplicates
+3. **Service Pattern**: Let services handle validation internally
+4. **Mock Properly**: Create complete mock objects with all required fields
+5. **Error Handling**: Use try-catch, handle promises properly
+6. **Code Style**: Arrow functions, const exports, proper formatting
+7. **Test Thoroughly**: Use helpers, ensure type safety in tests
+8. **Document Complex**: Add comments for type assertions and non-obvious code
+
+## Common Pitfalls to Avoid
+
+- Don't use `validateData` outside of service classes
+- Don't create duplicate type definitions
+- Don't ignore TypeScript errors - fix them properly
+- Don't use sed/regex for complex code modifications
+- Don't access protected/private class members
+- Don't create objects with duplicate properties
+- Don't use function declarations - use arrow functions
+- Don't mix different type systems (use one consistent approach)
+
+## When in Doubt
+
+- Check existing patterns in the codebase
+- Run TypeScript compiler to verify changes
+- Use proper type assertions rather than ignoring errors
+- Create helper functions for repetitive patterns
+- Ask for clarification rather than making assumptions

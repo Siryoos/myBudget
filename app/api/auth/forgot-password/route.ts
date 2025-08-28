@@ -1,10 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { query } from '@/lib/database';
+import { emailService } from '@/lib/email-service';
 import { createErrorResponse, createValidationError } from '@/lib/error-handling';
 import { rateLimiter } from '@/lib/redis';
-import { emailService } from '@/lib/email-service';
 
 const forgotPasswordSchema = z.object({
   email: z.string().email().transform(s => s.trim().toLowerCase()),
@@ -107,7 +108,7 @@ export async function POST(request: NextRequest) {
 
     // Send password reset email
     const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
-    
+
     const emailSent = await emailService.sendPasswordReset({
       email: user.email,
       name: user.name,

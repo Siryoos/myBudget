@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 
 import { middleware as securityMiddleware } from './middleware/security';
 
@@ -8,7 +9,7 @@ const defaultLocale = 'en';
 // RTL locales
 const rtlLocales = ['fa', 'ar'];
 
-function getLocale(request: NextRequest): string {
+const getLocale = (request: NextRequest): string => {
   // Check if there's a locale in the pathname
   const pathname = request.nextUrl.pathname;
   const pathnameHasLocale = locales.some(
@@ -40,10 +41,10 @@ function getLocale(request: NextRequest): string {
   }
 
   return defaultLocale;
-}
+};
 
 // Locale middleware function
-function localeMiddleware(request: NextRequest): NextResponse {
+const localeMiddleware = (request: NextRequest): NextResponse => {
   const pathname = request.nextUrl.pathname;
 
   // Skip API routes entirely - they don't need locale handling
@@ -87,10 +88,10 @@ function localeMiddleware(request: NextRequest): NextResponse {
   response.headers.set('x-locale', locale);
 
   return response;
-}
+};
 
 // Safe header merging function to prevent conflicts
-function mergeHeadersSafely(target: Headers, source: Headers): void {
+const mergeHeadersSafely = (target: Headers, source: Headers): void => {
   // Define priority order: security headers take precedence over locale headers
   const securityPriorityHeaders = [
     'Content-Security-Policy',
@@ -114,22 +115,28 @@ function mergeHeadersSafely(target: Headers, source: Headers): void {
     }
     // If header already exists and it's not security-related, keep the existing one
   });
-}
+};
 
 /**
- * Main Next.js middleware that enforces locale-prefixed routes and delegates to security middleware.
+ * Main Next.js middleware that enforces locale-prefixed routes and
+ * delegates to security middleware.
  *
- * If the request targets static assets, API routes, or file-like paths (contains a dot), this middleware is a no-op.
- * Otherwise it ensures the pathname starts with the resolved locale (from request.nextUrl.locale or `'en'`) and
- * redirects to the locale-prefixed path when missing. After locale handling, it invokes `securityMiddleware(request)`
- * and, if that returns a terminal response (status not 200 and not 302), returns that response. On success it allows
- * normal processing to continue by returning `NextResponse.next()`. Any unhandled error is caught and a generic
+ * If the request targets static assets, API routes, or file-like
+ * paths (contains a dot), this middleware is a no-op.
+ * Otherwise it ensures the pathname starts with the resolved locale
+ * (from request.nextUrl.locale or `'en'`) and redirects to the
+ * locale-prefixed path when missing. After locale handling, it invokes
+ * `securityMiddleware(request)` and, if that returns a terminal
+ * response (status not 200 and not 302), returns that response.
+ * On success it allows normal processing to continue by returning
+ * `NextResponse.next()`. Any unhandled error is caught and a generic
  * 500 response is returned.
  *
  * @param request - The incoming NextRequest to process.
- * @returns A NextResponse (redirect, terminal security response, next response, or a 500 error response).
+ * @returns A NextResponse (redirect, terminal security response,
+ * next response, or a 500 error response).
  */
-export async function middleware(request: NextRequest) {
+export const middleware = async (request: NextRequest) => {
   try {
     // First apply locale middleware
     const locale = request.nextUrl.locale || 'en';
@@ -166,28 +173,30 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   } catch (error) {
     console.error('Middleware error:', error);
-    
+
     // Return a generic error response
     return new NextResponse('Internal Server Error', { status: 500 });
   }
-}
+};
 
 /**
- * Returns Next.js middleware matcher configuration that excludes static assets and specific public files.
+ * Returns Next.js middleware matcher configuration that excludes
+ * static assets and specific public files.
  *
- * The matcher targets all application routes except paths under `_next/static`, `_next/image`, routes with file extensions,
- * and specific public files like `favicon.ico`, `sw.js`, and `manifest.json`.
+ * The matcher targets all application routes except paths under
+ * `_next/static`, `_next/image`, routes with file extensions,
+ * and specific public files like `favicon.ico`, `sw.js`, and
+ * `manifest.json`.
  *
- * @returns An object with a `matcher` array containing the route pattern used by Next.js middleware.
+ * @returns An object with a `matcher` array containing the route
+ * pattern used by Next.js middleware.
  */
-export function config() {
-  return {
-    matcher: [
-      // Simplified matcher that covers all necessary routes without conflicts
-      '/((?!_next/static|_next/image|favicon.ico|public|sw.js|manifest.json|.*\\..*).*)',
-    ],
-  };
-}
+export const config = {
+  matcher: [
+    // Simplified matcher that covers all necessary routes without conflicts
+    '/((?!_next/static|_next/image|favicon.ico|public|sw.js|manifest.json|.*\\..*).*)',
+  ],
+};
 
 /**
  * Extracts an authentication token from a Next.js request.
@@ -198,9 +207,9 @@ export function config() {
  *
  * @returns The extracted token string, or `null` if none was found.
  */
-export function getTokenFromRequest(request: NextRequest) {
+export const getTokenFromRequest = (_request: NextRequest) => {
   // ... existing code ...
-}
+};
 
 /**
  * Validate a parsed token and determine whether it is authentic and usable.
@@ -211,9 +220,9 @@ export function getTokenFromRequest(request: NextRequest) {
  * @param token - The token to validate (JWT string, session token object, etc.).
  * @returns `true` if the token is considered valid; otherwise `false`.
  */
-export function validateToken(token: any) {
+export const validateToken = (_token: unknown) => {
   // ... existing code ...
-}
+};
 
 /**
  * Create a simple Response-like object containing status, message, and optional headers.
@@ -225,9 +234,13 @@ export function validateToken(token: any) {
  * @param headers - Optional map of HTTP headers to attach to the response
  * @returns An object with `status`, `message`, and (when provided) `headers` properties suitable for use where a lightweight response descriptor is needed
  */
-export function createResponse(status: number, message: string, headers?: Record<string, string>) {
+export const createResponse = (
+  _status: number,
+  _message: string,
+  _headers?: Record<string, string>,
+) => {
   // ... existing code ...
-}
+};
 
 /**
  * Applies rate-limiting checks and updates the response accordingly.
@@ -241,27 +254,45 @@ export function createResponse(status: number, message: string, headers?: Record
  * @param request - The incoming Next.js request to inspect for rate-limiting keys (IP, auth token, etc.).
  * @param response - The Next.js response object to modify (headers or status) when limits apply.
  */
-export function handleRateLimit(request: NextRequest, response: NextResponse) {
+export const handleRateLimit = (
+  _request: NextRequest,
+  _response: NextResponse,
+) => {
   // ... existing code ...
-}
+};
 
 /**
- * Apply security-related headers and optional request-level checks to the response.
+ * Apply security-related headers and optional request-level checks to
+ * the response.
  *
- * This function is responsible for ensuring HTTP security headers (for example: Content-Security-Policy, Strict-Transport-Security, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy) are set on the provided response and for performing any lightweight request-level security checks needed by middleware.
+ * This function is responsible for ensuring HTTP security headers (for
+ * example: Content-Security-Policy, Strict-Transport-Security,
+ * X-Frame-Options, X-Content-Type-Options, Referrer-Policy,
+ * Permissions-Policy) are set on the provided response and for
+ * performing any lightweight request-level security checks needed
+ * by middleware.
  *
  * Behavior notes:
- * - Mutates the provided NextResponse in place by setting or updating headers.
- * - Designed to be idempotent: calling it multiple times should not produce duplicate or conflicting header values.
- * - May inspect the NextRequest to vary header values or to trigger additional checks (rate limiting, token validation hooks, etc.).
+ * - Mutates the provided NextResponse in place by setting or
+ *   updating headers.
+ * - Designed to be idempotent: calling it multiple times should not
+ *   produce duplicate or conflicting header values.
+ * - May inspect the NextRequest to vary header values or to trigger
+ *   additional checks (rate limiting, token validation hooks, etc.).
  *
  * Implementation details (intended):
- * - Security headers should be applied with conservative defaults; callers can override headers after this function runs if necessary.
- * - If a check requires terminating the request early, the function may perform that by mutating the response to an appropriate error/status and headers.
+ * - Security headers should be applied with conservative defaults;
+ *   callers can override headers after this function runs if necessary.
+ * - If a check requires terminating the request early, the function may
+ *   perform that by mutating the response to an appropriate error/status
+ *   and headers.
  */
-export function handleSecurityHeaders(request: NextRequest, response: NextResponse) {
+export const handleSecurityHeaders = (
+  _request: NextRequest,
+  _response: NextResponse,
+) => {
   // ... existing code ...
-}
+};
 
 /**
  * Applies caching policies to the outgoing response.
@@ -271,9 +302,12 @@ export function handleSecurityHeaders(request: NextRequest, response: NextRespon
  * Intended as the centralized place to implement cache rules, conditional-request
  * handling, and cache invalidation logic for middleware responses.
  */
-export function handleCaching(request: NextRequest, response: NextResponse) {
+export const handleCaching = (
+  _request: NextRequest,
+  _response: NextResponse,
+) => {
   // ... existing code ...
-}
+};
 
 /**
  * Applies compression-related handling to the given response based on the request.
@@ -284,9 +318,12 @@ export function handleCaching(request: NextRequest, response: NextResponse) {
  * responses that should not be compressed (e.g., already-compressed payloads, small
  * responses, or streaming responses).
  */
-export function handleCompression(request: NextRequest, response: NextResponse) {
+export const handleCompression = (
+  _request: NextRequest,
+  _response: NextResponse,
+) => {
   // ... existing code ...
-}
+};
 
 /**
  * Records or emits structured logs for an incoming request and its response.
@@ -300,9 +337,12 @@ export function handleCompression(request: NextRequest, response: NextResponse) 
  * @param request - The NextRequest being processed; used for request metadata.
  * @param response - The NextResponse produced so far; used for response metadata and optional enrichment.
  */
-export function handleLogging(request: NextRequest, response: NextResponse) {
+export const handleLogging = (
+  _request: NextRequest,
+  _response: NextResponse,
+) => {
   // ... existing code ...
-}
+};
 
 /**
  * Centralized error handler for middleware-level exceptions.
@@ -314,9 +354,9 @@ export function handleLogging(request: NextRequest, response: NextResponse) {
  * @param error - The error that occurred.
  * @param request - The incoming NextRequest; used to extract contextual information for logging, metrics, or response creation.
  */
-export function handleError(error: Error, request: NextRequest) {
+export const handleError = (_error: Error, _request: NextRequest) => {
   // ... existing code ...
-}
+};
 
 /**
  * Centralized post-processing for successful middleware responses.
@@ -326,6 +366,9 @@ export function handleError(error: Error, request: NextRequest) {
  * side effects such as logging, metrics, or firing post-response hooks. Should not terminate the
  * request flow by sending errors; keep side effects idempotent and safe to call for every successful request.
  */
-export function handleSuccess(request: NextRequest, response: NextResponse) {
+export const handleSuccess = (
+  _request: NextRequest,
+  _response: NextResponse,
+) => {
   // ... existing code ...
-}
+};
