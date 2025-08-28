@@ -23,7 +23,7 @@ interface HeaderProps {
 export function Header({ onMenuToggle }: HeaderProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [greetingKey, setGreetingKey] = useState('app.greeting.morning'); // Default to morning
-  const { t, isReady } = useTranslation('common');
+  const { t, ready } = useTranslation('common');
   const { locale } = useI18n();
 
   // Set greeting based on current time (client-side only to avoid hydration mismatch)

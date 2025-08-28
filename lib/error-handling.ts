@@ -1,5 +1,7 @@
 import { ZodError } from 'zod';
 
+import { loggingService } from '@/lib/logging-service';
+
 // Error codes for consistent error handling
 export enum ErrorCode {
   // Validation errors
@@ -277,14 +279,30 @@ export class ErrorHandler {
 
     // In production, send to external logging service
     if (process.env.NODE_ENV === 'production') {
-      this.sendToLoggingService(logData);
+      // Fire and forget - don't block the response
+      this.sendToLoggingService(logData).catch(error => {
+        console.error('Failed to send to logging service:', error);
+      });
     }
   }
 
-  private sendToLoggingService(logData: any): void {
-    // TODO: Implement external logging service integration
-    // Examples: Sentry, LogRocket, DataDog, etc.
-    console.log('[EXTERNAL_LOGGING]', logData);
+  private async sendToLoggingService(logData: any): Promise<void> {
+    try {
+      await loggingService.logError(
+        new Error(logData.message || 'Application error'),
+        {
+          component: logData.context?.component || 'ErrorHandler',
+          action: logData.context?.action || 'handleError',
+          requestId: logData.requestId,
+          userId: logData.context?.userId,
+          severity: logData.severity,
+        }
+      );
+    } catch (error) {
+      // Fallback to console if external logging fails
+      console.error('Failed to send to external logging service:', error);
+      console.log('[EXTERNAL_LOGGING]', logData);
+    }
   }
 }
 

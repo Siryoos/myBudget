@@ -95,7 +95,7 @@ export function GoalWizard({
   enableLossAversion = true,
   showPhotoUpload = true,
 }: GoalWizardProps) {
-  const { t } = useTranslation(['goals', 'common']);
+  const { t } = useTranslation('goals');
   const [step, setStep] = useState(1);
   const [selectedTemplate, setSelectedTemplate] = useState<typeof GOAL_TEMPLATES[0] | null>(null);
   const [framingType, setFramingType] = useState<'loss-avoidance' | 'achievement'>('achievement');

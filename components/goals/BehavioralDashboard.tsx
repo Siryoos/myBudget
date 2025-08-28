@@ -36,7 +36,7 @@ export function BehavioralDashboard({
   showSocialProof = true,
   enableNotifications = true,
 }: BehavioralDashboardProps) {
-  const { t, isReady } = useTranslation(['goals', 'dashboard', 'common']);
+  const { t, ready } = useTranslation('goals');
   const [goals, setGoals] = useState<SavingsGoal[]>([]);
   const [quickSaveHistory, setQuickSaveHistory] = useState<QuickSaveData[]>([]);
   const [activeTab, setActiveTab] = useState<'goals' | 'quick-save' | 'achievements' | 'insights'>('goals');
@@ -94,13 +94,11 @@ export function BehavioralDashboard({
     setGoals(mockGoals);
   }, []);
 
-  if (!isReady) {
+  if (!ready) {
     return (
-      <div className="flex items-center justify-center min-h-64">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-trust-blue mx-auto mb-4"></div>
-          <p className="text-neutral-gray">{t('common:status.loading', { defaultValue: 'Loading...' })}</p>
-        </div>
+      <div className="text-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-trust-blue mx-auto mb-4"></div>
+        <p className="text-neutral-gray">Loading behavioral dashboard...</p>
       </div>
     );
   }

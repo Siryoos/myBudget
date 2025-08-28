@@ -17,7 +17,7 @@ import { actionHandler } from '@/lib/action-handler';
 import { useInsights, useDashboardData } from '@/lib/api-hooks';
 import { useTranslation } from '@/lib/useTranslation';
 import { formatCurrency } from '@/lib/utils';
-import type { FinancialInsight } from '@/types';
+import type { FinancialInsight, InsightAction } from '@/types';
 
 import { getMockInsights, getMockSavingTips, getMockPeerComparisons } from './insights-data';
 
@@ -35,7 +35,7 @@ export function InsightsPanel({
   comparePeers = true,
 }: InsightsPanelProps) {
   const [activeTab, setActiveTab] = useState<TabType>('tips');
-  const { t, isReady } = useTranslation(['dashboard', 'common']);
+  const { t, ready } = useTranslation('dashboard');
   const router = useRouter();
   const { user } = useAuth();
 
@@ -55,7 +55,7 @@ export function InsightsPanel({
      getMockPeerComparisons(t)
   , [t]);
 
-  const handleInsightAction = useCallback(async (action: any) => {
+  const handleInsightAction = useCallback(async (action: InsightAction) => {
     switch (action.type) {
       case 'navigate':
         router.push(action.target);
@@ -77,7 +77,7 @@ export function InsightsPanel({
   }, [router, user]);
 
   const renderContent = () => {
-    if (!isReady || insightsLoading || dashboardLoading) {
+    if (!ready || insightsLoading || dashboardLoading) {
       return (
         <div className="flex items-center justify-center h-64">
           <div className="text-center">

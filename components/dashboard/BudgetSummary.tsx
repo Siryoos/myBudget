@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { useBudgets } from '@/hooks/use-api';
+import { useBudgets } from '@/contexts/AppProvider';
 import { useTranslation } from '@/lib/useTranslation';
 import { formatCurrency, formatPercentage, getBudgetCategoryColor } from '@/lib/utils';
 import type { BudgetCategory } from '@/types';
@@ -28,8 +28,8 @@ export function BudgetSummary({
   visualType = 'donutChart',
 }: BudgetSummaryProps) {
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month'>('month');
-  const { t } = useTranslation(['dashboard', 'budget']);
-  const { data: budgets, loading, error } = useBudgets();
+  const { t } = useTranslation('dashboard');
+  const { budgets, loading, error } = useBudgets();
 
   // Get the active budget (first one for now, or the current period budget)
   const activeBudget = budgets?.[0];

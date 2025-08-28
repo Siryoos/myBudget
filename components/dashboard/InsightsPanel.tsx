@@ -68,7 +68,7 @@ function InsightsPanelContent({
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [announcement, setAnnouncement] = useState<string>('');
-  const { t, isReady } = useTranslation(['dashboard', 'common']);
+  const { t, ready } = useTranslation('dashboard');
 
   // Mock data - in a real app, these would come from API calls
   // Memoize expensive data transformations
@@ -298,7 +298,7 @@ function InsightsPanelContent({
     const loadInitialData = async () => {
       try {
         // Wait for translations to be ready
-        if (isReady) {
+        if (ready) {
           // Simulate API call delay
           await new Promise(resolve => setTimeout(resolve, 500));
           setIsInitialLoading(false);
@@ -310,7 +310,7 @@ function InsightsPanelContent({
     };
 
     loadInitialData();
-  }, [isReady, sanitizeErrorMessage]);
+  }, [ready, sanitizeErrorMessage]);
 
   // Announce tab changes to screen readers
   useEffect(() => {

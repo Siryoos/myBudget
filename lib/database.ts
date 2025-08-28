@@ -1,6 +1,7 @@
 import * as dotenv from 'dotenv';
 import type { PoolClient, QueryResult, QueryResultRow } from 'pg';
 import { Pool } from 'pg';
+import type { TypedQueryResult } from './database/types';
 
 dotenv.config();
 
@@ -53,6 +54,49 @@ pool.on('error', (err) => {
 export const getClient = (): Promise<PoolClient> => pool.connect();
 export const getPool = (): Pool => pool;
 export const query = <T extends QueryResultRow = any>(text: string, params?: unknown[]): Promise<QueryResult<T>> => pool.query<T>(text, params);
+
+/**
+ * Executes a type-safe database query with runtime type validation
+ * @param queryText SQL query text
+ * @param params Query parameters
+ * @param typeGuard Function to validate the type of each row
+ * @returns Promise<TypedQueryResult<T>> Type-safe query result
+ */
+export async function executeTypedQuery<T>(
+  queryText: string,
+  params: unknown[],
+  typeGuard: (obj: unknown) => obj is T,
+): Promise<TypedQueryResult<T>> {
+  try {
+    const result = await pool.query(queryText, params);
+    
+    // Validate each row with the type guard
+    const validatedRows = result.rows.filter(typeGuard);
+    
+    if (validatedRows.length !== result.rows.length) {
+      console.warn(`Type validation failed for ${result.rows.length - validatedRows.length} rows`);
+    }
+    
+    return {
+      rows: validatedRows,
+      rowCount: validatedRows.length,
+      command: result.command,
+      oid: result.oid || 0,
+      fields: result.fields.map(field => ({
+        name: field.name,
+        tableID: field.tableID,
+        columnID: field.columnID,
+        dataTypeID: field.dataTypeID,
+        dataTypeSize: field.dataTypeSize,
+        dataTypeModifier: field.dataTypeModifier,
+        format: field.format,
+      })),
+    };
+  } catch (error) {
+    console.error('Type-safe query execution failed:', error);
+    throw error;
+  }
+}
 
 /**
  * Executes a function within a database transaction

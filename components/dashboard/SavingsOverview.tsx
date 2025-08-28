@@ -31,7 +31,7 @@ export function SavingsOverview({
   showGoalProgress = true,
   animateOnLoad = true,
 }: SavingsOverviewProps) {
-  const { t } = useTranslation(['dashboard']);
+  const { t } = useTranslation('dashboard');
   const [isAnimated, setIsAnimated] = useState(!animateOnLoad);
   const { data: dashboardData, loading, error } = useDashboard();
 
@@ -92,7 +92,7 @@ export function SavingsOverview({
       <Card className="overflow-hidden">
         <CardContent className="p-6">
           <div className="text-center text-neutral-gray">
-            <p className="mb-2">{t('dashboard:savingsOverview.errorLoading', { defaultValue: 'Unable to load savings data' })}</p>
+            <p className="mb-2">{t('savingsOverview.errorLoading', { defaultValue: 'Unable to load savings data' })}</p>
             <p className="text-sm">{error.message}</p>
           </div>
         </CardContent>
@@ -111,10 +111,10 @@ export function SavingsOverview({
               </div>
               <div>
                 <h3 className="text-lg font-semibold">
-                  {t('dashboard:savingsOverview.totalSavings', { defaultValue: 'Total Savings' })}
+                  {t('savingsOverview.totalSavings', { defaultValue: 'Total Savings' })}
                 </h3>
                 <p className="text-secondary-growth-green-light text-sm">
-                  {t('dashboard:savingsOverview.growingAnnually', {
+                  {t('savingsOverview.growingAnnually', {
                     rate: formatPercentage(savingsData.growthRate),
                     defaultValue: `Growing at ${formatPercentage(savingsData.growthRate)} annually`,
                   })}
@@ -143,7 +143,7 @@ export function SavingsOverview({
                     <ArrowDownIcon className="h-4 w-4 mr-1" />
                   )}
                   <span>
-                    {t('dashboard:savingsOverview.fromLastMonth', {
+                    {t('savingsOverview.fromLastMonth', {
                       amount: formatCurrency(Math.abs(monthlyChange)),
                       defaultValue: `${formatCurrency(Math.abs(monthlyChange))} from last month`,
                     })}
@@ -161,7 +161,7 @@ export function SavingsOverview({
                 <div className="flex items-center">
                   <CalendarIcon className="h-5 w-5 text-neutral-gray mr-2" />
                   <h4 className="font-semibold text-neutral-dark-gray">
-                    {t('dashboard:savingsOverview.thisMonthsGoal', { defaultValue: 'This Month\'s Goal' })}
+                    {t('savingsOverview.thisMonthsGoal', { defaultValue: 'This Month\'s Goal' })}
                   </h4>
                 </div>
                 <div className="text-right">
@@ -169,7 +169,7 @@ export function SavingsOverview({
                     {formatCurrency(savingsData.monthlySaved)} / {formatCurrency(savingsData.monthlyGoal)}
                   </div>
                   <div className="text-sm text-neutral-gray">
-                    {t('dashboard:savingsOverview.remaining', {
+                    {t('savingsOverview.remaining', {
                       amount: formatCurrency(monthlyProgress.remaining),
                       defaultValue: `${formatCurrency(monthlyProgress.remaining)} remaining`,
                     })}
@@ -186,8 +186,8 @@ export function SavingsOverview({
               />
 
               <div className="flex justify-between text-sm text-neutral-gray">
-                <span>{formatPercentage(monthlyProgress.percentage)} {t('dashboard:savingsOverview.complete', { defaultValue: 'complete' })}</span>
-                <span>{Math.ceil((30 * monthlyProgress.remaining) / savingsData.monthlyGoal)} {t('dashboard:savingsOverview.daysAtCurrentRate', { defaultValue: 'days at current rate' })}</span>
+                <span>{formatPercentage(monthlyProgress.percentage)} {t('savingsOverview.complete', { defaultValue: 'complete' })}</span>
+                <span>{Math.ceil((30 * monthlyProgress.remaining) / savingsData.monthlyGoal)} {t('savingsOverview.daysAtCurrentRate', { defaultValue: 'days at current rate' })}</span>
               </div>
             </div>
           )}
@@ -196,14 +196,14 @@ export function SavingsOverview({
             <div>
               <div className="flex items-center justify-between mb-3">
                 <h4 className="font-semibold text-neutral-dark-gray">
-                  {t('dashboard:savingsOverview.annualSavingsGoal', { defaultValue: 'Annual Savings Goal' })}
+                  {t('savingsOverview.annualSavingsGoal', { defaultValue: 'Annual Savings Goal' })}
                 </h4>
                 <div className="text-right">
                   <div className="font-semibold text-neutral-dark-gray">
                     {formatPercentage(annualProgress.percentage)}
                   </div>
                   <div className="text-sm text-neutral-gray">
-                    {t('dashboard:savingsOverview.of', { defaultValue: 'of' })} {formatCurrency(savingsData.annualGoal)}
+                    {t('savingsOverview.of', { defaultValue: 'of' })} {formatCurrency(savingsData.annualGoal)}
                   </div>
                 </div>
               </div>
@@ -218,7 +218,7 @@ export function SavingsOverview({
               <div className="mt-3 grid grid-cols-3 gap-4 text-center">
                 <div className="bg-neutral-light-gray rounded-lg p-3">
                   <div className="text-sm font-medium text-neutral-dark-gray">
-                    {t('dashboard:savingsOverview.saved', { defaultValue: 'Saved' })}
+                    {t('savingsOverview.saved', { defaultValue: 'Saved' })}
                   </div>
                   <div className="text-lg font-bold text-secondary-growth-green">
                     {formatCurrency(savingsData.totalSavings)}
@@ -226,7 +226,7 @@ export function SavingsOverview({
                 </div>
                 <div className="bg-neutral-light-gray rounded-lg p-3">
                   <div className="text-sm font-medium text-neutral-dark-gray">
-                    {t('dashboard:savingsOverview.remaining', { defaultValue: 'Remaining' })}
+                    {t('savingsOverview.remaining', { defaultValue: 'Remaining' })}
                   </div>
                   <div className="text-lg font-bold text-accent-action-orange">
                     {formatCurrency(annualProgress.remaining)}
@@ -234,7 +234,7 @@ export function SavingsOverview({
                 </div>
                 <div className="bg-neutral-light-gray rounded-lg p-3">
                   <div className="text-sm font-medium text-neutral-dark-gray">
-                    {t('dashboard:savingsOverview.monthlyNeed', { defaultValue: 'Monthly Need' })}
+                    {t('savingsOverview.monthlyNeed', { defaultValue: 'Monthly Need' })}
                   </div>
                   <div className="text-lg font-bold text-primary-trust-blue">
                     {formatCurrency(annualProgress.remaining / 12)}

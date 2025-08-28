@@ -2,17 +2,23 @@ import { useState, useCallback, useRef } from 'react';
 
 import { useToast } from './useToast';
 
+export interface RecoveryStrategy {
+  canRecover: (error: Error) => boolean;
+  recover: (error: Error) => Promise<void> | void;
+}
+
 export interface UseErrorHandlerOptions {
   showToast?: boolean;
   context?: Record<string, any>;
   onError?: (error: Error, message: string) => void;
+  strategies?: RecoveryStrategy[];
 }
 
 export function useErrorHandler(options: UseErrorHandlerOptions = {}) {
   const [error, setError] = useState<Error | null>(null);
   const [isError, setIsError] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const { showToast = true } = options;
+  const { showToast = true, strategies = [] } = options;
   const { toast } = useToast();
   const errorCountRef = useRef(0);
   const lastErrorRef = useRef<string>('');
@@ -27,6 +33,21 @@ export function useErrorHandler(options: UseErrorHandlerOptions = {}) {
     errorCountRef.current = Date.now();
 
     const errorObj = error instanceof Error ? error : new Error(String(error));
+
+    // Try recovery strategies first
+    for (const strategy of strategies) {
+      if (strategy.canRecover(errorObj)) {
+        try {
+          await strategy.recover(errorObj);
+          // If recovery succeeds, don't show error
+          return;
+        } catch (recoveryError) {
+          // Recovery failed, continue with normal error handling
+          console.warn('Recovery strategy failed:', recoveryError);
+        }
+      }
+    }
+
     setError(errorObj);
     setIsError(true);
 
@@ -43,7 +64,7 @@ export function useErrorHandler(options: UseErrorHandlerOptions = {}) {
     }
 
     options.onError?.(errorObj, message);
-  }, [options, showToast, toast]);
+  }, [options, showToast, toast, strategies]);
 
   const reset = useCallback(() => {
     setError(null);

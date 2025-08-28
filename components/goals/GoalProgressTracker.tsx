@@ -43,7 +43,7 @@ export function GoalProgressTracker({
   celebrationAnimations = true,
   showFutureProjections = true,
 }: GoalProgressTrackerProps) {
-  const { t, isReady } = useTranslation(['goals', 'common']);
+  const { t, ready } = useTranslation('goals');
   const { formatCurrency } = useCurrency();
   const [selectedVisual, setSelectedVisual] = useState<'progressBar' | 'thermometer' | 'jar'>('progressBar');
   const [showCompleted, setShowCompleted] = useState(false);
@@ -172,10 +172,10 @@ export function GoalProgressTracker({
       >
         <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
           <SparklesIcon className="w-5 h-5 text-purple-600 mr-2" />
-          {t('goals:projections.title', { defaultValue: 'Future Self Projection' })}
+          {t('projections.title', { defaultValue: 'Future Self Projection' })}
         </h4>
         <p className="text-sm text-gray-600 mb-4">
-          {t('goals:projections.description', { defaultValue: 'See how your savings could grow over time with compound interest' })}
+          {t('projections.description', { defaultValue: 'See how your savings could grow over time with compound interest' })}
         </p>
 
         <div className="h-48 mb-4">
@@ -279,10 +279,10 @@ export function GoalProgressTracker({
             <div className="mb-4">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium text-gray-700">
-                  {t('goals:progress.current', { defaultValue: 'Current' })}: {formatCurrency(goal.currentAmount)}
+                  {t('progress.current', { defaultValue: 'Current' })}: {formatCurrency(goal.currentAmount)}
                 </span>
                 <span className="text-sm font-medium text-gray-700">
-                  {t('goals:progress.target', { defaultValue: 'Target' })}: {formatCurrency(goal.targetAmount)}
+                  {t('progress.target', { defaultValue: 'Target' })}: {formatCurrency(goal.targetAmount)}
                 </span>
               </div>
 
@@ -295,8 +295,8 @@ export function GoalProgressTracker({
                     </div>
                     <div className="text-sm text-gray-500">
                       {isCompleted
-                        ? t('goals:progress.completed', { defaultValue: 'Completed!' })
-                        : `${formatCurrency(goal.targetAmount - goal.currentAmount)} ${t('goals:progress.remaining', { defaultValue: 'remaining' })}`
+                        ? t('progress.completed', { defaultValue: 'Completed!' })
+                        : `${formatCurrency(goal.targetAmount - goal.currentAmount)} ${t('progress.remaining', { defaultValue: 'remaining' })}`
                       }
                     </div>
                   </div>
@@ -311,8 +311,8 @@ export function GoalProgressTracker({
                   <CalendarIcon className="w-4 h-4" />
                   <span>
                     {monthsRemaining > 0
-                      ? t('goals:time.monthsRemaining', { defaultValue: '{{months}} months remaining', months: monthsRemaining })
-                      : t('goals:time.overdue', { defaultValue: 'Overdue' })
+                      ? t('time.monthsRemaining', { defaultValue: '{{months}} months remaining', months: monthsRemaining })
+                      : t('time.overdue', { defaultValue: 'Overdue' })
                     }
                   </span>
                 </div>
@@ -325,8 +325,8 @@ export function GoalProgressTracker({
                     className="text-blue-600 hover:text-blue-800"
                   >
                     {showProjections
-                      ? t('goals:projections.hide', { defaultValue: 'Hide Projections' })
-                      : t('goals:projections.show', { defaultValue: 'Show Future Value' })
+                      ? t('projections.hide', { defaultValue: 'Hide Projections' })
+                      : t('projections.show', { defaultValue: 'Show Future Value' })
                     }
                   </Button>
                 )}
@@ -340,7 +340,7 @@ export function GoalProgressTracker({
             {goal.milestones && goal.milestones.length > 0 && (
               <div className="mt-4">
                 <h4 className="text-sm font-medium text-gray-700 mb-2">
-                  {t('goals:milestones.title', { defaultValue: 'Milestones' })}
+                  {t('milestones.title', { defaultValue: 'Milestones' })}
                 </h4>
                 <div className="space-y-2">
                   {goal.milestones.map((milestone) => {
@@ -393,12 +393,12 @@ export function GoalProgressTracker({
 
   return (
     <>
-      {!isReady ? (
+      {!ready ? (
         <Card>
           <CardContent className="p-6">
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-trust-blue mx-auto mb-4"></div>
-              <p className="text-neutral-gray">{t('common:status.loading', { defaultValue: 'Loading...' })}</p>
+              <p className="text-neutral-gray">Loading progress tracker...</p>
             </div>
           </CardContent>
         </Card>
@@ -408,10 +408,10 @@ export function GoalProgressTracker({
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">
-            {t('goals:progress.title', { defaultValue: 'Goal Progress Tracker' })}
+            {t('progress.title', { defaultValue: 'Goal Progress Tracker' })}
           </h2>
           <p className="text-gray-600">
-            {t('goals:progress.subtitle', { defaultValue: 'Track your savings goals and see your progress' })}
+            {t('progress.subtitle', { defaultValue: 'Track your savings goals and see your progress' })}
           </p>
         </div>
 
@@ -419,16 +419,16 @@ export function GoalProgressTracker({
           {/* Visual Style Selector */}
           <div className="flex items-center space-x-2">
             <span className="text-sm text-gray-600">
-              {t('goals:progress.visualStyle', { defaultValue: 'Style:' })}
+              {t('progress.visualStyle', { defaultValue: 'Style:' })}
             </span>
             <select
               value={selectedVisual}
               onChange={(e) => setSelectedVisual(e.target.value as 'progressBar' | 'thermometer' | 'jar')}
               className="text-sm border border-gray-300 rounded-md px-2 py-1 focus:outline-none focus:ring-2 focus:ring-primary-trust-blue"
             >
-              <option value="progressBar">{t('goals:progress.styles.progressBar', { defaultValue: 'Progress Bar' })}</option>
-              <option value="thermometer">{t('goals:progress.styles.thermometer', { defaultValue: 'Thermometer' })}</option>
-              <option value="jar">{t('goals:progress.styles.jar', { defaultValue: 'Jar' })}</option>
+              <option value="progressBar">{t('progress.styles.progressBar', { defaultValue: 'Progress Bar' })}</option>
+              <option value="thermometer">{t('progress.styles.thermometer', { defaultValue: 'Thermometer' })}</option>
+              <option value="jar">{t('progress.styles.jar', { defaultValue: 'Jar' })}</option>
             </select>
           </div>
 
@@ -439,8 +439,8 @@ export function GoalProgressTracker({
             onClick={() => setShowCompleted(!showCompleted)}
           >
             {showCompleted
-              ? t('goals:progress.hideCompleted', { defaultValue: 'Hide Completed' })
-              : t('goals:progress.showCompleted', { defaultValue: 'Show Completed' })
+              ? t('progress.hideCompleted', { defaultValue: 'Hide Completed' })
+              : t('progress.showCompleted', { defaultValue: 'Show Completed' })
             }
           </Button>
         </div>
@@ -465,10 +465,10 @@ export function GoalProgressTracker({
         >
           <div className="text-6xl mb-4">🎯</div>
           <h3 className="text-xl font-semibold text-gray-900 mb-2">
-            {t('goals:progress.empty.title', { defaultValue: 'No goals yet' })}
+            {t('progress.empty.title', { defaultValue: 'No goals yet' })}
           </h3>
           <p className="text-gray-600 mb-6">
-            {t('goals:progress.empty.description', { defaultValue: 'Create your first savings goal to get started' })}
+            {t('progress.empty.description', { defaultValue: 'Create your first savings goal to get started' })}
           </p>
         </motion.div>
         )}

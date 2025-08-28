@@ -6,9 +6,9 @@ import { GoalWizard } from '@/components/goals/GoalWizard';
 import { useTranslation } from '@/lib/useTranslation';
 
 export default function GoalsPage() {
-  const { t, isReady } = useTranslation(['goals', 'common']);
+  const { t, ready } = useTranslation('goals');
 
-  if (!isReady) {
+  if (!ready) {
     return (
       <div className="min-h-screen bg-neutral-light-gray flex items-center justify-center">
         <div className="text-center">

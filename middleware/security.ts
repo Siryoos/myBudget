@@ -1,15 +1,15 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { RateLimitConfig as RateLimitConfigType } from '../lib/rate-limiting/config';
 
 // Conditional import for Redis - only import in Node.js runtime
 let rateLimiter: any = null;
-let RateLimitConfig: any = null;
+let rateLimitConfig: any = null;
 
 if (typeof process !== 'undefined' && process.env && process.env.NODE_ENV) {
   try {
     const redisModule = require('@/lib/redis');
     rateLimiter = redisModule.rateLimiter;
-    RateLimitConfig = redisModule.RateLimitConfig;
+    rateLimitConfig = redisModule.RateLimitConfig;
   } catch (error) {
     console.warn('Redis rate limiter not available in Edge Runtime');
   }
@@ -48,7 +48,7 @@ const validateEnvironment = () => {
   }
 
   // Validate Redis configuration
-  const redisPort = parseInt(process.env.REDIS_PORT || '6379');
+  const redisPort = parseInt(process.env.REDIS_PORT || '6379', 10);
   if (isNaN(redisPort) || redisPort < 1 || redisPort > 65535) {
     throw new Error('REDIS_PORT must be a valid port number (1-65535)');
   }
@@ -151,7 +151,7 @@ const isValidDomain = (domain: string): boolean => {
 };
 
 // Enhanced security middleware with proper error boundaries
-export function securityMiddleware(request: NextRequest): NextResponse {
+export function securityMiddleware(request: NextRequest) {
   try {
     // Get the response
     const response = NextResponse.next();
@@ -169,7 +169,7 @@ export function securityMiddleware(request: NextRequest): NextResponse {
     // Request validation with improved logic
     const contentLength = request.headers.get('content-length');
     if (contentLength) {
-      const size = parseInt(contentLength);
+      const size = parseInt(contentLength, 10);
       if (isNaN(size) || size > 10 * 1024 * 1024) { // 10MB limit
         securityMonitor.recordRequest('largeRequests');
         console.warn('Large request detected:', { ...securityLog, size });
@@ -412,7 +412,7 @@ function mergeSecurityHeaders(target: Headers, source: Headers): void {
 }
 
 // Enhanced combined middleware with better error handling and async rate limiting
-export async function middleware(request: NextRequest): Promise<NextResponse> {
+export async function middleware(request: NextRequest) {
   try {
     // Apply security headers
     const response = securityMiddleware(request);
@@ -512,7 +512,7 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
 // Note: Config is exported from the root middleware.ts file
 
 // Enhanced security health check endpoint with better error handling
-export async function GET(request: NextRequest): Promise<NextResponse> {
+export async function GET(request: NextRequest) {
   try {
     if (request.nextUrl.pathname === '/api/security/health') {
       const metrics = securityMonitor.getMetrics();

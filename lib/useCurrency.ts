@@ -13,8 +13,4 @@ export const useCurrency = () => {
     formatCurrency,
     locale,
   };
-<<<<<<< Current (Your changes)
-}
-=======
 };
->>>>>>> Incoming (Background Agent changes)

@@ -104,7 +104,7 @@ export function BudgetMethodSelector({
   allowCustomization = true,
   onMethodSelected,
 }: BudgetMethodSelectorProps) {
-  const { t } = useTranslation(['budget', 'common']);
+  const { t } = useTranslation('budget');
   const router = useRouter();
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
   const [showDetails, setShowDetails] = useState(false);

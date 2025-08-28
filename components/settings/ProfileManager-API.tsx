@@ -25,7 +25,7 @@ export function ProfileManager({
   financialProfile = true,
   preferences = true,
 }: ProfileManagerProps) {
-  const { t } = useTranslation(['settings', 'common']);
+  const { t } = useTranslation('settings');
   const { user, updateProfile } = useAuth();
   const [editingSection, setEditingSection] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -402,7 +402,7 @@ export function ProfileManager({
                 <input
                   type="number"
                   value={profileData.dependents}
-                  onChange={(e) => setProfileData(prev => ({ ...prev, dependents: parseInt(e.target.value) || 0 }))}
+                  onChange={(e) => setProfileData(prev => ({ ...prev, dependents: parseInt(e.target.value, 10) || 0 }))}
                   className="w-full px-3 py-2 border border-neutral-gray/30 rounded-lg focus:ring-2 focus:ring-primary-trust-blue focus:border-transparent"
                   min="0"
                   max="20"

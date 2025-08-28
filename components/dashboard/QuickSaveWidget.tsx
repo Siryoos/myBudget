@@ -23,7 +23,7 @@ export function QuickSaveWidget({
   customAmountEnabled = true,
   celebrationAnimation = true,
 }: QuickSaveWidgetProps) {
-  const { t } = useTranslation(['dashboard']);
+  const { t } = useTranslation('dashboard');
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [customAmount, setCustomAmount] = useState('');
   const [showCustomInput, setShowCustomInput] = useState(false);
@@ -78,10 +78,10 @@ export function QuickSaveWidget({
           </div>
           <div>
             <h3 className="text-lg font-semibold text-neutral-dark-gray">
-              {t('dashboard:quickSave.title', { defaultValue: 'Quick Save' })}
+              {t('quickSave.title', { defaultValue: 'Quick Save' })}
             </h3>
             <p className="text-sm text-neutral-gray">
-              {t('dashboard:quickSave.description', { defaultValue: 'Every dollar saved is a step towards your goals' })}
+              {t('quickSave.description', { defaultValue: 'Every dollar saved is a step towards your goals' })}
             </p>
           </div>
         </div>
@@ -94,10 +94,10 @@ export function QuickSaveWidget({
             <div className="text-center">
               <SparklesIcon className="h-12 w-12 text-secondary-growth-green mx-auto mb-2 animate-bounce" />
               <div className="text-lg font-bold text-secondary-growth-green">
-                {t('dashboard:quickSave.greatJob', { defaultValue: 'Great job! 🎉' })}
+                {t('quickSave.greatJob', { defaultValue: 'Great job! 🎉' })}
               </div>
               <div className="text-sm text-neutral-gray">
-                {t('dashboard:quickSave.successfullySaved', { defaultValue: 'You\'ve successfully saved' })} {formatCurrency(getSelectedAmount())}
+                {t('quickSave.successfullySaved', { defaultValue: 'You\'ve successfully saved' })} {formatCurrency(getSelectedAmount())}
               </div>
             </div>
           </div>
@@ -107,7 +107,7 @@ export function QuickSaveWidget({
           {/* Quick Amount Buttons */}
           <div>
             <label className="block text-sm font-medium text-neutral-dark-gray mb-2">
-              {t('dashboard:quickSave.chooseAmount', { defaultValue: 'Choose an amount' })}
+              {t('quickSave.chooseAmount', { defaultValue: 'Choose an amount' })}
             </label>
             <div className="grid grid-cols-2 gap-2">
               {defaultAmounts.map((amount) => (
@@ -147,14 +147,14 @@ export function QuickSaveWidget({
                 disabled={isLoading}
               >
                 <PlusIcon className="h-5 w-5 mr-2" />
-                {t('dashboard:quickSave.customAmount', { defaultValue: 'Custom Amount' })}
+                {t('quickSave.customAmount', { defaultValue: 'Custom Amount' })}
               </button>
 
               {showCustomInput && (
                 <div className="mt-3 space-y-3">
                   <div>
                     <label htmlFor="custom-amount" className="sr-only">
-                      {t('dashboard:quickSave.customAmount', { defaultValue: 'Enter custom amount' })}
+                      {t('quickSave.customAmount', { defaultValue: 'Enter custom amount' })}
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -194,11 +194,11 @@ export function QuickSaveWidget({
             loading={isLoading}
           >
             {isLoading ? (
-              t('dashboard:quickSave.saving', { defaultValue: 'Saving...' })
+              t('quickSave.saving', { defaultValue: 'Saving...' })
             ) : (
               <>
                 <BanknotesIcon className="h-5 w-5 mr-2" />
-                {t('dashboard:quickSave.save', { defaultValue: 'Save' })} {formatCurrency(getSelectedAmount())}
+                {t('quickSave.save', { defaultValue: 'Save' })} {formatCurrency(getSelectedAmount())}
               </>
             )}
           </Button>
@@ -206,10 +206,10 @@ export function QuickSaveWidget({
           {/* Motivational Message */}
           <div className="bg-primary-trust-blue/5 rounded-lg p-3 text-center">
             <p className="text-sm text-primary-trust-blue font-medium">
-              {t('dashboard:quickSave.tip', { defaultValue: '💡 Tip: Small, consistent savings add up quickly!' })}
+              {t('quickSave.tip', { defaultValue: '💡 Tip: Small, consistent savings add up quickly!' })}
             </p>
             <p className="text-xs text-neutral-gray mt-1">
-              {t('dashboard:quickSave.weeklySavings', {
+              {t('quickSave.weeklySavings', {
                 amount: formatCurrency(25),
                 annual: formatCurrency(1300),
                 defaultValue: 'Saving $25 weekly = $1,300 annually',
@@ -220,7 +220,7 @@ export function QuickSaveWidget({
           {/* Recent Savings */}
           <div className="border-t border-neutral-gray/20 pt-4">
             <h4 className="text-sm font-medium text-neutral-dark-gray mb-2">
-              {t('dashboard:quickSave.recentSaves', { defaultValue: 'Recent Quick Saves' })}
+              {t('quickSave.recentSaves', { defaultValue: 'Recent Quick Saves' })}
             </h4>
             <div className="space-y-2">
               {[

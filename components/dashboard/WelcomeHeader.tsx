@@ -25,7 +25,7 @@ export function WelcomeHeader({
   showDate = true,
   showQuickActions = true,
 }: WelcomeHeaderProps) {
-  const { t, i18n, isReady } = useTranslation(['common', 'dashboard']);
+  const { t, i18n, ready } = useTranslation('common');
   const [userName] = useState('Alex'); // This would come from user context
   const [greeting, setGreeting] = useState('morning'); // Default to morning
   const [today, setToday] = useState(new Date());
@@ -40,8 +40,8 @@ export function WelcomeHeader({
 
   // Debug logging
   useEffect(() => {
-    console.log('WelcomeHeader i18n state:', { isReady, language: i18n.language, isInitialized: i18n.isInitialized });
-  }, [isReady, i18n.language, i18n.isInitialized]);
+    console.log('WelcomeHeader i18n state:', { ready, language: i18n.language, isInitialized: i18n.isInitialized });
+  }, [ready, i18n.language, i18n.isInitialized]);
 
   const quickActions = [
     {

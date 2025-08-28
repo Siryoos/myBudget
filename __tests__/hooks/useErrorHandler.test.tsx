@@ -2,7 +2,6 @@ import { renderHook, act } from '@testing-library/react';
 
 import { useErrorHandler } from '../../hooks/useErrorHandler';
 import { ValidationError } from '../../lib/error-handling';
-import * as errorReporting from '../../lib/error-reporting';
 
 // Mock error reporter
 jest.mock('../../lib/error-reporting', () => ({

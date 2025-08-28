@@ -24,7 +24,7 @@ export function BehavioralDashboard({
   showSocialProof = true,
   enableNotifications = true,
 }: BehavioralDashboardProps) {
-  const { t, isReady } = useTranslation(['goals', 'dashboard', 'common']);
+  const { t, ready } = useTranslation('goals');
   const { goals, loading: goalsLoading, createGoal, addContribution } = useGoals();
   const { analytics } = useAnalytics();
   const [quickSaveHistory, setQuickSaveHistory] = useState<QuickSaveData[]>([]);
@@ -49,7 +49,7 @@ export function BehavioralDashboard({
     }
   }, [analytics]);
 
-  if (!isReady || goalsLoading) {
+  if (!ready || goalsLoading) {
     return (
       <div className="flex items-center justify-center min-h-64">
         <div className="text-center">
@@ -152,13 +152,13 @@ export function BehavioralDashboard({
       {/* Header */}
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-neutral-charcoal">
-          {t('goals:dashboard.title', { defaultValue: 'Smart Savings Dashboard' })}
+          {t('dashboard.title', { defaultValue: 'Smart Savings Dashboard' })}
         </h2>
         <button
           onClick={() => setShowGoalWizard(true)}
           className="px-4 py-2 bg-primary-trust-blue text-white rounded-lg hover:bg-primary-trust-blue/90 transition-colors"
         >
-          {t('goals:actions.createGoal', { defaultValue: 'Create Goal' })}
+          {t('actions.createGoal', { defaultValue: 'Create Goal' })}
         </button>
       </div>
 
@@ -187,7 +187,7 @@ export function BehavioralDashboard({
                   : 'border-transparent text-neutral-gray hover:text-neutral-charcoal'
               }`}
             >
-              {t(`goals:tabs.${tab}`, { defaultValue: tab.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') })}
+              {t(`tabs.${tab}`, { defaultValue: tab.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') })}
             </button>
           ))}
         </nav>
@@ -209,7 +209,7 @@ export function BehavioralDashboard({
 
                 <div className="mb-4">
                   <div className="flex justify-between text-sm mb-2">
-                    <span className="text-neutral-gray">{t('goals:progress', { defaultValue: 'Progress' })}</span>
+                    <span className="text-neutral-gray">{t('progress', { defaultValue: 'Progress' })}</span>
                     <span className="font-medium text-neutral-charcoal">
                       {Math.round((goal.currentAmount / goal.targetAmount) * 100)}%
                     </span>

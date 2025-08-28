@@ -1,5 +1,4 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 import { middleware as securityMiddleware } from './middleware/security';
 
@@ -120,11 +119,25 @@ function mergeHeadersSafely(target: Headers, source: Headers): void {
 export async function middleware(request: NextRequest) {
   try {
     // First apply locale middleware
-    const response = localeMiddleware(request);
+    const locale = request.nextUrl.locale || 'en';
+    const pathname = request.nextUrl.pathname;
 
-    // If locale middleware redirected, return early
-    if (response.status === 302) {
-      return response;
+    // Skip middleware for static files and API routes that don't need locale handling
+    if (
+      pathname.startsWith('/_next/') ||
+      pathname.startsWith('/api/') ||
+      pathname.startsWith('/static/') ||
+      pathname.includes('.')
+    ) {
+      return NextResponse.next();
+    }
+
+    // Handle locale routing
+    if (!pathname.startsWith(`/${locale}`)) {
+      // Redirect to locale-prefixed path
+      const url = request.nextUrl.clone();
+      url.pathname = `/${locale}${pathname}`;
+      return NextResponse.redirect(url);
     }
 
     // Then apply security middleware
@@ -132,38 +145,65 @@ export async function middleware(request: NextRequest) {
 
     // Check if securityResponse is a terminal response (status !== 200 and !== 302)
     // Terminal responses include 204 (preflight), 429 (rate limit), etc.
-    if (securityResponse.status !== 200 && securityResponse.status !== 302) {
+    if (securityResponse && securityResponse.status !== 200 && securityResponse.status !== 302) {
       return securityResponse;
     }
 
-    // Safely merge security headers into the locale response for non-terminal responses
-    mergeHeadersSafely(response.headers, securityResponse.headers);
-
-    return response;
+    // Continue with normal processing
+    return NextResponse.next();
   } catch (error) {
     console.error('Middleware error:', error);
-
-    // Return a safe fallback response instead of crashing
-    return new NextResponse(
-      JSON.stringify({
-        success: false,
-        error: 'Internal server error',
-        message: 'Middleware processing failed',
-      }),
-      {
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-        },
-      },
-    );
+    
+    // Return a generic error response
+    return new NextResponse('Internal Server Error', { status: 500 });
   }
 }
 
-export const config = {
-  matcher: [
-    // Simplified matcher that covers all necessary routes without conflicts
-    '/((?!_next/static|_next/image|favicon.ico|public|sw.js|manifest.json|.*\\..*).*)',
-  ],
-};
+export function config() {
+  return {
+    matcher: [
+      // Simplified matcher that covers all necessary routes without conflicts
+      '/((?!_next/static|_next/image|favicon.ico|public|sw.js|manifest.json|.*\\..*).*)',
+    ],
+  };
+}
+
+export function getTokenFromRequest(request: NextRequest) {
+  // ... existing code ...
+}
+
+export function validateToken(token: any) {
+  // ... existing code ...
+}
+
+export function createResponse(status: number, message: string, headers?: Record<string, string>) {
+  // ... existing code ...
+}
+
+export function handleRateLimit(request: NextRequest, response: NextResponse) {
+  // ... existing code ...
+}
+
+export function handleSecurityHeaders(request: NextRequest, response: NextResponse) {
+  // ... existing code ...
+}
+
+export function handleCaching(request: NextRequest, response: NextResponse) {
+  // ... existing code ...
+}
+
+export function handleCompression(request: NextRequest, response: NextResponse) {
+  // ... existing code ...
+}
+
+export function handleLogging(request: NextRequest, response: NextResponse) {
+  // ... existing code ...
+}
+
+export function handleError(error: Error, request: NextRequest) {
+  // ... existing code ...
+}
+
+export function handleSuccess(request: NextRequest, response: NextResponse) {
+  // ... existing code ...
+}

@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { query } from '@/lib/database';
 import { createErrorResponse, createValidationError } from '@/lib/error-handling';
 import { rateLimiter } from '@/lib/redis';
+import { emailService } from '@/lib/email-service';
 
 const forgotPasswordSchema = z.object({
   email: z.string().email().transform(s => s.trim().toLowerCase()),
@@ -82,14 +83,21 @@ export async function POST(request: NextRequest) {
       [user.id, resetTokenHash, expiresAt],
     );
 
-    // In production, send email here
-    // For development, we'll just log the token
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`[DEV] Password reset token for ${email}: ${resetToken}`);
-    }
+    // Send password reset email
+    const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
+    
+    const emailSent = await emailService.sendPasswordReset({
+      email: user.email,
+      name: user.name,
+      resetToken,
+      resetUrl,
+    });
 
-    // TODO: Implement email sending service
-    // await emailService.sendPasswordReset(user.email, resetToken);
+    // Log for development if email fails
+    if (!emailSent && process.env.NODE_ENV === 'development') {
+      console.log(`[DEV] Failed to send email, but here's the reset token for ${email}: ${resetToken}`);
+      console.log(`[DEV] Reset URL: ${resetUrl}`);
+    }
 
     return NextResponse.json({
       success: true,

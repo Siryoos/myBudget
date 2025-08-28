@@ -335,15 +335,8 @@ export interface TypedQueryResult<T> {
 }
 
 // Type-safe database query functions
-export async function executeTypedQuery<T>(
-  queryText: string,
-  params: unknown[],
-  typeGuard: (obj: unknown) => obj is T,
-): Promise<TypedQueryResult<T>> {
-  // This would be implemented in the actual database module
-  // For now, it's a type definition
-  throw new Error('executeTypedQuery not implemented');
-}
+// This function is now implemented in lib/database.ts
+export { executeTypedQuery } from '../database';
 
 // Database constraint types
 export interface DatabaseConstraint {

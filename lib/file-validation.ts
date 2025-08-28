@@ -1,9 +1,13 @@
 import { createHash } from 'crypto';
 
+// Size constants
+const KILOBYTE = 1024;
+const MEGABYTE = KILOBYTE * KILOBYTE;
+
 // File validation configuration
 export const FILE_VALIDATION_CONFIG = {
   images: {
-    maxSize: 5 * 1024 * 1024, // 5MB
+    maxSize: 5 * MEGABYTE, // 5MB
     allowedMimeTypes: [
       'image/jpeg',
       'image/jpg',

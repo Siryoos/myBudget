@@ -7,17 +7,49 @@ import { securityMiddleware, apiRateLimits } from '../../middleware/security';
 
 // Mock Next.js components
 const mockNextRequest = (overrides: Partial<NextRequest> = {}): NextRequest => {
+  const defaultNextUrl = {
+    pathname: '/api/test',
+    protocol: 'https:',
+    host: 'localhost',
+    href: 'https://localhost/api/test',
+    origin: 'https://localhost',
+    search: '',
+    searchParams: new URLSearchParams(),
+    toString: () => 'https://localhost/api/test',
+    toJSON: () => ({ pathname: '/api/test', protocol: 'https:', host: 'localhost' }),
+    // Mock required NextURL methods
+    analyze: jest.fn(),
+    formatPathname: jest.fn(),
+    formatSearch: jest.fn(),
+    buildId: 'test-build-id',
+    flightRouterState: null,
+    hash: '',
+    locale: 'en',
+    locales: ['en'],
+    params: {},
+    query: {},
+    segments: ['api', 'test'],
+  };
+
+  // Handle pathname override specifically
+  const nextUrl = {
+    ...defaultNextUrl,
+    ...(overrides.nextUrl || {}),
+    // Ensure pathname is properly set
+    pathname: overrides.nextUrl?.pathname || defaultNextUrl.pathname,
+    // Update href when pathname changes
+    href: overrides.nextUrl?.pathname
+      ? `https://localhost${overrides.nextUrl.pathname}`
+      : defaultNextUrl.href,
+  };
+
   const request = {
     ip: '127.0.0.1',
     headers: new Map([
       ['user-agent', 'Jest Test Agent'],
       ['x-forwarded-for', '127.0.0.1'],
     ]),
-    nextUrl: {
-      pathname: '/api/test',
-      protocol: 'https:',
-      host: 'localhost',
-    },
+    nextUrl,
     method: 'GET',
     ...overrides,
   } as any;
@@ -86,7 +118,11 @@ describe('Security Middleware', () => {
     });
 
     it('should generate and apply nonce for CSP in production', async () => {
-      process.env.NODE_ENV = 'production';
+      const originalNodeEnv = process.env.NODE_ENV;
+      Object.defineProperty(process.env, 'NODE_ENV', {
+        value: 'production',
+        writable: true,
+      });
       const request = mockNextRequest();
       const response = await securityMiddleware(request);
 
@@ -96,6 +132,12 @@ describe('Security Middleware', () => {
 
       const csp = response.headers.get('Content-Security-Policy');
       expect(csp).toContain(nonce);
+
+      // Cleanup
+      Object.defineProperty(process.env, 'NODE_ENV', {
+        value: originalNodeEnv,
+        writable: true,
+      });
     });
 
     it('should handle nonce generation failures gracefully', async () => {
@@ -338,11 +380,21 @@ describe('Security Configuration', () => {
 describe('Error Handling Security', () => {
   describe('Information Disclosure Prevention', () => {
     it('should not expose internal errors in production', () => {
-      process.env.NODE_ENV = 'production';
+      const originalNodeEnv = process.env.NODE_ENV;
+      Object.defineProperty(process.env, 'NODE_ENV', {
+        value: 'production',
+        writable: true,
+      });
 
       // In production, error messages should be generic
       // This test ensures our error handling doesn't leak sensitive information
       expect(process.env.NODE_ENV).toBe('production');
+
+      // Cleanup
+      Object.defineProperty(process.env, 'NODE_ENV', {
+        value: originalNodeEnv,
+        writable: true,
+      });
     });
 
     it('should handle errors gracefully without crashing', async () => {
@@ -457,9 +509,9 @@ describe('Security Integration Tests', () => {
     it('should apply security measures consistently', async () => {
       // Test multiple requests to ensure consistency
       const requests = [
-        mockNextRequest({ pathname: '/api/auth/login' }),
-        mockNextRequest({ pathname: '/api/user/profile' }),
-        mockNextRequest({ pathname: '/api/dashboard' }),
+        mockNextRequest({ nextUrl: { pathname: '/api/auth/login' } as any }),
+        mockNextRequest({ nextUrl: { pathname: '/api/user/profile' } as any }),
+        mockNextRequest({ nextUrl: { pathname: '/api/dashboard' } as any }),
       ];
 
       for (const request of requests) {

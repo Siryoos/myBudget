@@ -8,7 +8,7 @@ import { useI18n } from '@/lib/i18n-provider';
 import { useTranslation } from '@/lib/useTranslation';
 
 export function TranslationDemo() {
-  const { t, isReady, forceUpdate } = useTranslation(['dashboard', 'common']);
+  const { t, ready } = useTranslation('dashboard');
   const { locale, changeLanguage } = useI18n();
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -29,16 +29,12 @@ export function TranslationDemo() {
     }
   };
 
-  if (!isReady) {
+  if (!ready) {
     return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-trust-blue mx-auto mb-4"></div>
-            <p className="text-neutral-gray">Loading translations...</p>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="text-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-trust-blue mx-auto mb-4"></div>
+        <p className="text-neutral-gray">Loading translations...</p>
+      </div>
     );
   }
 
@@ -48,9 +44,9 @@ export function TranslationDemo() {
         <h3 className="text-lg font-semibold text-neutral-dark-gray">
           🌐 Translation System Demo
         </h3>
-        <p className="text-sm text-neutral-gray">
-          Current Language: <strong>{locale}</strong> | Force Update Counter: <strong>{forceUpdate}</strong>
-        </p>
+        <div className="text-sm text-neutral-gray mb-4">
+          Current Language: <strong>{locale}</strong>
+        </div>
       </CardHeader>
 
       <CardContent className="space-y-6">
@@ -127,10 +123,8 @@ export function TranslationDemo() {
         <div className="bg-purple-50 rounded-lg p-4">
           <h5 className="font-medium text-purple-900 mb-2">Translation Status</h5>
           <div className="space-y-1 text-sm">
-            <p><strong>Ready:</strong> {isReady ? '✅ Yes' : '❌ No'}</p>
+            <p><strong>Ready:</strong> {ready ? '✅ Yes' : '❌ No'}</p>
             <p><strong>Current Locale:</strong> {locale}</p>
-            <p><strong>Force Update Count:</strong> {forceUpdate}</p>
-            <p><strong>i18n Initialized:</strong> {typeof window !== 'undefined' && (window as any).i18n ? '✅ Yes' : '❌ No'}</p>
           </div>
         </div>
 
