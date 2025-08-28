@@ -103,12 +103,6 @@ export class GoalsService extends BaseService {
     // Validate input data
     const validatedData = this.validateData(savingsGoalSchemas.update, data);
 
-    // Check if goal exists
-    const existingGoal = await this.findById(id);
-    if (!existingGoal) {
-      throw new NotFoundError('Savings goal', id);
-    }
-
     // Build dynamic update query
     const updates: string[] = [];
     const values: any[] = [];
@@ -125,6 +119,11 @@ export class GoalsService extends BaseService {
     });
 
     if (updates.length === 0) {
+      // Only fetch when no updates needed
+      const existingGoal = await this.findById(id);
+      if (!existingGoal) {
+        throw new NotFoundError('Savings goal', id);
+      }
       return existingGoal;
     }
 
@@ -137,6 +136,9 @@ export class GoalsService extends BaseService {
     values.push(id);
 
     const result = await query(queryString, values);
+    if (!result.rows.length) {
+      throw new NotFoundError('Savings goal', id);
+    }
     const updatedGoal = result.rows[0];
 
     const [milestones, automationRules] = await Promise.all([
@@ -208,16 +210,6 @@ export class GoalsService extends BaseService {
     // Validate input data
     const validatedData = this.validateData(milestoneSchemas.update, data);
 
-    // Check if milestone exists and belongs to goal
-    const milestoneData = await query(
-      'SELECT * FROM milestones WHERE id = $1',
-      [milestoneId],
-    );
-    if (!milestoneData.rows.length || milestoneData.rows[0].goal_id !== goalId) {
-      throw new NotFoundError('Milestone', milestoneId);
-    }
-    const milestone = this.mapDbMilestoneToMilestone(milestoneData.rows[0]);
-
     // Build dynamic update query
     const updates: string[] = [];
     const values: any[] = [];
@@ -234,7 +226,12 @@ export class GoalsService extends BaseService {
     });
 
     if (updates.length === 0) {
-      return milestone;
+      // Only fetch when no updates needed
+      const res = await query('SELECT * FROM milestones WHERE id = $1 AND goal_id = $2', [milestoneId, goalId]);
+      if (!res.rows.length) {
+        throw new NotFoundError('Milestone', milestoneId);
+      }
+      return this.mapDbMilestoneToMilestone(res.rows[0]);
     }
 
     const queryString = `
@@ -253,30 +250,26 @@ export class GoalsService extends BaseService {
   }
 
   async completeMilestone(goalId: string, milestoneId: string): Promise<Milestone> {
-    // Check if milestone exists and belongs to goal
-    const milestoneData = await query(
-      'SELECT * FROM milestones WHERE id = $1',
-      [milestoneId],
-    );
-    if (!milestoneData.rows.length || milestoneData.rows[0].goal_id !== goalId) {
-      throw new NotFoundError('Milestone', milestoneId);
-    }
-
-    const milestone = this.mapDbMilestoneToMilestone(milestoneData.rows[0]);
-    if (milestone.isCompleted) {
-      throw new ValidationError('Milestone is already completed');
-    }
-
+    // Atomic completion - success path is single query
     const result = await query(`
       UPDATE milestones
       SET is_completed = true, completed_date = CURRENT_DATE
-      WHERE id = $1 AND goal_id = $2
+      WHERE id = $1 AND goal_id = $2 AND is_completed = false
       RETURNING *
     `, [milestoneId, goalId]);
 
     if (!result.rows.length) {
-      throw new NotFoundError('Milestone', milestoneId);
+      // Determine if milestone doesn't exist or is already completed
+      const check = await query(
+        'SELECT is_completed FROM milestones WHERE id = $1 AND goal_id = $2',
+        [milestoneId, goalId],
+      );
+      if (!check.rows.length) {
+        throw new NotFoundError('Milestone', milestoneId);
+      }
+      throw new ValidationError('Milestone is already completed');
     }
+    
     return this.mapDbMilestoneToMilestone(result.rows[0]);
   }
 
@@ -313,7 +306,7 @@ export class GoalsService extends BaseService {
       validatedData.type === 'fixed' ? validatedData.amount : null,
       validatedData.type === 'percentage' ? validatedData.percentage : null,
       validatedData.frequency,
-      validatedData.isActive || true,
+      validatedData.isActive ?? true,
     ]);
 
     return this.mapDbAutomationRuleToAutomationRule(result.rows[0]);
@@ -322,15 +315,6 @@ export class GoalsService extends BaseService {
   async updateAutomationRule(goalId: string, ruleId: string, data: AutomationRuleUpdate): Promise<AutomationRule> {
     // Validate input data
     const validatedData = this.validateData(automationRuleSchemas.update, data);
-
-    // Check if rule exists and belongs to goal
-    const ruleData = await query(
-      'SELECT * FROM automation_rules WHERE id = $1',
-      [ruleId],
-    );
-    if (!ruleData.rows.length || ruleData.rows[0].goal_id !== goalId) {
-      throw new NotFoundError('Automation rule', ruleId);
-    }
 
     // Build dynamic update query
     const updates: string[] = [];
@@ -348,6 +332,14 @@ export class GoalsService extends BaseService {
     });
 
     if (updates.length === 0) {
+      // Only fetch when no updates needed
+      const ruleData = await query(
+        'SELECT * FROM automation_rules WHERE id = $1 AND goal_id = $2',
+        [ruleId, goalId],
+      );
+      if (!ruleData.rows.length) {
+        throw new NotFoundError('Automation rule', ruleId);
+      }
       return this.mapDbAutomationRuleToAutomationRule(ruleData.rows[0]);
     }
 
@@ -412,11 +404,11 @@ export class GoalsService extends BaseService {
       // userId is not part of SavingsGoal type
       name: dbGoal.name,
       description: dbGoal.description,
-      targetAmount: dbGoal.target_amount == null ? 0 : parseFloat(dbGoal.target_amount),
-      currentAmount: dbGoal.current_amount == null ? 0 : parseFloat(dbGoal.current_amount),
+      targetAmount: dbGoal.target_amount == null ? 0 : Number(dbGoal.target_amount),
+      currentAmount: dbGoal.current_amount == null ? 0 : Number(dbGoal.current_amount),
       targetDate: typeof dbGoal.target_date === 'string'
         ? dbGoal.target_date
-        : dbGoal.target_date?.toISOString().slice(0, 10),
+        : dbGoal.target_date.toISOString().slice(0, 10),
       category: dbGoal.category,
       priority: dbGoal.priority,
       isActive: dbGoal.is_active,
@@ -435,7 +427,7 @@ export class GoalsService extends BaseService {
     return {
       id: dbMilestone.id,
       // goalId is not part of Milestone type
-      amount: dbMilestone.amount == null ? 0 : parseFloat(dbMilestone.amount),
+      amount: dbMilestone.amount == null ? 0 : Number(dbMilestone.amount),
       description: dbMilestone.description,
       isCompleted: dbMilestone.is_completed,
       completedDate: dbMilestone.completed_date ? new Date(dbMilestone.completed_date) : undefined,
