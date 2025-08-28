@@ -1,5 +1,42 @@
 import '@testing-library/jest-dom'
 
+// Add TextEncoder/TextDecoder polyfills for Node.js environment
+if (typeof global.TextEncoder === 'undefined') {
+  const { TextEncoder, TextDecoder } = require('util');
+  global.TextEncoder = TextEncoder;
+  global.TextDecoder = TextDecoder;
+}
+
+// Mock modules that have side effects
+jest.mock('@/lib/database');
+jest.mock('@/lib/auth');
+
+// Mock translations
+jest.mock('@/lib/useTranslation', () => ({
+  useTranslation: (namespace) => ({
+    t: (key) => key,
+    ready: true,
+    i18n: {
+      language: 'en',
+      changeLanguage: jest.fn(),
+    },
+  }),
+}));
+
+// Mock next-i18next
+jest.mock('next-i18next', () => ({
+  useTranslation: (namespace) => ({
+    t: (key) => key,
+    ready: true,
+    i18n: {
+      language: 'en',
+      changeLanguage: jest.fn(),
+    },
+  }),
+  Trans: ({ children }) => children,
+  I18nextProvider: ({ children }) => children,
+}));
+
 // Mock Next.js router
 jest.mock('next/router', () => ({
   useRouter() {

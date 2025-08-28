@@ -2,7 +2,7 @@ import { query } from '@/lib/database';
 import { BudgetService } from '@/lib/services/budget-service';
 import { budgetSchemas } from '@/lib/validation-schemas';
 
-import { createMockQueryResult, createEmptyQueryResult } from '../helpers/db-mocks';
+import { createMockQueryResult, createEmptyQueryResult } from '../../test-helpers/db-mocks';
 
 // Mock the database
 jest.mock('@/lib/database', () => ({
@@ -221,7 +221,7 @@ describe('BudgetService', () => {
 
     it('should throw error for non-existent budget', async () => {
       const categoryData = {
-        budgetId: 'non-existent-budget-id',
+        budgetId: '123e4567-e89b-12d3-a456-426614174999',
         name: 'Test Category',
         allocated: 100,
         color: '#FF0000',
