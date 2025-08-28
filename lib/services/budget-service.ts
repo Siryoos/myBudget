@@ -26,11 +26,12 @@ export class BudgetService extends BaseService {
 
     // Validate total allocation matches budget total
     const totalAllocated = validatedData.categories.reduce((sum, cat) => sum + cat.allocated, 0);
-    if (Math.abs(totalAllocated - validatedData.totalIncome) > 0.01) {
+    const EPSILON = 0.01;
+    if (Math.abs(totalAllocated - validatedData.totalIncome) > EPSILON) {
       throw new ValidationError('Total category allocation must equal budget total income');
     }
 
-    return await this.executeTransaction(async () => {
+    return this.executeTransaction(async () => {
       // Create budget
       const budgetResult = await query(`
         INSERT INTO budgets (
@@ -47,7 +48,19 @@ export class BudgetService extends BaseService {
         validatedData.endDate,
       ]);
 
-      const budget = budgetResult.rows[0];
+      const budget = budgetResult.rows[0] as {
+        id: string;
+        user_id: string;
+        name: string;
+        method: string;
+        total_income: number;
+        period: string;
+        start_date: string;
+        end_date: string;
+        created_at: Date;
+        updated_at: Date;
+        is_active: boolean;
+      };
 
       // Create budget categories
       const categories: BudgetCategory[] = [];
@@ -58,7 +71,7 @@ export class BudgetService extends BaseService {
           ) VALUES ($1, $2, $3, $4, $5, $6)
           RETURNING *
         `, [
-          budget.id,
+          budget.id as string,
           categoryData.name,
           categoryData.allocated,
           categoryData.color,
@@ -77,7 +90,19 @@ export class BudgetService extends BaseService {
   }
 
   async findById(id: string): Promise<BudgetWithCategories | null> {
-    const budget = await super.findById(id);
+    const budget = await super.findById<{
+      id: string;
+      user_id: string;
+      name: string;
+      method: string;
+      total_income: number;
+      period: string;
+      start_date: string;
+      end_date: string;
+      created_at: Date;
+      updated_at: Date;
+      is_active: boolean;
+    }>(id);
     if (!budget) {
       return null;
     }
@@ -90,7 +115,19 @@ export class BudgetService extends BaseService {
   }
 
   async findByUserId(userId: string): Promise<BudgetWithCategories[]> {
-    const budgets = await this.findAll({ user_id: userId }, {
+    const budgets = await this.findAll<{
+      id: string;
+      user_id: string;
+      name: string;
+      method: string;
+      total_income: number;
+      period: string;
+      start_date: string;
+      end_date: string;
+      created_at: Date;
+      updated_at: Date;
+      is_active: boolean;
+    }>({ user_id: userId }, {
       orderBy: 'created_at',
       orderDirection: 'DESC',
     });
@@ -108,7 +145,19 @@ export class BudgetService extends BaseService {
   }
 
   async findByUserIdAndName(userId: string, name: string): Promise<BudgetWithCategories | null> {
-    const budgets = await this.findAll({
+    const budgets = await this.findAll<{
+      id: string;
+      user_id: string;
+      name: string;
+      method: string;
+      total_income: number;
+      period: string;
+      start_date: string;
+      end_date: string;
+      created_at: Date;
+      updated_at: Date;
+      is_active: boolean;
+    }>({
       user_id: userId,
       name,
     });
@@ -146,7 +195,7 @@ export class BudgetService extends BaseService {
 
     // Build dynamic update query
     const updates: string[] = [];
-    const values: any[] = [];
+    const values: unknown[] = [];
     let paramCount = 1;
 
     Object.entries(validatedData).forEach(([key, value]) => {
@@ -172,7 +221,19 @@ export class BudgetService extends BaseService {
     values.push(id);
 
     const result = await query(queryString, values);
-    const updatedBudget = result.rows[0];
+    const updatedBudget = result.rows[0] as {
+      id: string;
+      user_id: string;
+      name: string;
+      method: string;
+      total_income: number;
+      period: string;
+      start_date: string;
+      end_date: string;
+      created_at: Date;
+      updated_at: Date;
+      is_active: boolean;
+    };
     const categories = await this.getBudgetCategories(id);
 
     return {
@@ -189,7 +250,7 @@ export class BudgetService extends BaseService {
     }
 
     // Delete budget (cascade will handle categories and transactions)
-    return await super.delete(id);
+    return super.delete(id);
   }
 
   // Budget Category methods
@@ -259,7 +320,7 @@ export class BudgetService extends BaseService {
 
     // Build dynamic update query
     const updates: string[] = [];
-    const values: any[] = [];
+    const values: unknown[] = [];
     let paramCount = 1;
 
     Object.entries(validatedData).forEach(([key, value]) => {
@@ -331,7 +392,19 @@ export class BudgetService extends BaseService {
     return result.rows.length > 0 ? this.mapDbCategoryToCategory(result.rows[0]) : null;
   }
 
-  private mapDbBudgetToBudget(dbBudget: any): Budget {
+  private mapDbBudgetToBudget(dbBudget: {
+    id: string;
+    user_id: string;
+    name: string;
+    method: string;
+    total_income: number | string;
+    period: string;
+    start_date: Date | string;
+    end_date: Date | string;
+    created_at: Date | string;
+    updated_at: Date | string;
+    is_active?: boolean;
+  }): Budget {
     return {
       id: dbBudget.id,
       userId: dbBudget.user_id,
@@ -339,16 +412,24 @@ export class BudgetService extends BaseService {
       method: dbBudget.method,
       totalIncome: parseFloat(dbBudget.total_income),
       period: dbBudget.period,
-      startDate: dbBudget.start_date.toISOString().split('T')[0],
-      endDate: dbBudget.end_date.toISOString().split('T')[0],
-      createdAt: dbBudget.created_at.toISOString(),
-      updatedAt: dbBudget.updated_at.toISOString(),
+      startDate: new Date(dbBudget.start_date).toISOString().split('T')[0],
+      endDate: new Date(dbBudget.end_date).toISOString().split('T')[0],
+      createdAt: new Date(dbBudget.created_at).toISOString(),
+      updatedAt: new Date(dbBudget.updated_at).toISOString(),
       categories: [], // Categories are loaded separately
       isActive: dbBudget.is_active || false,
     };
   }
 
-  private mapDbCategoryToCategory(dbCategory: any): BudgetCategory {
+  private mapDbCategoryToCategory(dbCategory: {
+    id: string;
+    name: string;
+    allocated: number | string;
+    spent: number | string;
+    color: string;
+    icon: string | null;
+    is_essential: boolean;
+  }): BudgetCategory {
     return {
       id: dbCategory.id,
       // budgetId is not part of BudgetCategory type

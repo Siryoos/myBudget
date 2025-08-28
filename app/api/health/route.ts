@@ -52,6 +52,6 @@ export const GET = async (request: NextRequest) => {
       status: 'unhealthy',
       error: error instanceof Error ? error.message : 'Health check failed',
       timestamp: new Date().toISOString(),
-    }, requestId, 503); // Service Unavailable
+    }, requestId, HTTP_SERVICE_UNAVAILABLE); // Service Unavailable
   }
 };

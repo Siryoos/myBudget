@@ -159,7 +159,7 @@ const getSecurityHeaders = () => {
  *
  * Behavior summary:
  * - Returns 413 when Content-Length exceeds 10 MB.
- * - Returns 400 for POST/PUT requests with non-JSON content types.
+ * - Returns HTTP_BAD_REQUEST for POST/PUT requests with non-JSON content types.
  * - Returns 204 for CORS preflight (OPTIONS) requests with appropriate CORS headers.
  * - Sets Access-Control-Allow-Origin and credentials when the Origin header matches configured ALLOWED_ORIGINS.
  * - Adds security headers from getSecurityHeaders(); in production attempts to generate and add a CSP nonce (X-Nonce)
@@ -167,7 +167,7 @@ const getSecurityHeaders = () => {
  *   directives are removed.
  * - Records metrics via securityMonitor (e.g., largeRequests, invalidContentTypes, suspiciousRequests, unauthorizedOrigins).
  *
- * @returns A NextResponse representing the allowed response, a CORS preflight response, or an error response (413/400/500).
+ * @returns A NextResponse representing the allowed response, a CORS preflight response, or an error response (413/HTTP_BAD_REQUEST/HTTP_INTERNAL_SERVER_ERROR).
  */
 export const securityMiddleware = (request: NextRequest) => {
   try {
@@ -216,7 +216,7 @@ export const securityMiddleware = (request: NextRequest) => {
             error: 'Invalid content type. Expected application/json',
           }),
           {
-            status: 400,
+            status: HTTP_BAD_REQUEST,
             headers: { 'Content-Type': 'application/json' },
           },
         );
@@ -325,7 +325,7 @@ export const securityMiddleware = (request: NextRequest) => {
         error: 'Internal server error',
       }),
       {
-        status: 500,
+        status: HTTP_INTERNAL_SERVER_ERROR,
         headers: { 'Content-Type': 'application/json' },
       },
     );
@@ -453,7 +453,7 @@ function mergeSecurityHeaders(target: Headers, source: Headers): void {
  *     standard rate-limit headers, and copies essential security headers from the base response.
  *   - If the rate check succeeds, attaches `X-RateLimit-Limit`, `X-RateLimit-Remaining`, and
  *     `X-RateLimit-Reset` to the response.
- * - On rate-limiter failures returns a 500 JSON error; unexpected errors also produce a 500 JSON error.
+ * - On rate-limiter failures returns a HTTP_INTERNAL_SERVER_ERROR JSON error; unexpected errors also produce a HTTP_INTERNAL_SERVER_ERROR JSON error.
  *
  * Returns a NextResponse with appropriate headers and status codes depending on the outcome.
  */
@@ -521,14 +521,14 @@ export async function middleware(request: NextRequest) {
 
         } catch (error) {
           console.error('Rate limiting error:', error);
-          // Fail securely - return 500 error instead of continuing
+          // Fail securely - return HTTP_INTERNAL_SERVER_ERROR error instead of continuing
           return new NextResponse(
             JSON.stringify({
               success: false,
               error: 'Internal server error - rate limiting unavailable',
             }),
             {
-              status: 500,
+              status: HTTP_INTERNAL_SERVER_ERROR,
               headers: {
                 'Content-Type': 'application/json',
               },
@@ -548,7 +548,7 @@ export async function middleware(request: NextRequest) {
         error: 'Internal server error',
       }),
       {
-        status: 500,
+        status: HTTP_INTERNAL_SERVER_ERROR,
         headers: {
           'Content-Type': 'application/json',
         },
@@ -567,12 +567,12 @@ export async function middleware(request: NextRequest) {
  * timestamp, current security metrics, environment info, and Redis availability/latency/error details.
  *
  * If the request path is not `/api/security/health`, the request is delegated to the next handler.
- * Errors during health evaluation are caught and result in a 500 JSON response describing the failure.
+ * Errors during health evaluation are caught and result in a HTTP_INTERNAL_SERVER_ERROR JSON response describing the failure.
  *
  * @returns A NextResponse containing the JSON health object.
- *          - Status 200: Redis reported healthy.
- *          - Status 503: Redis reported unhealthy or degraded.
- *          - Status 500: An internal error occurred during health evaluation.
+ *          - Status HTTP_OK: Redis reported healthy.
+ *          - Status HTTP_SERVICE_UNAVAILABLE: Redis reported unhealthy or degraded.
+ *          - Status HTTP_INTERNAL_SERVER_ERROR: An internal error occurred during health evaluation.
  */
 export async function GET(request: NextRequest) {
   try {
@@ -628,7 +628,7 @@ export async function GET(request: NextRequest) {
       };
 
       return new NextResponse(JSON.stringify(health), {
-        status: isHealthy ? 200 : 503,
+        status: isHealthy ? HTTP_OK : HTTP_SERVICE_UNAVAILABLE,
         headers: {
           'Content-Type': 'application/json',
           'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -646,7 +646,7 @@ export async function GET(request: NextRequest) {
         timestamp: new Date().toISOString(),
       }),
       {
-        status: 500,
+        status: HTTP_INTERNAL_SERVER_ERROR,
         headers: {
           'Content-Type': 'application/json',
           'Cache-Control': 'no-cache, no-store, must-revalidate',

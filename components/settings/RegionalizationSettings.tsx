@@ -116,7 +116,7 @@ export function RegionalizationSettings({
               {regions.map((region) => (
                 <div
                   key={region.id}
-                  className={`border-2 rounded-lg p-4 cursor-pointer transition-all duration-200 ${
+                  className={`border-2 rounded-lg p-4 cursor-pointer transition-all duration-HTTP_OK ${
                     settings.region === region.id
                       ? 'border-primary-trust-blue bg-primary-trust-blue/5'
                       : 'border-neutral-gray/30 hover:border-primary-trust-blue/50'
@@ -221,7 +221,7 @@ export function RegionalizationSettings({
                 {dateFormats.map((format) => (
                   <div
                     key={format.format}
-                    className={`border rounded-lg p-3 cursor-pointer text-center transition-all duration-200 ${
+                    className={`border rounded-lg p-3 cursor-pointer text-center transition-all duration-HTTP_OK ${
                       settings.dateFormat === format.format
                         ? 'border-primary-trust-blue bg-primary-trust-blue/5'
                         : 'border-neutral-gray/30 hover:border-primary-trust-blue/50'
@@ -307,7 +307,7 @@ export function RegionalizationSettings({
                         socialSharing: option,
                       },
                     }))}
-                    className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+                    className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-all duration-HTTP_OK ${
                       settings.culturalFeatures.socialSharing === option
                         ? 'bg-white text-primary-trust-blue shadow-sm'
                         : 'text-neutral-gray hover:text-neutral-dark-gray'

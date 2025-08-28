@@ -48,7 +48,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     };
 
     return NextResponse.json(health, {
-      status: isHealthy ? 200 : 503,
+      status: isHealthy ? HTTP_OK : HTTP_SERVICE_UNAVAILABLE,
       headers: {
         'Cache-Control': 'no-cache, no-store, must-revalidate',
       },
@@ -62,7 +62,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         timestamp: new Date().toISOString(),
       },
       {
-        status: 500,
+        status: HTTP_INTERNAL_SERVER_ERROR,
         headers: {
           'Cache-Control': 'no-cache, no-store, must-revalidate',
         },

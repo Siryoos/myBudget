@@ -41,7 +41,26 @@ export class GoalsService extends BaseService {
       validatedData.achievementDescription || null,
     ]);
 
-    const goal = this.mapDbGoalToGoal(result.rows[0]);
+    const goal = this.mapDbGoalToGoal(result.rows[0] as {
+      id: string;
+      user_id: string;
+      name: string;
+      description?: string;
+      target_amount: number;
+      current_amount: number;
+      target_date: string;
+      category: string;
+      priority: string;
+      is_active: boolean;
+      icon?: string;
+      color?: string;
+      photo_url?: string;
+      framing_type?: string;
+      loss_avoidance_description?: string;
+      achievement_description?: string;
+      created_at: Date;
+      updated_at: Date;
+    });
     return {
       ...goal,
       milestones: [],
@@ -50,7 +69,26 @@ export class GoalsService extends BaseService {
   }
 
   async findById(id: string): Promise<SavingsGoalWithDetails | null> {
-    const goal = await super.findById(id);
+    const goal = await super.findById<{
+      id: string;
+      user_id: string;
+      name: string;
+      description?: string;
+      target_amount: number;
+      current_amount: number;
+      target_date: string;
+      category: string;
+      priority: string;
+      is_active: boolean;
+      icon?: string;
+      color?: string;
+      photo_url?: string;
+      framing_type?: string;
+      loss_avoidance_description?: string;
+      achievement_description?: string;
+      created_at: Date;
+      updated_at: Date;
+    }>(id);
     if (!goal) {
       return null;
     }
@@ -69,7 +107,7 @@ export class GoalsService extends BaseService {
 
   async findByUserId(userId: string, priority?: 'low' | 'medium' | 'high'): Promise<SavingsGoalWithDetails[]> {
     let queryString = 'SELECT * FROM savings_goals WHERE user_id = $1';
-    const values: any[] = [userId];
+    const values: unknown[] = [userId];
     let paramCount = 2;
 
     if (priority) {
@@ -105,7 +143,7 @@ export class GoalsService extends BaseService {
 
     // Build dynamic update query
     const updates: string[] = [];
-    const values: any[] = [];
+    const values: unknown[] = [];
     let paramCount = 1;
 
     Object.entries(validatedData).forEach(([key, value]) => {
@@ -139,7 +177,26 @@ export class GoalsService extends BaseService {
     if (!result.rows.length) {
       throw new NotFoundError('Savings goal', id);
     }
-    const updatedGoal = result.rows[0];
+    const updatedGoal = result.rows[0] as {
+      id: string;
+      user_id: string;
+      name: string;
+      description?: string;
+      target_amount: number;
+      current_amount: number;
+      target_date: string;
+      category: string;
+      priority: string;
+      is_active: boolean;
+      icon?: string;
+      color?: string;
+      photo_url?: string;
+      framing_type?: string;
+      loss_avoidance_description?: string;
+      achievement_description?: string;
+      created_at: Date;
+      updated_at: Date;
+    };
 
     const [milestones, automationRules] = await Promise.all([
       this.getGoalMilestones(id),
@@ -160,7 +217,7 @@ export class GoalsService extends BaseService {
       throw new NotFoundError('Savings goal', id);
     }
 
-    return await super.delete(id);
+    return super.delete(id);
   }
 
   async contribute(goalId: string, amount: number): Promise<SavingsGoal> {
@@ -212,7 +269,7 @@ export class GoalsService extends BaseService {
 
     // Build dynamic update query
     const updates: string[] = [];
-    const values: any[] = [];
+    const values: unknown[] = [];
     let paramCount = 1;
 
     Object.entries(validatedData).forEach(([key, value]) => {
@@ -269,7 +326,7 @@ export class GoalsService extends BaseService {
       }
       throw new ValidationError('Milestone is already completed');
     }
-    
+
     return this.mapDbMilestoneToMilestone(result.rows[0]);
   }
 
@@ -318,7 +375,7 @@ export class GoalsService extends BaseService {
 
     // Build dynamic update query
     const updates: string[] = [];
-    const values: any[] = [];
+    const values: unknown[] = [];
     let paramCount = 1;
 
     Object.entries(validatedData).forEach(([key, value]) => {
@@ -398,14 +455,33 @@ export class GoalsService extends BaseService {
     return result.rows.length > 0 ? this.mapDbAutomationRuleToAutomationRule(result.rows[0]) : null;
   }
 
-  private mapDbGoalToGoal(dbGoal: any): SavingsGoal {
+  private mapDbGoalToGoal(dbGoal: {
+    id: string;
+    user_id: string;
+    name: string;
+    description?: string;
+    target_amount: number | string | null;
+    current_amount: number | string | null;
+    target_date: Date | string;
+    category: string;
+    priority: string;
+    is_active: boolean;
+    icon?: string;
+    color?: string;
+    photo_url?: string;
+    framing_type?: string;
+    loss_avoidance_description?: string;
+    achievement_description?: string;
+    created_at: Date | string;
+    updated_at: Date | string;
+  }): SavingsGoal {
     return {
       id: dbGoal.id,
       // userId is not part of SavingsGoal type
       name: dbGoal.name,
       description: dbGoal.description,
-      targetAmount: dbGoal.target_amount == null ? 0 : Number(dbGoal.target_amount),
-      currentAmount: dbGoal.current_amount == null ? 0 : Number(dbGoal.current_amount),
+      targetAmount: dbGoal.target_amount === null || dbGoal.target_amount === undefined ? 0 : Number(dbGoal.target_amount),
+      currentAmount: dbGoal.current_amount === null || dbGoal.current_amount === undefined ? 0 : Number(dbGoal.current_amount),
       targetDate: typeof dbGoal.target_date === 'string'
         ? dbGoal.target_date
         : dbGoal.target_date.toISOString().slice(0, 10),
@@ -423,11 +499,18 @@ export class GoalsService extends BaseService {
     };
   }
 
-  private mapDbMilestoneToMilestone(dbMilestone: any): Milestone {
+  private mapDbMilestoneToMilestone(dbMilestone: {
+    id: string;
+    goal_id: string;
+    amount: number | string | null;
+    description?: string;
+    is_completed: boolean;
+    completed_date?: Date | string | null;
+  }): Milestone {
     return {
       id: dbMilestone.id,
       // goalId is not part of Milestone type
-      amount: dbMilestone.amount == null ? 0 : Number(dbMilestone.amount),
+      amount: dbMilestone.amount === null || dbMilestone.amount === undefined ? 0 : Number(dbMilestone.amount),
       description: dbMilestone.description,
       isCompleted: dbMilestone.is_completed,
       completedDate: dbMilestone.completed_date ? new Date(dbMilestone.completed_date) : undefined,
@@ -435,7 +518,15 @@ export class GoalsService extends BaseService {
     };
   }
 
-  private mapDbAutomationRuleToAutomationRule(dbRule: any): AutomationRule {
+  private mapDbAutomationRuleToAutomationRule(dbRule: {
+    id: string;
+    goal_id: string;
+    type: string;
+    frequency: string;
+    amount?: number | string | null;
+    percentage?: number | string | null;
+    is_active: boolean;
+  }): AutomationRule {
     const base = {
       id: dbRule.id,
       frequency: dbRule.frequency,
@@ -444,9 +535,9 @@ export class GoalsService extends BaseService {
 
     switch (dbRule.type) {
       case 'fixed':
-        return { ...base, type: 'fixed', amount: dbRule.amount == null ? 0 : Number(dbRule.amount) };
+        return { ...base, type: 'fixed', amount: dbRule.amount === null || dbRule.amount === undefined ? 0 : Number(dbRule.amount) };
       case 'percentage':
-        return { ...base, type: 'percentage', percentage: dbRule.percentage == null ? 0 : Number(dbRule.percentage) };
+        return { ...base, type: 'percentage', percentage: dbRule.percentage === null || dbRule.percentage === undefined ? 0 : Number(dbRule.percentage) };
       case 'round-up':
         return { ...base, type: 'round-up' };
       case 'remainder':

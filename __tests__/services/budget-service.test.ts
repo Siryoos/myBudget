@@ -198,7 +198,7 @@ describe('BudgetService', () => {
       const categoryData = {
         budgetId: mockBudget.id,
         name: 'Transportation',
-        allocated: 400,
+        allocated: HTTP_BAD_REQUEST,
         color: '#0000FF',
         icon: 'car',
         isEssential: false,

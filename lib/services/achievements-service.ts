@@ -74,7 +74,7 @@ export class AchievementsService extends BaseService {
 
     // Build dynamic update query
     const updates: string[] = [];
-    const values: any[] = [];
+    const values: unknown[] = [];
     let paramCount = 1;
 
     Object.entries(validatedData).forEach(([key, value]) => {
@@ -110,7 +110,7 @@ export class AchievementsService extends BaseService {
       throw new NotFoundError('Achievement', id);
     }
 
-    return await super.delete(id);
+    return super.delete(id);
   }
 
   // User achievement methods
@@ -190,7 +190,7 @@ export class AchievementsService extends BaseService {
 
     // Build dynamic update query
     const updates: string[] = [];
-    const values: any[] = [];
+    const values: unknown[] = [];
     let paramCount = 1;
 
     Object.entries(validatedData).forEach(([key, value]) => {
@@ -237,10 +237,10 @@ export class AchievementsService extends BaseService {
     `, [userId]);
 
     const row = result.rows[0];
-    const totalAchievements = parseInt(row.total_achievements);
-    const unlockedAchievements = parseInt(row.unlocked_achievements);
-    const totalPoints = parseInt(row.total_points);
-    const unlockedPoints = parseInt(row.unlocked_points);
+    const totalAchievements = parseInt(row.total_achievements, 10);
+    const unlockedAchievements = parseInt(row.unlocked_achievements, 10);
+    const totalPoints = parseInt(row.total_points, 10);
+    const unlockedPoints = parseInt(row.unlocked_points, 10);
 
     return {
       totalAchievements,
@@ -345,9 +345,9 @@ export class AchievementsService extends BaseService {
 
     const row = result.rows[0];
     return {
-      transactionCount: parseInt(row.transaction_count) || 0,
-      savingsTransactions: parseInt(row.savings_transactions) || 0,
-      completedGoals: parseInt(row.completed_goals) || 0,
+      transactionCount: parseInt(row.transaction_count, 10) || 0,
+      savingsTransactions: parseInt(row.savings_transactions, 10) || 0,
+      completedGoals: parseInt(row.completed_goals, 10) || 0,
     };
   }
 
@@ -370,30 +370,42 @@ export class AchievementsService extends BaseService {
     return parseFloat(result.rows[0].adherence) || 0;
   }
 
-  private mapDbAchievementToAchievement(dbAchievement: any): Achievement {
+  private mapDbAchievementToAchievement(dbAchievement: {\n    id: string;\n    name: string;\n    description: string;\n    category: string;\n    icon: string;\n    requirement_type: string;\n    requirement_value: number;\n    points: number;\n  }): Achievement {
     return {
       id: dbAchievement.id,
       name: dbAchievement.name,
       description: dbAchievement.description,
       category: dbAchievement.category,
       icon: dbAchievement.icon,
-      requirement: { type: dbAchievement.requirement_type, value: dbAchievement.requirement_value, description: dbAchievement.description },
+      requirement: {
+        type: dbAchievement.requirement_type as string,
+        value: Number(dbAchievement.requirement_value),
+        description: dbAchievement.description as string
+      },
       // requirement value included in requirement object above
       // requirementTimeframe is not part of Achievement type
-      points: dbAchievement.points,
+      points: Number(dbAchievement.points),
       isUnlocked: false,
     };
   }
 
-  private mapDbUserAchievementToUserAchievement(dbUserAchievement: any): UserAchievement {
+  private mapDbUserAchievementToUserAchievement(dbUserAchievement: {
+    id: string;
+    user_id: string;
+    achievement_id: string;
+    is_unlocked: boolean;
+    unlocked_date?: Date | null;
+    progress: number;
+    max_progress: number;
+  }): UserAchievement {
     return {
       id: dbUserAchievement.id,
       userId: dbUserAchievement.user_id,
       achievementId: dbUserAchievement.achievement_id,
       isUnlocked: dbUserAchievement.is_unlocked,
-      unlockedDate: dbUserAchievement.unlocked_date?.toISOString().split('T')[0],
-      progress: dbUserAchievement.progress,
-      maxProgress: dbUserAchievement.max_progress,
+      unlockedDate: dbUserAchievement.unlocked_date ? new Date(dbUserAchievement.unlocked_date) : undefined,
+      progress: Number(dbUserAchievement.progress),
+      maxProgress: Number(dbUserAchievement.max_progress),
       // createdAt is not part of UserAchievement type
     };
   }

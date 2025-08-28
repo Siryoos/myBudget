@@ -60,7 +60,7 @@ export const POST = requireAuth(async (request: AuthenticatedRequest) => {
     // Create achievement using service
     const achievement = await achievementsService.create(body);
 
-    return createSuccessResponse(achievement, requestId, 201);
+    return createSuccessResponse(achievement, requestId, HTTP_CREATED);
 
   } catch (error) {
     return handleApiError(error, requestId);

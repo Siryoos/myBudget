@@ -166,7 +166,7 @@ describe('Validation Schemas', () => {
           categories: [
             {
               name: 'Housing',
-              allocated: 500,
+              allocated: HTTP_INTERNAL_SERVER_ERROR,
               color: 'invalid-color',
             },
           ],

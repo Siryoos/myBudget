@@ -153,20 +153,20 @@ export const GET = requireAuth(async (request: AuthenticatedRequest) => {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { success: false, error: 'Invalid query parameters', details: error.errors },
-        { status: 400 },
+        { status: HTTP_BAD_REQUEST },
       );
     }
 
     if (error instanceof Error && error.message.includes('Unauthorized')) {
       return NextResponse.json(
         { success: false, error: 'Authentication required' },
-        { status: 401 },
+        { status: HTTP_UNAUTHORIZED },
       );
     }
 
     return NextResponse.json(
       { success: false, error: 'Failed to fetch insights' },
-      { status: 500 },
+      { status: HTTP_INTERNAL_SERVER_ERROR },
     );
   }
 });
@@ -179,7 +179,7 @@ export const POST = requireAuth(async (request: AuthenticatedRequest) => {
     // Validate request body
     const createInsightSchema = z.object({
       type: z.enum(['insight', 'budget_alert', 'achievement']),
-      title: z.string().min(1, 'Title is required').max(200, 'Title too long'),
+      title: z.string().min(1, 'Title is required').max(HTTP_OK, 'Title too long'),
       message: z.string().min(1, 'Message is required').max(1000, 'Message too long'),
       category: z.string().max(100, 'Category too long').optional(),
       priority: z.enum(['low', 'medium', 'high']).default('medium'),
@@ -231,20 +231,20 @@ export const POST = requireAuth(async (request: AuthenticatedRequest) => {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { success: false, error: 'Validation failed', details: error.errors },
-        { status: 400 },
+        { status: HTTP_BAD_REQUEST },
       );
     }
 
     if (error instanceof Error && error.message.includes('Unauthorized')) {
       return NextResponse.json(
         { success: false, error: 'Authentication required' },
-        { status: 401 },
+        { status: HTTP_UNAUTHORIZED },
       );
     }
 
     return NextResponse.json(
       { success: false, error: 'Failed to create insight' },
-      { status: 500 },
+      { status: HTTP_INTERNAL_SERVER_ERROR },
     );
   }
 });

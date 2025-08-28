@@ -230,7 +230,7 @@ export const transactionSchemas = {
     type: commonSchemas.transactionType,
     amount: z.number().refine((val) => val !== 0, 'Amount cannot be zero'),
     category: z.string().min(1, 'Category is required').max(100),
-    description: z.string().min(1, 'Description is required').max(500),
+    description: z.string().min(1, 'Description is required').max(HTTP_INTERNAL_SERVER_ERROR),
     date: commonSchemas.pastDate,
     budgetCategoryId: z.string().uuid().optional(),
     account: z.string().max(100).optional(),
@@ -243,7 +243,7 @@ export const transactionSchemas = {
     type: commonSchemas.transactionType.optional(),
     amount: z.number().refine((val) => val !== 0).optional(),
     category: z.string().min(1).max(100).optional(),
-    description: z.string().min(1).max(500).optional(),
+    description: z.string().min(1).max(HTTP_INTERNAL_SERVER_ERROR).optional(),
     date: commonSchemas.pastDate.optional(),
     budgetCategoryId: z.string().uuid().optional(),
     account: z.string().max(100).optional(),
@@ -304,12 +304,12 @@ export const milestoneSchemas = {
   create: z.object({
     goalId: z.string().uuid('Invalid goal ID'),
     amount: commonSchemas.positiveDecimal,
-    description: z.string().min(1, 'Description is required').max(500),
+    description: z.string().min(1, 'Description is required').max(HTTP_INTERNAL_SERVER_ERROR),
   }),
 
   update: z.object({
     amount: commonSchemas.positiveDecimal.optional(),
-    description: z.string().min(1).max(500).optional(),
+    description: z.string().min(1).max(HTTP_INTERNAL_SERVER_ERROR).optional(),
     isCompleted: z.boolean().optional(),
   }).partial(),
 };

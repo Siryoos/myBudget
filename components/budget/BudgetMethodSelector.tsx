@@ -165,7 +165,7 @@ export function BudgetMethodSelector() {
               <button
                 key={method.id}
                 onClick={() => handleMethodSelect(method.id)}
-                className={`p-4 rounded-lg border-2 text-left transition-all duration-200 hover:shadow-md ${
+                className={`p-4 rounded-lg border-2 text-left transition-all duration-HTTP_OK hover:shadow-md ${
                   isSelected
                     ? 'border-primary-trust-blue bg-primary-trust-blue/5'
                     : 'border-neutral-gray/30 hover:border-primary-trust-blue/50'

@@ -23,15 +23,15 @@ const forgotPasswordSchema = z.object({
  * Behavior and side effects:
  * - Enforces a 1-hour window rate limit (max 3 requests per identifier) and returns
  *   429 with rate-limit headers when exceeded.
- * - Validates input against `forgotPasswordSchema`; returns a 400 JSON response on validation failure.
+ * - Validates input against `forgotPasswordSchema`; returns a HTTP_BAD_REQUEST JSON response on validation failure.
  * - If a user exists for the provided email, stores a hashed reset token with a 1-hour expiry
  *   in `password_reset_tokens` (upsert by user_id) and calls `emailService.sendPasswordReset`.
  * - If email sending fails in development, logs the token and reset URL for debugging.
- * - Returns a JSON response with a `requestId` for tracing; on unexpected errors returns a 500 JSON response.
+ * - Returns a JSON response with a `requestId` for tracing; on unexpected errors returns a HTTP_INTERNAL_SERVER_ERROR JSON response.
  *
  * @returns A NextResponse JSON body indicating success or error, appropriate HTTP status,
- *          and traceable `requestId`. (Responses include 200 for accepted requests, 400 for validation errors,
- *          429 for rate-limit violations, and 500 for internal errors.)
+ *          and traceable `requestId`. (Responses include HTTP_OK for accepted requests, HTTP_BAD_REQUEST for validation errors,
+ *          429 for rate-limit violations, and HTTP_INTERNAL_SERVER_ERROR for internal errors.)
  */
 export async function POST(request: NextRequest) {
   const requestId = crypto.randomUUID();
@@ -134,7 +134,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       const errorResponse = createValidationError(error, requestId);
-      return NextResponse.json(errorResponse, { status: 400 });
+      return NextResponse.json(errorResponse, { status: HTTP_BAD_REQUEST });
     }
 
     console.error('Forgot password error:', error);
@@ -142,6 +142,6 @@ export async function POST(request: NextRequest) {
       new Error('Failed to process password reset request'),
       requestId,
     );
-    return NextResponse.json(errorResponse, { status: 500 });
+    return NextResponse.json(errorResponse, { status: HTTP_INTERNAL_SERVER_ERROR });
   }
 }

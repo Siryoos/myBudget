@@ -44,7 +44,7 @@ export interface BulkOperationSummary {
  * Build a standardized JSON success response for Next.js endpoints.
  *
  * Returns a NextResponse containing a payload with `success: true`, the provided `data`,
- * a `timestamp`, and an optional `requestId`. The response status defaults to `200` but
+ * a `timestamp`, and an optional `requestId`. The response status defaults to `HTTP_OK` but
  * can be overridden via `options.status`. Provided `options.headers` are merged with
  * `Content-Type: application/json`. If `options.cacheControl` is set, a `Cache-Control`
  * header is added.
@@ -58,7 +58,7 @@ export function createSuccessResponse<T>(
   options: ApiResponseOptions = {},
 ): NextResponse<SuccessResponse<T>> {
   const {
-    status = 200,
+    status = HTTP_OK,
     headers = {},
     requestId,
     timestamp = new Date().toISOString(),
@@ -95,7 +95,7 @@ export function createSuccessResponse<T>(
  * Also sets response headers (including `Content-Type: application/json`) and the HTTP status.
  *
  * @param error - An Error instance or a string; the response `message` is taken from `error.message` or the string.
- * @param options.status - HTTP status code for the response (defaults to 500).
+ * @param options.status - HTTP status code for the response (defaults to HTTP_INTERNAL_SERVER_ERROR).
  * @param options.code - Machine-readable error code (defaults to `INTERNAL_ERROR`).
  * @param options.details - Optional structured details to include in the error payload.
  * @param options.retryAfter - If provided, included in the error payload and set as the `Retry-After` response header.
@@ -112,7 +112,7 @@ export function createErrorResponse(
   } = {},
 ): NextResponse<ErrorResponse> {
   const {
-    status = 500,
+    status = HTTP_INTERNAL_SERVER_ERROR,
     headers = {},
     requestId,
     timestamp = new Date().toISOString(),
@@ -197,14 +197,14 @@ export function createBulkOperationResponse<T>(
 }
 
 /**
- * Returns a 400 Validation error response with structured error details.
+ * Returns a HTTP_BAD_REQUEST Validation error response with structured error details.
  *
  * Creates a standardized error payload with code `VALIDATION_ERROR`, message `"Validation failed"`,
  * and the provided `errors` attached to the error `details`. Use `options` to include metadata
- * (for example `requestId`, headers, or custom timestamp); the response status is set to 400.
+ * (for example `requestId`, headers, or custom timestamp); the response status is set to HTTP_BAD_REQUEST.
  *
  * @param errors - An array of validation error objects or messages to include in the response `details`.
- * @param options - Optional response metadata (e.g., `requestId`, headers); `status` will be set to 400.
+ * @param options - Optional response metadata (e.g., `requestId`, headers); `status` will be set to HTTP_BAD_REQUEST.
  * @returns A NextResponse containing the standardized ErrorResponse payload for a validation failure.
  */
 export function createValidationErrorResponse(
@@ -214,7 +214,7 @@ export function createValidationErrorResponse(
   return createErrorResponse(
     'Validation failed',
     {
-      status: 400,
+      status: HTTP_BAD_REQUEST,
       code: 'VALIDATION_ERROR',
       details: errors,
       ...options,
@@ -223,10 +223,10 @@ export function createValidationErrorResponse(
 }
 
 /**
- * Create a 401 Authentication Error API response.
+ * Create a HTTP_UNAUTHORIZED Authentication Error API response.
  *
  * Produces a standardized error payload with `success: false`, an error `code` of `AUTHENTICATION_ERROR`,
- * and an HTTP status of 401. The `message` defaults to `"Authentication required"` when not provided.
+ * and an HTTP status of HTTP_UNAUTHORIZED. The `message` defaults to `"Authentication required"` when not provided.
  *
  * @param message - Optional custom error message to include in the response
  */
@@ -237,7 +237,7 @@ export function createAuthenticationErrorResponse(
   return createErrorResponse(
     message,
     {
-      status: 401,
+      status: HTTP_UNAUTHORIZED,
       code: 'AUTHENTICATION_ERROR',
       ...options,
     },
@@ -245,9 +245,9 @@ export function createAuthenticationErrorResponse(
 }
 
 /**
- * Return a standardized 403 Authorization error response.
+ * Return a standardized HTTP_FORBIDDEN Authorization error response.
  *
- * The response will use HTTP status 403 and an error code of `AUTHORIZATION_ERROR`.
+ * The response will use HTTP status HTTP_FORBIDDEN and an error code of `AUTHORIZATION_ERROR`.
  * The optional `message` overrides the default "Insufficient permissions".
  *
  * @param message - Human-readable error message; defaults to "Insufficient permissions".
@@ -260,7 +260,7 @@ export function createAuthorizationErrorResponse(
   return createErrorResponse(
     message,
     {
-      status: 403,
+      status: HTTP_FORBIDDEN,
       code: 'AUTHORIZATION_ERROR',
       ...options,
     },
@@ -268,10 +268,10 @@ export function createAuthorizationErrorResponse(
 }
 
 /**
- * Returns a 404 error response indicating the specified resource was not found.
+ * Returns a HTTP_NOT_FOUND error response indicating the specified resource was not found.
  *
  * @param resource - Human-readable resource name used in the error message (default: "Resource").
- * @param options - Optional response metadata; the response `status` will be set to `404` and the error `code` to `"NOT_FOUND"`.
+ * @param options - Optional response metadata; the response `status` will be set to `HTTP_NOT_FOUND` and the error `code` to `"NOT_FOUND"`.
  * @returns A NextResponse containing a standardized ErrorResponse (`success: false`) describing the missing resource.
  */
 export function createNotFoundErrorResponse(
@@ -281,7 +281,7 @@ export function createNotFoundErrorResponse(
   return createErrorResponse(
     `${resource} not found`,
     {
-      status: 404,
+      status: HTTP_NOT_FOUND,
       code: 'NOT_FOUND',
       ...options,
     },
@@ -289,13 +289,13 @@ export function createNotFoundErrorResponse(
 }
 
 /**
- * Create a 409 Conflict error response.
+ * Create a HTTP_CONFLICT Conflict error response.
  *
- * Builds a standardized error payload with `success: false`, error `code` set to `CONFLICT`, and an HTTP status of 409.
+ * Builds a standardized error payload with `success: false`, error `code` set to `CONFLICT`, and an HTTP status of HTTP_CONFLICT.
  *
  * @param message - Optional custom error message; defaults to `"Resource conflict"`.
- * @param options - Optional response metadata (headers, requestId, timestamp, cacheControl, etc.). The returned response will use status 409 and error code `CONFLICT`.
- * @returns A NextResponse containing the standardized ErrorResponse with status 409.
+ * @param options - Optional response metadata (headers, requestId, timestamp, cacheControl, etc.). The returned response will use status HTTP_CONFLICT and error code `CONFLICT`.
+ * @returns A NextResponse containing the standardized ErrorResponse with status HTTP_CONFLICT.
  */
 export function createConflictErrorResponse(
   message: string = 'Resource conflict',
@@ -304,7 +304,7 @@ export function createConflictErrorResponse(
   return createErrorResponse(
     message,
     {
-      status: 409,
+      status: HTTP_CONFLICT,
       code: 'CONFLICT',
       ...options,
     },
@@ -338,17 +338,17 @@ export function createRateLimitErrorResponse(
 }
 
 /**
- * Return a 201 Created JSON response wrapping the provided data.
+ * Return a HTTP_CREATED Created JSON response wrapping the provided data.
  *
  * @param data - The resource payload to include in the response body.
- * @param options - Optional response metadata; the `status` field is ignored and forced to 201.
+ * @param options - Optional response metadata; the `status` field is ignored and forced to HTTP_CREATED.
  * @returns A NextResponse containing a SuccessResponse with the provided `data`.
  */
 export function createCreatedResponse<T>(
   data: T,
   options: Omit<ApiResponseOptions, 'status'> = {},
 ): NextResponse<SuccessResponse<T>> {
-  return createSuccessResponse(data, { ...options, status: 201 });
+  return createSuccessResponse(data, { ...options, status: HTTP_CREATED });
 }
 
 /**

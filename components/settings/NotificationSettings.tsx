@@ -140,7 +140,7 @@ export function NotificationSettings({
                 <button
                   key={freq}
                   onClick={() => setSettings(prev => ({ ...prev, frequency: freq }))}
-                  className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+                  className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-all duration-HTTP_OK ${
                     settings.frequency === freq
                       ? 'bg-white text-primary-trust-blue shadow-sm'
                       : 'text-neutral-gray hover:text-neutral-dark-gray'
@@ -285,7 +285,7 @@ export function NotificationSettings({
                 }).map((channel) => (
                   <button
                     key={channel}
-                    className="px-3 py-1 text-xs bg-primary-trust-blue text-white rounded-md hover:bg-primary-trust-blue-dark transition-colors duration-200"
+                    className="px-3 py-1 text-xs bg-primary-trust-blue text-white rounded-md hover:bg-primary-trust-blue-dark transition-colors duration-HTTP_OK"
                   >
                     Test {channel.toUpperCase()}
                   </button>

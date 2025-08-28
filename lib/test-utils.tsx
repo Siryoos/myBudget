@@ -145,7 +145,7 @@ export const mockData = {
       {
         id: 'cat-2',
         name: 'Food',
-        allocated: 500,
+        allocated: HTTP_INTERNAL_SERVER_ERROR,
         spent: 480,
         color: '#10B981',
         icon: 'utensils',

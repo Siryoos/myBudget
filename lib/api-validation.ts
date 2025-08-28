@@ -41,7 +41,7 @@ export const commonSchemas = {
 
   // Search parameters
   search: z.object({
-    query: z.string().min(1).max(200).optional(),
+    query: z.string().min(1).max(HTTP_OK).optional(),
     category: z.string().max(100).optional(),
     tags: z.array(z.string().max(50)).max(10).optional(),
   }),
@@ -66,7 +66,7 @@ export const commonSchemas = {
   // Description validation
   description: z.string()
     .min(1, 'Description is required')
-    .max(500, 'Description cannot exceed 500 characters')
+    .max(HTTP_INTERNAL_SERVER_ERROR, 'Description cannot exceed HTTP_INTERNAL_SERVER_ERROR characters')
     .transform(s => s.trim()),
 
   // Category validation
@@ -227,7 +227,7 @@ export class RequestValidator {
 }
 
 // Error response helper
-export function createValidationErrorResponse(error: Error, status: number = 400): NextResponse {
+export function createValidationErrorResponse(error: Error, status: number = HTTP_BAD_REQUEST): NextResponse {
   return NextResponse.json(
     {
       success: false,

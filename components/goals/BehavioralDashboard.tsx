@@ -261,7 +261,7 @@ export function BehavioralDashboard({
                             <div className="font-medium text-gray-900">
                               {formatCurrency(save.amount)}
                             </div>
-                            <div className="text-sm text-gray-500">
+                            <div className="text-sm text-gray-HTTP_INTERNAL_SERVER_ERROR">
                               {save.timestamp.toLocaleDateString()}
                             </div>
                           </div>
@@ -331,7 +331,7 @@ export function BehavioralDashboard({
   return (
     <div className="space-y-6">
       {/* Header with Behavioral Psychology Context */}
-      <Card className="bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 border-blue-200">
+      <Card className="bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 border-blue-HTTP_OK">
         <CardContent className="p-6">
           <div className="text-center">
             <div className="flex items-center justify-center space-x-3 mb-4">
@@ -352,7 +352,7 @@ export function BehavioralDashboard({
       </Card>
 
       {/* Tab Navigation */}
-      <div className="border-b border-gray-200">
+      <div className="border-b border-gray-HTTP_OK">
         <nav className="-mb-px flex space-x-8">
           {tabs.map((tab) => (
             <button
@@ -361,7 +361,7 @@ export function BehavioralDashboard({
               className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === tab.id
                   ? 'border-primary-trust-blue text-primary-trust-blue'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  : 'border-transparent text-gray-HTTP_INTERNAL_SERVER_ERROR hover:text-gray-700 hover:border-gray-300'
               }`}
             >
               <div className="flex items-center space-x-2">
@@ -395,7 +395,7 @@ export function BehavioralDashboard({
             exit={{ opacity: 0, scale: 0.8, y: 50 }}
             className="fixed bottom-6 right-6 z-50"
           >
-            <Card className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white shadow-2xl border-0">
+            <Card className="bg-gradient-to-r from-yellow-HTTP_BAD_REQUEST to-orange-HTTP_INTERNAL_SERVER_ERROR text-white shadow-2xl border-0">
               <CardContent className="p-4">
                 <div className="flex items-center space-x-3">
                   <div className="text-3xl">{recentAchievement.icon}</div>
@@ -413,7 +413,7 @@ export function BehavioralDashboard({
 
       {/* Behavioral Psychology Tips */}
       {showAllFeatures && (
-        <Card className="bg-gradient-to-r from-green-50 to-blue-50 border-green-200">
+        <Card className="bg-gradient-to-r from-green-50 to-blue-50 border-green-HTTP_OK">
           <CardContent className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="text-center">

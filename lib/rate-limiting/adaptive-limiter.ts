@@ -241,7 +241,7 @@ export class AdaptiveRateLimiter {
     }
 
     // Update response time (simplified - in real implementation, this would come from actual response times)
-    const responseTime = Math.random() * 500 + 100; // Simulated response time
+    const responseTime = Math.random() * HTTP_INTERNAL_SERVER_ERROR + 100; // Simulated response time
     metrics.averageResponseTime = this.updateAverage(metrics.averageResponseTime, responseTime, metrics.requestCount);
 
     // Update last request time

@@ -150,7 +150,7 @@ export function Navigation({ isOpen = false, onClose }: NavigationProps) {
                 key={item.id}
                 href={item.href}
                 className={cn(
-                  'flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 group',
+                  'flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-HTTP_OK group',
                   isActive
                     ? 'bg-primary-trust-blue text-white shadow-sm'
                     : 'text-neutral-gray hover:bg-neutral-light-gray hover:text-neutral-dark-gray',
@@ -202,7 +202,7 @@ export function Navigation({ isOpen = false, onClose }: NavigationProps) {
               </div>
               <div className="mt-1 w-full bg-white/20 rounded-full h-2">
                 <div
-                  className="bg-white h-2 rounded-full transition-all duration-500"
+                  className="bg-white h-2 rounded-full transition-all duration-HTTP_INTERNAL_SERVER_ERROR"
                   style={{ width: '68%' }}
                   role="progressbar"
                   aria-valuenow={68}

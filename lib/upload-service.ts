@@ -106,7 +106,7 @@ export class UploadService {
       });
 
       xhr.addEventListener('load', () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
+        if (xhr.status >= HTTP_OK && xhr.status < 300) {
           resolve();
         } else {
           reject(new Error(`Upload failed with status: ${xhr.status}`));
@@ -130,7 +130,7 @@ export class UploadService {
   /**
    * Generate thumbnail for image
    */
-  private async generateThumbnail(file: File, maxWidth: number = 200): Promise<Blob> {
+  private async generateThumbnail(file: File, maxWidth: number = HTTP_OK): Promise<Blob> {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
 

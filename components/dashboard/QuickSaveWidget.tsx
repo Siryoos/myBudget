@@ -128,7 +128,7 @@ export function QuickSaveWidget({
                     setShowCustomInput(false);
                     setCustomAmount('');
                   }}
-                  className={`p-3 rounded-lg border-2 transition-all duration-200 text-center ${
+                  className={`p-3 rounded-lg border-2 transition-all duration-HTTP_OK text-center ${
                     selectedAmount === amount && !showCustomInput
                       ? 'border-secondary-growth-green bg-secondary-growth-green/10 text-secondary-growth-green'
                       : 'border-neutral-gray/30 hover:border-secondary-growth-green/50 text-neutral-dark-gray'
@@ -149,7 +149,7 @@ export function QuickSaveWidget({
                   setShowCustomInput(!showCustomInput);
                   setSelectedAmount(null);
                 }}
-                className={`w-full p-3 rounded-lg border-2 transition-all duration-200 flex items-center justify-center ${
+                className={`w-full p-3 rounded-lg border-2 transition-all duration-HTTP_OK flex items-center justify-center ${
                   showCustomInput
                     ? 'border-secondary-growth-green bg-secondary-growth-green/10 text-secondary-growth-green'
                     : 'border-neutral-gray/30 hover:border-secondary-growth-green/50 text-neutral-dark-gray'

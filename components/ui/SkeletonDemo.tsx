@@ -76,7 +76,7 @@ export function SkeletonDemo() {
           <li>• All skeleton elements include <code>aria-hidden=&quot;true&quot;</code></li>
           <li>• Interactive elements include <code>tabIndex={-1}</code></li>
           <li>• Enhanced wave animation with wide gradient background</li>
-          <li>• Proper background-size (200% width) for smooth animation</li>
+          <li>• Proper background-size (HTTP_OK% width) for smooth animation</li>
           <li>• Assistive technology will skip these decorative elements</li>
         </ul>
       </div>

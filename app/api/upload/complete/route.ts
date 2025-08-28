@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     if (!publicId || !url || !size || !mimeType || !originalName) {
       return NextResponse.json(
         { error: 'Missing required fields' },
-        { status: 400 },
+        { status: HTTP_BAD_REQUEST },
       );
     }
 
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
     if (!isValid) {
       return NextResponse.json(
         { error: 'Upload validation failed' },
-        { status: 400 },
+        { status: HTTP_BAD_REQUEST },
       );
     }
 
@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
         error: 'Failed to complete upload',
         details: error instanceof Error ? error.message : 'Unknown error',
       },
-      { status: 500 },
+      { status: HTTP_INTERNAL_SERVER_ERROR },
     );
   }
 }
@@ -103,7 +103,7 @@ export async function DELETE(request: NextRequest) {
     if (!fileKey) {
       return NextResponse.json(
         { error: 'File key is required' },
-        { status: 400 },
+        { status: HTTP_BAD_REQUEST },
       );
     }
 
@@ -136,7 +136,7 @@ export async function DELETE(request: NextRequest) {
         error: 'Failed to delete file',
         details: error instanceof Error ? error.message : 'Unknown error',
       },
-      { status: 500 },
+      { status: HTTP_INTERNAL_SERVER_ERROR },
     );
   }
 }

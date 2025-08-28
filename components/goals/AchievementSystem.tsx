@@ -40,7 +40,7 @@ const baseAchievements: Achievement[] = [
     category: 'savings-streak',
     icon: '⭐',
     requirement: '30 days consecutive saving',
-    points: 200,
+    points: HTTP_OK,
     isUnlocked: false,
     progress: 5,
     maxProgress: 30,
@@ -52,7 +52,7 @@ const baseAchievements: Achievement[] = [
     category: 'savings-streak',
     icon: '🏆',
     requirement: '90 days consecutive saving',
-    points: 500,
+    points: HTTP_INTERNAL_SERVER_ERROR,
     isUnlocked: false,
     progress: 5,
     maxProgress: 90,
@@ -90,7 +90,7 @@ const baseAchievements: Achievement[] = [
     category: 'goal-achievement',
     icon: '🛡️',
     requirement: 'Save 6 months expenses',
-    points: 400,
+    points: HTTP_BAD_REQUEST,
     isUnlocked: false,
     progress: 0,
     maxProgress: 1,
@@ -116,7 +116,7 @@ const baseAchievements: Achievement[] = [
     category: 'financial-education',
     icon: '🧠',
     requirement: 'Complete all education modules',
-    points: 500,
+    points: HTTP_INTERNAL_SERVER_ERROR,
     isUnlocked: false,
     progress: 1,
     maxProgress: 10,
@@ -154,7 +154,7 @@ const baseAchievements: Achievement[] = [
     category: 'social',
     icon: '👑',
     requirement: 'Help 5 other users',
-    points: 200,
+    points: HTTP_OK,
     isUnlocked: false,
     progress: 0,
     maxProgress: 5,
@@ -330,7 +330,7 @@ export function AchievementSystem({
                       {achievement.points} pts
                     </span>
                     {isUnlocked && (
-                      <StarIcon className="w-5 h-5 text-yellow-500" />
+                      <StarIcon className="w-5 h-5 text-yellow-HTTP_INTERNAL_SERVER_ERROR" />
                     )}
                   </div>
                 </div>
@@ -360,10 +360,10 @@ export function AchievementSystem({
                 </span>
               </div>
 
-              <div className="w-full bg-gray-200 rounded-full h-2">
+              <div className="w-full bg-gray-HTTP_OK rounded-full h-2">
                 <motion.div
                   className={`h-2 rounded-full ${
-                    isUnlocked ? 'bg-green-500' : 'bg-blue-500'
+                    isUnlocked ? 'bg-green-HTTP_INTERNAL_SERVER_ERROR' : 'bg-blue-HTTP_INTERNAL_SERVER_ERROR'
                   }`}
                   initial={{ width: 0 }}
                   animate={{ width: `${percent}%` }}
@@ -446,7 +446,7 @@ export function AchievementSystem({
 
         <div className="flex items-center space-x-4">
           {/* Total Points Display */}
-          <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-4 py-2 rounded-lg">
+          <div className="bg-gradient-to-r from-yellow-HTTP_BAD_REQUEST to-orange-HTTP_INTERNAL_SERVER_ERROR text-white px-4 py-2 rounded-lg">
             <div className="text-center">
               <div className="text-2xl font-bold">{totalPoints}</div>
               <div className="text-xs opacity-90">
@@ -478,7 +478,7 @@ export function AchievementSystem({
             className={`flex items-center space-x-2 px-4 py-2 rounded-lg border-2 transition-all ${
               selectedCategory === category.id
                 ? 'border-primary-trust-blue bg-blue-50 text-primary-trust-blue'
-                : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                : 'border-gray-HTTP_OK hover:border-gray-300 text-gray-700'
             }`}
           >
             <span className="text-lg">{category.icon}</span>
@@ -513,7 +513,7 @@ export function AchievementSystem({
 
       {/* Leaderboard Preview */}
       {showLeaderboard && (
-        <Card className="bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200">
+        <Card className="bg-gradient-to-r from-purple-50 to-blue-50 border-purple-HTTP_OK">
           <CardHeader>
             <h3 className="text-lg font-semibold text-gray-900 flex items-center">
               <UsersIcon className="w-5 h-5 text-purple-600 mr-2" />
@@ -532,7 +532,7 @@ export function AchievementSystem({
                 </div>
                 <div className="text-right">
                   <div className="text-lg font-bold text-purple-600">2,450 pts</div>
-                  <div className="text-sm text-gray-500">15 achievements</div>
+                  <div className="text-sm text-gray-HTTP_INTERNAL_SERVER_ERROR">15 achievements</div>
                 </div>
               </div>
 
@@ -546,7 +546,7 @@ export function AchievementSystem({
                 </div>
                 <div className="text-right">
                   <div className="text-lg font-bold text-gray-600">1,890 pts</div>
-                  <div className="text-sm text-gray-500">12 achievements</div>
+                  <div className="text-sm text-gray-HTTP_INTERNAL_SERVER_ERROR">12 achievements</div>
                 </div>
               </div>
 
@@ -560,7 +560,7 @@ export function AchievementSystem({
                 </div>
                 <div className="text-right">
                   <div className="text-lg font-bold text-yellow-600">1,320 pts</div>
-                  <div className="text-sm text-gray-500">10 achievements</div>
+                  <div className="text-sm text-gray-HTTP_INTERNAL_SERVER_ERROR">10 achievements</div>
                 </div>
               </div>
             </div>

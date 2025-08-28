@@ -132,7 +132,7 @@ export function BudgetVisualization({
               <div className="flex-1 flex items-center">
                 <div className="flex-1 bg-neutral-light-gray rounded-full h-6 relative overflow-hidden">
                   <div
-                    className="h-full rounded-full transition-all duration-500 flex items-center justify-end pr-2"
+                    className="h-full rounded-full transition-all duration-HTTP_INTERNAL_SERVER_ERROR flex items-center justify-end pr-2"
                     style={{
                       width: `${percentage}%`,
                       backgroundColor: item.color,
@@ -270,7 +270,7 @@ export function BudgetVisualization({
                     <button
                       key={type}
                       onClick={() => setActiveChart(type as any)}
-                      className={`p-2 rounded-md transition-all duration-200 ${
+                      className={`p-2 rounded-md transition-all duration-HTTP_OK ${
                         activeChart === type
                           ? 'bg-white text-primary-trust-blue shadow-sm'
                           : 'text-neutral-gray hover:text-neutral-dark-gray'

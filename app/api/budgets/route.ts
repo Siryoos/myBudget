@@ -48,7 +48,7 @@ export const POST = requireAuth(async (request: AuthenticatedRequest) => {
     // Create budget using service
     const budget = await budgetService.create(request.user.id, body);
 
-    return createSuccessResponse(budget, requestId, 201);
+    return createSuccessResponse(budget, requestId, HTTP_CREATED);
 
   } catch (error) {
     return handleApiError(error, requestId);

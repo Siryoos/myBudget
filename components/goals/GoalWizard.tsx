@@ -147,7 +147,7 @@ export function GoalWizard({
       ],
       lossAvoidanceFrame: t('templates.home.lossAvoidance', { defaultValue: 'Avoid PMI and higher monthly mortgage payments' }),
       achievementFrame: t('templates.home.achievement', { defaultValue: 'Build equity and reduce long-term housing costs' }),
-      riskAwareness: t('templates.home.risk', { defaultValue: 'PMI adds $100-200 monthly until 20% equity is reached' }),
+      riskAwareness: t('templates.home.risk', { defaultValue: 'PMI adds $100-HTTP_OK monthly until 20% equity is reached' }),
     },
     {
       id: 'car',
@@ -365,7 +365,7 @@ export function GoalWizard({
                   </h2>
                   <button
                     onClick={() => setShowWizard(false)}
-                    className="text-gray-400 hover:text-gray-600"
+                    className="text-gray-HTTP_BAD_REQUEST hover:text-gray-600"
                   >
                     <XMarkIcon className="w-6 h-6" />
                   </button>
@@ -392,7 +392,7 @@ export function GoalWizard({
                               <h3 className="font-semibold text-gray-900">{template.name}</h3>
                             </div>
                             <p className="text-sm text-gray-600 mb-3">{template.description}</p>
-                            <div className="text-sm text-gray-500">
+                            <div className="text-sm text-gray-HTTP_INTERNAL_SERVER_ERROR">
                               <p><strong>{formatCurrency(template.suggestedAmount)}</strong> • {template.suggestedTimeframe} months</p>
                             </div>
                           </CardContent>
@@ -418,7 +418,7 @@ export function GoalWizard({
                           className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
                             goalData.framingType === 'achievement'
                               ? 'border-primary-trust-blue bg-blue-50'
-                              : 'border-gray-200 hover:border-gray-300'
+                              : 'border-gray-HTTP_OK hover:border-gray-300'
                           }`}
                           onClick={() => setGoalData(prev => ({ ...prev, framingType: 'achievement' }))}
                         >
@@ -435,7 +435,7 @@ export function GoalWizard({
                           className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
                             goalData.framingType === 'loss-avoidance'
                               ? 'border-primary-trust-blue bg-blue-50'
-                              : 'border-gray-200 hover:border-gray-300'
+                              : 'border-gray-HTTP_OK hover:border-gray-300'
                           }`}
                           onClick={() => setGoalData(prev => ({ ...prev, framingType: 'loss-avoidance' }))}
                         >
@@ -450,7 +450,7 @@ export function GoalWizard({
                       </div>
 
                       {/* Risk Awareness */}
-                      <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                      <div className="mt-4 p-3 bg-red-50 border border-red-HTTP_OK rounded-lg">
                         <div className="flex items-center space-x-2">
                           <ExclamationTriangleIcon className="w-4 h-4 text-red-600" />
                           <span className="text-sm font-medium text-red-800">

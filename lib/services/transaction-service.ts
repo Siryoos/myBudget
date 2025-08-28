@@ -55,7 +55,7 @@ export class TransactionService extends BaseService {
       SELECT * FROM transactions
       WHERE user_id = $1
     `;
-    const values: any[] = [userId];
+    const values: unknown[] = [userId];
     let paramCount = 2;
 
     // Build WHERE clause from filters
@@ -107,7 +107,7 @@ export class TransactionService extends BaseService {
     // Get total count
     const countQuery = queryString.replace('SELECT *', 'SELECT COUNT(*) as count');
     const countResult = await query(countQuery, values);
-    const total = parseInt(countResult.rows[0].count);
+    const total = parseInt(countResult.rows[0].count, 10);
 
     // Add pagination
     const page = pagination?.page || 1;
@@ -148,7 +148,7 @@ export class TransactionService extends BaseService {
 
     // Build dynamic update query
     const updates: string[] = [];
-    const values: any[] = [];
+    const values: unknown[] = [];
     let paramCount = 1;
 
     Object.entries(validatedData).forEach(([key, value]) => {
@@ -184,7 +184,7 @@ export class TransactionService extends BaseService {
       throw new NotFoundError('Transaction', id);
     }
 
-    return await super.delete(id);
+    return super.delete(id);
   }
 
   async getSummary(userId: string, startDate?: string, endDate?: string): Promise<{
@@ -201,7 +201,7 @@ export class TransactionService extends BaseService {
       FROM transactions
       WHERE user_id = $1
     `;
-    const values: any[] = [userId];
+    const values: unknown[] = [userId];
     let paramCount = 2;
 
     if (startDate) {
@@ -226,7 +226,7 @@ export class TransactionService extends BaseService {
       totalIncome,
       totalExpenses,
       netIncome: totalIncome - totalExpenses,
-      transactionCount: parseInt(row.transaction_count),
+      transactionCount: parseInt(row.transaction_count, 10),
     };
   }
 
@@ -245,7 +245,7 @@ export class TransactionService extends BaseService {
       FROM transactions
       WHERE user_id = $1
     `;
-    const values: any[] = [userId];
+    const values: unknown[] = [userId];
     let paramCount = 2;
 
     if (startDate) {
@@ -270,11 +270,11 @@ export class TransactionService extends BaseService {
       category: row.category,
       totalIncome: parseFloat(row.total_income),
       totalExpenses: parseFloat(row.total_expenses),
-      transactionCount: parseInt(row.transaction_count),
+      transactionCount: parseInt(row.transaction_count, 10),
     }));
   }
 
-  private mapDbTransactionToTransaction(dbTransaction: any): Transaction {
+  private mapDbTransactionToTransaction(dbTransaction: unknown): Transaction {
     return {
       id: dbTransaction.id,
       amount: parseFloat(dbTransaction.amount),

@@ -226,19 +226,19 @@ const processTokenRefresh = async (refreshToken: string, request: NextRequest, r
   // Verify refresh token
   const tokenResult = verifyRefreshToken(refreshToken);
   if (!tokenResult.success) {
-    return createTokenErrorResponse(tokenResult.error!, requestId, 401);
+    return createTokenErrorResponse(tokenResult.error!, requestId, HTTP_UNAUTHORIZED);
   }
 
   // Validate decoded token structure
   const structureResult = validateTokenStructure(tokenResult.decoded!);
   if (!structureResult.valid) {
-    return createTokenErrorResponse(structureResult.error!, requestId, 401);
+    return createTokenErrorResponse(structureResult.error!, requestId, HTTP_UNAUTHORIZED);
   }
 
   // Check user existence and token version
   const userResult = await validateUserAndToken(tokenResult.decoded!);
   if (!userResult.valid) {
-    const status = userResult.error?.code === 'USER_NOT_FOUND' ? 404 : 401;
+    const status = userResult.error?.code === 'USER_NOT_FOUND' ? HTTP_NOT_FOUND : HTTP_UNAUTHORIZED;
     return createTokenErrorResponse(userResult.error!, requestId, status);
   }
 
@@ -259,7 +259,7 @@ export const POST = async (request: NextRequest) => {
   } catch (error) {
     if (error instanceof ZodError) {
       const errorResponse = createValidationError(error, requestId);
-      return NextResponse.json(errorResponse, { status: 400 });
+      return NextResponse.json(errorResponse, { status: HTTP_BAD_REQUEST });
     }
 
     console.error('Token refresh error:', error);
@@ -267,6 +267,6 @@ export const POST = async (request: NextRequest) => {
       new Error('Failed to refresh token'),
       requestId,
     );
-    return NextResponse.json(errorResponse, { status: 500 });
+    return NextResponse.json(errorResponse, { status: HTTP_INTERNAL_SERVER_ERROR });
   }
 };

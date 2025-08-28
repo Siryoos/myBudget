@@ -115,9 +115,9 @@ export function GoalProgressTracker({
     switch (selectedVisual) {
       case 'thermometer':
         return (
-          <motion.div className="relative w-8 h-32 bg-gray-200 rounded-full overflow-hidden">
+          <motion.div className="relative w-8 h-32 bg-gray-HTTP_OK rounded-full overflow-hidden">
             <motion.div
-              className="absolute bottom-0 w-full bg-gradient-to-t from-red-500 via-yellow-500 to-green-500"
+              className="absolute bottom-0 w-full bg-gradient-to-t from-red-HTTP_INTERNAL_SERVER_ERROR via-yellow-HTTP_INTERNAL_SERVER_ERROR to-green-HTTP_INTERNAL_SERVER_ERROR"
               initial={{ height: 0 }}
               animate={{ height: `${enhancedProgress}%` }}
               transition={{ duration: 1, ease: 'easeOut' }}
@@ -141,7 +141,7 @@ export function GoalProgressTracker({
 
             {/* Coins filling the jar */}
             <motion.div
-              className="absolute bottom-0 w-full bg-gradient-to-t from-yellow-400 to-yellow-600"
+              className="absolute bottom-0 w-full bg-gradient-to-t from-yellow-HTTP_BAD_REQUEST to-yellow-600"
               initial={{ height: 0 }}
               animate={{ height: `${enhancedProgress}%` }}
               transition={{ duration: 1, ease: 'easeOut' }}
@@ -150,7 +150,7 @@ export function GoalProgressTracker({
             {/* Coin dropping effect */}
             {enhancedProgress > 0 && (
               <motion.div
-                className="absolute top-0 left-1/2 transform -translate-x-1/2 w-3 h-3 bg-yellow-500 rounded-full"
+                className="absolute top-0 left-1/2 transform -translate-x-1/2 w-3 h-3 bg-yellow-HTTP_INTERNAL_SERVER_ERROR rounded-full"
                 animate={{ y: [0, 20], opacity: [1, 0] }}
                 transition={{ duration: 0.5, repeat: 3, repeatDelay: 1 }}
               />
@@ -252,7 +252,7 @@ export function GoalProgressTracker({
         exit={{ opacity: 0, y: -20 }}
         className="relative"
       >
-        <Card className={`h-full transition-all duration-300 ${isCompleted ? 'bg-green-50 border-green-200' : ''}`}>
+        <Card className={`h-full transition-all duration-300 ${isCompleted ? 'bg-green-50 border-green-HTTP_OK' : ''}`}>
           <CardContent className="p-6">
             {/* Goal Header with Photo */}
             <div className="flex items-start space-x-4 mb-4">
@@ -313,7 +313,7 @@ export function GoalProgressTracker({
                     <div className="text-2xl font-bold text-gray-900">
                       {Math.round(progress)}%
                     </div>
-                    <div className="text-sm text-gray-500">
+                    <div className="text-sm text-gray-HTTP_INTERNAL_SERVER_ERROR">
                       {isCompleted
                         ? t('progress.completed', { defaultValue: 'Completed!' })
                         : `${formatCurrency(goal.targetAmount - goal.currentAmount)} ${t('progress.remaining', { defaultValue: 'remaining' })}`

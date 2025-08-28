@@ -436,7 +436,7 @@ export const requireMFA = (handler: (request: MFARequest) => Promise<Response>) 
     if (!userId) {
       return new Response(
         JSON.stringify({ error: 'Authentication required' }),
-        { status: 401, headers: { 'Content-Type': 'application/json' } },
+        { status: HTTP_UNAUTHORIZED, headers: { 'Content-Type': 'application/json' } },
       );
     }
 
@@ -454,7 +454,7 @@ export const requireMFA = (handler: (request: MFARequest) => Promise<Response>) 
             code: 'MFA_REQUIRED',
             requiresMFA: true,
           }),
-          { status: 403, headers: { 'Content-Type': 'application/json' } },
+          { status: HTTP_FORBIDDEN, headers: { 'Content-Type': 'application/json' } },
         );
       }
     }

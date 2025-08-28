@@ -4,11 +4,11 @@ jest.mock('next/server', () => ({
   NextResponse: {
     next: jest.fn(() => ({
       headers: new Map(),
-      status: 200,
+      status: HTTP_OK,
     })),
     json: jest.fn(() => ({
       headers: new Map(),
-      status: 200,
+      status: HTTP_OK,
     })),
   },
 }));
@@ -142,7 +142,7 @@ describe('Security Middleware Core Logic', () => {
 
       const response = securityMiddleware(request);
       // Should still process the request but log the unauthorized origin
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(HTTP_OK);
     });
   });
 
@@ -206,7 +206,7 @@ describe('Security Middleware Core Logic', () => {
 
       const response = securityMiddleware(suspiciousRequest);
       // Should still process but log the suspicious request
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(HTTP_OK);
     });
   });
 });

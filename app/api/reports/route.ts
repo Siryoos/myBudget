@@ -16,7 +16,7 @@ export const GET = requireAuth(async (request: AuthenticatedRequest) => {
     if (!startDate || !endDate) {
       return NextResponse.json(
         { error: 'Start date and end date are required' },
-        { status: 400 },
+        { status: HTTP_BAD_REQUEST },
       );
     }
 
@@ -38,7 +38,7 @@ export const GET = requireAuth(async (request: AuthenticatedRequest) => {
       default:
         return NextResponse.json(
           { error: 'Invalid report type. Supported types: monthly, category, trends, budget' },
-          { status: 400 },
+          { status: HTTP_BAD_REQUEST },
         );
     }
 
@@ -55,7 +55,7 @@ export const GET = requireAuth(async (request: AuthenticatedRequest) => {
     console.error('Generate report error:', error);
     return NextResponse.json(
       { error: 'Failed to generate report' },
-      { status: 500 },
+      { status: HTTP_INTERNAL_SERVER_ERROR },
     );
   }
 });

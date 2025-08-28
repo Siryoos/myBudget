@@ -104,7 +104,7 @@ export class UserService extends BaseService {
 
     // Build dynamic update query
     const updates: string[] = [];
-    const values: any[] = [];
+    const values: unknown[] = [];
     let paramCount = 1;
 
     Object.entries(validatedData).forEach(([key, value]) => {
@@ -178,7 +178,7 @@ export class UserService extends BaseService {
     }
 
     // Delete user (cascade will handle related data)
-    return await super.delete(id);
+    return super.delete(id);
   }
 
   async getProfile(id: string): Promise<UserProfile> {
@@ -210,7 +210,7 @@ export class UserService extends BaseService {
     return this.mapDbUserToProfile(user);
   }
 
-  private mapDbUserToProfile(dbUser: any): UserProfile {
+  private mapDbUserToProfile(dbUser: unknown): UserProfile {
     return {
       id: dbUser.id,
       email: dbUser.email,

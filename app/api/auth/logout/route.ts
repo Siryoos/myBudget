@@ -48,6 +48,6 @@ export const POST = requireAuth(async (request: AuthenticatedRequest) => {
       new Error('Failed to logout'),
       requestId,
     );
-    return NextResponse.json(errorResponse, { status: 500 });
+    return NextResponse.json(errorResponse, { status: HTTP_INTERNAL_SERVER_ERROR });
   }
 });

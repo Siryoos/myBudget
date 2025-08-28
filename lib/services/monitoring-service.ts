@@ -114,7 +114,7 @@ export class MonitoringService {
     const totalResponseTime = recentMetrics.reduce((sum, m) => sum + m.responseTime, 0);
     const averageResponseTime = totalRequests > 0 ? totalResponseTime / totalRequests : 0;
 
-    const errors = recentMetrics.filter(m => m.statusCode >= 400).length;
+    const errors = recentMetrics.filter(m => m.statusCode >= HTTP_BAD_REQUEST).length;
     const errorRate = totalRequests > 0 ? (errors / totalRequests) * 100 : 0;
 
     const statusCodes: Record<number, number> = {};

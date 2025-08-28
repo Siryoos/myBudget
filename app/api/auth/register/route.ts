@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     if (existingUser.rows.length > 0) {
       return NextResponse.json(
         { error: 'User already exists' },
-        { status: 400 },
+        { status: HTTP_BAD_REQUEST },
       );
     }
 
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
           error: 'Validation failed',
           details: error.flatten(),
         },
-        { status: 400 },
+        { status: HTTP_BAD_REQUEST },
       );
     }
 
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
     console.error('Registration error:', error);
     return NextResponse.json(
       { error: 'Registration failed' },
-      { status: 500 },
+      { status: HTTP_INTERNAL_SERVER_ERROR },
     );
   }
 }

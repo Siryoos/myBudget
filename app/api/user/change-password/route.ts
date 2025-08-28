@@ -30,7 +30,7 @@ export const PUT = requireAuth(async (request: AuthenticatedRequest) => {
     if (userResult.rows.length === 0) {
       return NextResponse.json(
         { error: 'User not found' },
-        { status: 404 },
+        { status: HTTP_NOT_FOUND },
       );
     }
 
@@ -38,7 +38,7 @@ export const PUT = requireAuth(async (request: AuthenticatedRequest) => {
     if (!isValidCurrentPassword) {
       return NextResponse.json(
         { error: 'Current password is incorrect' },
-        { status: 400 },
+        { status: HTTP_BAD_REQUEST },
       );
     }
 
@@ -69,13 +69,13 @@ export const PUT = requireAuth(async (request: AuthenticatedRequest) => {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Validation failed', details: error.errors },
-        { status: 400 },
+        { status: HTTP_BAD_REQUEST },
       );
     }
 
     return NextResponse.json(
       { error: 'Failed to change password' },
-      { status: 500 },
+      { status: HTTP_INTERNAL_SERVER_ERROR },
     );
   }
 });

@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
           },
           requestId,
         },
-        { status: 400 },
+        { status: HTTP_BAD_REQUEST },
       );
     }
 
@@ -122,7 +122,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       const errorResponse = createValidationError(error, requestId);
-      return NextResponse.json(errorResponse, { status: 400 });
+      return NextResponse.json(errorResponse, { status: HTTP_BAD_REQUEST });
     }
 
     console.error('Reset password error:', error);
@@ -130,6 +130,6 @@ export async function POST(request: NextRequest) {
       new Error('Failed to reset password'),
       requestId,
     );
-    return NextResponse.json(errorResponse, { status: 500 });
+    return NextResponse.json(errorResponse, { status: HTTP_INTERNAL_SERVER_ERROR });
   }
 }
