@@ -122,7 +122,7 @@ export class QueryOptimizer {
         suggestions.push('Query is slow (>1s). Consider adding indexes or optimizing the query');
       }
 
-      if (result.rowCount > 1000) {
+      if ((result.rowCount ?? 0) > 1000) {
         suggestions.push('Large result set. Consider pagination or filtering');
       }
 

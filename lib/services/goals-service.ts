@@ -303,7 +303,7 @@ export class GoalsService extends BaseService {
     `, [
       goalId,
       validatedData.type,
-      validatedData.type === 'fixed' ? validatedData.amount : null,
+      validatedData.type === 'fixed_amount' ? validatedData.amount : null,
       validatedData.type === 'percentage' ? validatedData.percentage : null,
       validatedData.frequency,
       validatedData.isActive ?? true,

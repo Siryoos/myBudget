@@ -10,7 +10,6 @@ if (typeof process !== 'undefined' && process.env && process.env.NODE_ENV) {
   try {
     const redisModule = require('@/lib/redis');
     rateLimiter = redisModule.rateLimiter;
-    rateLimitConfig = redisModule.RateLimitConfig;
   } catch (error) {
     console.warn('Redis rate limiter not available in Edge Runtime');
   }
@@ -483,7 +482,10 @@ export async function middleware(request: NextRequest) {
 
         try {
           // Check rate limit asynchronously
-          const rateLimitResult = await rateLimiter.checkRateLimit(identifier, rateLimitConfig);
+          if (!rateLimiter || typeof (rateLimiter as any).checkRateLimit !== 'function') {
+            throw new Error('Rate limiter is unavailable');
+          }
+          const rateLimitResult = await (rateLimiter as any).checkRateLimit(identifier, rateLimitConfig);
 
           if (!rateLimitResult.allowed) {
             // Create rate limit response

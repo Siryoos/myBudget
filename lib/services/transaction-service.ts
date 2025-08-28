@@ -277,19 +277,14 @@ export class TransactionService extends BaseService {
   private mapDbTransactionToTransaction(dbTransaction: any): Transaction {
     return {
       id: dbTransaction.id,
-      userId: dbTransaction.user_id,
-      budgetCategoryId: dbTransaction.budget_category_id,
       amount: parseFloat(dbTransaction.amount),
       description: dbTransaction.description,
       category: dbTransaction.category,
-      date: dbTransaction.date.toISOString().split('T')[0],
+      date: new Date(dbTransaction.date),
       type: dbTransaction.type,
       account: dbTransaction.account,
       tags: dbTransaction.tags,
       isRecurring: dbTransaction.is_recurring,
-      recurringFrequency: dbTransaction.recurring_frequency,
-      createdAt: dbTransaction.created_at.toISOString(),
-      updatedAt: dbTransaction.updated_at.toISOString(),
     };
   }
 }

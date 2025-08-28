@@ -4,6 +4,7 @@ import { query } from '@/lib/database';
 import type { UserCreate, UserUpdate } from '@/lib/validation-schemas';
 import { userSchemas } from '@/lib/validation-schemas';
 import type { User } from '@/types';
+import { UserRole } from '@/types/auth';
 
 import { BaseService, NotFoundError, ValidationError, ConflictError } from './base-service';
 
@@ -214,6 +215,7 @@ export class UserService extends BaseService {
       id: dbUser.id,
       email: dbUser.email,
       name: dbUser.name,
+      role: (dbUser.role as UserRole) ?? UserRole.USER,
       avatar: dbUser.avatar,
       currency: dbUser.currency,
       language: dbUser.language,
