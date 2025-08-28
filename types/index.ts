@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import type { Milestone as MilestoneFromApi, AutomationRule as AutomationRuleFromApi, RuleCondition as RuleConditionFromApi } from './api';
-import { UserRole } from './auth';
+import type { UserRole } from './auth';
 
 // Core financial types
 export interface Transaction {
@@ -471,7 +471,7 @@ export interface User {
 }
 
 // Re-export UserRole from auth.ts to avoid duplication
-export { UserRole }
+export type { UserRole }
 
 export interface Notification {
   id: string

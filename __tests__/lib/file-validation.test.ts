@@ -46,7 +46,7 @@ const createMockFile = (
   const enc = new TextEncoder();
   const base =
     typeof content === 'string' ? enc.encode(content) : new Uint8Array(content);
-  const desired = customSize ?? base.byteLength || KILOBYTE * KILOBYTE;
+  const desired = customSize ?? (base.byteLength || KILOBYTE * KILOBYTE);
   let payload: Uint8Array;
   if (desired <= base.byteLength) {
     payload = base.slice(0, desired);
