@@ -216,7 +216,7 @@ export function useTransactions(params?: Parameters<typeof api.transactions.list
   const key = params ? `transactions-${JSON.stringify(params)}` : 'transactions';
   return useApi(
     key,
-    () => api.transactions.list(params).then(res => res.data),
+    () => api.transactions.list(params),
     options,
   );
 }
@@ -224,7 +224,7 @@ export function useTransactions(params?: Parameters<typeof api.transactions.list
 export function useTransaction(id: string | null, options?: UseApiOptions) {
   return useApi(
     id ? `transaction-${id}` : null,
-    () => api.transactions.get(id!).then(res => res.data),
+    () => api.transactions.get(id!),
     options,
   );
 }
@@ -232,7 +232,7 @@ export function useTransaction(id: string | null, options?: UseApiOptions) {
 export function useBudgets(options?: UseApiOptions) {
   return useApi(
     'budgets',
-    () => api.budgets.list().then(res => res.data),
+    () => api.budgets.list(),
     options,
   );
 }
@@ -240,7 +240,7 @@ export function useBudgets(options?: UseApiOptions) {
 export function useBudget(id: string | null, options?: UseApiOptions) {
   return useApi(
     id ? `budget-${id}` : null,
-    () => api.budgets.get(id!).then(res => res.data),
+    () => api.budgets.get(id!),
     options,
   );
 }
@@ -249,7 +249,7 @@ export function useGoals(priority?: Parameters<typeof api.goals.list>[0], option
   const key = priority ? `goals-${priority}` : 'goals';
   return useApi(
     key,
-    () => api.goals.list(priority).then(res => res.data),
+    () => api.goals.list(priority),
     options,
   );
 }
@@ -257,7 +257,7 @@ export function useGoals(priority?: Parameters<typeof api.goals.list>[0], option
 export function useGoal(id: string | null, options?: UseApiOptions) {
   return useApi(
     id ? `goal-${id}` : null,
-    () => api.goals.get(id!).then(res => res.data),
+    () => api.goals.get(id!),
     options,
   );
 }
@@ -265,7 +265,7 @@ export function useGoal(id: string | null, options?: UseApiOptions) {
 export function useDashboard(options?: UseApiOptions) {
   return useApi(
     'dashboard',
-    () => api.dashboard.get().then(res => res.data),
+    () => api.dashboard.get(),
     options,
   );
 }
@@ -274,7 +274,7 @@ export function useNotifications(unreadOnly?: boolean, options?: UseApiOptions) 
   const key = `notifications-${unreadOnly ? 'unread' : 'all'}`;
   return useApi(
     key,
-    () => api.notifications.list(unreadOnly).then(res => res.data),
+    () => api.notifications.list(unreadOnly),
     options,
   );
 }
@@ -282,7 +282,7 @@ export function useNotifications(unreadOnly?: boolean, options?: UseApiOptions) 
 export function useAchievements(options?: UseApiOptions) {
   return useApi(
     'achievements',
-    () => api.achievements.list().then(res => res.data),
+    () => api.achievements.list(),
     options,
   );
 }
@@ -290,7 +290,7 @@ export function useAchievements(options?: UseApiOptions) {
 export function useProfile(options?: UseApiOptions) {
   return useApi(
     'profile',
-    () => api.auth.getProfile().then(res => res.data),
+    () => api.auth.getProfile(),
     options,
   );
 }
@@ -298,7 +298,7 @@ export function useProfile(options?: UseApiOptions) {
 export function useSettings(options?: UseApiOptions) {
   return useApi(
     'settings',
-    () => api.settings.get().then(res => res.data),
+    () => api.settings.get(),
     options,
   );
 }
@@ -310,7 +310,7 @@ export function useAnalytics(
   const key = params ? `analytics-${JSON.stringify(params)}` : 'analytics';
   return useApi(
     key,
-    () => api.analytics.get(params).then(res => res.data),
+    () => api.analytics.get(params),
     options,
   );
 }

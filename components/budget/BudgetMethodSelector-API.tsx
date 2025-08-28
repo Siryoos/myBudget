@@ -221,17 +221,13 @@ export function BudgetMethodSelector({
         })),
       });
 
-      if (response.success && response.data) {
-        // Notify parent component
-        if (onMethodSelected) {
-          onMethodSelected(selectedMethod);
-        }
-
-        // Navigate to budget configuration
-        router.push(`/budget/${response.data.budgetId}/configure`);
-      } else {
-        throw new Error(response.error || 'Failed to create budget');
+      // Notify parent component
+      if (onMethodSelected) {
+        onMethodSelected(selectedMethod);
       }
+
+      // Navigate to budget configuration
+      router.push(`/budget/${response.id}/configure`);
     } catch (err) {
       console.error('Failed to create budget:', err);
       setError(err instanceof Error ? err.message : 'Failed to create budget');

@@ -27,7 +27,7 @@ export const GET = requireAuth(async (request: AuthenticatedRequest, context?: {
 
     // Get goal to verify it exists and get milestones
     const goal = await goalsService.findById(id);
-    
+
     if (!goal) {
       throw new Error(`Goal not found: ${id}`);
     }

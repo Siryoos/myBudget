@@ -45,7 +45,7 @@ const createMockFile = (
 ): File => {
   const blob = new Blob([content as BlobPart], options);
   const size = customSize || KILOBYTE * KILOBYTE;
-  
+
   // Create a proper File object
   const file = new File([blob], name, {
     ...options,
@@ -54,17 +54,17 @@ const createMockFile = (
 
   // Override size if custom size is provided
   if (customSize) {
-    Object.defineProperty(file, 'size', { 
-      value: size, 
-      writable: false, 
-      configurable: true 
+    Object.defineProperty(file, 'size', {
+      value: size,
+      writable: false,
+      configurable: true,
     });
   }
 
   // Mock the async methods if they don't exist in the test environment
   if (!file.text) {
     (file as any).text = jest.fn().mockResolvedValue(
-      typeof content === 'string' ? content : new TextDecoder().decode(content)
+      typeof content === 'string' ? content : new TextDecoder().decode(content),
     );
   }
 
@@ -72,7 +72,7 @@ const createMockFile = (
     (file as any).arrayBuffer = jest.fn().mockResolvedValue(
       typeof content === 'string'
         ? new TextEncoder().encode(content).buffer
-        : content.buffer
+        : content.buffer,
     );
   }
 

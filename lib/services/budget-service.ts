@@ -241,8 +241,15 @@ export class BudgetService extends BaseService {
 
     // Check name uniqueness if name is being updated
     if (validatedData.name && validatedData.name !== existingCategory.name) {
+      // Get the budget_id from the database record
+      const categoryRecord = await query(
+        'SELECT budget_id FROM budget_categories WHERE id = $1',
+        [id],
+      );
+      const budgetId = categoryRecord.rows[0]?.budget_id;
+
       const categoryWithName = await this.findCategoryByBudgetIdAndName(
-        existingCategory.budgetId,
+        budgetId,
         validatedData.name,
       );
       if (categoryWithName) {
@@ -336,13 +343,15 @@ export class BudgetService extends BaseService {
       endDate: dbBudget.end_date.toISOString().split('T')[0],
       createdAt: dbBudget.created_at.toISOString(),
       updatedAt: dbBudget.updated_at.toISOString(),
+      categories: [], // Categories are loaded separately
+      isActive: dbBudget.is_active || false,
     };
   }
 
   private mapDbCategoryToCategory(dbCategory: any): BudgetCategory {
     return {
       id: dbCategory.id,
-      budgetId: dbCategory.budget_id,
+      // budgetId is not part of BudgetCategory type
       name: dbCategory.name,
       allocated: parseFloat(dbCategory.allocated),
       spent: parseFloat(dbCategory.spent),
@@ -350,8 +359,7 @@ export class BudgetService extends BaseService {
       color: dbCategory.color,
       icon: dbCategory.icon,
       isEssential: dbCategory.is_essential,
-      createdAt: dbCategory.created_at.toISOString(),
-      updatedAt: dbCategory.updated_at.toISOString(),
+      // timestamps are not part of BudgetCategory type
     };
   }
 }

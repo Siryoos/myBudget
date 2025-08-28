@@ -209,10 +209,14 @@ export class GoalsService extends BaseService {
     const validatedData = this.validateData(milestoneSchemas.update, data);
 
     // Check if milestone exists and belongs to goal
-    const milestone = await this.findMilestoneById(milestoneId);
-    if (!milestone || milestone.goalId !== goalId) {
+    const milestoneData = await query(
+      'SELECT * FROM milestones WHERE id = $1',
+      [milestoneId],
+    );
+    if (!milestoneData.rows.length || milestoneData.rows[0].goal_id !== goalId) {
       throw new NotFoundError('Milestone', milestoneId);
     }
+    const milestone = this.mapDbMilestoneToMilestone(milestoneData.rows[0]);
 
     // Build dynamic update query
     const updates: string[] = [];
@@ -247,11 +251,15 @@ export class GoalsService extends BaseService {
 
   async completeMilestone(goalId: string, milestoneId: string): Promise<Milestone> {
     // Check if milestone exists and belongs to goal
-    const milestone = await this.findMilestoneById(milestoneId);
-    if (!milestone || milestone.goalId !== goalId) {
+    const milestoneData = await query(
+      'SELECT * FROM milestones WHERE id = $1',
+      [milestoneId],
+    );
+    if (!milestoneData.rows.length || milestoneData.rows[0].goal_id !== goalId) {
       throw new NotFoundError('Milestone', milestoneId);
     }
 
+    const milestone = this.mapDbMilestoneToMilestone(milestoneData.rows[0]);
     if (milestone.isCompleted) {
       throw new ValidationError('Milestone is already completed');
     }
@@ -268,8 +276,11 @@ export class GoalsService extends BaseService {
 
   async deleteMilestone(goalId: string, milestoneId: string): Promise<boolean> {
     // Check if milestone exists and belongs to goal
-    const milestone = await this.findMilestoneById(milestoneId);
-    if (!milestone || milestone.goalId !== goalId) {
+    const milestoneData = await query(
+      'SELECT * FROM milestones WHERE id = $1',
+      [milestoneId],
+    );
+    if (!milestoneData.rows.length || milestoneData.rows[0].goal_id !== goalId) {
       throw new NotFoundError('Milestone', milestoneId);
     }
 
@@ -313,8 +324,11 @@ export class GoalsService extends BaseService {
     const validatedData = this.validateData(automationRuleSchemas.update, data);
 
     // Check if rule exists and belongs to goal
-    const rule = await this.findAutomationRuleById(ruleId);
-    if (!rule || rule.goalId !== goalId) {
+    const ruleData = await query(
+      'SELECT * FROM automation_rules WHERE id = $1',
+      [ruleId],
+    );
+    if (!ruleData.rows.length || ruleData.rows[0].goal_id !== goalId) {
       throw new NotFoundError('Automation rule', ruleId);
     }
 
@@ -351,8 +365,11 @@ export class GoalsService extends BaseService {
 
   async deleteAutomationRule(goalId: string, ruleId: string): Promise<boolean> {
     // Check if rule exists and belongs to goal
-    const rule = await this.findAutomationRuleById(ruleId);
-    if (!rule || rule.goalId !== goalId) {
+    const ruleData = await query(
+      'SELECT * FROM automation_rules WHERE id = $1',
+      [ruleId],
+    );
+    if (!ruleData.rows.length || ruleData.rows[0].goal_id !== goalId) {
       throw new NotFoundError('Automation rule', ruleId);
     }
 
@@ -395,7 +412,7 @@ export class GoalsService extends BaseService {
   private mapDbGoalToGoal(dbGoal: any): SavingsGoal {
     return {
       id: dbGoal.id,
-      userId: dbGoal.user_id,
+      // userId is not part of SavingsGoal type
       name: dbGoal.name,
       description: dbGoal.description,
       targetAmount: parseFloat(dbGoal.target_amount),
@@ -418,7 +435,7 @@ export class GoalsService extends BaseService {
   private mapDbMilestoneToMilestone(dbMilestone: any): Milestone {
     return {
       id: dbMilestone.id,
-      goalId: dbMilestone.goal_id,
+      // goalId is not part of Milestone type
       amount: parseFloat(dbMilestone.amount),
       description: dbMilestone.description,
       isCompleted: dbMilestone.is_completed,

@@ -459,6 +459,6 @@ export function isSuccessResponse<T>(response: ApiResponse<T>): response is Succ
  * @param response - The API response to test.
  * @returns True if `response` is an `ErrorResponse` (i.e., `success === false`).
  */
-export function isErrorResponse(response: ApiResponse<any>): response is ErrorResponse {
-  return response.success === false;
+export function isErrorResponse(response: any): response is ErrorResponse {
+  return response?.success === false;
 }

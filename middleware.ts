@@ -191,12 +191,12 @@ export const middleware = async (request: NextRequest) => {
  * @returns An object with a `matcher` array containing the route
  * pattern used by Next.js middleware.
  */
-export const config = () => ({
-    matcher: [
-      // Simplified matcher that covers all necessary routes without conflicts
-      '/((?!_next/static|_next/image|favicon.ico|public|sw.js|manifest.json|.*\\..*).*)',
-    ],
-  });
+export const config = {
+  matcher: [
+    // Simplified matcher that covers all necessary routes without conflicts
+    '/((?!_next/static|_next/image|favicon.ico|public|sw.js|manifest.json|.*\\..*).*)',
+  ],
+};
 
 /**
  * Extracts an authentication token from a Next.js request.

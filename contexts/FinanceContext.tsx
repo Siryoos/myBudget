@@ -3,8 +3,7 @@
 import type { ReactNode } from 'react';
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
-import { BudgetService } from '@/lib/services/budget-service';
-import { TransactionService } from '@/lib/services/transaction-service';
+import { apiClient } from '@/lib/api-client';
 import type { Transaction, Budget, SavingsGoal } from '@/types';
 
 interface FinanceContextType {
@@ -39,8 +38,7 @@ interface FinanceContextType {
 
 const FinanceContext = createContext<FinanceContextType | undefined>(undefined);
 
-const transactionService = new TransactionService();
-const budgetService = new BudgetService();
+// API client is used instead of direct service imports
 
 /**
  * Provides finance-related state and actions (transactions, budgets, savings goals) to descendant components.
@@ -77,8 +75,8 @@ export function FinanceProvider({ children, userId }: { children: ReactNode; use
     setTransactionsError(null);
 
     try {
-      const result = await transactionService.findByUserId(userId, {}, { page: 1, limit: 50 });
-      setTransactions(result.data);
+      const transactions = await apiClient.getTransactions(userId);
+      setTransactions(transactions);
     } catch (error) {
       setTransactionsError(error instanceof Error ? error.message : 'Failed to load transactions');
     } finally {
@@ -94,7 +92,7 @@ export function FinanceProvider({ children, userId }: { children: ReactNode; use
     setBudgetsError(null);
 
     try {
-      const budgetsData = await budgetService.findByUserId(userId);
+      const budgetsData = await apiClient.getBudgets(userId);
       setBudgets(budgetsData as Budget[]);
 
       // Set the most recent budget as active if none is set

@@ -4,8 +4,7 @@ import { useRouter } from 'next/navigation';
 import type { ReactNode } from 'react';
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
-import { UserService } from '@/lib/services/user-service';
-// Validation happens inside services now
+import { apiClient } from '@/lib/api-client';
 import type { User } from '@/types/auth';
 
 interface AuthContextType {
@@ -24,7 +23,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const userService = new UserService();
+// API client is used instead of direct service imports
 
 /**
  * Provides authentication state and actions to descendant components.
@@ -53,9 +52,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const token = localStorage.getItem('authToken');
         if (token) {
           // Verify token by fetching profile
-          const userProfile = await userService.findById(token); // This would need to be adjusted based on your JWT structure
+          const userProfile = await apiClient.getUserProfile(token); // This would need to be adjusted based on your JWT structure
           if (userProfile) {
-            setUser(userProfile);
+            setUser(userProfile as unknown as User);
           } else {
             localStorage.removeItem('authToken');
           }
@@ -72,8 +71,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string) => {
-    try {      // Authenticate user (validation happens in the service)
-      const authenticatedUser = await userService.authenticate(email, password) as unknown as User;
+    try { // Authenticate user (validation happens in the service)
+      const authenticatedUser = await apiClient.authenticate(email, password) as unknown as User;
       if (!authenticatedUser) {
         throw new Error('Invalid email or password');
       }
@@ -88,7 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = async (data: any) => {
     try {
       // Create user (validation happens in the service)
-      const newUser = await userService.create(data) as unknown as User;
+      const newUser = await apiClient.register(data) as unknown as User;
 
       setUser(newUser as unknown as User);
       router.push('/onboarding');
@@ -112,8 +111,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error('No user logged in');
     }
 
-    try {      // Update user (validation happens in the service)
-      const updatedUser = await userService.update(user.id, data) as unknown as User;
+    try { // Update user (validation happens in the service)
+      const updatedUser = await apiClient.updateUserProfile(user.id, data as any) as unknown as User;
 
       setUser(updatedUser as unknown as User);
     } catch (error) {
@@ -127,11 +126,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const refreshedUser = await userService.findById(user.id);
+              const refreshedUser = await apiClient.getUserProfile(user.id);
       if (!refreshedUser) {
         throw new Error('User not found');
       }
-      setUser(refreshedUser);
+      setUser(refreshedUser as unknown as User);
     } catch (error) {
       setUser(null);
       router.push('/login');

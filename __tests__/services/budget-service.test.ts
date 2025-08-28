@@ -1,6 +1,7 @@
 import { query } from '@/lib/database';
 import { BudgetService } from '@/lib/services/budget-service';
 import { budgetSchemas } from '@/lib/validation-schemas';
+
 import { createMockQueryResult, createEmptyQueryResult } from '../helpers/db-mocks';
 
 // Mock the database

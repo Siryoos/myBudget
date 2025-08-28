@@ -63,7 +63,7 @@
     "docker:prod": "docker compose -f docker-compose.prod.yml up -d",
     "docker:build": "docker compose -f docker-compose.yml build",
     "docker:build:prod": "docker compose -f docker-compose.prod.yml build",
-    "security:check": "tsx scripts/security-check.ts",
+    "security:check": "node scripts/security-check.js",
     "security:audit": "npm audit --audit-level=moderate",
     "security:fix": "npm audit fix",
     "security:validate": "npm run security:check && npm run security:audit",

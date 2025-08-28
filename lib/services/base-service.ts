@@ -1,6 +1,7 @@
+import type { QueryResult } from 'pg';
 import { z } from 'zod';
 
-import { query, QueryResult } from '@/lib/database';
+import { query } from '@/lib/database';
 
 // Base service class with common functionality
 export abstract class BaseService {

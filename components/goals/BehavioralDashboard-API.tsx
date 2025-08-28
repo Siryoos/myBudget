@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 
 import { useGoals, useMutation, useAuth } from '@/contexts/AppProvider';
-import { GoalsService } from '@/lib/services/goals-service';
+import { apiClient } from '@/lib/api-client';
 import { useTranslation } from '@/lib/useTranslation';
 import type { SavingsGoal, Achievement, QuickSaveData } from '@/types';
 
@@ -46,20 +46,21 @@ export function BehavioralDashboard({
   const createGoalState = useMutation(
     async (goalData: any) => {
       if (!user?.id) {throw new Error('User not authenticated');}
-      const goalsService = new GoalsService();
-      const result = await goalsService.create(user.id, goalData);
+      const result = await apiClient.createGoal({ ...goalData, userId: user.id });
       refreshGoals(); // Refresh after successful creation
       return result;
-    }
+    },
   );
 
   const addContributionState = useMutation(
     async ({ goalId, amount }: { goalId: string; amount: number }) => {
-      const goalsService = new GoalsService();
-      const result = await goalsService.contribute(goalId, amount);
+      const result = await apiClient.request(`/goals/${goalId}/contribute`, {
+        method: 'POST',
+        body: JSON.stringify({ amount }),
+      });
       refreshGoals(); // Refresh after successful contribution
       return result;
-    }
+    },
   );
   const [quickSaveHistory, setQuickSaveHistory] = useState<QuickSaveData[]>([]);
   const [activeTab, setActiveTab] = useState<'goals' | 'quick-save' | 'achievements' | 'insights'>('goals');

@@ -1,7 +1,8 @@
 import { query } from '@/lib/database';
 import { UserService } from '@/lib/services/user-service';
-import { createMockQueryResult, createEmptyQueryResult } from '../helpers/db-mocks';
 import { userSchemas } from '@/lib/validation-schemas';
+
+import { createMockQueryResult, createEmptyQueryResult } from '../helpers/db-mocks';
 
 // Mock the database
 jest.mock('@/lib/database', () => ({

@@ -224,9 +224,9 @@ export class MonitoringService {
     uptime: number;
     memoryUsage: NodeJS.MemoryUsage;
     metrics: {
-      api: ReturnType<typeof this.getApiMetricsSummary>;
-      errors: ReturnType<typeof this.getErrorMetricsSummary>;
-      performance: ReturnType<typeof this.getPerformanceMetricsSummary>;
+      api: any;
+      errors: any;
+      performance: any;
     };
   }> {
     const uptime = process.uptime();

@@ -5,7 +5,7 @@ import type { QueryResult, QueryResultRow } from 'pg';
  */
 export function createMockQueryResult<T extends QueryResultRow>(
   rows: T[],
-  command = 'SELECT'
+  command = 'SELECT',
 ): QueryResult<T> {
   return {
     rows,
@@ -20,7 +20,7 @@ export function createMockQueryResult<T extends QueryResultRow>(
  * Creates a mock empty QueryResult object
  */
 export function createEmptyQueryResult<T extends QueryResultRow>(
-  command = 'SELECT'
+  command = 'SELECT',
 ): QueryResult<T> {
   return createMockQueryResult<T>([], command);
 }
