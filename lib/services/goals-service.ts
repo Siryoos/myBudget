@@ -240,12 +240,15 @@ export class GoalsService extends BaseService {
     const queryString = `
       UPDATE milestones
       SET ${updates.join(', ')}
-      WHERE id = $${paramCount}
+      WHERE id = $${paramCount} AND goal_id = $${paramCount + 1}
       RETURNING *
     `;
-    values.push(milestoneId);
+    values.push(milestoneId, goalId);
 
     const result = await query(queryString, values);
+    if (!result.rows.length) {
+      throw new NotFoundError('Milestone', milestoneId);
+    }
     return this.mapDbMilestoneToMilestone(result.rows[0]);
   }
 
@@ -267,29 +270,26 @@ export class GoalsService extends BaseService {
     const result = await query(`
       UPDATE milestones
       SET is_completed = true, completed_date = CURRENT_DATE
-      WHERE id = $1
+      WHERE id = $1 AND goal_id = $2
       RETURNING *
-    `, [milestoneId]);
+    `, [milestoneId, goalId]);
 
+    if (!result.rows.length) {
+      throw new NotFoundError('Milestone', milestoneId);
+    }
     return this.mapDbMilestoneToMilestone(result.rows[0]);
   }
 
   async deleteMilestone(goalId: string, milestoneId: string): Promise<boolean> {
-    // Check if milestone exists and belongs to goal
-    const milestoneData = await query(
-      'SELECT * FROM milestones WHERE id = $1',
-      [milestoneId],
+    const result = await query(
+      'DELETE FROM milestones WHERE id = $1 AND goal_id = $2 RETURNING id',
+      [milestoneId, goalId],
     );
-    if (!milestoneData.rows.length || milestoneData.rows[0].goal_id !== goalId) {
+
+    if (!result.rows.length) {
       throw new NotFoundError('Milestone', milestoneId);
     }
-
-    const result = await query(
-      'DELETE FROM milestones WHERE id = $1 RETURNING id',
-      [milestoneId],
-    );
-
-    return result.rows.length > 0;
+    return true;
   }
 
   // Automation rule methods
@@ -354,31 +354,28 @@ export class GoalsService extends BaseService {
     const queryString = `
       UPDATE automation_rules
       SET ${updates.join(', ')}
-      WHERE id = $${paramCount}
+      WHERE id = $${paramCount} AND goal_id = $${paramCount + 1}
       RETURNING *
     `;
-    values.push(ruleId);
+    values.push(ruleId, goalId);
 
     const result = await query(queryString, values);
+    if (!result.rows.length) {
+      throw new NotFoundError('Automation rule', ruleId);
+    }
     return this.mapDbAutomationRuleToAutomationRule(result.rows[0]);
   }
 
   async deleteAutomationRule(goalId: string, ruleId: string): Promise<boolean> {
-    // Check if rule exists and belongs to goal
-    const ruleData = await query(
-      'SELECT * FROM automation_rules WHERE id = $1',
-      [ruleId],
+    const result = await query(
+      'DELETE FROM automation_rules WHERE id = $1 AND goal_id = $2 RETURNING id',
+      [ruleId, goalId],
     );
-    if (!ruleData.rows.length || ruleData.rows[0].goal_id !== goalId) {
+
+    if (!result.rows.length) {
       throw new NotFoundError('Automation rule', ruleId);
     }
-
-    const result = await query(
-      'DELETE FROM automation_rules WHERE id = $1 RETURNING id',
-      [ruleId],
-    );
-
-    return result.rows.length > 0;
+    return true;
   }
 
   private async getGoalMilestones(goalId: string): Promise<Milestone[]> {
@@ -417,7 +414,9 @@ export class GoalsService extends BaseService {
       description: dbGoal.description,
       targetAmount: dbGoal.target_amount == null ? 0 : parseFloat(dbGoal.target_amount),
       currentAmount: dbGoal.current_amount == null ? 0 : parseFloat(dbGoal.current_amount),
-      targetDate: dbGoal.target_date.toISOString().split('T')[0],
+      targetDate: typeof dbGoal.target_date === 'string'
+        ? dbGoal.target_date
+        : dbGoal.target_date?.toISOString().slice(0, 10),
       category: dbGoal.category,
       priority: dbGoal.priority,
       isActive: dbGoal.is_active,
@@ -427,8 +426,8 @@ export class GoalsService extends BaseService {
       framingType: dbGoal.framing_type,
       lossAvoidanceDescription: dbGoal.loss_avoidance_description,
       achievementDescription: dbGoal.achievement_description,
-      createdAt: dbGoal.created_at.toISOString(),
-      updatedAt: dbGoal.updated_at.toISOString(),
+      createdAt: typeof dbGoal.created_at === 'string' ? dbGoal.created_at : dbGoal.created_at.toISOString(),
+      updatedAt: typeof dbGoal.updated_at === 'string' ? dbGoal.updated_at : dbGoal.updated_at.toISOString(),
     };
   }
 
@@ -453,9 +452,9 @@ export class GoalsService extends BaseService {
 
     switch (dbRule.type) {
       case 'fixed':
-        return { ...base, type: 'fixed', amount: parseFloat(dbRule.amount) };
+        return { ...base, type: 'fixed', amount: dbRule.amount == null ? 0 : Number(dbRule.amount) };
       case 'percentage':
-        return { ...base, type: 'percentage', percentage: parseFloat(dbRule.percentage) };
+        return { ...base, type: 'percentage', percentage: dbRule.percentage == null ? 0 : Number(dbRule.percentage) };
       case 'round-up':
         return { ...base, type: 'round-up' };
       case 'remainder':
