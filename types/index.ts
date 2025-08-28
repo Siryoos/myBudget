@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
-import type { ApiResponse as ApiResponseFromApi, Milestone as MilestoneFromApi, AutomationRule as AutomationRuleFromApi, RuleCondition as RuleConditionFromApi } from './api';
+import type { Milestone as MilestoneFromApi, AutomationRule as AutomationRuleFromApi, RuleCondition as RuleConditionFromApi } from './api';
+import { UserRole } from './auth';
 
 // Core financial types
 export interface Transaction {
@@ -296,28 +297,14 @@ export interface TimeSeriesData {
   category?: string
 }
 
-// Re-export from api.ts to avoid duplication
-export type ApiResponse<T = unknown> = ApiResponseFromApi<T>;
+// Import from error-handling.ts to avoid duplication
+import type { SuccessResponse, ErrorResponse } from '@/lib/error-handling';
 
-export interface SuccessResponse<T = unknown> {
-  success: true
-  data: T
-  timestamp: string
-  requestId?: string
-}
+// Define ApiResponse as a union type
+export type ApiResponse<T = unknown> = SuccessResponse<T> | ErrorResponse;
 
-export interface ErrorResponse {
-  success: false
-  error: {
-    code: string
-    message: string
-    details?: any
-    retryAfter?: number
-  }
-  timestamp: string
-  requestId?: string
-  path?: string
-}
+// Re-export for convenience
+export type { SuccessResponse, ErrorResponse };
 
 export interface PaginatedResponse<T = unknown> {
   data: T[]
@@ -483,7 +470,8 @@ export interface User {
   updatedAt: string
 }
 
-export type UserRole = 'user' | 'admin' | 'premium'
+// Re-export UserRole from auth.ts to avoid duplication
+export { UserRole }
 
 export interface Notification {
   id: string

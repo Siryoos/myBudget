@@ -9,7 +9,7 @@ import {
   ForbiddenError,
 } from './base-service';
 
-export interface ErrorResponse {
+export interface ServiceErrorResponse {
   success: false;
   error: string;
   code: string;

@@ -69,41 +69,22 @@ const createMockFile = (
   // Mock the async methods if they don't exist in the test environment
   if (!file.text) {
     (file as any).text = jest.fn().mockResolvedValue(
-      typeof content === 'string' ? content : new TextDecoder().decode(content),
+      new TextDecoder().decode(payload)
     );
   }
 
   if (!file.arrayBuffer) {
-    (file as any).arrayBuffer = jest.fn().mockResolvedValue(
-      typeof content === 'string'
-        ? new TextEncoder().encode(content).buffer
-        : content.buffer,
-    );
+    (file as any).arrayBuffer = jest.fn().mockResolvedValue(payload.buffer);
   }
 
   if (!file.slice) {
-    (file as any).slice = jest.fn().mockImplementation((start?: number, end?: number, contentType?: string) => {
-      const slicedContent = typeof content === 'string'
-        ? content.slice(start, end)
-        : content.slice(start, end);
-      
-      // Create a simple blob-like object with arrayBuffer method
-      const slicedBlob = {
-        size: slicedContent.length,
-        type: contentType || options.type,
-        arrayBuffer: jest.fn().mockResolvedValue(
-          typeof slicedContent === 'string'
-            ? new TextEncoder().encode(slicedContent).buffer
-            : slicedContent.buffer
-        ),
-        text: jest.fn().mockResolvedValue(
-          typeof slicedContent === 'string' ? slicedContent : new TextDecoder().decode(slicedContent)
-        ),
-        slice: jest.fn(),
-      };
-      
-      return slicedBlob;
-    });
+    (file as any).slice = jest
+      .fn()
+      .mockImplementation((start?: number, end?: number, contentType?: string) => {
+        const s = start ?? 0;
+        const e = end ?? payload.byteLength;
+        return blob.slice(s, e, contentType ?? options.type);
+      });
   }
 
   return file;

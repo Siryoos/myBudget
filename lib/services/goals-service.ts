@@ -310,8 +310,8 @@ export class GoalsService extends BaseService {
     `, [
       goalId,
       validatedData.type,
-      validatedData.amount || null,
-      validatedData.percentage || null,
+      validatedData.type === 'fixed' ? validatedData.amount : null,
+      validatedData.type === 'percentage' ? validatedData.percentage : null,
       validatedData.frequency,
       validatedData.isActive || true,
     ]);
@@ -445,15 +445,23 @@ export class GoalsService extends BaseService {
   }
 
   private mapDbAutomationRuleToAutomationRule(dbRule: any): AutomationRule {
-    return {
+    const base = {
       id: dbRule.id,
-      goalId: dbRule.goal_id,
-      type: dbRule.type,
-      amount: dbRule.amount ? parseFloat(dbRule.amount) : null,
-      percentage: dbRule.percentage ? parseFloat(dbRule.percentage) : null,
       frequency: dbRule.frequency,
       isActive: dbRule.is_active,
-      createdAt: dbRule.created_at.toISOString(),
     };
+
+    switch (dbRule.type) {
+      case 'fixed':
+        return { ...base, type: 'fixed', amount: parseFloat(dbRule.amount) };
+      case 'percentage':
+        return { ...base, type: 'percentage', percentage: parseFloat(dbRule.percentage) };
+      case 'round-up':
+        return { ...base, type: 'round-up' };
+      case 'remainder':
+        return { ...base, type: 'remainder' };
+      default:
+        throw new Error(`Unknown automation rule type: ${dbRule.type}`);
+    }
   }
 }
