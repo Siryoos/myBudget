@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import type { ApiResponse as ApiResponseFromApi, Milestone as MilestoneFromApi, AutomationRule as AutomationRuleFromApi, RuleCondition as RuleConditionFromApi } from './api';
 
 // Core financial types
 export interface Transaction {
@@ -39,29 +40,12 @@ export interface Budget {
 
 export type GoalCategory = 'emergency' | 'vacation' | 'home' | 'car' | 'wedding' | 'education' | 'retirement' | 'custom'
 
-export interface RuleCondition {
-  field: string
-  operator: 'equals' | 'greater_than' | 'less_than' | 'contains'
-  value: string | number
-}
+// Re-export from api.ts to avoid duplication
+export type RuleCondition = RuleConditionFromApi;
 
-export interface Milestone {
-  id: string
-  amount: number
-  description: string
-  isCompleted: boolean
-  completedDate?: Date
-}
-
-export interface AutomationRule {
-  id: string
-  type: 'fixed' | 'percentage' | 'round-up' | 'remainder'
-  amount?: number
-  percentage?: number
-  frequency: 'daily' | 'weekly' | 'biweekly' | 'monthly'
-  isActive: boolean
-  conditions?: RuleCondition[]
-}
+// Re-export from api.ts to avoid duplication
+export type Milestone = MilestoneFromApi;
+export type AutomationRule = AutomationRuleFromApi;
 
 export interface SavingsGoal {
   id: string
@@ -312,15 +296,8 @@ export interface TimeSeriesData {
   category?: string
 }
 
-// API response types
-export interface ApiResponse<T = unknown> {
-  success: boolean
-  data?: T
-  error?: string
-  message?: string
-  timestamp?: string
-  requestId?: string
-}
+// Re-export from api.ts to avoid duplication
+export type ApiResponse<T = unknown> = ApiResponseFromApi<T>;
 
 export interface SuccessResponse<T = unknown> {
   success: true

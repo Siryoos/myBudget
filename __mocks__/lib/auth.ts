@@ -1,5 +1,7 @@
 // Mock auth module for tests
-export const requireAuth = jest.fn((handler) => handler);
+export const requireAuth = jest.fn(<T extends (...args: any[]) => any>(handler: T) =>
+  jest.fn((...args: Parameters<T>): ReturnType<T> => handler(...args)),
+);
 
 export const hashPassword = jest.fn().mockResolvedValue('hashed-password');
 

@@ -243,13 +243,20 @@ export interface Contribution {
   source?: string;
 }
 
+export interface RuleCondition {
+  field: string;
+  operator: 'equals' | 'greater_than' | 'less_than' | 'contains';
+  value: string | number;
+}
+
 export interface AutomationRule {
   id: string;
-  type: 'fixed' | 'percentage' | 'round-up';
+  type: 'fixed' | 'percentage' | 'round-up' | 'remainder';
   amount?: number;
   percentage?: number;
-  frequency: 'daily' | 'weekly' | 'monthly';
+  frequency: 'daily' | 'weekly' | 'biweekly' | 'monthly';
   isActive: boolean;
+  conditions?: RuleCondition[];
 }
 
 export interface CreateGoalRequest {

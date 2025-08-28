@@ -6,7 +6,7 @@
 - ALWAYS use proper TypeScript types, avoid `any` unless absolutely necessary
 - When using `any`, add a comment explaining why it's needed
 - Prefer `unknown` over `any` when the type is truly unknown
-- Use type guards and type assertions properly: `as unknown as Type` for complex conversions
+- Prefer type guards or schema validation for complex conversions; avoid `as unknown as Type`
 
 ### Import Management
 - Use type-only imports when importing types: `import type { User } from './types'`

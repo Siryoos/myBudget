@@ -1,22 +1,5 @@
 import { FileValidator } from '../../lib/file-validation';
 
-// Mock the problematic verifyFileSignature method
-jest.spyOn(FileValidator, 'verifyFileSignature').mockImplementation(async (file: File, signatures?: Record<string, number[]>) => {
-  // Simple mock implementation
-  // For the test with fake data, check the file name
-  if (file.name === 'fake.jpg') {
-    return false; // This is the fake JPEG with wrong signature
-  }
-  
-  if (file.type === 'image/jpeg' && file.name.endsWith('.jpg')) {
-    return true;
-  }
-  if (file.type === 'image/png' && file.name.endsWith('.png')) {
-    return true;
-  }
-  return false;
-});
-
 // Constants for file validation tests
 const SHA256_HASH_SIZE = 32;
 const DEFAULT_FILE_SIZE = 1024 * 1024; // 1MB
@@ -60,8 +43,20 @@ const createMockFile = (
   options: { type: string },
   customSize?: number,
 ): File => {
-  const blob = new Blob([content as BlobPart], options);
-  const size = customSize || KILOBYTE * KILOBYTE;
+  const enc = new TextEncoder();
+  const base =
+    typeof content === 'string' ? enc.encode(content) : new Uint8Array(content);
+  const desired = customSize ?? base.byteLength || KILOBYTE * KILOBYTE;
+  let payload: Uint8Array;
+  if (desired <= base.byteLength) {
+    payload = base.slice(0, desired);
+  } else {
+    payload = new Uint8Array(desired);
+    payload.set(base);
+    // Fill remainder deterministically
+    for (let i = base.byteLength; i < desired; i++) payload[i] = 0x41; // 'A'
+  }
+  const blob = new Blob([payload], options);
 
   // Create a proper File object
   const file = new File([blob], name, {
@@ -69,14 +64,7 @@ const createMockFile = (
     lastModified: Date.now(),
   });
 
-  // Override size if custom size is provided
-  if (customSize) {
-    Object.defineProperty(file, 'size', {
-      value: size,
-      writable: false,
-      configurable: true,
-    });
-  }
+  // Size now naturally reflects the payload length; no override needed.
 
   // Mock the async methods if they don't exist in the test environment
   if (!file.text) {
@@ -228,6 +216,7 @@ describe('FileValidator', () => {
   });
 
   describe('verifyFileSignature', () => {
+    beforeAll(() => jest.restoreAllMocks());
     it('should verify JPEG signature', async () => {
       // JPEG magic numbers: FF D8 FF E0
       const jpegData = new Uint8Array(JPEG_SOI_MARKER);
@@ -250,6 +239,19 @@ describe('FileValidator', () => {
   });
 
   describe('validateFile', () => {
+    beforeAll(() => {
+      jest
+        .spyOn(FileValidator, 'verifyFileSignature')
+        .mockImplementation(async (file: File) => {
+          if (file.name === 'fake.jpg') return false;
+          if (file.type === 'image/jpeg' && file.name.endsWith('.jpg')) return true;
+          if (file.type === 'image/png' && file.name.endsWith('.png')) return true;
+          return false;
+        });
+    });
+    afterAll(() => {
+      jest.restoreAllMocks();
+    });
     it('should accept valid image files', async () => {
       const jpegData = new Uint8Array([0xFF, 0xD8, 0xFF, 0xE0]);
       const file = createMockFile(jpegData, 'test.jpg', { type: 'image/jpeg' });

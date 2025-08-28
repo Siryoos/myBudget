@@ -352,14 +352,16 @@ class BundleAnalyzer {
   /**
    * Format bytes to human readable format
    */
-  private formatBytes(bytes: number): string {
-    if (bytes === 0) {return '0 Bytes';}
+  public formatBytes(bytes: number): string {
+    if (!Number.isFinite(bytes) || bytes <= 0) return '0 Bytes';
 
     const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-
-    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB'];
+    let i = Math.floor(Math.log(bytes) / Math.log(k));
+    if (i < 0) i = 0;
+    if (i >= sizes.length) i = sizes.length - 1;
+    const value = bytes / Math.pow(k, i);
+    return `${parseFloat(value.toFixed(2))} ${sizes[i]}`;
   }
 
   /**

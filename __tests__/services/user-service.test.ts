@@ -47,7 +47,10 @@ describe('UserService', () => {
         language: 'de' as const,
       };
 
-      mockQuery.mockResolvedValueOnce(createMockQueryResult([mockUser], 'SELECT'));
+      // 1) email uniqueness check -> no rows
+      mockQuery.mockResolvedValueOnce(createEmptyQueryResult('SELECT'));
+      // 2) insert -> returns created row
+      mockQuery.mockResolvedValueOnce(createMockQueryResult([mockUser], 'INSERT'));
 
       const result = await userService.create(userData);
 
