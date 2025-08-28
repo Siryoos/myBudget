@@ -1,4 +1,4 @@
-import type { PerformanceMetrics } from '@/types';
+// Performance metrics types are defined below
 
 /**
  * Performance Monitoring System

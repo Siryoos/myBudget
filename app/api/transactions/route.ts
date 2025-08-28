@@ -37,14 +37,11 @@ export const GET = requireAuth(async (request: AuthenticatedRequest) => {
       maxAmount: searchParams.get('maxAmount') ? parseFloat(searchParams.get('maxAmount')!) : undefined,
     };
 
-    // Validate filters
-    const validatedFilters = transactionService.validateData(transactionSchemas.filter, filters);
-
-    // Get transactions using service
+    // Get transactions using service (validation happens internally)
     const result = await transactionService.findByUserId(
       request.user.id,
-      validatedFilters,
-      { page: validatedFilters.page, limit: validatedFilters.limit },
+      filters,
+      { page: filters.page || 1, limit: filters.limit || 20 },
     );
 
     return createPaginatedResponse(
@@ -97,11 +94,8 @@ export const PUT = requireAuth(async (request: AuthenticatedRequest) => {
       throw new Error('Transaction ID is required');
     }
 
-    // Validate update data
-    const validatedData = transactionService.validateData(transactionSchemas.update, updateData);
-
-    // Update transaction using service
-    const transaction = await transactionService.update(id, validatedData);
+    // Update transaction using service (validation happens internally)
+    const transaction = await transactionService.update(id, updateData);
 
     return createSuccessResponse({ ...transaction, requestId }, requestId);
 

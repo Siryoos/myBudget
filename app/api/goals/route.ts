@@ -38,10 +38,7 @@ const getGoalsHandler = async (request: AuthenticatedRequest) => {
   }
 };
 
-export const GET = withFullOptimization(
-  (request: OptimizedRequest) => `${request.url}-user-${(request as any).user?.id}`,
-  'get-goals',
-)(requireAuth(getGoalsHandler));
+export const GET = requireAuth(getGoalsHandler);
 
 export const POST = requireAuth(async (request: AuthenticatedRequest) => {
   const requestId = generateRequestId();

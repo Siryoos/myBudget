@@ -5,7 +5,7 @@ import type { ReactNode } from 'react';
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 import { UserService } from '@/lib/services/user-service';
-import { userSchemas } from '@/lib/validation-schemas';
+// Validation happens inside services now
 import type { User } from '@/types/auth';
 
 interface AuthContextType {
@@ -72,17 +72,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string) => {
-    try {
-      // Validate input
-      const validatedData = userService.validateData(userSchemas.login, { email, password });
-
-      // Authenticate user
-      const authenticatedUser = await userService.authenticate(email, password);
+    try {      // Authenticate user (validation happens in the service)
+      const authenticatedUser = await userService.authenticate(email, password) as unknown as User;
       if (!authenticatedUser) {
         throw new Error('Invalid email or password');
       }
 
-      setUser(authenticatedUser);
+      setUser(authenticatedUser as unknown as User);
       router.push('/dashboard');
     } catch (error) {
       throw error;
@@ -91,13 +87,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = async (data: any) => {
     try {
-      // Validate input
-      const validatedData = userService.validateData(userSchemas.create, data);
+      // Create user (validation happens in the service)
+      const newUser = await userService.create(data) as unknown as User;
 
-      // Create user
-      const newUser = await userService.create(validatedData);
-
-      setUser(newUser);
+      setUser(newUser as unknown as User);
       router.push('/onboarding');
     } catch (error) {
       throw error;
@@ -119,14 +112,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error('No user logged in');
     }
 
-    try {
-      // Validate input
-      const validatedData = userService.validateData(userSchemas.update, data);
+    try {      // Update user (validation happens in the service)
+      const updatedUser = await userService.update(user.id, data) as unknown as User;
 
-      // Update user
-      const updatedUser = await userService.update(user.id, validatedData);
-
-      setUser(updatedUser);
+      setUser(updatedUser as unknown as User);
     } catch (error) {
       throw error;
     }

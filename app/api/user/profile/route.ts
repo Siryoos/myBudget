@@ -41,12 +41,11 @@ export const PUT = requireAuth(async (request: AuthenticatedRequest) => {
     await validator.validateRequestSize();
     validator.validateHeaders();
 
-    // Parse and validate request body
+    // Parse request body
     const body = await request.json();
-    const validatedData = userService.validateData(userSchemas.update, body);
 
-    // Update user profile using service
-    const updatedProfile = await userService.update(request.user.id, validatedData);
+    // Update user profile using service (validation happens internally)
+    const updatedProfile = await userService.update(request.user.id, body);
 
     return createSuccessResponse({
       message: 'Profile updated successfully',

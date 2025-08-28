@@ -41,8 +41,8 @@ export const GET = async (request: NextRequest) => {
                          healthData.status === 'unhealthy' || !databaseHealthy ? 'unhealthy' : 'degraded';
 
     return createSuccessResponse({
-      status: overallStatus,
       ...response,
+      status: overallStatus,
     }, requestId);
 
   } catch (error) {

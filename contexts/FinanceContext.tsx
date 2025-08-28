@@ -95,11 +95,11 @@ export function FinanceProvider({ children, userId }: { children: ReactNode; use
 
     try {
       const budgetsData = await budgetService.findByUserId(userId);
-      setBudgets(budgetsData);
+      setBudgets(budgetsData as Budget[]);
 
       // Set the most recent budget as active if none is set
       if (budgetsData.length > 0 && !activeBudget) {
-        setActiveBudget(budgetsData[0]);
+        setActiveBudget(budgetsData[0] as Budget);
       }
     } catch (error) {
       setBudgetsError(error instanceof Error ? error.message : 'Failed to load budgets');
