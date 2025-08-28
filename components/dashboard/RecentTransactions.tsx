@@ -21,6 +21,16 @@ interface RecentTransactionsProps {
   showAmounts?: boolean
 }
 
+/**
+ * Renders a card showing a list of recent financial transactions with filtering, per-item details, and quick summary stats.
+ *
+ * Displays transactions from the application transactions context, allows switching between "All", "Income", and "Expense" filters,
+ * and shows category badges, amounts, relative dates, and quick totals for the currently visible transactions.
+ *
+ * @param limit - Maximum number of transactions to display (default: 5).
+ * @param showCategories - Whether to render category badges for each transaction (default: true).
+ * @param showAmounts - Whether to render formatted transaction amounts (default: true).
+ */
 export function RecentTransactions({
   limit = 5,
   showCategories = true,

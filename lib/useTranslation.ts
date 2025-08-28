@@ -1,6 +1,24 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation as useI18nTranslation } from 'react-i18next';
 
+/**
+ * React hook that wraps react-i18next's translation utilities and exposes a curated i18n API.
+ *
+ * Uses react-i18next's useTranslation(namespace) under the hood and returns a safe translate
+ * function plus helpers for language/resource management.
+ *
+ * @param namespace - Optional namespace to scope translations (passed to react-i18next's hook).
+ * @returns An object containing:
+ *  - `t`: safe translate function that returns the key on error,
+ *  - `i18n`: the underlying i18n instance,
+ *  - `ready`: boolean indicating whether translations are ready,
+ *  - `changeLanguage(language)`: async language switcher,
+ *  - `getCurrentLanguage()`: current language code,
+ *  - `getAvailableLanguages()`: available language codes,
+ *  - resource helpers: `hasResourceBundle`, `loadNamespaces`, `loadLanguages`, `reloadResources`,
+ *    `getDataByLanguage`, `hasLoadedNamespace`, `getResource`, `addResource`, `addResources`,
+ *    `addResourceBundle`, `removeResourceBundle`.
+ */
 export function useTranslation(namespace?: string) {
   const { t, i18n, ready } = useI18nTranslation(namespace);
   const [isReady, setIsReady] = useState(ready);

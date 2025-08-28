@@ -163,7 +163,13 @@ export function getDirection(locale: string): 'ltr' | 'rtl' {
 }
 
 /**
- * Convert number to locale-specific digits
+ * Convert Arabic/Latin digits in a number or numeric string into the locale's digit glyphs.
+ *
+ * Falls back to English digits when the locale is not recognized. Non-digit characters are preserved.
+ *
+ * @param num - Numeric value or numeric string to convert.
+ * @param locale - Locale code used to select digit glyphs (e.g., 'en', 'fa', 'ar').
+ * @returns The input formatted as a string with digits replaced by the locale's digit glyphs.
  */
 export function toLocaleDigits(num: number | string, locale: string): string {
   const digits = NUMBER_SYSTEMS[locale as keyof typeof NUMBER_SYSTEMS] || NUMBER_SYSTEMS.en;
@@ -179,7 +185,14 @@ export function formatNumber(num: number, locale: string, options?: Intl.NumberF
 }
 
 /**
- * Format currency with locale-specific formatting
+ * Format a numeric amount as a locale-aware currency string.
+ *
+ * Uses the module's currency configuration for the given `locale` (symbol, placement,
+ * decimal count and separators) and delegates numeric formatting to `formatNumber`.
+ *
+ * @param amount - The monetary value in major units (e.g., 1234.5 represents 1,234.50)
+ * @param locale - Locale key used to look up currency configuration (falls back to `en`)
+ * @returns A formatted currency string including the currency symbol in the configured position
  */
 export function formatCurrency(amount: number, locale: string): string {
   const config = CURRENCY_CONFIG[locale as keyof typeof CURRENCY_CONFIG] || CURRENCY_CONFIG.en;
@@ -277,7 +290,12 @@ export function getCurrencySymbol(locale: string): string {
 }
 
 /**
- * Get locale-specific currency code
+ * Returns the ISO 4217 currency code for the given locale.
+ *
+ * Falls back to the default English currency configuration if the locale is not recognized.
+ *
+ * @param locale - Locale identifier (e.g., `'en'`, `'fa'`, `'ar'`) used to look up the currency configuration
+ * @returns The currency code (e.g., `USD`, `IRR`, `SAR`) for the resolved locale
  */
 export function getCurrencyCode(locale: string): string {
   const config = CURRENCY_CONFIG[locale as keyof typeof CURRENCY_CONFIG] || CURRENCY_CONFIG.en;

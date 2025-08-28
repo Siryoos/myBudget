@@ -14,6 +14,28 @@ export interface UseErrorHandlerOptions {
   strategies?: RecoveryStrategy[];
 }
 
+/**
+ * React hook that centralizes error handling with optional recovery, toast notifications, and local error state.
+ *
+ * The returned handlers attempt configured recovery strategies first; if any strategy reports it can recover and
+ * its `recover` call completes successfully, the error is considered handled and no state update or notification is made.
+ * If recovery does not occur (or all strategies fail), the hook stores the Error in local state, derives an error
+ * message, optionally shows a toast (enabled by default), and invokes an optional `onError` callback.
+ *
+ * Duplicate error occurrences (same string) within ~1 second are ignored to prevent rapid repeated handling.
+ *
+ * @param options - Optional configuration:
+ *   - showToast?: boolean — whether to show a toast for unhandled errors (default: true).
+ *   - onError?: (error: Error, message: string) => void — callback invoked when an error is ultimately handled/shown.
+ *   - strategies?: RecoveryStrategy[] — ordered list of recovery strategies to attempt before showing the error.
+ * @returns An object with:
+ *   - error: Error | null — the last stored error (null if none).
+ *   - isError: boolean — whether an error is currently stored.
+ *   - errorMessage: string | null — the derived message for the stored error.
+ *   - handle: (error: unknown) => Promise<void> — primary async handler that runs recovery and then handles the error.
+ *   - reset: () => void — clears stored error state.
+ *   - throwError: (error: Error | string) => void — convenience that wraps/forwards an Error or string to `handle`.
+ */
 export function useErrorHandler(options: UseErrorHandlerOptions = {}) {
   const [error, setError] = useState<Error | null>(null);
   const [isError, setIsError] = useState(false);

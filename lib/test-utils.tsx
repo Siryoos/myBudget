@@ -35,6 +35,18 @@ interface TestWrapperProps {
   router?: Partial<NextRouter>;
 }
 
+/**
+ * Composes mock Theme, Auth, and App providers around `children` for testing.
+ *
+ * Use this wrapper when rendering components in tests to provide consistent
+ * application context (theme, authentication state, and app state).
+ *
+ * @param children - React nodes to render within the composed providers.
+ * @param initialAuthState - Optional initial authentication context injected into the MockAuthProvider.
+ * @param initialAppState - Optional initial application context injected into the MockAppProvider; its `theme` value also seeds the MockThemeProvider.
+ * @param router - Optional partial Next.js router object that can be passed alongside the wrapper (not used directly by the wrapper).
+ * @returns A JSX element that wraps `children` with MockThemeProvider, MockAuthProvider, and MockAppProvider.
+ */
 export function TestWrapper({ 
   children, 
   initialAuthState = {}, 
@@ -52,7 +64,18 @@ export function TestWrapper({
   );
 }
 
-// Custom render function with providers
+/**
+ * Renders a React element wrapped with the library's test providers (theme, auth, app).
+ *
+ * Renders `ui` using React Testing Library's `render` while wrapping it in the TestWrapper
+ * so components under test receive the same provider composition used across tests.
+ *
+ * @param ui - The React element to render.
+ * @param options.initialAuthState - Optional initial authentication state for the Auth provider.
+ * @param options.initialAppState - Optional initial application state for the App provider.
+ * @param options.router - Optional partial Next.js router to provide to the TestWrapper.
+ * @returns The RenderResult returned by React Testing Library's `render`.
+ */
 export function renderWithProviders(
   ui: ReactElement,
   options: RenderOptions & {
@@ -282,7 +305,17 @@ export const mockFunctions = {
   },
 };
 
-// Test environment setup
+/**
+ * Installs common Jest test-environment hooks and mocks for tests.
+ *
+ * Sets a global `fetch` mock and replaces `console.log`, `console.warn`, and `console.error`
+ * with jest mocks for the duration of the test suite, restoring the original console methods
+ * after all tests run. Also clears and resets all Jest mocks before each test.
+ *
+ * This function registers lifecycle hooks (beforeAll, afterAll, beforeEach) and therefore
+ * must be called from a Jest test context (e.g., at the top level of a test file or inside a
+ * test setup module).
+ */
 export function setupTestEnvironment() {
   // Mock fetch globally
   global.fetch = jest.fn();

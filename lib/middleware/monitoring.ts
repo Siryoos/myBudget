@@ -16,7 +16,17 @@ export interface MonitoredResponse extends NextResponse {
   };
 }
 
-// Middleware to track API metrics
+/**
+ * Wraps a request handler to capture and record API metrics and errors.
+ *
+ * The returned middleware records request start time, endpoint, HTTP method, response status and duration,
+ * extracts user context (x-user-id, user-agent, x-forwarded-for) from headers, and forwards those values to the monitoring service.
+ * On success it records API metrics and, in development mode, injects `x-response-time` and `x-request-id` headers into the response.
+ * On failure it records error metrics (including error message and stack when available) and re-throws the error.
+ *
+ * @param handler - The original request handler to wrap. It receives a `MonitoredRequest` (augmented with monitoring metadata) and must return a `NextResponse`.
+ * @returns A handler function with identical signature that adds monitoring around the original handler.
+ */
 export function withMonitoring(
   handler: (request: MonitoredRequest) => Promise<NextResponse>
 ) {
@@ -90,7 +100,16 @@ export function withMonitoring(
   };
 }
 
-// Middleware to track performance metrics
+/**
+ * Wraps a request handler to measure and report API performance metrics.
+ *
+ * The returned async handler records response time, an estimated database query count,
+ * and current heap memory (heapUsed) to monitoringService.recordPerformanceMetrics for both
+ * successful and failing executions. Any error thrown by the wrapped handler is re-thrown.
+ *
+ * @param handler - Request handler that accepts a MonitoredRequest and returns a Promise<NextResponse>.
+ * @returns An async handler that instruments performance and delegates to `handler`.
+ */
 export function withPerformanceMonitoring(
   handler: (request: MonitoredRequest) => Promise<NextResponse>
 ) {
@@ -139,14 +158,29 @@ export function withPerformanceMonitoring(
   };
 }
 
-// Combined middleware that includes both monitoring and performance tracking
+/**
+ * Composes monitoring and performance middleware around a request handler.
+ *
+ * Wraps `handler` first with performance monitoring and then with API/error monitoring,
+ * returning a new handler that records performance metrics, API metrics, and errors.
+ *
+ * @param handler - The original request handler that accepts a MonitoredRequest and returns a NextResponse.
+ * @returns A handler function with both monitoring and performance instrumentation applied.
+ */
 export function withFullMonitoring(
   handler: (request: MonitoredRequest) => Promise<NextResponse>
 ) {
   return withMonitoring(withPerformanceMonitoring(handler));
 }
 
-// Health check endpoint data
+/**
+ * Retrieves health status from the monitoring service and falls back to a safe "unhealthy" payload on error.
+ *
+ * Calls `monitoringService.getHealthStatus()` and returns its result. If that call throws, the function logs the error and returns a fallback object:
+ * `{ status: 'unhealthy', uptime: number, memoryUsage: NodeJS.MemoryUsage, metrics: null, error: string }`.
+ *
+ * @returns The health status returned by the monitoring service or a fallback unhealthy status object containing `status`, `uptime`, `memoryUsage`, `metrics`, and an `error` message.
+ */
 export async function getHealthData() {
   try {
     return await monitoringService.getHealthStatus();

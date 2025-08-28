@@ -57,6 +57,19 @@ const TabButton = React.memo(({
 
 TabButton.displayName = 'TabButton';
 
+/**
+ * Renders the Financial Insights panel with three optional tabs: Tips, Insights, and Compare.
+ *
+ * The component manages local UI state (active tab, loading flags, dismissed insights, error and announcement messages),
+ * performs input validation/sanitization for actions, logs errors, and announces changes for screen readers.
+ * Data shown is currently sourced from mock providers (saving tips, insights, peer comparisons) and the component
+ * supports RTL layout. Tabs and many strings use translations with fallbacks.
+ *
+ * @param showSavingTips - If true, includes the "Tips" tab. Defaults to true.
+ * @param personalizedRecommendations - If true, includes the "Insights" (personalized recommendations) tab. Defaults to true.
+ * @param comparePeers - If true, includes the "Compare" (peer comparisons) tab. Defaults to true.
+ * @returns A JSX element containing the insights panel UI.
+ */
 function InsightsPanelContent({
   showSavingTips = true,
   personalizedRecommendations = true,

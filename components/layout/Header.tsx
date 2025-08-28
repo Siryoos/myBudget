@@ -20,6 +20,18 @@ interface HeaderProps {
   onMenuToggle?: () => void
 }
 
+/**
+ * Top navigation header for the app with branding, search, locale-aware links, notifications, and user menu.
+ *
+ * Renders a responsive header that:
+ * - Shows a mobile menu button which calls `onMenuToggle` when clicked.
+ * - Displays the app name and a time-of-day greeting determined client-side to avoid hydration mismatch.
+ * - Provides a controlled search input (hidden on small screens).
+ * - Includes a language switcher, notifications button with badge, and an accessible user dropdown menu whose items are localized and prefixed with the current locale.
+ *
+ * @param onMenuToggle - Optional callback invoked when the mobile menu button is pressed.
+ * @returns The header JSX element.
+ */
 export function Header({ onMenuToggle }: HeaderProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [greetingKey, setGreetingKey] = useState('app.greeting.morning'); // Default to morning

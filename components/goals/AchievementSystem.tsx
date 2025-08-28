@@ -168,6 +168,19 @@ interface AchievementSystemProps {
   onAchievementUnlocked?: (achievement: Achievement) => void
 }
 
+/**
+ * AchievementSystem React component — displays and manages a user's achievement list, progress, filters, and a leaderboard preview.
+ *
+ * Renders achievement cards with progress bars, category filters, total points, and optional leaderboard. Keeps internal achievement state (initialized from `baseAchievements`) and updates progress/unlock status reactively when `goals` change. Triggers a temporary unlock animation and invokes `onAchievementUnlocked` when an achievement is programmatically unlocked via the UI.
+ *
+ * Props:
+ * - goals: optional array of savings goals used to compute achievement progress and unlocks (e.g., completes, emergency fund ratio).
+ * - showLeaderboard: whether to show the static leaderboard preview.
+ * - enableNotifications: reserved flag (not used for external side effects in this component).
+ * - onAchievementUnlocked: optional callback invoked with the unlocked Achievement when the component triggers an unlock animation.
+ *
+ * @returns The component's JSX element.
+ */
 export function AchievementSystem({
   goals = [],
   showLeaderboard = true,

@@ -29,6 +29,20 @@ interface InsightsPanelProps {
   comparePeers?: boolean
 }
 
+/**
+ * InsightsPanel — a dashboard panel that displays saving tips, personalized recommendations,
+ * and peer comparisons in three switchable tabs.
+ *
+ * Renders mock data for tips, recommendations, and peer comparisons (used until a real
+ * insights service is available). Handles insight actions (navigate, execute, external)
+ * and provides a dismiss callback for individual insights.
+ *
+ * @param showSavingTips - If true, shows the "Tips" tab (default: true).
+ * @param personalizedRecommendations - If true, shows the "Recommendations" tab (default: true).
+ * @param comparePeers - If true, shows the "Peers" tab (default: true).
+ *
+ * @returns A React element containing the insights card with tabbed content.
+ */
 export function InsightsPanel({
   showSavingTips = true,
   personalizedRecommendations = true,

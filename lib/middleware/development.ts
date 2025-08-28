@@ -11,7 +11,14 @@ interface DevRequest extends NextRequest {
   };
 }
 
-// Development request logging middleware
+/**
+ * Wraps a request handler to attach lightweight development metadata, log the request/response, and emit development headers.
+ *
+ * The returned handler adds a `dev` object to the incoming request containing `startTime`, a generated `requestId`, `userAgent`, and `ipAddress`. In NODE_ENV === 'development' it logs the incoming request, logs the response status and duration (or errors), and sets `x-dev-request-id`, `x-dev-response-time`, and `x-dev-environment` headers on successful responses. Errors from the wrapped handler are rethrown after optional development logging.
+ *
+ * @param handler - The original request handler to wrap.
+ * @returns A handler with the same signature that augments the request and response with development information.
+ */
 export function withDevLogging(
   handler: (request: DevRequest) => Promise<NextResponse>
 ) {
@@ -74,7 +81,13 @@ export function withDevLogging(
   };
 }
 
-// Development API documentation middleware
+/**
+ * Middleware wrapper that serves an in-browser API documentation page for requests to /api/docs.
+ *
+ * If the incoming request's pathname is `/api/docs` or `/api/docs/`, returns a 200 HTML response
+ * produced by `generateApiDocs()` with `Content-Type: text/html` and `x-dev-api-docs: true`.
+ * For all other requests, delegates to the provided handler and returns its response.
+ */
 export function withDevApiDocs(
   handler: (request: DevRequest) => Promise<NextResponse>
 ) {
@@ -97,7 +110,16 @@ export function withDevApiDocs(
   };
 }
 
-// Development performance monitoring middleware
+/**
+ * Wraps a request handler to measure memory and execution time and inject development performance headers.
+ *
+ * This middleware records heap memory before and after the wrapped handler runs, computes the heapUsed delta,
+ * and measures request duration. It skips monitoring for common static asset extensions. On completion it sets
+ * the response headers `x-dev-memory-delta` and `x-dev-memory-peak` (both in bytes). When NODE_ENV is `development`
+ * and the request takes more than 100ms, a brief performance log is emitted to stdout.
+ *
+ * @returns A new request handler that performs the described performance measurements and returns the original response.
+ */
 export function withDevPerformance(
   handler: (request: DevRequest) => Promise<NextResponse>
 ) {
@@ -133,7 +155,16 @@ export function withDevPerformance(
   };
 }
 
-// Development error overlay middleware
+/**
+ * Wraps a request handler to render a development-friendly HTML error overlay on thrown errors.
+ *
+ * When the wrapped handler throws and NODE_ENV === 'development', returns a 500 HTML response
+ * produced by `generateErrorHtml(error)` with `Content-Type: text/html` and header `x-dev-error: true`.
+ * In non-development environments the original error is rethrown.
+ *
+ * @param handler - The request handler to wrap.
+ * @returns A new handler that delegates to `handler` and converts thrown errors into a development error page when applicable.
+ */
 export function withDevErrorOverlay(
   handler: (request: DevRequest) => Promise<NextResponse>
 ) {
@@ -158,7 +189,14 @@ export function withDevErrorOverlay(
   };
 }
 
-// Development hot reload detection middleware
+/**
+ * Wraps a request handler to inject development hot-reload indicator headers.
+ *
+ * When NODE_ENV is 'development', the returned handler sets `x-dev-hot-reload: enabled`
+ * and `x-dev-turbo: enabled` on successful responses to signal in-browser tooling.
+ *
+ * @returns A new handler that delegates to the provided `handler` and adds the hot-reload headers in development.
+ */
 export function withDevHotReload(
   handler: (request: DevRequest) => Promise<NextResponse>
 ) {
@@ -175,7 +213,13 @@ export function withDevHotReload(
   };
 }
 
-// Combined development middleware
+/**
+ * Wraps a request handler with the full set of development middleware: request logging, performance monitoring,
+ * API docs interception, error overlay rendering, and hot-reload indicators.
+ *
+ * @param handler - The original request handler to enhance.
+ * @returns A new handler equivalent to `handler` but augmented with development-only behavior and headers.
+ */
 export function withDevEnhancements(
   handler: (request: DevRequest) => Promise<NextResponse>
 ) {
@@ -190,7 +234,15 @@ export function withDevEnhancements(
   );
 }
 
-// Helper function to generate API documentation
+/**
+ * Generate a development-only HTML page documenting available API endpoints and local dev tooling.
+ *
+ * The returned string is a complete HTML document that lists predefined endpoints (method, path, description),
+ * includes development notices, monitoring links, and common local commands — intended to be served at
+ * /api/docs during development.
+ *
+ * @returns A string containing the full HTML for the API documentation page.
+ */
 function generateApiDocs(): string {
   const endpoints = [
     { method: 'GET', path: '/api/health', description: 'Health check endpoint' },
@@ -324,7 +376,16 @@ function generateApiDocs(): string {
 </html>`;
 }
 
-// Helper function to generate error HTML
+/**
+ * Generate an HTML development error overlay for a thrown error.
+ *
+ * Produces a styled, printable HTML page that includes the error message, stack trace (if available),
+ * timestamp, Node.js version, platform, and quick development actions/links. Intended for use only in
+ * development environments as a human-readable debugging aid.
+ *
+ * @param error - The thrown value or Error object to render; if not an Error an "Unknown error" message is shown.
+ * @returns A full HTML document as a string suitable for returning in an HTTP response.
+ */
 function generateErrorHtml(error: any): string {
   const errorMessage = error instanceof Error ? error.message : 'Unknown error';
   const stackTrace = error instanceof Error ? error.stack : '';

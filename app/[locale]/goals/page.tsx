@@ -5,6 +5,16 @@ import { GoalProgressTracker } from '@/components/goals/GoalProgressTracker';
 import { GoalWizard } from '@/components/goals/GoalWizard';
 import { useTranslation } from '@/lib/useTranslation';
 
+/**
+ * Client-side page for viewing and creating savings goals.
+ *
+ * Renders a full-screen loading state until the `useTranslation('goals')` hook is ready, then displays the goals UI:
+ * - Page header with translated title and subtitle from the "goals" namespace.
+ * - Left column: GoalWizard for creating goals (predefined templates, visual goal setting, milestone breakdown) and GoalProgressTracker (multiple visual styles, time remaining, projected completion, celebration animations).
+ * - Right column: AutomationSettings (auto transfers, round-ups, rule-based saving, and custom rules).
+ *
+ * This component has no external parameters and does not return values beyond rendering UI.
+ */
 export default function GoalsPage() {
   const { t, ready } = useTranslation('goals');
 

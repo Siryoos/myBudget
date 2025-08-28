@@ -99,6 +99,26 @@ const BUDGET_METHODS: BudgetMethod[] = [
   },
 ];
 
+/**
+ * Renders a UI for choosing a budgeting method, optionally customizing category allocations,
+ * creating a new budget via the API, and (optionally) showing a comparison table of methods.
+ *
+ * The component manages selection state, optional per-category percentage customizations,
+ * and validates percentages before creating a budget. Percentage validation:
+ * - If a method defines no percentage-based categories, validation passes.
+ * - If some required categories are missing percentages, validation allows partial coverage.
+ * - If all required categories have values, each value must be 0–100 and the total must equal 100 (±0.01).
+ *
+ * Side effects:
+ * - Calls `apiClient.createBudget` to create a budget with per-category allocations, colors, icons,
+ *   and an `isEssential` flag for certain categories.
+ * - On successful creation, optionally invokes `onMethodSelected(methodId)` and navigates to
+ *   `/budget/{budgetId}/configure` via the router.
+ *
+ * @param showComparison - When true (default), displays the method comparison panel when not viewing details.
+ * @param allowCustomization - When true (default), allows editing of predefined category percentages.
+ * @param onMethodSelected - Optional callback invoked with the selected method ID after a budget is successfully created.
+ */
 export function BudgetMethodSelector({
   showComparison = true,
   allowCustomization = true,

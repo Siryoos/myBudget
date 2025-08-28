@@ -73,7 +73,22 @@ export const createDatabaseError = (message: string = 'Database error', details?
   return new ApiError(message, ERROR_CODES.DATABASE_ERROR, 500, details);
 };
 
-// Error handler function
+/**
+ * Convert any thrown error into a standardized NextResponse containing an ErrorResponse.
+ *
+ * Maps known error types to appropriate HTTP status codes and error codes:
+ * - ApiError: uses the instance's message, code, details and statusCode.
+ * - ZodError: returns `VALIDATION_ERROR` with a structured `validationErrors` array (400).
+ * - NotFoundError / ValidationError / ConflictError / UnauthorizedError / ForbiddenError:
+ *   mapped to `NOT_FOUND` (404), `VALIDATION_ERROR` (400), `CONFLICT` (409), `UNAUTHORIZED` (401), and `FORBIDDEN` (403) respectively.
+ * - Errors whose message contains "database" (case-insensitive): returns `DATABASE_ERROR` (500) with a generic message.
+ * - Fallback: returns `INTERNAL_ERROR` (500) with the error message when available.
+ *
+ * @param error - The thrown value to normalize (can be any type).
+ * @param requestId - Optional request identifier to include in the response.
+ * @returns A NextResponse wrapping an ErrorResponse with `success: false`, an error message, an error code,
+ *          optional `details`, optional `requestId`, and the appropriate HTTP status.
+ */
 export function handleApiError(error: unknown, requestId?: string): NextResponse<ErrorResponse> {
   console.error('API Error:', error);
 
@@ -171,7 +186,14 @@ export function handleApiError(error: unknown, requestId?: string): NextResponse
   }, { status: 500 });
 }
 
-// Success response helpers
+/**
+ * Create a standardized JSON success response for API routes.
+ *
+ * @param data - The response payload to return as `data`.
+ * @param requestId - Optional request identifier to include in the response body.
+ * @param status - HTTP status code for the response (defaults to `200`).
+ * @returns A NextResponse whose JSON body is `{ success: true, data, requestId }`.
+ */
 export function createSuccessResponse<T>(
   data: T,
   requestId?: string,
@@ -184,6 +206,22 @@ export function createSuccessResponse<T>(
   }, { status });
 }
 
+/**
+ * Builds a standardized paginated successful JSON response.
+ *
+ * Returns a NextResponse with `{ success: true, data, pagination, requestId? }` suitable for list endpoints.
+ *
+ * @param data - Array of items for the current page.
+ * @param pagination - Pagination metadata:
+ *   - `page`: current page number
+ *   - `limit`: items per page
+ *   - `total`: total number of items across all pages
+ *   - `totalPages`: total number of pages
+ *   - `hasNext`: whether a next page exists
+ *   - `hasPrev`: whether a previous page exists
+ * @param requestId - Optional request identifier to echo back to the client.
+ * @returns A NextResponse containing `{ success: true; data: T[]; pagination; requestId? }`.
+ */
 export function createPaginatedResponse<T>(
   data: T[],
   pagination: {
@@ -209,7 +247,11 @@ export function createPaginatedResponse<T>(
   });
 }
 
-// Request ID generator
+/**
+ * Generates a unique request identifier.
+ *
+ * @returns A UUID string suitable for use as a request ID.
+ */
 export function generateRequestId(): string {
   return crypto.randomUUID();
 }

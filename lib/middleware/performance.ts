@@ -8,7 +8,15 @@ export interface OptimizedRequest extends NextRequest {
   };
 }
 
-// Response compression middleware
+/**
+ * Wraps a request handler to add response compression and short public caching headers.
+ *
+ * The returned handler invokes the original handler and, before returning the response,
+ * sets `Content-Encoding: gzip` and `Cache-Control: public, max-age=300` (5 minutes).
+ *
+ * @param handler - The inner request handler to wrap.
+ * @returns A handler that behaves like `handler` but adds gzip and cache-control headers to its responses.
+ */
 export function withCompression(
   handler: (request: OptimizedRequest) => Promise<NextResponse>
 ) {
@@ -23,7 +31,25 @@ export function withCompression(
   };
 }
 
-// Caching middleware for expensive operations
+/**
+ * Higher-order middleware that caches JSON responses for expensive operations.
+ *
+ * The returned wrapper computes a cache key using `cacheKey(request)`, checks for a cached
+ * value across user, goals, and achievements caches, and if present returns it immediately
+ * with headers `x-cache-status: HIT` and `x-cache-key`. On a cache miss it invokes the
+ * wrapped handler, reads the JSON body, stores the payload in one of the three caches
+ * (chosen by inspecting whether the key contains `user`, `goal`, or `achievement`) using
+ * the provided `ttl` (if any), and returns the JSON response with `x-cache-status: MISS`
+ * and `x-cache-key`.
+ *
+ * @param cacheKey - Function that derives a cache key from the incoming request.
+ *                   The key's contents are inspected to select which internal cache to use
+ *                   (contains `user`, `goal`, or `achievement`).
+ * @param ttl - Optional time-to-live for the cached entry (in seconds). If omitted the
+ *              underlying cache's default TTL is used.
+ * @returns A middleware wrapper that takes a handler and returns a Request -> Response function
+ *          with caching behavior and cache-status headers.
+ */
 export function withCaching(
   cacheKey: (request: OptimizedRequest) => string,
   ttl?: number
@@ -67,7 +93,16 @@ export function withCaching(
   };
 }
 
-// Performance monitoring middleware
+/**
+ * Creates middleware that measures and annotates request performance for a named operation.
+ *
+ * The returned wrapper starts a performance timer, attaches `request.performance` (with `startTime` and `operation`),
+ * invokes the underlying handler, ends the timer on both success and error, and adds `x-operation` and
+ * `x-performance-tracked` headers to the outgoing response.
+ *
+ * @param operationName - A human-readable name for the operation being tracked (used for the timer and `x-operation` header)
+ * @returns A higher-order handler that wraps the provided request handler with performance tracking
+ */
 export function withPerformanceTracking(
   operationName: string
 ) {
@@ -145,6 +180,21 @@ class RateLimiter {
 
 const rateLimiter = new RateLimiter();
 
+/**
+ * Creates a rate-limiting middleware wrapper for a request handler.
+ *
+ * The returned higher-order function enforces a per-identifier request limit within a sliding window.
+ * If the limit is exceeded the middleware returns an HTTP 429 JSON response containing an `error`
+ * message and `retryAfter` (seconds) and sets `Retry-After`, `X-RateLimit-Limit`, `X-RateLimit-Remaining`,
+ * and `X-RateLimit-Reset` headers. When allowed, the original handler is invoked.
+ *
+ * @param getIdentifier - Function that extracts a unique identifier (e.g., IP or user id) from the request.
+ *                        Defaults to `req.ip` or `'anonymous'`.
+ * @param options - Optional configuration to create a dedicated RateLimiter for this wrapper:
+ *                  - limit: maximum requests allowed per window (default 100 when not provided)
+ *                  - windowMs: window duration in milliseconds (default 60000 when not provided)
+ * @returns A function that accepts a request handler and returns a wrapped handler enforcing the rate limit.
+ */
 export function withRateLimit(
   getIdentifier: (request: OptimizedRequest) => string = (req) => req.ip || 'anonymous',
   options?: { limit?: number; windowMs?: number }
@@ -180,7 +230,18 @@ export function withRateLimit(
   };
 }
 
-// Request optimization middleware
+/**
+ * Wraps a request handler to inject URL defaults for common list endpoints and enforce pagination.
+ *
+ * For requests whose path includes `/goals` or `/transactions`:
+ * - If both `page` and `limit` are absent, the middleware adds `page=1` and `limit=20` and responds with a redirect to the optimized URL.
+ * - Otherwise, if `sort` is absent, the middleware adds `sort=created_at` and `order=desc` before delegating to the wrapped handler.
+ *
+ * The function returns a new handler that either issues the redirect (when pagination defaults are applied)
+ * or forwards the original request to the provided handler.
+ *
+ * @returns A wrapped handler that applies the described URL optimizations before invoking the original handler.
+ */
 export function withRequestOptimization(
   handler: (request: OptimizedRequest) => Promise<NextResponse>
 ) {
@@ -210,7 +271,15 @@ export function withRequestOptimization(
   };
 }
 
-// Database connection optimization middleware
+/**
+ * Wraps a request handler and adds database optimization headers to its response.
+ *
+ * Adds `X-Database-Optimized: true` to every response and sets `X-Query-Optimized`
+ * to `read-optimized` for GET requests or `write-optimized` for POST/PUT/PATCH requests.
+ *
+ * @param handler - The request handler to wrap.
+ * @returns A handler that forwards the request to `handler` and augments the resulting response headers.
+ */
 export function withDatabaseOptimization(
   handler: (request: OptimizedRequest) => Promise<NextResponse>
 ) {
@@ -232,7 +301,20 @@ export function withDatabaseOptimization(
   };
 }
 
-// Combined optimization middleware
+/**
+ * Composes a pipeline of common middlewares (performance tracking, caching, rate limiting,
+ * request optimization, database optimization, and compression) into a single handler wrapper.
+ *
+ * When provided, `operationName` enables performance tracking for the wrapped handler.
+ * When provided, `cacheKey` enables response caching keyed by the function's return value.
+ * The composed middleware order is: performance tracking (if enabled), caching (if enabled),
+ * rate limiting, request optimization, database optimization, then compression. Order is significant.
+ *
+ * @param cacheKey - Optional function that derives a cache key from the incoming request.
+ * @param operationName - Optional name used to label the performance-tracked operation.
+ * @returns A function that accepts a Next.js request handler and returns a new handler wrapped
+ *          with the composed optimizations.
+ */
 export function withFullOptimization(
   cacheKey?: (request: OptimizedRequest) => string,
   operationName?: string

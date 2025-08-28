@@ -17,24 +17,27 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Logging functions
+# log_info prints an informational message prefixed with `[INFO]` in blue to stdout.
 log_info() {
     echo -e "${BLUE}[INFO]${NC} $1"
 }
 
+# log_success prints a green "[SUCCESS]"-prefixed message to stdout.
 log_success() {
     echo -e "${GREEN}[SUCCESS]${NC} $1"
 }
 
+# log_warning prints a warning message prefixed with [WARNING] in yellow to stdout.
 log_warning() {
     echo -e "${YELLOW}[WARNING]${NC} $1"
 }
 
+# log_error prints an error message prefixed with a red "[ERROR]" tag.
 log_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
-# Check prerequisites
+# check_prerequisites verifies Docker and Docker Compose are installed and that `.env.production` exists (creates a template if missing); exits with a non‑zero code on failure.
 check_prerequisites() {
     log_info "Checking prerequisites..."
 
@@ -61,7 +64,7 @@ check_prerequisites() {
     log_success "Prerequisites check passed"
 }
 
-# Create environment template if it doesn't exist
+# create_env_template creates or overwrites .env.production with a production-oriented template containing defaults for database, Redis, JWT, application URLs, monitoring, security, and admin settings.
 create_env_template() {
     cat > .env.production << EOF
 # Production Environment Variables
@@ -99,7 +102,7 @@ MAINTENANCE_MODE=false
 EOF
 }
 
-# Setup SSL certificates
+# setup_ssl ensures nginx SSL certificates exist by creating the nginx/ssl directory, checking for `fullchain.pem` and `privkey.pem`, and generating self-signed certificates as a development fallback if real certificates are not present; it also logs guidance for obtaining production certificates.
 setup_ssl() {
     log_info "Setting up SSL certificates..."
 
@@ -123,7 +126,17 @@ setup_ssl() {
     log_success "SSL certificates configured"
 }
 
-# Build and deploy
+# deploy orchestrates a full production deployment: stops containers, builds images, brings services up, runs DB migrations, and seeds data.
+# 
+# It uses docker-compose.prod.yml and the `smartsave-app` service. Steps performed:
+# - Stops any running stacks (ignores errors if none are running).
+# - Builds Docker images with --no-cache and starts services in detached mode.
+# - Waits briefly for services to initialize, then runs `npm run db:migrate` inside the `smartsave-app` container.
+# - Attempts to run `npm run db:seed` but ignores failures (seeding is best-effort).
+# 
+# Side effects:
+# - Modifies running Docker containers and images.
+# - Exits on error for any command that fails (script is run with `set -e`), except where failures are explicitly ignored.
 deploy() {
     log_info "Starting deployment process..."
 
@@ -154,7 +167,15 @@ deploy() {
     log_success "Deployment completed successfully!"
 }
 
-# Health check
+# health_check Performs runtime health checks for the deployment and exits with a non‑zero status if any check fails.
+# 
+# Performs these checks in order:
+# - Verifies docker-compose services report "Up".
+# - Polls the application's HTTP health endpoint (http://localhost/api/health) up to 30 times with 10s intervals.
+# - Verifies PostgreSQL readiness inside the `smartsave-db` container via `pg_isready`.
+# - Verifies Redis responsiveness inside the `smartsave-redis` container via `redis-cli ping`.
+# 
+# On any failure the function logs an error and exits with status 1; on success it logs that all health checks passed.
 health_check() {
     log_info "Performing health checks..."
 
@@ -204,7 +225,7 @@ health_check() {
     log_success "All health checks passed!"
 }
 
-# Backup database
+# backup_database creates a timestamped SQL dump of the production database in ./backups, compresses it to .gz, and removes backups older than 7 days.
 backup_database() {
     log_info "Creating database backup..."
 
@@ -226,7 +247,7 @@ backup_database() {
     log_success "Database backup created: $BACKUP_FILE.gz"
 }
 
-# Show status
+# show_status displays docker-compose service status, tails the last 20 lines of the smartsave-app logs, and prints the /api/health response (uses `jq` for pretty JSON if available).
 show_status() {
     log_info "Service Status:"
     docker-compose -f docker-compose.prod.yml ps
@@ -238,7 +259,7 @@ show_status() {
     curl -s http://localhost/api/health | jq . 2>/dev/null || curl -s http://localhost/api/health
 }
 
-# Rollback deployment
+# rollback stops the current production deployment (docker-compose.prod.yml down) and provides a placeholder to start a previous version; it logs warnings and requires implementing restore logic according to your backup strategy.
 rollback() {
     log_warning "Rolling back to previous deployment..."
 
@@ -252,7 +273,20 @@ rollback() {
     log_warning "Rollback completed. Please verify the application is working correctly."
 }
 
-# Main deployment process
+# main dispatches CLI commands for deployment tasks.
+# 
+# When called it selects an action (default: "deploy") and runs the corresponding workflow:
+# - deploy: runs prerequisites check, SSL setup, database backup, deployment, health checks, and status display.
+# - status: shows current service status and recent logs.
+# - backup: creates a timestamped database backup.
+# - rollback: attempts to roll back to a previous deployment (implementation depends on backup strategy).
+# - logs: tails docker-compose service logs.
+# - restart: restarts services and runs health checks.
+# - stop: stops all services.
+#
+# The first argument is the command name (defaults to "deploy"). The function invokes other script functions
+# and docker-compose; it relies on docker-compose.prod.yml and the script's strict error mode (set -e), so
+# any failing step will cause the script to exit with a non-zero status.
 main() {
     case "${1:-deploy}" in
         "deploy")

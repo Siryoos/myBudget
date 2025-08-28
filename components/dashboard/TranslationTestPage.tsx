@@ -14,6 +14,16 @@ import { RecentTransactions } from './RecentTransactions';
 import { SavingsOverview } from './SavingsOverview';
 import { WelcomeHeader } from './WelcomeHeader';
 
+/**
+ * Renders a translation testing UI that lets a user switch the app locale and preview translated components.
+ *
+ * Displays a loading state until translations are ready, shows the current locale and readiness, and provides
+ * buttons to switch languages (English, Arabic, Persian). Language changes are performed asynchronously via
+ * the i18n changeLanguage function. A toggle button controls visibility of the dashboard components (welcome
+ * header, widgets, panels, and recent transactions) so their translations and layout (including RTL) can be inspected.
+ *
+ * @returns The TranslationTestPage JSX element.
+ */
 export function TranslationTestPage() {
   const { t, ready } = useTranslation('common');
   const { locale, changeLanguage } = useI18n();

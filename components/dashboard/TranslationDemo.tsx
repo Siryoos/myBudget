@@ -7,6 +7,20 @@ import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { useI18n } from '@/lib/i18n-provider';
 import { useTranslation } from '@/lib/useTranslation';
 
+/**
+ * Demo React component that showcases the app's translation system and language switching.
+ *
+ * Renders a loading state until translations are ready, then displays a card with:
+ * - Instant language switching buttons (uses `changeLanguage` from `useI18n`)
+ * - Examples of translations from `common` and `dashboard` namespaces using `t(...)`
+ * - Dynamic content (current time and date, updated every second) and locale/direction info
+ * - Translation readiness and current locale status, plus usage instructions
+ *
+ * Side effects:
+ * - Starts a timer to update the displayed current time every second.
+ *
+ * @returns The component's JSX element.
+ */
 export function TranslationDemo() {
   const { t, ready } = useTranslation('dashboard');
   const { locale, changeLanguage } = useI18n();
