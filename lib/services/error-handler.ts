@@ -13,7 +13,7 @@ export interface ServiceErrorResponse {
   success: false;
   error: string;
   code: string;
-  details?: any;
+  details?: Record<string, unknown>;
   requestId?: string;
 }
 
@@ -63,7 +63,7 @@ export const createInternalError = (message: string = 'Internal server error', d
 export const createDatabaseError = (message: string = 'Database error', details?: any): ApiError => new ApiError(message, ERROR_CODES.DATABASE_ERROR, 500, details);
 
 /**
- * Convert any thrown error into a standardized NextResponse containing an ErrorResponse.
+ * Convert any thrown error into a standardized NextResponse containing a ServiceErrorResponse.
  *
  * Maps known error types to appropriate HTTP status codes and error codes:
  * - ApiError: uses the instance's message, code, details and statusCode.
@@ -75,10 +75,10 @@ export const createDatabaseError = (message: string = 'Database error', details?
  *
  * @param error - The thrown value to normalize (can be any type).
  * @param requestId - Optional request identifier to include in the response.
- * @returns A NextResponse wrapping an ErrorResponse with `success: false`, an error message, an error code,
+ * @returns A NextResponse wrapping a ServiceErrorResponse with `success: false`, an error message, an error code,
  *          optional `details`, optional `requestId`, and the appropriate HTTP status.
  */
-export function handleApiError(error: unknown, requestId?: string): NextResponse<ErrorResponse> {
+export function handleApiError(error: unknown, requestId?: string): NextResponse<ServiceErrorResponse> {
   console.error('API Error:', error);
 
   // Handle ApiError instances

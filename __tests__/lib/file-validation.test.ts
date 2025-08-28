@@ -17,22 +17,46 @@ if (typeof TextEncoder === 'undefined') {
   };
 }
 
+// Polyfill TextDecoder for Node.js environment
+if (typeof TextDecoder === 'undefined') {
+  (globalThis as any).TextDecoder = class TextDecoder {
+    decode(input: ArrayBufferView | ArrayBuffer): string {
+      const buf =
+        input instanceof ArrayBuffer
+          ? Buffer.from(input)
+          : Buffer.from(input.buffer, input.byteOffset, input.byteLength);
+      return buf.toString('utf8');
+    }
+  };
+}
+
 // Polyfill crypto.subtle for Node.js environment
 if (typeof crypto !== 'undefined' && !crypto.subtle) {
-  (crypto as unknown as { subtle: { digest: (algorithm: string, data: ArrayBuffer) => Promise<ArrayBuffer> } }).subtle = {
+  const subtleMock = {
     digest: async (algorithm: string, data: ArrayBuffer): Promise<ArrayBuffer> => {
       // Simple mock implementation for testing that generates consistent hashes
       const content = new Uint8Array(data);
       const hash = new Uint8Array(SHA256_HASH_SIZE); // SHA-256 is 32 bytes
 
       // Generate a deterministic hash based on content
+      const len = content.length;
       for (let i = 0; i < hash.length; i++) {
-        hash[i] = content[i % content.length] || i;
+        hash[i] = len ? content[i % len] : i;
       }
 
       return hash.buffer;
     },
   };
+  
+  try {
+    Object.defineProperty(globalThis.crypto, 'subtle', { 
+      value: subtleMock, 
+      configurable: true 
+    });
+  } catch {
+    // If crypto is read-only, create a new crypto object
+    (globalThis as any).crypto = { subtle: subtleMock };
+  }
 }
 
 // Mock File object methods for Node.js environment
@@ -46,7 +70,7 @@ const createMockFile = (
   const enc = new TextEncoder();
   const base =
     typeof content === 'string' ? enc.encode(content) : new Uint8Array(content);
-  const desired = customSize ?? (base.byteLength || KILOBYTE * KILOBYTE);
+  const desired = customSize ?? (base.byteLength || DEFAULT_FILE_SIZE);
   let payload: Uint8Array;
   if (desired <= base.byteLength) {
     payload = base.slice(0, desired);
@@ -74,7 +98,7 @@ const createMockFile = (
   }
 
   if (!file.arrayBuffer) {
-    (file as any).arrayBuffer = jest.fn().mockResolvedValue(payload.buffer);
+    (file as any).arrayBuffer = jest.fn().mockResolvedValue(payload.slice().buffer);
   }
 
   if (!file.slice) {
@@ -93,8 +117,7 @@ const createMockFile = (
 describe('FileValidator', () => {
   describe('validateSize', () => {
     it('should accept files within size limit', () => {
-      const file = createMockFile('content', 'test.jpg', { type: 'image/jpeg' });
-      Object.defineProperty(file, 'size', { value: DEFAULT_FILE_SIZE }); // 1MB
+      const file = createMockFile('content', 'test.jpg', { type: 'image/jpeg' }, DEFAULT_FILE_SIZE); // 1MB
 
       expect(FileValidator.validateSize(file, 5 * DEFAULT_FILE_SIZE)).toBe(true);
     });
@@ -235,8 +258,7 @@ describe('FileValidator', () => {
     });
     it('should accept valid image files', async () => {
       const jpegData = new Uint8Array([0xFF, 0xD8, 0xFF, 0xE0]);
-      const file = createMockFile(jpegData, 'test.jpg', { type: 'image/jpeg' });
-      Object.defineProperty(file, 'size', { value: 1024 * 1024 }); // 1MB
+      const file = createMockFile(jpegData, 'test.jpg', { type: 'image/jpeg' }, 1024 * 1024); // 1MB
 
       const result = await FileValidator.validateFile(file, 'images');
       expect(result.valid).toBe(true);

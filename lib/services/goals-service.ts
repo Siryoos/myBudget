@@ -348,7 +348,7 @@ export class GoalsService extends BaseService {
     });
 
     if (updates.length === 0) {
-      return rule;
+      return this.mapDbAutomationRuleToAutomationRule(ruleData.rows[0]);
     }
 
     const queryString = `
@@ -415,8 +415,8 @@ export class GoalsService extends BaseService {
       // userId is not part of SavingsGoal type
       name: dbGoal.name,
       description: dbGoal.description,
-      targetAmount: parseFloat(dbGoal.target_amount),
-      currentAmount: parseFloat(dbGoal.current_amount),
+      targetAmount: dbGoal.target_amount == null ? 0 : parseFloat(dbGoal.target_amount),
+      currentAmount: dbGoal.current_amount == null ? 0 : parseFloat(dbGoal.current_amount),
       targetDate: dbGoal.target_date.toISOString().split('T')[0],
       category: dbGoal.category,
       priority: dbGoal.priority,
@@ -436,11 +436,11 @@ export class GoalsService extends BaseService {
     return {
       id: dbMilestone.id,
       // goalId is not part of Milestone type
-      amount: parseFloat(dbMilestone.amount),
+      amount: dbMilestone.amount == null ? 0 : parseFloat(dbMilestone.amount),
       description: dbMilestone.description,
       isCompleted: dbMilestone.is_completed,
-      completedDate: dbMilestone.completed_date?.toISOString().split('T')[0] || null,
-      createdAt: dbMilestone.created_at.toISOString(),
+      completedDate: dbMilestone.completed_date ? new Date(dbMilestone.completed_date) : undefined,
+      // createdAt is not part of Milestone type
     };
   }
 
