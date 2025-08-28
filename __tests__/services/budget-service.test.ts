@@ -71,20 +71,29 @@ describe('BudgetService', () => {
       };
 
       // Mock budget creation
-      mockQuery.mockResolvedValueOnce({
+      mockQuery.mockResolvedValueOnce({ command: "SELECT", oid: 0, fields: [],
         rows: [mockBudget],
         rowCount: 1,
-      });
+        command: 'INSERT',
+        oid: 0,
+        fields: [],
+      } as any);
 
       // Mock category creation
-      mockQuery.mockResolvedValueOnce({
+      mockQuery.mockResolvedValueOnce({ command: "SELECT", oid: 0, fields: [],
         rows: [mockCategory],
-        rowCount: 1,
+        rowCount: null,
+        command: "SELECT",
+        oid: 0,
+        fields: [],
       });
 
-      mockQuery.mockResolvedValueOnce({
+      mockQuery.mockResolvedValueOnce({ command: "SELECT", oid: 0, fields: [],
         rows: [{ ...mockCategory, name: 'Food', id: '890e1234-e89b-12d3-a456-426614174003' }],
-        rowCount: 1,
+        rowCount: null,
+        command: "SELECT",
+        oid: 0,
+        fields: [],
       });
 
       const result = await budgetService.create(mockUserId, budgetData);
@@ -106,9 +115,12 @@ describe('BudgetService', () => {
       };
 
       // Mock existing budget check
-      mockQuery.mockResolvedValueOnce({
+      mockQuery.mockResolvedValueOnce({ command: "SELECT", oid: 0, fields: [],
         rows: [mockBudget],
-        rowCount: 1,
+        rowCount: null,
+        command: "SELECT",
+        oid: 0,
+        fields: [],
       });
 
       await expect(budgetService.create(mockUserId, budgetData)).rejects.toThrow('Budget with this name already exists');
@@ -137,15 +149,21 @@ describe('BudgetService', () => {
       };
 
       // Mock budget creation
-      mockQuery.mockResolvedValueOnce({
+      mockQuery.mockResolvedValueOnce({ command: "SELECT", oid: 0, fields: [],
         rows: [mockBudget],
-        rowCount: 1,
+        rowCount: null,
+        command: "SELECT",
+        oid: 0,
+        fields: [],
       });
 
       // Mock allocation validation failure
-      mockQuery.mockResolvedValueOnce({
+      mockQuery.mockResolvedValueOnce({ command: "SELECT", oid: 0, fields: [],
         rows: [{ count: 1 }],
-        rowCount: 1,
+        rowCount: null,
+        command: "SELECT",
+        oid: 0,
+        fields: [],
       });
 
       await expect(budgetService.create(mockUserId, budgetData)).rejects.toThrow('Total category allocation');
@@ -154,14 +172,20 @@ describe('BudgetService', () => {
 
   describe('findByUserId', () => {
     it('should find budgets by user ID', async () => {
-      mockQuery.mockResolvedValueOnce({
+      mockQuery.mockResolvedValueOnce({ command: "SELECT", oid: 0, fields: [],
         rows: [mockBudget],
-        rowCount: 1,
+        rowCount: null,
+        command: "SELECT",
+        oid: 0,
+        fields: [],
       });
 
-      mockQuery.mockResolvedValueOnce({
+      mockQuery.mockResolvedValueOnce({ command: "SELECT", oid: 0, fields: [],
         rows: [mockCategory],
-        rowCount: 1,
+        rowCount: null,
+        command: "SELECT",
+        oid: 0,
+        fields: [],
       });
 
       const result = await budgetService.findByUserId(mockUserId);
@@ -180,20 +204,29 @@ describe('BudgetService', () => {
       };
 
       // Mock existing budget check
-      mockQuery.mockResolvedValueOnce({
+      mockQuery.mockResolvedValueOnce({ command: "SELECT", oid: 0, fields: [],
         rows: [mockBudget],
-        rowCount: 1,
+        rowCount: null,
+        command: "SELECT",
+        oid: 0,
+        fields: [],
       });
 
-      mockQuery.mockResolvedValueOnce({
+      mockQuery.mockResolvedValueOnce({ command: "SELECT", oid: 0, fields: [],
         rows: [mockCategory],
-        rowCount: 1,
+        rowCount: null,
+        command: "SELECT",
+        oid: 0,
+        fields: [],
       });
 
       // Mock update
-      mockQuery.mockResolvedValueOnce({
+      mockQuery.mockResolvedValueOnce({ command: "SELECT", oid: 0, fields: [],
         rows: [{ ...mockBudget, name: 'Updated Budget Name', total_income: 6000 }],
-        rowCount: 1,
+        rowCount: null,
+        command: "SELECT",
+        oid: 0,
+        fields: [],
       });
 
       const result = await budgetService.update(mockBudget.id, updateData);
@@ -203,9 +236,12 @@ describe('BudgetService', () => {
     });
 
     it('should throw error for non-existent budget', async () => {
-      mockQuery.mockResolvedValueOnce({
+      mockQuery.mockResolvedValueOnce({ command: "SELECT", oid: 0, fields: [],
         rows: [],
-        rowCount: 0,
+        rowCount: null,
+        command: "SELECT",
+        oid: 0,
+        fields: [],
       });
 
       await expect(budgetService.update('non-existent-id', { name: 'Test' })).rejects.toThrow('Budget not found');
@@ -215,19 +251,28 @@ describe('BudgetService', () => {
   describe('delete', () => {
     it('should delete budget successfully', async () => {
       // Mock existing budget check
-      mockQuery.mockResolvedValueOnce({
+      mockQuery.mockResolvedValueOnce({ command: "SELECT", oid: 0, fields: [],
         rows: [mockBudget],
-        rowCount: 1,
+        rowCount: null,
+        command: "SELECT",
+        oid: 0,
+        fields: [],
       });
 
-      mockQuery.mockResolvedValueOnce({
+      mockQuery.mockResolvedValueOnce({ command: "SELECT", oid: 0, fields: [],
         rows: [mockCategory],
-        rowCount: 1,
+        rowCount: null,
+        command: "SELECT",
+        oid: 0,
+        fields: [],
       });
 
-      mockQuery.mockResolvedValueOnce({
+      mockQuery.mockResolvedValueOnce({ command: "SELECT", oid: 0, fields: [],
         rows: [{ id: mockBudget.id }],
-        rowCount: 1,
+        rowCount: null,
+        command: "SELECT",
+        oid: 0,
+        fields: [],
       });
 
       const result = await budgetService.delete(mockBudget.id);
@@ -248,21 +293,30 @@ describe('BudgetService', () => {
       };
 
       // Mock budget existence check
-      mockQuery.mockResolvedValueOnce({
+      mockQuery.mockResolvedValueOnce({ command: "SELECT", oid: 0, fields: [],
         rows: [mockBudget],
-        rowCount: 1,
+        rowCount: null,
+        command: "SELECT",
+        oid: 0,
+        fields: [],
       });
 
       // Mock duplicate name check
-      mockQuery.mockResolvedValueOnce({
+      mockQuery.mockResolvedValueOnce({ command: "SELECT", oid: 0, fields: [],
         rows: [],
-        rowCount: 0,
+        rowCount: null,
+        command: "SELECT",
+        oid: 0,
+        fields: [],
       });
 
       // Mock category creation
-      mockQuery.mockResolvedValueOnce({
+      mockQuery.mockResolvedValueOnce({ command: "SELECT", oid: 0, fields: [],
         rows: [mockCategory],
-        rowCount: 1,
+        rowCount: null,
+        command: "SELECT",
+        oid: 0,
+        fields: [],
       });
 
       const result = await budgetService.createCategory(categoryData);
@@ -279,9 +333,12 @@ describe('BudgetService', () => {
         color: '#FF0000',
       };
 
-      mockQuery.mockResolvedValueOnce({
+      mockQuery.mockResolvedValueOnce({ command: "SELECT", oid: 0, fields: [],
         rows: [],
-        rowCount: 0,
+        rowCount: null,
+        command: "SELECT",
+        oid: 0,
+        fields: [],
       });
 
       await expect(budgetService.createCategory(categoryData)).rejects.toThrow('Budget not found');
@@ -296,15 +353,21 @@ describe('BudgetService', () => {
       };
 
       // Mock budget existence
-      mockQuery.mockResolvedValueOnce({
+      mockQuery.mockResolvedValueOnce({ command: "SELECT", oid: 0, fields: [],
         rows: [mockBudget],
-        rowCount: 1,
+        rowCount: null,
+        command: "SELECT",
+        oid: 0,
+        fields: [],
       });
 
       // Mock duplicate name check
-      mockQuery.mockResolvedValueOnce({
+      mockQuery.mockResolvedValueOnce({ command: "SELECT", oid: 0, fields: [],
         rows: [mockCategory],
-        rowCount: 1,
+        rowCount: null,
+        command: "SELECT",
+        oid: 0,
+        fields: [],
       });
 
       await expect(budgetService.createCategory(categoryData)).rejects.toThrow('Category with this name already exists');

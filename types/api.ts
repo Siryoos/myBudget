@@ -467,5 +467,4 @@ export interface PresignedUrlResponse {
   expiresAt: string;
 }
 
-// Import UserRole from auth types
-import type { UserRole } from './auth';
+

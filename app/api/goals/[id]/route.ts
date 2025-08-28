@@ -48,15 +48,11 @@ export const PUT = requireAuth(async (request: AuthenticatedRequest, context?: {
     await validator.validateRequestSize();
     validator.validateHeaders();
 
-    // Parse and validate request body
+    // Parse request body
     const body = await request.json();
-    const { ...updateData } = body;
 
-    // Validate update data
-    const validatedData = goalsService.validateData(savingsGoalSchemas.update, updateData);
-
-    // Update goal using service
-    const goal = await goalsService.update(id, validatedData);
+    // Update goal using service (validation happens inside the service)
+    const goal = await goalsService.update(id, body);
 
     return createSuccessResponse(goal, requestId);
 

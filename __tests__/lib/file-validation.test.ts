@@ -10,7 +10,7 @@ const TEST_FILENAME_LENGTH = 300;
 
 // Polyfill TextEncoder for Node.js environment
 if (typeof TextEncoder === 'undefined') {
-  (globalThis as unknown as { TextEncoder: typeof TextEncoder }).TextEncoder = class TextEncoder {
+  (globalThis as any).TextEncoder = class TextEncoder {
     encode(input: string): Uint8Array {
       return new Uint8Array(Buffer.from(input, 'utf8'));
     }
@@ -42,35 +42,48 @@ const createMockFile = (
   name: string,
   options: { type: string },
   customSize?: number,
-) => {
-  const file = new File([content as BlobPart], name, options) as unknown as {
-    size: number;
-    text: jest.MockedFunction<() => Promise<string>>;
-    arrayBuffer: jest.MockedFunction<() => Promise<ArrayBuffer>>;
-    slice: jest.MockedFunction<(start?: number, end?: number) => Blob>;
-  };
-
-  // Set size (default 1MB or custom size)
+): File => {
+  const blob = new Blob([content as BlobPart], options);
   const size = customSize || KILOBYTE * KILOBYTE;
-  Object.defineProperty(file, 'size', { value: size, writable: true, configurable: true });
-
-  // Mock text() method
-  file.text = jest.fn().mockResolvedValue(typeof content === 'string' ? content : '');
-
-  // Mock arrayBuffer() method
-  file.arrayBuffer = jest.fn().mockResolvedValue(
-    typeof content === 'string'
-      ? new TextEncoder().encode(content).buffer
-      : content.buffer,
-  );
-
-  // Mock slice() method
-  file.slice = jest.fn().mockImplementation((start: number, end: number) => {
-    const slicedContent = typeof content === 'string'
-      ? content.slice(start, end)
-      : content.slice(start, end);
-    return createMockFile(slicedContent, name, options, size);
+  
+  // Create a proper File object
+  const file = new File([blob], name, {
+    ...options,
+    lastModified: Date.now(),
   });
+
+  // Override size if custom size is provided
+  if (customSize) {
+    Object.defineProperty(file, 'size', { 
+      value: size, 
+      writable: false, 
+      configurable: true 
+    });
+  }
+
+  // Mock the async methods if they don't exist in the test environment
+  if (!file.text) {
+    (file as any).text = jest.fn().mockResolvedValue(
+      typeof content === 'string' ? content : new TextDecoder().decode(content)
+    );
+  }
+
+  if (!file.arrayBuffer) {
+    (file as any).arrayBuffer = jest.fn().mockResolvedValue(
+      typeof content === 'string'
+        ? new TextEncoder().encode(content).buffer
+        : content.buffer
+    );
+  }
+
+  if (!file.slice) {
+    (file as any).slice = jest.fn().mockImplementation((start?: number, end?: number) => {
+      const slicedContent = typeof content === 'string'
+        ? content.slice(start, end)
+        : content.slice(start, end);
+      return createMockFile(slicedContent, name, options, size);
+    });
+  }
 
   return file;
 };

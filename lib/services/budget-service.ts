@@ -1,7 +1,7 @@
 import { query } from '@/lib/database';
 import type { BudgetCreate, BudgetUpdate, BudgetCategoryCreate, BudgetCategoryUpdate } from '@/lib/validation-schemas';
 import { budgetSchemas, budgetCategorySchemas } from '@/lib/validation-schemas';
-import type { Budget, BudgetCategory } from '@/types';
+import type { Budget, BudgetCategory } from '@/types/api';
 
 import { BaseService, NotFoundError, ValidationError, ConflictError } from './base-service';
 

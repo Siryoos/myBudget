@@ -289,13 +289,13 @@ export class ErrorHandler {
   private async sendToLoggingService(logData: Record<string, unknown>): Promise<void> {
     try {
       await loggingService.logError(
-        new Error(logData.message || 'Application error'),
+        new Error((logData.message as string) || 'Application error'),
         {
-          component: logData.context?.component || 'ErrorHandler',
-          action: logData.context?.action || 'handleError',
-          requestId: logData.requestId,
-          userId: logData.context?.userId,
-          severity: logData.severity,
+          component: 'ErrorHandler',
+          action: 'handleError',
+          requestId: logData.requestId as string | undefined,
+          userId: undefined,
+          severity: logData.severity as string | undefined,
         },
       );
     } catch (error) {

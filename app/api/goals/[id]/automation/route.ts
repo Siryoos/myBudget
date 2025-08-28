@@ -27,8 +27,12 @@ export const GET = requireAuth(async (request: AuthenticatedRequest, context?: {
 
     // Get goal to verify it exists and get automation rules
     const goal = await goalsService.findById(id);
+    
+    if (!goal) {
+      throw new Error(`Goal not found: ${id}`);
+    }
 
-    return createSuccessResponse(goal.automationRules, requestId);
+    return createSuccessResponse(goal.automationRules || [], requestId);
 
   } catch (error) {
     return handleApiError(error, requestId);

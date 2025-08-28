@@ -1,5 +1,6 @@
 import { query } from '@/lib/database';
 import { UserService } from '@/lib/services/user-service';
+import { createMockQueryResult, createEmptyQueryResult } from '../helpers/db-mocks';
 import { userSchemas } from '@/lib/validation-schemas';
 
 // Mock the database
@@ -45,9 +46,9 @@ describe('UserService', () => {
         language: 'de' as const,
       };
 
-      mockQuery.mockResolvedValueOnce({
+      mockQuery.mockResolvedValueOnce({ command: "SELECT", oid: 0, fields: [], // @ts-expect-error - Mock QueryResult
         rows: [mockUser],
-        rowCount: 1,
+        rowCount: 1, command: "SELECT", oid: 0, fields: [],
       });
 
       const result = await userService.create(userData);
@@ -68,9 +69,9 @@ describe('UserService', () => {
         dateOfBirth: '1990-01-01',
       };
 
-      mockQuery.mockResolvedValueOnce({
+      mockQuery.mockResolvedValueOnce({ command: "SELECT", oid: 0, fields: [], // @ts-expect-error - Mock QueryResult
         rows: [mockUser],
-        rowCount: 1,
+        rowCount: 1, command: "SELECT", oid: 0, fields: [],
       });
 
       await expect(userService.create(userData)).rejects.toThrow('User with this email already exists');
@@ -90,9 +91,9 @@ describe('UserService', () => {
 
   describe('findByEmail', () => {
     it('should find user by email', async () => {
-      mockQuery.mockResolvedValueOnce({
+      mockQuery.mockResolvedValueOnce({ command: "SELECT", oid: 0, fields: [], // @ts-expect-error - Mock QueryResult
         rows: [mockUser],
-        rowCount: 1,
+        rowCount: 1, command: "SELECT", oid: 0, fields: [],
       });
 
       const result = await userService.findByEmail('test@example.com');
@@ -105,9 +106,9 @@ describe('UserService', () => {
     });
 
     it('should return null for non-existent email', async () => {
-      mockQuery.mockResolvedValueOnce({
+      mockQuery.mockResolvedValueOnce({ command: "SELECT", oid: 0, fields: [], // @ts-expect-error - Mock QueryResult
         rows: [],
-        rowCount: 0,
+        rowCount: 0, command: "SELECT", oid: 0, fields: [],
       });
 
       const result = await userService.findByEmail('nonexistent@example.com');
@@ -118,9 +119,9 @@ describe('UserService', () => {
 
   describe('findById', () => {
     it('should find user by id', async () => {
-      mockQuery.mockResolvedValueOnce({
+      mockQuery.mockResolvedValueOnce({ command: "SELECT", oid: 0, fields: [], // @ts-expect-error - Mock QueryResult
         rows: [mockUser],
-        rowCount: 1,
+        rowCount: 1, command: "SELECT", oid: 0, fields: [],
       });
 
       const result = await userService.findById(mockUser.id);
@@ -140,9 +141,9 @@ describe('UserService', () => {
         monthlyIncome: 6000,
       };
 
-      mockQuery.mockResolvedValueOnce({
+      mockQuery.mockResolvedValueOnce({ command: "SELECT", oid: 0, fields: [], // @ts-expect-error - Mock QueryResult
         rows: [{ ...mockUser, name: 'Updated Name', monthly_income: 6000 }],
-        rowCount: 1,
+        rowCount: 1, command: "SELECT", oid: 0, fields: [],
       });
 
       const result = await userService.update(mockUser.id, updateData);
@@ -152,9 +153,9 @@ describe('UserService', () => {
     });
 
     it('should throw error for non-existent user', async () => {
-      mockQuery.mockResolvedValueOnce({
+      mockQuery.mockResolvedValueOnce({ command: "SELECT", oid: 0, fields: [], // @ts-expect-error - Mock QueryResult
         rows: [],
-        rowCount: 0,
+        rowCount: 0, command: "SELECT", oid: 0, fields: [],
       });
 
       await expect(userService.update('non-existent-id', { name: 'Test' })).rejects.toThrow('User not found');
@@ -168,9 +169,9 @@ describe('UserService', () => {
         password: 'correctpassword',
       };
 
-      mockQuery.mockResolvedValueOnce({
+      mockQuery.mockResolvedValueOnce({ command: "SELECT", oid: 0, fields: [], // @ts-expect-error - Mock QueryResult
         rows: [mockUser],
-        rowCount: 1,
+        rowCount: 1, command: "SELECT", oid: 0, fields: [],
       });
 
       // Mock bcrypt.compare to return true
@@ -188,9 +189,9 @@ describe('UserService', () => {
         password: 'wrongpassword',
       };
 
-      mockQuery.mockResolvedValueOnce({
+      mockQuery.mockResolvedValueOnce({ command: "SELECT", oid: 0, fields: [], // @ts-expect-error - Mock QueryResult
         rows: [mockUser],
-        rowCount: 1,
+        rowCount: 1, command: "SELECT", oid: 0, fields: [],
       });
 
       // Mock bcrypt.compare to return false
@@ -203,9 +204,9 @@ describe('UserService', () => {
     });
 
     it('should return null for non-existent email', async () => {
-      mockQuery.mockResolvedValueOnce({
+      mockQuery.mockResolvedValueOnce({ command: "SELECT", oid: 0, fields: [], // @ts-expect-error - Mock QueryResult
         rows: [],
-        rowCount: 0,
+        rowCount: 0, command: "SELECT", oid: 0, fields: [],
       });
 
       const result = await userService.authenticate('nonexistent@example.com', 'password');
@@ -216,14 +217,14 @@ describe('UserService', () => {
 
   describe('delete', () => {
     it('should delete user successfully', async () => {
-      mockQuery.mockResolvedValueOnce({
+      mockQuery.mockResolvedValueOnce({ command: "SELECT", oid: 0, fields: [], // @ts-expect-error - Mock QueryResult
         rows: [mockUser],
-        rowCount: 1,
+        rowCount: 1, command: "SELECT", oid: 0, fields: [],
       });
 
-      mockQuery.mockResolvedValueOnce({
+      mockQuery.mockResolvedValueOnce({ command: "SELECT", oid: 0, fields: [], // @ts-expect-error - Mock QueryResult
         rows: [{ id: mockUser.id }],
-        rowCount: 1,
+        rowCount: 1, command: "SELECT", oid: 0, fields: [],
       });
 
       const result = await userService.delete(mockUser.id);
@@ -236,9 +237,9 @@ describe('UserService', () => {
     });
 
     it('should throw error for non-existent user', async () => {
-      mockQuery.mockResolvedValueOnce({
+      mockQuery.mockResolvedValueOnce({ command: "SELECT", oid: 0, fields: [], // @ts-expect-error - Mock QueryResult
         rows: [],
-        rowCount: 0,
+        rowCount: 0, command: "SELECT", oid: 0, fields: [],
       });
 
       await expect(userService.delete('non-existent-id')).rejects.toThrow('User not found');

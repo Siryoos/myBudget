@@ -32,12 +32,11 @@ export const PUT = requireAuth(async (
     await validator.validateRequestSize();
     validator.validateHeaders();
 
-    // Parse and validate request body
+    // Parse request body
     const body = await request.json();
-    const validatedData = goalsService.validateData(milestoneSchemas.update, body);
 
-    // Update milestone using service
-    const milestone = await goalsService.updateMilestone(goalId, milestoneId, validatedData);
+    // Update milestone using service (validation happens inside the service)
+    const milestone = await goalsService.updateMilestone(goalId, milestoneId, body);
 
     return createSuccessResponse(milestone, requestId);
 

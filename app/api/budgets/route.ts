@@ -72,11 +72,8 @@ export const PUT = requireAuth(async (request: AuthenticatedRequest) => {
       throw new Error('Budget ID is required');
     }
 
-    // Validate update data
-    const validatedData = budgetService.validateData(budgetSchemas.update, updateData);
-
-    // Update budget using service
-    const budget = await budgetService.update(id, validatedData);
+    // Update budget using service (validation happens inside the service)
+    const budget = await budgetService.update(id, updateData);
 
     return createSuccessResponse(budget, requestId);
 
