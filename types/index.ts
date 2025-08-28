@@ -75,7 +75,7 @@ export interface SavingsGoal {
 export type AchievementCategory = 'savings-streak' | 'goal-achievement' | 'financial-education' | 'milestone' | 'social' | 'streak'
 
 export interface AchievementRequirement {
-  type: 'consecutive-days' | 'total-amount' | 'goal-completion' | 'education-modules' | 'custom'
+  type: 'consecutive-days' | 'total-amount' | 'goal-completion' | 'education-modules' | 'custom' | 'transaction_count' | 'saving_streak' | 'budget_adherence' | 'goal-completion' | 'goal_completion'
   value: number
   timeframe?: 'daily' | 'weekly' | 'monthly' | 'yearly' | 'all-time'
   description: string

@@ -71,7 +71,8 @@ export function useMutation<TData = any, TVariables = any>(
 export function useCreateTransaction(options?: MutationOptions<Transaction>) {
   return useMutation(
     async (data: Parameters<typeof api.transactions.create>[0]) => {
-      return await api.transactions.create(data);
+      const res = await api.transactions.create(data);
+      return (res as any).success ? (res as any).data : (res as any);
     },
     {
       ...options,
@@ -89,13 +90,14 @@ export function useCreateTransaction(options?: MutationOptions<Transaction>) {
 export function useUpdateTransaction(options?: MutationOptions<Transaction>) {
   return useMutation(
     async ({ id, data }: { id: string; data: Partial<Transaction> }) => {
-      return await api.transactions.update(id, data);
+      const res = await api.transactions.update(id, data);
+      return (res as any).success ? (res as any).data : (res as any);
     },
     {
       ...options,
       onSuccess: (data) => {
         api.utils.invalidateCache('transactions');
-        api.utils.invalidateCache(`transaction-${data.id}`);
+        api.utils.invalidateCache(`transaction-${(data as any).id}`);
         api.utils.invalidateCache('dashboard');
         options?.onSuccess?.(data);
       },
@@ -106,7 +108,8 @@ export function useUpdateTransaction(options?: MutationOptions<Transaction>) {
 export function useDeleteTransaction(options?: MutationOptions<{ message: string }>) {
   return useMutation(
     async (id: string) => {
-      return await api.transactions.delete(id);
+      const res = await api.transactions.delete(id);
+      return (res as any).success ? ((res as any).data || { message: 'Deleted' }) : (res as any);
     },
     {
       ...options,
@@ -123,7 +126,8 @@ export function useDeleteTransaction(options?: MutationOptions<{ message: string
 export function useCreateBudget(options?: MutationOptions<Budget>) {
   return useMutation(
     async (data: Parameters<typeof api.budgets.create>[0]) => {
-      return await api.budgets.create(data);
+      const res = await api.budgets.create(data);
+      return (res as any).success ? (res as any).data : (res as any);
     },
     {
       ...options,
@@ -139,7 +143,8 @@ export function useCreateBudget(options?: MutationOptions<Budget>) {
 export function useUpdateBudget(options?: MutationOptions<Budget>) {
   return useMutation(
     async ({ id, data }: { id: string; data: Partial<Budget> }) => {
-      return await api.budgets.update(id, data);
+      const res = await api.budgets.update(id, data);
+      return (res as any).success ? (res as any).data : (res as any);
     },
     {
       ...options,
@@ -155,7 +160,8 @@ export function useUpdateBudget(options?: MutationOptions<Budget>) {
 export function useDeleteBudget(options?: MutationOptions<{ message: string }>) {
   return useMutation(
     async (id: string) => {
-      return await api.budgets.delete(id);
+      const res = await api.budgets.delete(id);
+      return (res as any).success ? ((res as any).data || { message: 'Deleted' }) : (res as any);
     },
     {
       ...options,
@@ -172,7 +178,8 @@ export function useDeleteBudget(options?: MutationOptions<{ message: string }>) 
 export function useCreateGoal(options?: MutationOptions<any>) {
   return useMutation(
     async (data: Parameters<typeof api.goals.create>[0]) => {
-      return await api.goals.create(data);
+      const res = await api.goals.create(data);
+      return (res as any).success ? (res as any).data : (res as any);
     },
     {
       ...options,
@@ -188,7 +195,8 @@ export function useCreateGoal(options?: MutationOptions<any>) {
 export function useUpdateGoal(options?: MutationOptions<{ message: string }>) {
   return useMutation(
     async ({ id, data }: { id: string; data: Partial<SavingsGoal> }) => {
-      return await api.goals.update(id, data);
+      const res = await api.goals.update(id, data);
+      return (res as any).success ? ((res as any).data || { message: 'Updated' }) : (res as any);
     },
     {
       ...options,
@@ -204,7 +212,8 @@ export function useUpdateGoal(options?: MutationOptions<{ message: string }>) {
 export function useDeleteGoal(options?: MutationOptions<{ message: string }>) {
   return useMutation(
     async (id: string) => {
-      return await api.goals.delete(id);
+      const res = await api.goals.delete(id);
+      return (res as any).success ? ((res as any).data || { message: 'Deleted' }) : (res as any);
     },
     {
       ...options,
@@ -220,7 +229,8 @@ export function useDeleteGoal(options?: MutationOptions<{ message: string }>) {
 export function useContributeToGoal(options?: MutationOptions<{ message: string }>) {
   return useMutation(
     async ({ goalId, amount }: { goalId: string; amount: number }) => {
-      return await api.goals.contribute(goalId, amount);
+      const res = await api.goals.contribute(goalId, amount);
+      return (res as any).success ? ((res as any).data || { message: 'Contributed' }) : (res as any);
     },
     {
       ...options,
@@ -237,7 +247,8 @@ export function useContributeToGoal(options?: MutationOptions<{ message: string 
 export function useCreateMilestone(options?: MutationOptions<any>) {
   return useMutation(
     async ({ goalId, data }: { goalId: string; data: { amount: number; description: string } }) => {
-      return await api.goals.milestones.create(goalId, data);
+      const res = await api.goals.milestones.create(goalId, data);
+      return (res as any).success ? (res as any).data : (res as any);
     },
     {
       ...options,
@@ -252,7 +263,8 @@ export function useCreateMilestone(options?: MutationOptions<any>) {
 export function useCompleteMilestone(options?: MutationOptions<{ message: string }>) {
   return useMutation(
     async ({ goalId, milestoneId }: { goalId: string; milestoneId: string }) => {
-      return await api.goals.milestones.complete(goalId, milestoneId);
+      const res = await api.goals.milestones.complete(goalId, milestoneId);
+      return (res as any).success ? ((res as any).data || { message: 'Completed' }) : (res as any);
     },
     {
       ...options,
@@ -269,7 +281,8 @@ export function useCompleteMilestone(options?: MutationOptions<{ message: string
 export function useMarkNotificationRead(options?: MutationOptions<{ message: string }>) {
   return useMutation(
     async (id: string) => {
-      return await api.notifications.markRead(id);
+      const res = await api.notifications.markRead(id);
+      return (res as any).success ? ((res as any).data || { message: 'Marked read' }) : (res as any);
     },
     {
       ...options,
@@ -284,7 +297,8 @@ export function useMarkNotificationRead(options?: MutationOptions<{ message: str
 export function useMarkAllNotificationsRead(options?: MutationOptions<{ message: string }>) {
   return useMutation(
     async () => {
-      return await api.notifications.markAllRead();
+      const res = await api.notifications.markAllRead();
+      return (res as any).success ? ((res as any).data || { message: 'All read' }) : (res as any);
     },
     {
       ...options,
@@ -300,7 +314,8 @@ export function useMarkAllNotificationsRead(options?: MutationOptions<{ message:
 export function useUpdateSettings(options?: MutationOptions<{ message: string }>) {
   return useMutation(
     async (data: Parameters<typeof api.settings.update>[0]) => {
-      return await api.settings.update(data);
+      const res = await api.settings.update(data);
+      return (res as any).success ? ((res as any).data || { message: 'Updated' }) : (res as any);
     },
     {
       ...options,
@@ -316,7 +331,8 @@ export function useUpdateSettings(options?: MutationOptions<{ message: string }>
 export function useUpdateProfile(options?: MutationOptions<any>) {
   return useMutation(
     async (data: Parameters<typeof api.auth.updateProfile>[0]) => {
-      return await api.auth.updateProfile(data);
+      const res = await api.auth.updateProfile(data);
+      return (res as any).success ? (res as any).data : (res as any);
     },
     {
       ...options,
@@ -330,18 +346,30 @@ export function useUpdateProfile(options?: MutationOptions<any>) {
 
 // Auth mutations
 export function useLogin(options?: MutationOptions<{ user: any; token: string }>) {
-  return useMutation(
+  return useMutation<{ user: any; token: string }, { email: string; password: string }>(
     async ({ email, password }: { email: string; password: string }) => {
-      return await api.auth.login(email, password);
+      const response = (await api.auth.login(email, password)) as unknown;
+      const maybeEnvelope = response as { success?: boolean; data?: { user: any; token?: string; accessToken?: string } };
+      if (maybeEnvelope && maybeEnvelope.success && maybeEnvelope.data) {
+        const { user, token, accessToken } = maybeEnvelope.data;
+        return { user, token: token ?? (accessToken as string) };
+      }
+      return response as { user: any; token: string };
     },
     options,
   );
 }
 
 export function useRegister(options?: MutationOptions<{ user: any; token: string }>) {
-  return useMutation(
+  return useMutation<{ user: any; token: string }, Parameters<typeof api.auth.register>[0]>(
     async (data: Parameters<typeof api.auth.register>[0]) => {
-      return await api.auth.register(data);
+      const response = (await api.auth.register(data)) as unknown;
+      const maybeEnvelope = response as { success?: boolean; data?: { user: any; token?: string; accessToken?: string } };
+      if (maybeEnvelope && maybeEnvelope.success && maybeEnvelope.data) {
+        const { user, token, accessToken } = maybeEnvelope.data;
+        return { user, token: token ?? (accessToken as string) };
+      }
+      return response as { user: any; token: string };
     },
     options,
   );

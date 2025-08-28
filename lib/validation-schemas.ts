@@ -140,6 +140,7 @@ export const userSchemas = {
   }),
 
   update: z.object({
+    email: commonSchemas.email.optional(),
     name: z.string().min(2).max(255).optional(),
     avatar: z.string().url().optional().or(z.literal('')),
     currency: commonSchemas.currency.optional(),

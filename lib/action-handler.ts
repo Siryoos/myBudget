@@ -37,10 +37,15 @@ const actionHandlers: Record<string, ActionHandler> = {
 
     try {
       const response = await apiClient.addGoalContribution(context.goalId, context.data.amount);
+      const success = (response as any)?.success === true;
+      const message = success
+        ? 'Contribution added successfully'
+        : ((response as any)?.error?.message || 'Failed to add contribution');
+      const data = success ? (response as any).data : undefined;
       return {
-        success: response.success,
-        message: response.success ? 'Contribution added successfully' : response.error,
-        data: response.data,
+        success,
+        message,
+        data,
       };
     } catch (error) {
       return {
@@ -78,9 +83,11 @@ const actionHandlers: Record<string, ActionHandler> = {
       });
 
       return {
-        success: response.success,
-        message: response.success ? 'Coffee expense tracked' : response.error,
-        data: response.data,
+        success: (response as any)?.success === true,
+        message: (response as any)?.success === true
+          ? 'Coffee expense tracked'
+          : ((response as any)?.error?.message || 'Failed to track expense'),
+        data: (response as any)?.success ? (response as any).data : undefined,
       };
     } catch (error) {
       return {
@@ -159,8 +166,10 @@ const actionHandlers: Record<string, ActionHandler> = {
       });
 
       return {
-        success: response.success,
-        message: response.success ? 'Notifications enabled' : response.error,
+        success: (response as any)?.success === true,
+        message: (response as any)?.success === true
+          ? 'Notifications enabled'
+          : ((response as any)?.error?.message || 'Failed to update settings'),
       };
     } catch (error) {
       return {

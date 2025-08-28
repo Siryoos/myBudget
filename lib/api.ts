@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { UserRole } from '@/types/auth';
 
 import type {
   Transaction,
@@ -18,11 +19,19 @@ const userSchema = z.object({
   id: z.string(),
   email: z.string().email(),
   name: z.string(),
+  role: z.nativeEnum(UserRole),
   monthlyIncome: z.number(),
   currency: z.string(),
   language: z.string(),
   createdAt: z.string(),
   updatedAt: z.string(),
+});
+
+// Minimal auth user shape returned by login/register endpoints
+const authUserSchema = z.object({
+  id: z.string(),
+  email: z.string().email(),
+  name: z.string(),
 });
 
 const transactionSchema = z.object({
@@ -123,7 +132,7 @@ export const api = {
     async login(email: string, password: string) {
       const response = await apiClient.login(email, password);
       if (response.success && response.data) {
-        response.data.user = userSchema.parse(response.data.user);
+        response.data.user = authUserSchema.parse(response.data.user) as unknown as User;
       }
       return response;
     },
@@ -150,7 +159,7 @@ export const api = {
 
       const response = await apiClient.register(validatedData);
       if (response.success && response.data) {
-        response.data.user = userSchema.parse(response.data.user);
+        response.data.user = authUserSchema.parse(response.data.user) as unknown as User;
       }
       return response;
     },

@@ -25,21 +25,21 @@ export function useInsights(fallbackData: FinancialInsight[] = []) {
       const response = await apiClient.getNotifications(true);
 
       if (response.success && response.data) {
-        const apiInsights: FinancialInsight[] = response.data
-          .filter(notif => notif.type === 'insight' || notif.type === 'budget_alert')
-          .map(notif => ({
+        const apiInsights: FinancialInsight[] = (response.data as Notification[])
+          .filter((notif: Notification) => notif.type === 'insight' || notif.type === 'budget_alert')
+          .map((notif: Notification) => ({
             id: notif.id,
             type: notif.type === 'budget_alert' ? 'budget-warning' : 'saving-opportunity',
             title: notif.title,
             description: notif.message,
-            impact: (notif.priority || 'medium'),
-            category: notif.category || 'General',
-            actionable: Boolean(notif.actionUrl),
-            actions: notif.actionUrl ? [{
+            impact: ((notif as any).priority || 'medium'),
+            category: (notif as any).category || 'General',
+            actionable: Boolean((notif as any).actionUrl),
+            actions: (notif as any).actionUrl ? [{
               id: '1',
               label: 'View Details',
               type: 'navigate' as const,
-              target: notif.actionUrl,
+              target: (notif as any).actionUrl,
             }] : [],
             createdAt: new Date(notif.createdAt),
             isRead: notif.isRead,
@@ -168,7 +168,7 @@ export function useGoals(priority?: 'low' | 'medium' | 'high') {
         await fetchGoals(); // Refresh goals list
         return response.data;
       }
-        throw new Error(response.error || 'Failed to create goal');
+        throw new Error((response as any)?.error?.message || 'Failed to create goal');
 
     } catch (err) {
       console.error('Failed to create goal:', err);
@@ -183,7 +183,7 @@ export function useGoals(priority?: 'low' | 'medium' | 'high') {
       if (response.success) {
         await fetchGoals(); // Refresh goals list
       } else {
-        throw new Error(response.error || 'Failed to update goal');
+        throw new Error((response as any)?.error?.message || 'Failed to update goal');
       }
     } catch (err) {
       console.error('Failed to update goal:', err);
@@ -198,7 +198,7 @@ export function useGoals(priority?: 'low' | 'medium' | 'high') {
       if (response.success) {
         setGoals(prev => prev.filter(g => g.id !== id));
       } else {
-        throw new Error(response.error || 'Failed to delete goal');
+        throw new Error((response as any)?.error?.message || 'Failed to delete goal');
       }
     } catch (err) {
       console.error('Failed to delete goal:', err);
@@ -213,7 +213,7 @@ export function useGoals(priority?: 'low' | 'medium' | 'high') {
       if (response.success) {
         await fetchGoals(); // Refresh to get updated amounts
       } else {
-        throw new Error(response.error || 'Failed to add contribution');
+        throw new Error((response as any)?.error?.message || 'Failed to add contribution');
       }
     } catch (err) {
       console.error('Failed to add contribution:', err);
@@ -289,7 +289,7 @@ export function useApiData<T>(
       if (response.success && response.data) {
         setData(response.data);
       } else {
-        throw new Error(response.error || 'Failed to load data');
+        throw new Error(((response as any)?.error?.message) || 'Failed to load data');
       }
     } catch (err) {
       console.error('API fetch error:', err);

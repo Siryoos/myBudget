@@ -9,8 +9,13 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
-// Load environment variables from .env file
-require('dotenv').config();
+// Load environment variables from .env.local first (if present), then fallback to .env
+const dotenvLocalPath = path.resolve(process.cwd(), '.env.local');
+if (fs.existsSync(dotenvLocalPath)) {
+  require('dotenv').config({ path: dotenvLocalPath });
+} else {
+  require('dotenv').config();
+}
 
 // Colors for console output
 const colors = {

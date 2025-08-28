@@ -380,9 +380,8 @@ export class AchievementsService extends BaseService {
       requirement: { type: dbAchievement.requirement_type, value: dbAchievement.requirement_value, description: dbAchievement.description },
       // requirement value included in requirement object above
       // requirementTimeframe is not part of Achievement type
-      requirementDescription: dbAchievement.requirement_description,
       points: dbAchievement.points,
-      createdAt: dbAchievement.created_at.toISOString(),
+      isUnlocked: false,
     };
   }
 
