@@ -90,7 +90,7 @@ class ErrorBoundary extends React.Component<
             </p>
             <button
               onClick={() => window.location.reload()}
-              className="bg-blue-HTTP_INTERNAL_SERVER_ERROR hover:bg-blue-600 text-white px-4 py-2 rounded"
+              className="bg-primary-trust-blue hover:bg-primary-trust-blue/90 text-white px-4 py-2 rounded"
             >
               Reload page
             </button>
