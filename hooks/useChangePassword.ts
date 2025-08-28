@@ -45,18 +45,21 @@ export function useChangePassword() {
       const result: ApiResponse<ChangePasswordSuccessData> = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || result.message || 'Failed to change password');
+        const message = (result as any)?.error?.message || (result as any)?.message || 'Failed to change password';
+        throw new Error(message);
       }
 
       // Check for requiresReauth in the response
-      if (result.data?.requiresReauth) {
+      if ((result as any).success === true && (result as any).data?.requiresReauth) {
         // Use AuthContext logout to properly clear all auth state
         await logout();
         return;
       }
 
       // Normal success handling
-      setSuccess(result.data?.message || 'Password changed successfully');
+      if ((result as any).success === true) {
+        setSuccess((result as any).data?.message || 'Password changed successfully');
+      }
 
       // Reset form after successful password change
       setTimeout(() => {

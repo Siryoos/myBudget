@@ -14,6 +14,7 @@ import { Card, CardContent } from '@/components/ui/Card';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useDashboard } from '@/hooks/use-api';
+import type { ApiResponse } from '@/types';
 import { useTranslation } from '@/lib/useTranslation';
 import { formatCurrency, calculateProgress, formatPercentage } from '@/lib/utils';
 
@@ -48,7 +49,8 @@ export function SavingsOverview({
 }: SavingsOverviewProps) {
   const { t } = useTranslation('dashboard');
   const [isAnimated, setIsAnimated] = useState(!animateOnLoad);
-  const { data: dashboardData, loading, error } = useDashboard();
+  const { data: dashboardResponse, loading, error } = useDashboard();
+  const dashboardData = (dashboardResponse as any)?.success ? (dashboardResponse as any).data : (dashboardResponse as any) || {};
 
   // Calculate savings data from dashboard
   const savingsData = {

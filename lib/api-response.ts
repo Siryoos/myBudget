@@ -69,7 +69,7 @@ export function createSuccessResponse<T>(
     success: true,
     data,
     timestamp,
-    ...(requestId && { requestId }),
+    requestId: requestId || 'unknown',
   };
 
   const responseHeaders: Record<string, string> = {
@@ -133,7 +133,7 @@ export function createErrorResponse(
       ...(retryAfter && { retryAfter }),
     },
     timestamp,
-    ...(requestId && { requestId }),
+    requestId: requestId || 'unknown',
     ...(path && { path }),
   };
 

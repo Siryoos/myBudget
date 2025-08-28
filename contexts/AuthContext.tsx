@@ -71,13 +71,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string) => {
-    try { // Authenticate user (validation happens in the service)
-      const authenticatedUser = await apiClient.authenticate(email, password) as unknown as User;
-      if (!authenticatedUser) {
+     try { // Authenticate user (validation happens in the service)
+      const loginResponse = await apiClient.login(email, password);
+      const isSuccess = (loginResponse as any)?.success === true;
+      const userFromResponse = isSuccess ? (loginResponse as any).data?.user : null;
+      if (!userFromResponse) {
         throw new Error('Invalid email or password');
       }
 
-      setUser(authenticatedUser as unknown as User);
+      setUser(userFromResponse as unknown as User);
       router.push('/dashboard');
     } catch (error) {
       throw error;
@@ -87,9 +89,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = async (data: any) => {
     try {
       // Create user (validation happens in the service)
-      const newUser = await apiClient.register(data) as unknown as User;
+      const registerResponse = await apiClient.register(data);
+      const isSuccess = (registerResponse as any)?.success === true;
+      const userFromResponse = isSuccess ? (registerResponse as any).data?.user : null;
+      if (!userFromResponse) {
+        throw new Error('Registration failed');
+      }
 
-      setUser(newUser as unknown as User);
+      setUser(userFromResponse as unknown as User);
       router.push('/onboarding');
     } catch (error) {
       throw error;
