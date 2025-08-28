@@ -1,0 +1,75 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+scrape_configs:
+  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # SmartSave Application
+  - job_name: 'smartsave-app'
+    static_configs:
+      - targets: ['smartsave-app:3000']
+    scrape_interval: 10s
+    metrics_path: '/api/metrics'
+    params:
+      format: ['prometheus']
+
+  # PostgreSQL Database
+  - job_name: 'smartsave-postgres'
+    static_configs:
+      - targets: ['smartsave-db:5432']
+    scrape_interval: 30s
+
+  # Redis Cache
+  - job_name: 'smartsave-redis'
+    static_configs:
+      - targets: ['smartsave-redis:6379']
+    scrape_interval: 30s
+
+  # Node.js Application Metrics
+  - job_name: 'smartsave-node'
+    static_configs:
+      - targets: ['smartsave-app:3000']
+    scrape_interval: 15s
+    metrics_path: '/api/metrics/node'
+
+  # Nginx Metrics
+  - job_name: 'smartsave-nginx'
+    static_configs:
+      - targets: ['smartsave-nginx:80']
+    scrape_interval: 15s
+
+  # Loki for log aggregation
+  - job_name: 'loki'
+    static_configs:
+      - targets: ['loki:3100']
+    scrape_interval: 15s
+
+  # System metrics (if running on host)
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['localhost:9100']
+    scrape_interval: 15s
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          # - alertmanager:9093
+
+# Load rules once and periodically evaluate them according to the global 'evaluation_interval'.
+rule_files:
+  - "alert_rules.yml"
+
+# A scrape configuration containing exactly one endpoint to scrape:
+# Here it's Prometheus itself.
+scrape_configs:
+  # ... existing scrape configs ...
