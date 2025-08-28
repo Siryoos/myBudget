@@ -17,7 +17,7 @@ const inter = Inter({
 });
 
 const roboto = Roboto({
-  weight: ['300', 'HTTP_BAD_REQUEST', 'HTTP_INTERNAL_SERVER_ERROR', '700'],
+  weight: ['300', '400', '500', '700'],
   subsets: ['latin'],
   variable: '--font-roboto',
   display: 'swap',
