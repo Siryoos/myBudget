@@ -246,7 +246,7 @@ export class RedisConnectionManager {
   // Event handlers
   private async handleError(error: Error): Promise<void> {
     this.connectionState = ConnectionState.ERROR;
-    
+
     await logSystemEvent({
       eventType: AuditEventType.SYSTEM_ERROR,
       severity: AuditSeverity.MEDIUM,
@@ -265,7 +265,7 @@ export class RedisConnectionManager {
 
   private async handleClose(): Promise<void> {
     this.connectionState = ConnectionState.DISCONNECTED;
-    
+
     await logSystemEvent({
       eventType: AuditEventType.SYSTEM_ERROR,
       severity: AuditSeverity.LOW,
@@ -279,7 +279,7 @@ export class RedisConnectionManager {
   private async handleReconnecting(): Promise<void> {
     this.connectionState = ConnectionState.RECONNECTING;
     this.reconnectAttempts++;
-    
+
     await logSystemEvent({
       eventType: AuditEventType.SYSTEM_ERROR,
       severity: AuditSeverity.LOW,
@@ -298,7 +298,7 @@ export class RedisConnectionManager {
   private async handleReady(): Promise<void> {
     this.connectionState = ConnectionState.CONNECTED;
     this.reconnectAttempts = 0;
-    
+
     await logSystemEvent({
       eventType: AuditEventType.CONFIGURATION_CHANGE,
       severity: AuditSeverity.LOW,
@@ -329,7 +329,7 @@ export class RedisConnectionManager {
       }
 
       this.setupEventHandlers();
-      
+
       await logSystemEvent({
         eventType: AuditEventType.CONFIGURATION_CHANGE,
         severity: AuditSeverity.LOW,
@@ -457,7 +457,7 @@ export class RedisConnectionManager {
     }
 
     this.connectionState = ConnectionState.DISCONNECTED;
-    
+
     await logSystemEvent({
       eventType: AuditEventType.CONFIGURATION_CHANGE,
       severity: AuditSeverity.LOW,

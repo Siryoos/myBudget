@@ -1,6 +1,7 @@
 import * as dotenv from 'dotenv';
 import type { PoolClient, QueryResult, QueryResultRow } from 'pg';
 import { Pool } from 'pg';
+
 import type { TypedQueryResult } from './database/types';
 
 dotenv.config();
@@ -75,14 +76,14 @@ export async function executeTypedQuery<T>(
 ): Promise<TypedQueryResult<T>> {
   try {
     const result = await pool.query(queryText, params);
-    
+
     // Validate each row with the type guard
     const validatedRows = result.rows.filter(typeGuard);
-    
+
     if (validatedRows.length !== result.rows.length) {
       console.warn(`Type validation failed for ${result.rows.length - validatedRows.length} rows`);
     }
-    
+
     return {
       rows: validatedRows,
       rowCount: validatedRows.length,

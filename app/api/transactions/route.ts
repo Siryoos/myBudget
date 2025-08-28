@@ -1,15 +1,15 @@
-import { NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 import { RequestValidator, REQUEST_LIMITS } from '@/lib/api-validation';
 import { requireAuth } from '@/lib/auth-middleware';
-import { TransactionService } from '@/lib/services/transaction-service';
-import { transactionSchemas } from '@/lib/validation-schemas';
 import {
   handleApiError,
   createSuccessResponse,
   createPaginatedResponse,
-  generateRequestId
+  generateRequestId,
 } from '@/lib/services/error-handler';
+import { TransactionService } from '@/lib/services/transaction-service';
+import { transactionSchemas } from '@/lib/validation-schemas';
 import type { AuthenticatedRequest } from '@/types/auth';
 
 const transactionService = new TransactionService();
@@ -44,13 +44,13 @@ export const GET = requireAuth(async (request: AuthenticatedRequest) => {
     const result = await transactionService.findByUserId(
       request.user.id,
       validatedFilters,
-      { page: validatedFilters.page, limit: validatedFilters.limit }
+      { page: validatedFilters.page, limit: validatedFilters.limit },
     );
 
     return createPaginatedResponse(
       result.data.map(tx => ({ ...tx, requestId })),
       result.pagination,
-      requestId
+      requestId,
     );
 
   } catch (error) {
@@ -130,7 +130,7 @@ export const DELETE = requireAuth(async (request: AuthenticatedRequest) => {
 
     return createSuccessResponse(
       { message: 'Transaction deleted successfully', requestId },
-      requestId
+      requestId,
     );
 
   } catch (error) {

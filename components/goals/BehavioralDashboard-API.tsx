@@ -45,7 +45,7 @@ export function BehavioralDashboard({
   // Mutations for goal operations
   const createGoalState = useMutation(
     async (goalData: any) => {
-      if (!user?.id) throw new Error('User not authenticated');
+      if (!user?.id) {throw new Error('User not authenticated');}
       const goalsService = new GoalsService();
       return await goalsService.create(user.id, goalData);
     },
@@ -53,7 +53,7 @@ export function BehavioralDashboard({
       onSuccess: () => {
         refreshGoals();
       },
-    }
+    },
   );
 
   const addContributionState = useMutation(
@@ -65,7 +65,7 @@ export function BehavioralDashboard({
       onSuccess: () => {
         refreshGoals();
       },
-    }
+    },
   );
   const [quickSaveHistory, setQuickSaveHistory] = useState<QuickSaveData[]>([]);
   const [activeTab, setActiveTab] = useState<'goals' | 'quick-save' | 'achievements' | 'insights'>('goals');

@@ -35,7 +35,7 @@ interface UseApiOptions {
  */
 export function useApi<T>(
   apiCall: () => Promise<T>,
-  options: UseApiOptions = {}
+  options: UseApiOptions = {},
 ) {
   const [state, setState] = useState<ApiState<T>>({
     data: null,
@@ -103,14 +103,14 @@ export function useApi<T>(
 export function usePaginatedApi<T>(
   apiCall: (page: number, limit: number) => Promise<{ data: T[]; pagination: any }>,
   initialPage: number = 1,
-  initialLimit: number = 20
+  initialLimit: number = 20,
 ) {
   const [page, setPage] = useState(initialPage);
   const [limit, setLimit] = useState(initialLimit);
 
   const { data, loading, error, execute } = useApi(
     () => apiCall(page, limit),
-    { immediate: true }
+    { immediate: true },
   );
 
   const loadMore = useCallback(() => {
@@ -159,7 +159,7 @@ export function usePaginatedApi<T>(
  *  - `reset()`: resets `data`, `loading`, and `error` to their initial values.
  */
 export function useMutation<TData, TVariables>(
-  mutationFn: (variables: TVariables) => Promise<TData>
+  mutationFn: (variables: TVariables) => Promise<TData>,
 ) {
   const [state, setState] = useState({
     loading: false,
@@ -218,7 +218,7 @@ export function useOptimisticMutation<TData, TVariables>(
     onSuccess?: (data: TData, variables: TVariables) => void;
     onError?: (error: Error, variables: TVariables) => void;
     onSettled?: (data: TData | null, error: Error | null, variables: TVariables) => void;
-  } = {}
+  } = {},
 ) {
   const [state, setState] = useState({
     loading: false,

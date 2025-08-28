@@ -1,6 +1,6 @@
+import { query } from '@/lib/database';
 import { BudgetService } from '@/lib/services/budget-service';
 import { budgetSchemas } from '@/lib/validation-schemas';
-import { query } from '@/lib/database';
 
 // Mock the database
 jest.mock('@/lib/database', () => ({

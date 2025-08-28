@@ -25,7 +25,7 @@ const IPV4_PRIVATE_RANGES = {
   CLASS_B: { network: 172, min: 16, max: 31 },
   CLASS_C: { network: 192, secondary: 168 },
   LOOPBACK: { network: 127 },
-  ZERO: { network: 0 }
+  ZERO: { network: 0 },
 };
 
 // Trusted IP bypass manager
@@ -125,13 +125,13 @@ export class TrustedIPBypassManager {
     isTrusted: boolean,
     reason: string,
     bypassLevel: 'full' | 'partial' | 'none',
-    ip?: string
+    ip?: string,
   ): TrustedIPBypassResult {
     return {
       isTrusted,
       reason,
       bypassLevel,
-      headers: ip && isTrusted && bypassLevel !== 'none' ? this.generateTrustedHeaders(ip, bypassLevel as 'full' | 'partial') : {},
+      headers: ip && isTrusted && bypassLevel !== 'none' ? this.generateTrustedHeaders(ip, bypassLevel) : {},
     };
   }
 
@@ -146,7 +146,7 @@ export class TrustedIPBypassManager {
       const [rangeIP, prefixLength] = range.split('/');
       const prefix = parseInt(prefixLength, 10);
 
-      if (isNaN(prefix) || prefix < 0 || 
+      if (isNaN(prefix) || prefix < 0 ||
           prefix > (isIPv6(rangeIP) ? IPV6_MAX_PREFIX : IPV4_MAX_PREFIX)) {
         return false;
       }
@@ -218,7 +218,7 @@ export class TrustedIPBypassManager {
   private isInternalIPv4(ip: string): boolean {
     const parts = ip.split('.').map(Number);
     const { CLASS_A, CLASS_B, CLASS_C, LOOPBACK, ZERO } = IPV4_PRIVATE_RANGES;
-    
+
     return (
       (parts[0] === CLASS_A.network) ||
       (parts[0] === CLASS_B.network && parts[1] >= CLASS_B.min && parts[1] <= CLASS_B.max) ||
@@ -381,8 +381,8 @@ export const trustedIPBypassManager = TrustedIPBypassManager.getInstance();
 
 // Convenience functions
 export const checkTrustedIP = (
-  ip: string, 
-  endpoint?: string
+  ip: string,
+  endpoint?: string,
 ): TrustedIPBypassResult => trustedIPBypassManager.checkTrustedIP(ip, endpoint);
 
 export const isIPTrusted = (ip: string): boolean => trustedIPBypassManager.isIPTrusted(ip);

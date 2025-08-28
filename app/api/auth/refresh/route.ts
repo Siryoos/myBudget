@@ -90,7 +90,7 @@ const verifyRefreshToken = (refreshToken: string): { success: boolean; decoded?:
         details: 'The refresh token is invalid or malformed',
       },
     };
-  };
+  }
 };
 
 // Helper function to validate token structure

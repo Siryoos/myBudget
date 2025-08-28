@@ -1,7 +1,9 @@
 import { query } from '@/lib/database';
-import { BaseService, NotFoundError, ValidationError } from './base-service';
-import { SavingsGoalCreate, SavingsGoalUpdate, MilestoneCreate, MilestoneUpdate, AutomationRuleCreate, AutomationRuleUpdate, savingsGoalSchemas, milestoneSchemas, automationRuleSchemas } from '@/lib/validation-schemas';
+import type { SavingsGoalCreate, SavingsGoalUpdate, MilestoneCreate, MilestoneUpdate, AutomationRuleCreate, AutomationRuleUpdate } from '@/lib/validation-schemas';
+import { savingsGoalSchemas, milestoneSchemas, automationRuleSchemas } from '@/lib/validation-schemas';
 import type { SavingsGoal, Milestone, AutomationRule } from '@/types';
+
+import { BaseService, NotFoundError, ValidationError } from './base-service';
 
 export interface SavingsGoalWithDetails extends SavingsGoal {
   milestones: Milestone[];
@@ -43,7 +45,7 @@ export class GoalsService extends BaseService {
     return {
       ...goal,
       milestones: [],
-      automationRules: []
+      automationRules: [],
     };
   }
 
@@ -55,13 +57,13 @@ export class GoalsService extends BaseService {
 
     const [milestones, automationRules] = await Promise.all([
       this.getGoalMilestones(id),
-      this.getGoalAutomationRules(id)
+      this.getGoalAutomationRules(id),
     ]);
 
     return {
       ...this.mapDbGoalToGoal(goal),
       milestones,
-      automationRules
+      automationRules,
     };
   }
 
@@ -84,13 +86,13 @@ export class GoalsService extends BaseService {
     for (const goal of result.rows) {
       const [milestones, automationRules] = await Promise.all([
         this.getGoalMilestones(goal.id),
-        this.getGoalAutomationRules(goal.id)
+        this.getGoalAutomationRules(goal.id),
       ]);
 
       goals.push({
         ...this.mapDbGoalToGoal(goal),
         milestones,
-        automationRules
+        automationRules,
       });
     }
 
@@ -139,13 +141,13 @@ export class GoalsService extends BaseService {
 
     const [milestones, automationRules] = await Promise.all([
       this.getGoalMilestones(id),
-      this.getGoalAutomationRules(id)
+      this.getGoalAutomationRules(id),
     ]);
 
     return {
       ...this.mapDbGoalToGoal(updatedGoal),
       milestones,
-      automationRules
+      automationRules,
     };
   }
 
@@ -273,7 +275,7 @@ export class GoalsService extends BaseService {
 
     const result = await query(
       'DELETE FROM milestones WHERE id = $1 RETURNING id',
-      [milestoneId]
+      [milestoneId],
     );
 
     return result.rows.length > 0;
@@ -300,7 +302,7 @@ export class GoalsService extends BaseService {
       validatedData.amount || null,
       validatedData.percentage || null,
       validatedData.frequency,
-      validatedData.isActive || true
+      validatedData.isActive || true,
     ]);
 
     return this.mapDbAutomationRuleToAutomationRule(result.rows[0]);
@@ -356,7 +358,7 @@ export class GoalsService extends BaseService {
 
     const result = await query(
       'DELETE FROM automation_rules WHERE id = $1 RETURNING id',
-      [ruleId]
+      [ruleId],
     );
 
     return result.rows.length > 0;
@@ -365,7 +367,7 @@ export class GoalsService extends BaseService {
   private async getGoalMilestones(goalId: string): Promise<Milestone[]> {
     const result = await query(
       'SELECT * FROM milestones WHERE goal_id = $1 ORDER BY amount',
-      [goalId]
+      [goalId],
     );
 
     return result.rows.map(row => this.mapDbMilestoneToMilestone(row));
@@ -374,7 +376,7 @@ export class GoalsService extends BaseService {
   private async getGoalAutomationRules(goalId: string): Promise<AutomationRule[]> {
     const result = await query(
       'SELECT * FROM automation_rules WHERE goal_id = $1 ORDER BY created_at',
-      [goalId]
+      [goalId],
     );
 
     return result.rows.map(row => this.mapDbAutomationRuleToAutomationRule(row));

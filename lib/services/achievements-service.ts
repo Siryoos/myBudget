@@ -1,7 +1,9 @@
 import { query } from '@/lib/database';
-import { BaseService, NotFoundError } from './base-service';
-import { AchievementCreate, AchievementUpdate, UserAchievementUpdate, achievementSchemas, userAchievementSchemas } from '@/lib/validation-schemas';
+import type { AchievementCreate, AchievementUpdate, UserAchievementUpdate } from '@/lib/validation-schemas';
+import { achievementSchemas, userAchievementSchemas } from '@/lib/validation-schemas';
 import type { Achievement, UserAchievement } from '@/types';
+
+import { BaseService, NotFoundError } from './base-service';
 
 export interface AchievementWithProgress extends Achievement {
   userProgress?: {
@@ -55,7 +57,7 @@ export class AchievementsService extends BaseService {
   async findByCategory(category: string): Promise<Achievement[]> {
     const result = await query(
       'SELECT * FROM achievements WHERE category = $1 ORDER BY points DESC',
-      [category]
+      [category],
     );
     return result.rows.map(row => this.mapDbAchievementToAchievement(row));
   }
@@ -160,7 +162,7 @@ export class AchievementsService extends BaseService {
       `, [userId, achievementId]);
 
       return this.mapDbUserAchievementToUserAchievement(result.rows[0]);
-    } else {
+    }
       // Create new user achievement record
       const result = await query(`
         INSERT INTO user_achievements (user_id, achievement_id, is_unlocked, unlocked_date, progress, max_progress)
@@ -169,13 +171,13 @@ export class AchievementsService extends BaseService {
       `, [userId, achievementId, achievement.requirementValue]);
 
       return this.mapDbUserAchievementToUserAchievement(result.rows[0]);
-    }
+
   }
 
   async updateUserAchievement(
     userId: string,
     achievementId: string,
-    data: UserAchievementUpdate
+    data: UserAchievementUpdate,
   ): Promise<UserAchievement> {
     // Validate input data
     const validatedData = this.validateData(userAchievementSchemas.update, data);
@@ -312,7 +314,7 @@ export class AchievementsService extends BaseService {
   private async findUserAchievement(userId: string, achievementId: string): Promise<UserAchievement | null> {
     const result = await query(
       'SELECT * FROM user_achievements WHERE user_id = $1 AND achievement_id = $2',
-      [userId, achievementId]
+      [userId, achievementId],
     );
 
     return result.rows.length > 0

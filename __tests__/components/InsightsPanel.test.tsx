@@ -1,8 +1,8 @@
-import React from 'react';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
-import { renderWithProviders, mockData, mockApiResponses } from '@/lib/test-utils';
+import React from 'react';
 
 import { InsightsPanel } from '@/components/dashboard/InsightsPanel';
+import { renderWithProviders, mockData, mockApiResponses } from '@/lib/test-utils';
 
 // Mock the API hooks
 jest.mock('@/lib/api-hooks', () => ({
@@ -87,7 +87,7 @@ describe('InsightsPanel', () => {
           showSavingTips={true}
           personalizedRecommendations={false}
           comparePeers={false}
-        />
+        />,
       );
 
       expect(screen.getByText('tips')).toBeInTheDocument();
@@ -157,7 +157,7 @@ describe('InsightsPanel', () => {
       waitFor(() => {
         const comparison = screen.getByText('Savings Rate');
         expect(comparison).toBeInTheDocument();
-        
+
         // Check if better performance is highlighted
         const userValue = screen.getByText('20%');
         expect(userValue).toHaveClass('text-secondary-growth-green');
@@ -168,20 +168,20 @@ describe('InsightsPanel', () => {
   describe('Interaction Handling', () => {
     it('handles insight dismissal', async () => {
       const mockDismissInsight = jest.fn();
-      
+
       renderWithProviders(
         <InsightsPanel {...defaultProps} />,
         {
           initialAppState: {
             // Mock the dismiss function
           },
-        }
+        },
       );
 
       waitFor(() => {
         const dismissButton = screen.getByLabelText('Dismiss insight');
         fireEvent.click(dismissButton);
-        
+
         expect(mockDismissInsight).toHaveBeenCalledWith('insight-1');
       });
     });
@@ -195,13 +195,13 @@ describe('InsightsPanel', () => {
         <InsightsPanel {...defaultProps} />,
         {
           router: mockRouter,
-        }
+        },
       );
 
       waitFor(() => {
         const actionButton = screen.getByText('Set coffee budget');
         fireEvent.click(actionButton);
-        
+
         expect(mockRouter.push).toHaveBeenCalledWith('/budget?category=food');
       });
     });
@@ -227,7 +227,7 @@ describe('InsightsPanel', () => {
 
       // Press arrow key to navigate
       fireEvent.keyDown(tipsTab, { key: 'ArrowRight' });
-      
+
       const recommendationsTab = screen.getByRole('tab', { name: 'recommendations' });
       expect(recommendationsTab).toHaveFocus();
     });
@@ -252,7 +252,7 @@ describe('InsightsPanel', () => {
           initialAppState: {
             // Mock empty data
           },
-        }
+        },
       );
 
       waitFor(() => {
@@ -264,12 +264,12 @@ describe('InsightsPanel', () => {
   describe('Performance', () => {
     it('renders within acceptable time', () => {
       const start = performance.now();
-      
+
       renderWithProviders(<InsightsPanel {...defaultProps} />);
-      
+
       const end = performance.now();
       const renderTime = end - start;
-      
+
       // Should render in less than 100ms
       expect(renderTime).toBeLessThan(100);
     });
@@ -287,7 +287,7 @@ describe('InsightsPanel', () => {
           initialAppState: {
             // Mock large dataset
           },
-        }
+        },
       );
 
       // Should not crash with large datasets
@@ -320,7 +320,7 @@ describe('InsightsPanel', () => {
           initialAppState: {
             // Mock RTL language
           },
-        }
+        },
       );
 
       const container = screen.getByTestId('insights-panel');

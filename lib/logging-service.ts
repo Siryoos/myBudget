@@ -73,10 +73,10 @@ export class ConsoleLoggingService extends BaseLoggingService {
   }
 
   async log(entry: LogEntry): Promise<void> {
-    if (!this.isEnabled) return;
+    if (!this.isEnabled) {return;}
 
     const formattedEntry = this.formatLogEntry(entry);
-    
+
     switch (entry.level) {
       case 'error':
         console.error('🚨 ERROR:', formattedEntry);
@@ -150,7 +150,7 @@ export class SentryLoggingService extends BaseLoggingService {
     try {
       // Dynamic import to avoid bundling Sentry in client
       const Sentry = await import('@sentry/nextjs');
-      
+
       Sentry.init({
         dsn: this.config.dsn,
         environment: this.config.environment || process.env.NODE_ENV,
@@ -173,11 +173,11 @@ export class SentryLoggingService extends BaseLoggingService {
   }
 
   async log(entry: LogEntry): Promise<void> {
-    if (!this.isEnabled || !this.sentry) return;
+    if (!this.isEnabled || !this.sentry) {return;}
 
     try {
       const formattedEntry = this.formatLogEntry(entry);
-      
+
       if (entry.error) {
         this.sentry.captureException(entry.error, {
           tags: entry.tags,
@@ -258,12 +258,12 @@ export class FileLoggingService extends BaseLoggingService {
   }
 
   async log(entry: LogEntry): Promise<void> {
-    if (!this.isEnabled) return;
+    if (!this.isEnabled) {return;}
 
     try {
       const formattedEntry = this.formatLogEntry(entry);
-      const logLine = JSON.stringify(formattedEntry) + '\n';
-      
+      const logLine = `${JSON.stringify(formattedEntry)}\n`;
+
       // In a real implementation, you'd use a proper file logging library
       // For now, we'll use console as fallback
       console.log(`[FILE LOG] ${logLine.trim()}`);
@@ -328,7 +328,7 @@ export class LoggingServiceManager {
   private initializeServices(): void {
     // Initialize based on environment variables
     const config = this.getServiceConfig();
-    
+
     switch (config.service) {
       case 'sentry':
         if (config.dsn) {

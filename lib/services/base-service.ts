@@ -1,5 +1,6 @@
-import { query, QueryResult } from '@/lib/database';
 import { z } from 'zod';
+
+import { query, QueryResult } from '@/lib/database';
 
 // Base service class with common functionality
 export abstract class BaseService {
@@ -13,7 +14,7 @@ export abstract class BaseService {
   async findById(id: string): Promise<any | null> {
     const result = await query(
       `SELECT * FROM ${this.tableName} WHERE id = $1`,
-      [id]
+      [id],
     );
 
     return result.rows[0] || null;
@@ -87,7 +88,7 @@ export abstract class BaseService {
   async delete(id: string): Promise<boolean> {
     const result = await query(
       `DELETE FROM ${this.tableName} WHERE id = $1 RETURNING id`,
-      [id]
+      [id],
     );
 
     return result.rows.length > 0;
@@ -100,7 +101,7 @@ export abstract class BaseService {
     } catch (error) {
       if (error instanceof z.ZodError) {
         const errorMessages = error.errors.map(err =>
-          `${err.path.join('.')}: ${err.message}`
+          `${err.path.join('.')}: ${err.message}`,
         ).join(', ');
         throw new Error(`Validation failed: ${errorMessages}`);
       }
@@ -110,7 +111,7 @@ export abstract class BaseService {
 
   // Execute transaction
   protected async executeTransaction<T>(
-    callback: () => Promise<T>
+    callback: () => Promise<T>,
   ): Promise<T> {
     try {
       await query('BEGIN');

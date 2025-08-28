@@ -1,16 +1,16 @@
-import { NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 import { RequestValidator, REQUEST_LIMITS } from '@/lib/api-validation';
 import { generateToken } from '@/lib/auth';
 import { generateRefreshToken } from '@/lib/jwt-wrapper';
-import { UserService } from '@/lib/services/user-service';
-import { userSchemas } from '@/lib/validation-schemas';
 import {
   handleApiError,
   createSuccessResponse,
   generateRequestId,
-  createUnauthorizedError
+  createUnauthorizedError,
 } from '@/lib/services/error-handler';
+import { UserService } from '@/lib/services/user-service';
+import { userSchemas } from '@/lib/validation-schemas';
 
 const userService = new UserService();
 
@@ -43,7 +43,7 @@ export const POST = async (request: NextRequest) => {
     const accessToken = await generateToken({
       id: user.id,
       userId: user.id,
-      email: user.email
+      email: user.email,
     });
 
     const refreshToken = generateRefreshToken({
@@ -59,7 +59,7 @@ export const POST = async (request: NextRequest) => {
       user: {
         id: user.id,
         email: user.email,
-        name: user.name
+        name: user.name,
       },
       accessToken,
       refreshToken,

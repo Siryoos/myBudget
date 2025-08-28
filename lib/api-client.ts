@@ -1,11 +1,11 @@
-import type { 
+import type {
   DashboardData,
   Transaction,
   Budget,
   SavingsGoal,
   Achievement,
   FinancialInsight,
-  ApiResponse 
+  ApiResponse,
 } from '@/types';
 import type { Notification } from '@/types/api';
 
@@ -146,7 +146,7 @@ export class ApiClient {
 
         // Type guard for refresh response
         const refreshResponse = data as RefreshTokenResponse;
-        
+
         if (!refreshResponse.data || typeof refreshResponse.data !== 'object') {
           throw new ApiError(
             'Missing or invalid data property in refresh response',
@@ -180,7 +180,7 @@ export class ApiClient {
       } finally {
         this.refreshPromise = null;
       }
-    })() as Promise<string>;
+    })();
 
     return this.refreshPromise;
   }

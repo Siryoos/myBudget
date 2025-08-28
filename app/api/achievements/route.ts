@@ -1,14 +1,14 @@
-import { NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 import { RequestValidator, REQUEST_LIMITS } from '@/lib/api-validation';
 import { requireAuth } from '@/lib/auth-middleware';
 import { AchievementsService } from '@/lib/services/achievements-service';
-import { achievementSchemas } from '@/lib/validation-schemas';
 import {
   handleApiError,
   createSuccessResponse,
-  generateRequestId
+  generateRequestId,
 } from '@/lib/services/error-handler';
+import { achievementSchemas } from '@/lib/validation-schemas';
 import type { AuthenticatedRequest } from '@/types/auth';
 
 const achievementsService = new AchievementsService();

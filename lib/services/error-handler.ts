@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
 import { ZodError } from 'zod';
+
 import {
   NotFoundError,
   ValidationError,
   ConflictError,
   UnauthorizedError,
-  ForbiddenError
+  ForbiddenError,
 } from './base-service';
 
 export interface ErrorResponse {
@@ -44,34 +45,22 @@ export class ApiError extends Error {
 }
 
 // Error factory functions
-export const createValidationError = (message: string, details?: any): ApiError => {
-  return new ApiError(message, ERROR_CODES.VALIDATION_ERROR, 400, details);
-};
+export const createValidationError = (message: string, details?: any): ApiError => new ApiError(message, ERROR_CODES.VALIDATION_ERROR, 400, details);
 
 export const createNotFoundError = (resource: string, id?: string): ApiError => {
   const message = id ? `${resource} with id ${id} not found` : `${resource} not found`;
   return new ApiError(message, ERROR_CODES.NOT_FOUND, 404);
 };
 
-export const createConflictError = (message: string, details?: any): ApiError => {
-  return new ApiError(message, ERROR_CODES.CONFLICT, 409, details);
-};
+export const createConflictError = (message: string, details?: any): ApiError => new ApiError(message, ERROR_CODES.CONFLICT, 409, details);
 
-export const createUnauthorizedError = (message: string = 'Unauthorized'): ApiError => {
-  return new ApiError(message, ERROR_CODES.UNAUTHORIZED, 401);
-};
+export const createUnauthorizedError = (message: string = 'Unauthorized'): ApiError => new ApiError(message, ERROR_CODES.UNAUTHORIZED, 401);
 
-export const createForbiddenError = (message: string = 'Forbidden'): ApiError => {
-  return new ApiError(message, ERROR_CODES.FORBIDDEN, 403);
-};
+export const createForbiddenError = (message: string = 'Forbidden'): ApiError => new ApiError(message, ERROR_CODES.FORBIDDEN, 403);
 
-export const createInternalError = (message: string = 'Internal server error', details?: any): ApiError => {
-  return new ApiError(message, ERROR_CODES.INTERNAL_ERROR, 500, details);
-};
+export const createInternalError = (message: string = 'Internal server error', details?: any): ApiError => new ApiError(message, ERROR_CODES.INTERNAL_ERROR, 500, details);
 
-export const createDatabaseError = (message: string = 'Database error', details?: any): ApiError => {
-  return new ApiError(message, ERROR_CODES.DATABASE_ERROR, 500, details);
-};
+export const createDatabaseError = (message: string = 'Database error', details?: any): ApiError => new ApiError(message, ERROR_CODES.DATABASE_ERROR, 500, details);
 
 /**
  * Convert any thrown error into a standardized NextResponse containing an ErrorResponse.
@@ -197,7 +186,7 @@ export function handleApiError(error: unknown, requestId?: string): NextResponse
 export function createSuccessResponse<T>(
   data: T,
   requestId?: string,
-  status: number = 200
+  status: number = 200,
 ): NextResponse<{ success: true; data: T; requestId?: string }> {
   return NextResponse.json({
     success: true,
@@ -232,7 +221,7 @@ export function createPaginatedResponse<T>(
     hasNext: boolean;
     hasPrev: boolean;
   },
-  requestId?: string
+  requestId?: string,
 ): NextResponse<{
   success: true;
   data: T[];

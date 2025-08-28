@@ -1,4 +1,5 @@
-import { NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
+
 import { query } from '@/lib/database';
 import { getHealthData } from '@/lib/middleware/monitoring';
 import { createSuccessResponse, generateRequestId } from '@/lib/services/error-handler';

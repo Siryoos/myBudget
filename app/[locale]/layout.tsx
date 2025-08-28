@@ -13,10 +13,8 @@ export default function LocaleLayout({
 }
 
 // Generate static params for all supported locales
-export const generateStaticParams = () => {
-  return [
+export const generateStaticParams = () => [
     { locale: 'en' },
     { locale: 'fa' },
     { locale: 'ar' },
   ];
-}

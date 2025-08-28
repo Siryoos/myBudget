@@ -1,14 +1,14 @@
-import { NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 import { RequestValidator, REQUEST_LIMITS } from '@/lib/api-validation';
 import { requireAuth } from '@/lib/auth-middleware';
-import { UserService } from '@/lib/services/user-service';
-import { userSchemas } from '@/lib/validation-schemas';
 import {
   handleApiError,
   createSuccessResponse,
-  generateRequestId
+  generateRequestId,
 } from '@/lib/services/error-handler';
+import { UserService } from '@/lib/services/user-service';
+import { userSchemas } from '@/lib/validation-schemas';
 import type { AuthenticatedRequest } from '@/types/auth';
 
 const userService = new UserService();
@@ -50,7 +50,7 @@ export const PUT = requireAuth(async (request: AuthenticatedRequest) => {
 
     return createSuccessResponse({
       message: 'Profile updated successfully',
-      profile: updatedProfile
+      profile: updatedProfile,
     }, requestId);
 
   } catch (error) {
@@ -87,7 +87,7 @@ export const PATCH = requireAuth(async (request: AuthenticatedRequest) => {
 
     return createSuccessResponse({
       message: 'Avatar updated successfully',
-      profile: updatedProfile
+      profile: updatedProfile,
     }, requestId);
 
   } catch (error) {

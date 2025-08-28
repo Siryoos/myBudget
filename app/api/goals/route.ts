@@ -1,15 +1,16 @@
-import { NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 import { RequestValidator, REQUEST_LIMITS } from '@/lib/api-validation';
 import { requireAuth } from '@/lib/auth-middleware';
-import { GoalsService } from '@/lib/services/goals-service';
-import { savingsGoalSchemas } from '@/lib/validation-schemas';
+import type { OptimizedRequest } from '@/lib/middleware/performance';
+import { withFullOptimization } from '@/lib/middleware/performance';
 import {
   handleApiError,
   createSuccessResponse,
-  generateRequestId
+  generateRequestId,
 } from '@/lib/services/error-handler';
-import { withFullOptimization, OptimizedRequest } from '@/lib/middleware/performance';
+import { GoalsService } from '@/lib/services/goals-service';
+import { savingsGoalSchemas } from '@/lib/validation-schemas';
 import type { AuthenticatedRequest } from '@/types/auth';
 
 const goalsService = new GoalsService();
@@ -39,7 +40,7 @@ const getGoalsHandler = async (request: AuthenticatedRequest) => {
 
 export const GET = withFullOptimization(
   (request: OptimizedRequest) => `${request.url}-user-${(request as any).user?.id}`,
-  'get-goals'
+  'get-goals',
 )(requireAuth(getGoalsHandler));
 
 export const POST = requireAuth(async (request: AuthenticatedRequest) => {

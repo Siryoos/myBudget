@@ -2,7 +2,7 @@ import type { PerformanceMetrics } from '@/types';
 
 /**
  * Performance Monitoring System
- * 
+ *
  * This module provides comprehensive performance monitoring including:
  * - API response times
  * - Database query performance
@@ -143,9 +143,9 @@ export class PerformanceMonitor {
     value: number,
     unit: string,
     metadata?: Record<string, any>,
-    tags?: string[]
+    tags?: string[],
   ): void {
-    if (!this.isEnabled) return;
+    if (!this.isEnabled) {return;}
 
     const metric: PerformanceMetric = {
       id: crypto.randomUUID(),
@@ -171,7 +171,7 @@ export class PerformanceMonitor {
     method: string,
     responseTime: number,
     statusCode: number,
-    metadata?: Record<string, any>
+    metadata?: Record<string, any>,
   ): void {
     this.recordMetric(
       'api',
@@ -184,7 +184,7 @@ export class PerformanceMonitor {
         statusCode,
         ...metadata,
       },
-      ['api', endpoint, method, statusCode.toString()]
+      ['api', endpoint, method, statusCode.toString()],
     );
 
     // Record error rate for non-2xx status codes
@@ -199,7 +199,7 @@ export class PerformanceMonitor {
           method,
           statusCode,
         },
-        ['api', 'error', endpoint, method]
+        ['api', 'error', endpoint, method],
       );
     }
   }
@@ -211,7 +211,7 @@ export class PerformanceMonitor {
     query: string,
     executionTime: number,
     rowCount: number,
-    metadata?: Record<string, any>
+    metadata?: Record<string, any>,
   ): void {
     this.recordMetric(
       'database',
@@ -223,7 +223,7 @@ export class PerformanceMonitor {
         rowCount,
         ...metadata,
       },
-      ['database', 'query']
+      ['database', 'query'],
     );
   }
 
@@ -234,7 +234,7 @@ export class PerformanceMonitor {
     componentName: string,
     renderTime: number,
     reRenderCount: number = 0,
-    metadata?: Record<string, any>
+    metadata?: Record<string, any>,
   ): void {
     this.recordMetric(
       'component',
@@ -246,7 +246,7 @@ export class PerformanceMonitor {
         reRenderCount,
         ...metadata,
       },
-      ['component', componentName]
+      ['component', componentName],
     );
 
     if (reRenderCount > 0) {
@@ -258,7 +258,7 @@ export class PerformanceMonitor {
         {
           componentName,
         },
-        ['component', 're-render', componentName]
+        ['component', 're-render', componentName],
       );
     }
   }
@@ -269,10 +269,10 @@ export class PerformanceMonitor {
   recordMemoryMetric(): void {
     if (typeof performance !== 'undefined' && 'memory' in performance) {
       const memory = (performance as any).memory;
-      
+
       if (memory) {
         const heapUsagePercent = (memory.usedJSHeapSize / memory.jsHeapSizeLimit) * 100;
-        
+
         this.recordMetric(
           'memory',
           'heap_usage',
@@ -283,7 +283,7 @@ export class PerformanceMonitor {
             total: memory.totalJSHeapSize,
             limit: memory.jsHeapSizeLimit,
           },
-          ['memory', 'heap']
+          ['memory', 'heap'],
         );
       }
     }
@@ -295,7 +295,7 @@ export class PerformanceMonitor {
   recordInteractionMetric(
     action: string,
     duration: number,
-    metadata?: Record<string, any>
+    metadata?: Record<string, any>,
   ): void {
     this.recordMetric(
       'interaction',
@@ -306,7 +306,7 @@ export class PerformanceMonitor {
         action,
         ...metadata,
       },
-      ['interaction', action]
+      ['interaction', action],
     );
   }
 
@@ -316,7 +316,7 @@ export class PerformanceMonitor {
   recordErrorMetric(
     errorType: string,
     recoveryTime: number,
-    metadata?: Record<string, any>
+    metadata?: Record<string, any>,
   ): void {
     this.recordMetric(
       'error',
@@ -327,7 +327,7 @@ export class PerformanceMonitor {
         errorType,
         ...metadata,
       },
-      ['error', errorType]
+      ['error', errorType],
     );
   }
 
@@ -336,7 +336,7 @@ export class PerformanceMonitor {
    */
   private checkThresholds(metric: PerformanceMetric): void {
     const relevantThresholds = this.thresholds.filter(
-      t => t.type === metric.type && t.name === metric.name
+      t => t.type === metric.type && t.name === metric.name,
     );
 
     relevantThresholds.forEach(threshold => {
@@ -354,7 +354,7 @@ export class PerformanceMonitor {
   private createAlert(
     type: 'warning' | 'critical',
     metric: PerformanceMetric,
-    threshold: PerformanceThreshold
+    threshold: PerformanceThreshold,
   ): void {
     const alert: PerformanceAlert = {
       id: crypto.randomUUID(),
@@ -375,7 +375,7 @@ export class PerformanceMonitor {
   private notifyAlert(alert: PerformanceAlert): void {
     if (alert.type === 'critical') {
       console.error('🚨 CRITICAL PERFORMANCE ALERT:', alert.message);
-      
+
       // In production, send to monitoring service
       if (process.env.NODE_ENV === 'production') {
         this.sendToMonitoringService(alert);
@@ -408,7 +408,7 @@ export class PerformanceMonitor {
    */
   getMetrics(
     type?: PerformanceMetric['type'],
-    timeRange?: { start: number; end: number }
+    timeRange?: { start: number; end: number },
   ): PerformanceMetric[] {
     let filtered = this.metrics;
 
@@ -418,7 +418,7 @@ export class PerformanceMonitor {
 
     if (timeRange) {
       filtered = filtered.filter(
-        m => m.timestamp >= timeRange.start && m.timestamp <= timeRange.end
+        m => m.timestamp >= timeRange.start && m.timestamp <= timeRange.end,
       );
     }
 
@@ -461,7 +461,7 @@ export class PerformanceMonitor {
   private groupMetricsByName(metrics: PerformanceMetric[]): Record<string, PerformanceMetric[]> {
     return metrics.reduce((groups, metric) => {
       const key = `${metric.type}:${metric.name}`;
-      if (!groups[key]) groups[key] = [];
+      if (!groups[key]) {groups[key] = [];}
       groups[key].push(metric);
       return groups;
     }, {} as Record<string, PerformanceMetric[]>);
@@ -492,7 +492,7 @@ export class PerformanceMonitor {
    * Flush metrics to external service
    */
   private async flushMetrics(): Promise<void> {
-    if (this.metrics.length === 0) return;
+    if (this.metrics.length === 0) {return;}
 
     try {
       // Example: Send to monitoring service
@@ -558,25 +558,25 @@ export const recordApiPerformance = (
   method: string,
   responseTime: number,
   statusCode: number,
-  metadata?: Record<string, any>
+  metadata?: Record<string, any>,
 ) => performanceMonitor.recordApiMetric(endpoint, method, responseTime, statusCode, metadata);
 
 export const recordDatabasePerformance = (
   query: string,
   executionTime: number,
   rowCount: number,
-  metadata?: Record<string, any>
+  metadata?: Record<string, any>,
 ) => performanceMonitor.recordDatabaseMetric(query, executionTime, rowCount, metadata);
 
 export const recordComponentPerformance = (
   componentName: string,
   renderTime: number,
   reRenderCount?: number,
-  metadata?: Record<string, any>
+  metadata?: Record<string, any>,
 ) => performanceMonitor.recordComponentMetric(componentName, renderTime, reRenderCount, metadata);
 
 export const recordInteractionPerformance = (
   action: string,
   duration: number,
-  metadata?: Record<string, any>
+  metadata?: Record<string, any>,
 ) => performanceMonitor.recordInteractionMetric(action, duration, metadata);

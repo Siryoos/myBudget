@@ -3,8 +3,8 @@
 import type { ReactNode } from 'react';
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
-import { TransactionService } from '@/lib/services/transaction-service';
 import { BudgetService } from '@/lib/services/budget-service';
+import { TransactionService } from '@/lib/services/transaction-service';
 import type { Transaction, Budget, SavingsGoal } from '@/types';
 
 interface FinanceContextType {
@@ -71,7 +71,7 @@ export function FinanceProvider({ children, userId }: { children: ReactNode; use
 
   // Load transactions
   const loadTransactions = useCallback(async () => {
-    if (!userId) return;
+    if (!userId) {return;}
 
     setTransactionsLoading(true);
     setTransactionsError(null);
@@ -88,7 +88,7 @@ export function FinanceProvider({ children, userId }: { children: ReactNode; use
 
   // Load budgets
   const loadBudgets = useCallback(async () => {
-    if (!userId) return;
+    if (!userId) {return;}
 
     setBudgetsLoading(true);
     setBudgetsError(null);
@@ -110,7 +110,7 @@ export function FinanceProvider({ children, userId }: { children: ReactNode; use
 
   // Load goals (placeholder - would need a goal service)
   const loadGoals = useCallback(async () => {
-    if (!userId) return;
+    if (!userId) {return;}
 
     setGoalsLoading(true);
     setGoalsError(null);

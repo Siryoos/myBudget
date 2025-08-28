@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 // Core financial types
 export interface Transaction {
   id: string
@@ -22,6 +24,8 @@ export interface BudgetCategory {
   isEssential: boolean
 }
 
+export type BudgetMethod = '50-30-20' | 'pay-yourself-first' | 'envelope' | 'zero-based' | 'kakeibo'
+
 export interface Budget {
   id: string
   name: string
@@ -33,7 +37,31 @@ export interface Budget {
   endDate: Date | string
 }
 
-export type BudgetMethod = '50-30-20' | 'pay-yourself-first' | 'envelope' | 'zero-based' | 'kakeibo'
+export type GoalCategory = 'emergency' | 'vacation' | 'home' | 'car' | 'wedding' | 'education' | 'retirement' | 'custom'
+
+export interface RuleCondition {
+  field: string
+  operator: 'equals' | 'greater_than' | 'less_than' | 'contains'
+  value: string | number
+}
+
+export interface Milestone {
+  id: string
+  amount: number
+  description: string
+  isCompleted: boolean
+  completedDate?: Date
+}
+
+export interface AutomationRule {
+  id: string
+  type: 'fixed' | 'percentage' | 'round-up' | 'remainder'
+  amount?: number
+  percentage?: number
+  frequency: 'daily' | 'weekly' | 'biweekly' | 'monthly'
+  isActive: boolean
+  conditions?: RuleCondition[]
+}
 
 export interface SavingsGoal {
   id: string
@@ -58,33 +86,16 @@ export interface SavingsGoal {
   color?: string
 }
 
-export type GoalCategory = 'emergency' | 'vacation' | 'home' | 'car' | 'wedding' | 'education' | 'retirement' | 'custom'
-
-export interface Milestone {
-  id: string
-  amount: number
-  description: string
-  isCompleted: boolean
-  completedDate?: Date
-}
-
-export interface AutomationRule {
-  id: string
-  type: 'fixed' | 'percentage' | 'round-up' | 'remainder'
-  amount?: number
-  percentage?: number
-  frequency: 'daily' | 'weekly' | 'biweekly' | 'monthly'
-  isActive: boolean
-  conditions?: RuleCondition[]
-}
-
-export interface RuleCondition {
-  field: string
-  operator: 'equals' | 'greater_than' | 'less_than' | 'contains'
-  value: string | number
-}
-
 // Behavioral enhancement types
+export type AchievementCategory = 'savings-streak' | 'goal-achievement' | 'financial-education' | 'milestone' | 'social' | 'streak'
+
+export interface AchievementRequirement {
+  type: 'consecutive-days' | 'total-amount' | 'goal-completion' | 'education-modules' | 'custom'
+  value: number
+  timeframe?: 'daily' | 'weekly' | 'monthly' | 'yearly' | 'all-time'
+  description: string
+}
+
 export interface Achievement {
   id: string
   name: string
@@ -98,15 +109,6 @@ export interface Achievement {
   unlockedAt?: Date | string
   progress?: number
   maxProgress?: number
-}
-
-export type AchievementCategory = 'savings-streak' | 'goal-achievement' | 'financial-education' | 'milestone' | 'social' | 'streak'
-
-export interface AchievementRequirement {
-  type: 'consecutive-days' | 'total-amount' | 'goal-completion' | 'education-modules' | 'custom'
-  value: number
-  timeframe?: 'daily' | 'weekly' | 'monthly' | 'yearly' | 'all-time'
-  description: string
 }
 
 export interface UserAchievement {
@@ -277,13 +279,13 @@ export type ChallengeType = 'no-spend' | '52-week' | 'round-up' | 'budget-contro
 // Component props types
 export interface ComponentProps {
   className?: string
-  children?: React.ReactNode
+  children?: ReactNode
 }
 
 export interface CardProps extends ComponentProps {
   title?: string
   subtitle?: string
-  actions?: React.ReactNode
+  actions?: ReactNode
   hoverable?: boolean
 }
 

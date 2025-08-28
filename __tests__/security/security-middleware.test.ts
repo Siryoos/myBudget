@@ -23,6 +23,7 @@ jest.mock('../../lib/redis', () => ({
 
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
+
 import { securityMiddleware } from '../../middleware/security';
 
 // Instead of importing the problematic middleware, let's test the core security functions

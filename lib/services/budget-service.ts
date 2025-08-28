@@ -1,7 +1,9 @@
 import { query } from '@/lib/database';
-import { BaseService, NotFoundError, ValidationError, ConflictError } from './base-service';
-import { BudgetCreate, BudgetUpdate, BudgetCategoryCreate, BudgetCategoryUpdate, budgetSchemas, budgetCategorySchemas } from '@/lib/validation-schemas';
+import type { BudgetCreate, BudgetUpdate, BudgetCategoryCreate, BudgetCategoryUpdate } from '@/lib/validation-schemas';
+import { budgetSchemas, budgetCategorySchemas } from '@/lib/validation-schemas';
 import type { Budget, BudgetCategory } from '@/types';
+
+import { BaseService, NotFoundError, ValidationError, ConflictError } from './base-service';
 
 export interface BudgetWithCategories extends Budget {
   categories: BudgetCategory[];
@@ -42,7 +44,7 @@ export class BudgetService extends BaseService {
         validatedData.totalIncome,
         validatedData.period,
         validatedData.startDate,
-        validatedData.endDate
+        validatedData.endDate,
       ]);
 
       const budget = budgetResult.rows[0];
@@ -61,7 +63,7 @@ export class BudgetService extends BaseService {
           categoryData.allocated,
           categoryData.color,
           categoryData.icon || null,
-          categoryData.isEssential || false
+          categoryData.isEssential || false,
         ]);
 
         categories.push(this.mapDbCategoryToCategory(categoryResult.rows[0]));
@@ -69,7 +71,7 @@ export class BudgetService extends BaseService {
 
       return {
         ...this.mapDbBudgetToBudget(budget),
-        categories
+        categories,
       };
     });
   }
@@ -83,14 +85,14 @@ export class BudgetService extends BaseService {
     const categories = await this.getBudgetCategories(id);
     return {
       ...this.mapDbBudgetToBudget(budget),
-      categories
+      categories,
     };
   }
 
   async findByUserId(userId: string): Promise<BudgetWithCategories[]> {
     const budgets = await this.findAll({ user_id: userId }, {
       orderBy: 'created_at',
-      orderDirection: 'DESC'
+      orderDirection: 'DESC',
     });
 
     const result: BudgetWithCategories[] = [];
@@ -98,7 +100,7 @@ export class BudgetService extends BaseService {
       const categories = await this.getBudgetCategories(budget.id);
       result.push({
         ...this.mapDbBudgetToBudget(budget),
-        categories
+        categories,
       });
     }
 
@@ -108,7 +110,7 @@ export class BudgetService extends BaseService {
   async findByUserIdAndName(userId: string, name: string): Promise<BudgetWithCategories | null> {
     const budgets = await this.findAll({
       user_id: userId,
-      name: name
+      name,
     });
 
     if (budgets.length === 0) {
@@ -120,7 +122,7 @@ export class BudgetService extends BaseService {
 
     return {
       ...this.mapDbBudgetToBudget(budget),
-      categories
+      categories,
     };
   }
 
@@ -136,7 +138,7 @@ export class BudgetService extends BaseService {
 
     // Check name uniqueness if name is being updated
     if (validatedData.name && validatedData.name !== existingBudget.name) {
-      const budgetWithName = await this.findByUserIdAndName(existingBudget.userId!, validatedData.name);
+      const budgetWithName = await this.findByUserIdAndName(existingBudget.userId, validatedData.name);
       if (budgetWithName) {
         throw new ConflictError('Budget with this name already exists');
       }
@@ -175,7 +177,7 @@ export class BudgetService extends BaseService {
 
     return {
       ...this.mapDbBudgetToBudget(updatedBudget),
-      categories
+      categories,
     };
   }
 
@@ -204,7 +206,7 @@ export class BudgetService extends BaseService {
     // Check if category name already exists in this budget
     const existingCategory = await this.findCategoryByBudgetIdAndName(
       validatedData.budgetId,
-      validatedData.name
+      validatedData.name,
     );
     if (existingCategory) {
       throw new ConflictError('Category with this name already exists in this budget');
@@ -221,7 +223,7 @@ export class BudgetService extends BaseService {
       validatedData.allocated,
       validatedData.color,
       validatedData.icon || null,
-      validatedData.isEssential || false
+      validatedData.isEssential || false,
     ]);
 
     return this.mapDbCategoryToCategory(result.rows[0]);
@@ -240,8 +242,8 @@ export class BudgetService extends BaseService {
     // Check name uniqueness if name is being updated
     if (validatedData.name && validatedData.name !== existingCategory.name) {
       const categoryWithName = await this.findCategoryByBudgetIdAndName(
-        existingCategory.budgetId!,
-        validatedData.name
+        existingCategory.budgetId,
+        validatedData.name,
       );
       if (categoryWithName) {
         throw new ConflictError('Category with this name already exists in this budget');
@@ -289,7 +291,7 @@ export class BudgetService extends BaseService {
     // Delete category
     const result = await query(
       'DELETE FROM budget_categories WHERE id = $1 RETURNING id',
-      [id]
+      [id],
     );
 
     return result.rows.length > 0;
@@ -298,7 +300,7 @@ export class BudgetService extends BaseService {
   private async getBudgetCategories(budgetId: string): Promise<BudgetCategory[]> {
     const result = await query(
       'SELECT * FROM budget_categories WHERE budget_id = $1 ORDER BY name',
-      [budgetId]
+      [budgetId],
     );
 
     return result.rows.map(row => this.mapDbCategoryToCategory(row));
@@ -307,7 +309,7 @@ export class BudgetService extends BaseService {
   private async findCategoryById(id: string): Promise<BudgetCategory | null> {
     const result = await query(
       'SELECT * FROM budget_categories WHERE id = $1',
-      [id]
+      [id],
     );
 
     return result.rows.length > 0 ? this.mapDbCategoryToCategory(result.rows[0]) : null;
@@ -316,7 +318,7 @@ export class BudgetService extends BaseService {
   private async findCategoryByBudgetIdAndName(budgetId: string, name: string): Promise<BudgetCategory | null> {
     const result = await query(
       'SELECT * FROM budget_categories WHERE budget_id = $1 AND name = $2',
-      [budgetId, name]
+      [budgetId, name],
     );
 
     return result.rows.length > 0 ? this.mapDbCategoryToCategory(result.rows[0]) : null;

@@ -1,4 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
+
 import { performanceMonitor, userCache, goalsCache, achievementsCache } from '@/lib/utils/performance';
 
 export interface OptimizedRequest extends NextRequest {
@@ -18,7 +20,7 @@ export interface OptimizedRequest extends NextRequest {
  * @returns A handler that behaves like `handler` but adds gzip and cache-control headers to its responses.
  */
 export function withCompression(
-  handler: (request: OptimizedRequest) => Promise<NextResponse>
+  handler: (request: OptimizedRequest) => Promise<NextResponse>,
 ) {
   return async (request: OptimizedRequest): Promise<NextResponse> => {
     const response = await handler(request);
@@ -52,10 +54,10 @@ export function withCompression(
  */
 export function withCaching(
   cacheKey: (request: OptimizedRequest) => string,
-  ttl?: number
+  ttl?: number,
 ) {
   return function (
-    handler: (request: OptimizedRequest) => Promise<NextResponse>
+    handler: (request: OptimizedRequest) => Promise<NextResponse>,
   ) {
     return async (request: OptimizedRequest): Promise<NextResponse> => {
       const key = cacheKey(request);
@@ -104,10 +106,10 @@ export function withCaching(
  * @returns A higher-order handler that wraps the provided request handler with performance tracking
  */
 export function withPerformanceTracking(
-  operationName: string
+  operationName: string,
 ) {
   return function (
-    handler: (request: OptimizedRequest) => Promise<NextResponse>
+    handler: (request: OptimizedRequest) => Promise<NextResponse>,
   ) {
     return async (request: OptimizedRequest): Promise<NextResponse> => {
       const endTimer = performanceMonitor.start(operationName);
@@ -167,7 +169,7 @@ class RateLimiter {
 
   getRemainingRequests(identifier: string): number {
     const userRequests = this.requests.get(identifier);
-    if (!userRequests) return this.limit;
+    if (!userRequests) {return this.limit;}
 
     return Math.max(0, this.limit - userRequests.count);
   }
@@ -197,12 +199,12 @@ const rateLimiter = new RateLimiter();
  */
 export function withRateLimit(
   getIdentifier: (request: OptimizedRequest) => string = (req) => req.ip || 'anonymous',
-  options?: { limit?: number; windowMs?: number }
+  options?: { limit?: number; windowMs?: number },
 ) {
   const limiter = options ? new RateLimiter(options.limit, options.windowMs) : rateLimiter;
 
   return function (
-    handler: (request: OptimizedRequest) => Promise<NextResponse>
+    handler: (request: OptimizedRequest) => Promise<NextResponse>,
   ) {
     return async (request: OptimizedRequest): Promise<NextResponse> => {
       const identifier = getIdentifier(request);
@@ -221,7 +223,7 @@ export function withRateLimit(
               'X-RateLimit-Remaining': limiter.getRemainingRequests(identifier).toString(),
               'X-RateLimit-Reset': limiter.getResetTime(identifier).toString(),
             },
-          }
+          },
         );
       }
 
@@ -243,7 +245,7 @@ export function withRateLimit(
  * @returns A wrapped handler that applies the described URL optimizations before invoking the original handler.
  */
 export function withRequestOptimization(
-  handler: (request: OptimizedRequest) => Promise<NextResponse>
+  handler: (request: OptimizedRequest) => Promise<NextResponse>,
 ) {
   return async (request: OptimizedRequest): Promise<NextResponse> => {
     // Pre-process request for optimization
@@ -281,7 +283,7 @@ export function withRequestOptimization(
  * @returns A handler that forwards the request to `handler` and augments the resulting response headers.
  */
 export function withDatabaseOptimization(
-  handler: (request: OptimizedRequest) => Promise<NextResponse>
+  handler: (request: OptimizedRequest) => Promise<NextResponse>,
 ) {
   return async (request: OptimizedRequest): Promise<NextResponse> => {
     // Add database optimization headers
@@ -317,10 +319,10 @@ export function withDatabaseOptimization(
  */
 export function withFullOptimization(
   cacheKey?: (request: OptimizedRequest) => string,
-  operationName?: string
+  operationName?: string,
 ) {
   return function (
-    handler: (request: OptimizedRequest) => Promise<NextResponse>
+    handler: (request: OptimizedRequest) => Promise<NextResponse>,
   ) {
     let optimizedHandler = handler;
 

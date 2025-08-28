@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 // User roles enum
 export enum UserRole {
   ADMIN = 'admin',
@@ -139,10 +141,10 @@ export interface RegisterData {
 
 // Route protection types
 export interface ProtectedRouteProps {
-  children: React.ReactNode;
+  children: ReactNode;
   requiredRoles?: UserRole[];
   requiredPermissions?: Permission[];
-  fallback?: React.ReactNode;
+  fallback?: ReactNode;
   redirectTo?: string;
 }
 

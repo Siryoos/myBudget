@@ -1,9 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { RateLimitConfig as RateLimitConfigType } from '../lib/rate-limiting/config';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 
 // Conditional import for Redis - only import in Node.js runtime
-let rateLimiter: any = null;
-let rateLimitConfig: any = null;
+let rateLimiter: unknown = null;
+// Unused variable - will be removed
+// let rateLimitConfig: unknown = null;
 
 if (typeof process !== 'undefined' && process.env && process.env.NODE_ENV) {
   try {
@@ -38,7 +39,7 @@ const validateEnvironment = () => {
       const trimmed = origin.trim();
       return !trimmed ||
              !trimmed.startsWith('http') ||
-             !trimmed.match(/^https?:\/\/[^\s\/]+(\/.*)?$/);
+             !trimmed.match(/^https?:\/\/[^\s/]+(\/.*)?$/);
     });
 
     if (invalidOrigins.length > 0) {
@@ -70,6 +71,16 @@ try {
 
 // Allowed origins for CORS - remove hardcoded fallbacks for security
 const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS?.split(',').map(o => o.trim()).filter(Boolean) || [];
+
+// Helper function to validate domain format
+const isValidDomain = (domain: string): boolean => {
+  try {
+    const url = new URL(domain);
+    return url.protocol === 'https:' && url.hostname.includes('.');
+  } catch {
+    return false;
+  }
+};
 
 // Security headers configuration - configurable via environment variables
 const getSecurityHeaders = () => {
@@ -140,16 +151,6 @@ const getSecurityHeaders = () => {
   };
 };
 
-// Helper function to validate domain format
-const isValidDomain = (domain: string): boolean => {
-  try {
-    const url = new URL(domain);
-    return url.protocol === 'https:' && url.hostname.includes('.');
-  } catch {
-    return false;
-  }
-};
-
 /**
  * Enforces request-level security controls and injects security headers for incoming requests.
  *
@@ -169,7 +170,7 @@ const isValidDomain = (domain: string): boolean => {
  *
  * @returns A NextResponse representing the allowed response, a CORS preflight response, or an error response (413/400/500).
  */
-export function securityMiddleware(request: NextRequest) {
+export const securityMiddleware = (request: NextRequest) => {
   try {
     // Get the response
     const response = NextResponse.next();
@@ -330,7 +331,7 @@ export function securityMiddleware(request: NextRequest) {
       },
     );
   }
-}
+};
 
 // API-specific rate limits with improved type safety
 export const apiRateLimits: Record<string, any> = {

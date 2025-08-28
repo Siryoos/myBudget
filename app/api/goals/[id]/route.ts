@@ -1,14 +1,14 @@
-import { NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 import { RequestValidator, REQUEST_LIMITS } from '@/lib/api-validation';
 import { requireAuth } from '@/lib/auth-middleware';
-import { GoalsService } from '@/lib/services/goals-service';
-import { savingsGoalSchemas } from '@/lib/validation-schemas';
 import {
   handleApiError,
   createSuccessResponse,
-  generateRequestId
+  generateRequestId,
 } from '@/lib/services/error-handler';
+import { GoalsService } from '@/lib/services/goals-service';
+import { savingsGoalSchemas } from '@/lib/validation-schemas';
 import type { AuthenticatedRequest } from '@/types/auth';
 
 const goalsService = new GoalsService();
@@ -84,7 +84,7 @@ export const DELETE = requireAuth(async (request: AuthenticatedRequest, context?
 
     return createSuccessResponse(
       { message: 'Goal deleted successfully', requestId },
-      requestId
+      requestId,
     );
 
   } catch (error) {

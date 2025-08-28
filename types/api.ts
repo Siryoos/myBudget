@@ -1,9 +1,11 @@
+import type { UserRole } from './auth';
+
 // Base API response types
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;
-  details?: any;
+  details?: unknown;
   timestamp?: string;
   requestId?: string;
 }
@@ -24,7 +26,7 @@ export interface ApiError {
   code: string;
   message: string;
   field?: string;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
 }
 
 // Authentication types

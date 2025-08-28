@@ -1,6 +1,6 @@
+import { query } from '@/lib/database';
 import { UserService } from '@/lib/services/user-service';
 import { userSchemas } from '@/lib/validation-schemas';
-import { query } from '@/lib/database';
 
 // Mock the database
 jest.mock('@/lib/database', () => ({
@@ -54,7 +54,7 @@ describe('UserService', () => {
 
       expect(mockQuery).toHaveBeenCalledWith(
         expect.stringContaining('INSERT INTO users'),
-        expect.any(Array)
+        expect.any(Array),
       );
       expect(result.email).toBe(userData.email);
       expect(result.name).toBe(userData.name);
@@ -99,7 +99,7 @@ describe('UserService', () => {
 
       expect(mockQuery).toHaveBeenCalledWith(
         expect.stringContaining('WHERE lower(email) = lower($1)'),
-        ['test@example.com']
+        ['test@example.com'],
       );
       expect(result?.email).toBe('test@example.com');
     });
@@ -127,7 +127,7 @@ describe('UserService', () => {
 
       expect(mockQuery).toHaveBeenCalledWith(
         'SELECT * FROM users WHERE id = $1',
-        [mockUser.id]
+        [mockUser.id],
       );
       expect(result?.id).toBe(mockUser.id);
     });
@@ -231,7 +231,7 @@ describe('UserService', () => {
       expect(result).toBe(true);
       expect(mockQuery).toHaveBeenCalledWith(
         'DELETE FROM users WHERE id = $1 RETURNING id',
-        [mockUser.id]
+        [mockUser.id],
       );
     });
 

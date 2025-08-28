@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 import { RequestValidator, REQUEST_LIMITS } from '@/lib/api-validation';
 import { requireAuth } from '@/lib/auth-middleware';
@@ -6,7 +6,7 @@ import { AchievementsService } from '@/lib/services/achievements-service';
 import {
   handleApiError,
   createSuccessResponse,
-  generateRequestId
+  generateRequestId,
 } from '@/lib/services/error-handler';
 import type { AuthenticatedRequest } from '@/types/auth';
 
@@ -30,7 +30,7 @@ export const GET = requireAuth(async (request: AuthenticatedRequest) => {
 
     return createSuccessResponse({
       achievements: userAchievements,
-      progress: progressStats
+      progress: progressStats,
     }, requestId);
 
   } catch (error) {
@@ -55,7 +55,7 @@ export const POST = requireAuth(async (request: AuthenticatedRequest) => {
       unlockedAchievements,
       message: unlockedAchievements.length > 0
         ? `Unlocked ${unlockedAchievements.length} new achievement(s)!`
-        : 'No new achievements unlocked'
+        : 'No new achievements unlocked',
     }, requestId);
 
   } catch (error) {

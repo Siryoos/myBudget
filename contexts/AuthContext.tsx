@@ -152,37 +152,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // RBAC helper functions
   const hasPermission = useCallback((permission: string): boolean => {
-    if (!user) return false;
+    if (!user) {return false;}
     // Implement your permission logic here
     return true; // Placeholder
   }, [user]);
 
   const hasRole = useCallback((role: string): boolean => {
-    if (!user) return false;
+    if (!user) {return false;}
     return user.role === role;
   }, [user]);
 
   const canAccess = useCallback(
     (requiredRoles?: string[], requiredPermissions?: string[]): boolean => {
-      if (!user) return false;
+      if (!user) {return false;}
 
       // Check roles
       if (requiredRoles && requiredRoles.length > 0) {
         const hasRequiredRole = requiredRoles.includes(user.role);
-        if (!hasRequiredRole) return false;
+        if (!hasRequiredRole) {return false;}
       }
 
       // Check permissions
       if (requiredPermissions && requiredPermissions.length > 0) {
         const hasAllPermissions = requiredPermissions.every(permission =>
-          hasPermission(permission)
+          hasPermission(permission),
         );
-        if (!hasAllPermissions) return false;
+        if (!hasAllPermissions) {return false;}
       }
 
       return true;
     },
-    [user, hasPermission]
+    [user, hasPermission],
   );
 
   const value: AuthContextType = {
