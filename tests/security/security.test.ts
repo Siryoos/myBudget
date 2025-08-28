@@ -62,7 +62,7 @@ const mockNextResponse = () => {
     headers: new Map(),
     set: jest.fn(),
     get: jest.fn(),
-    status: 200,
+    status: HTTP_OK,
   } as any;
 
   response.headers.set = jest.fn();
@@ -501,7 +501,7 @@ describe('Security Integration Tests', () => {
       expect(response.headers.get('Content-Security-Policy')).toBeDefined();
 
       // Verify response is secure
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(HTTP_OK);
     });
   });
 

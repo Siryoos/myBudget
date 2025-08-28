@@ -11,8 +11,8 @@ export const cn = (...inputs: ClassValue[]): string => clsx(inputs);
  */
 export const formatCurrency = (
   amount: number,
-  currency: string = 'USD',
-  locale: string = 'en-US',
+  currency = 'USD',
+  locale = 'en-US',
 ): string => new Intl.NumberFormat(locale, {
     style: 'currency',
     currency,
@@ -25,7 +25,7 @@ export const formatCurrency = (
  */
 export const formatPercentage = (
   value: number,
-  precision: number = 1,
+  precision = 1,
 ): string => `${value.toFixed(precision)}%`;
 
 /**
@@ -33,7 +33,7 @@ export const formatPercentage = (
  */
 export const formatCompactNumber = (
   num: number,
-  locale: string = 'en-US',
+  locale = 'en-US',
 ): string => new Intl.NumberFormat(locale, {
     notation: 'compact',
     maximumFractionDigits: 1,
@@ -44,7 +44,7 @@ export const formatCompactNumber = (
  */
 export const formatDate = (
   date: Date | string,
-  formatStr: string = 'MMM dd, yyyy',
+  formatStr = 'MMM dd, yyyy',
 ): string => {
   const dateObj = typeof date === 'string' ? new Date(date) : date;
   return format(dateObj, formatStr);
@@ -196,16 +196,23 @@ export const formatTimeRemaining = (targetDate: Date): string => {
     return 'Overdue';
   }
 
-  const days = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+  const MS_IN_SECOND = 1000;
+  const SECONDS_IN_MINUTE = 60;
+  const MINUTES_IN_HOUR = 60;
+  const HOURS_IN_DAY = 24;
+  const MS_IN_DAY = MS_IN_SECOND * SECONDS_IN_MINUTE * MINUTES_IN_HOUR * HOURS_IN_DAY;
+  const days = Math.ceil(timeDiff / MS_IN_DAY);
 
   if (days === 1) {return '1 day left';}
-  if (days < 30) {return `${days} days left`;}
-  if (days < 365) {
-    const months = Math.ceil(days / 30);
+  const DAYS_IN_MONTH = 30;
+  const DAYS_IN_YEAR = 365;
+  if (days < DAYS_IN_MONTH) {return `${days} days left`;}
+  if (days < DAYS_IN_YEAR) {
+    const months = Math.ceil(days / DAYS_IN_MONTH);
     return months === 1 ? '1 month left' : `${months} months left`;
   }
 
-  const years = Math.ceil(days / 365);
+  const years = Math.ceil(days / DAYS_IN_YEAR);
   return years === 1 ? '1 year left' : `${years} years left`;
 };
 
@@ -215,8 +222,10 @@ export const formatTimeRemaining = (targetDate: Date): string => {
 export const getTimeBasedGreeting = (): string => {
   const hour = new Date().getHours();
 
-  if (hour < 12) {return 'Good morning';}
-  if (hour < 17) {return 'Good afternoon';}
+  const NOON = 12;
+  const EVENING_START = 17;
+  if (hour < NOON) {return 'Good morning';}
+  if (hour < EVENING_START) {return 'Good afternoon';}
   return 'Good evening';
 };
 
@@ -236,7 +245,7 @@ export const calculateCompoundInterest = (
   principal: number,
   rate: number,
   time: number,
-  compoundingFrequency: number = 12,
+  compoundingFrequency = 12,
 ): number => principal * Math.pow(1 + rate / compoundingFrequency, compoundingFrequency * time);
 
 /**

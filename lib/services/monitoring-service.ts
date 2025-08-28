@@ -32,12 +32,25 @@ export interface PerformanceMetrics {
   timestamp: Date;
 }
 
+// Constants
+const MINUTES_IN_HOUR = 60;
+const SECONDS_IN_MINUTE = 60;
+const MS_IN_SECOND = 1000;
+const DEFAULT_HOURS = 24;
+const MAX_METRICS = 1000;
+const TOP_ITEMS_COUNT = 10;
+const HTTP_BAD_REQUEST = 400;
+const PERCENTAGE_MULTIPLIER = 100;
+const MAX_RESPONSE_TIME_GOOD = 5000;
+const MAX_RESPONSE_TIME_OK = 10000;
+const MAX_ERROR_RATE_GOOD = 50;
+
 export class MonitoringService {
   private static instance: MonitoringService;
   private metrics: ApiMetrics[] = [];
   private errors: ErrorMetrics[] = [];
   private performance: PerformanceMetrics[] = [];
-  private maxMetrics = 1000; // Keep last 1000 metrics in memory
+  private maxMetrics = MAX_METRICS; // Keep last 1000 metrics in memory
 
   static getInstance(): MonitoringService {
     if (!MonitoringService.instance) {
@@ -62,7 +75,7 @@ export class MonitoringService {
 
     // Log to console in development
     if (process.env.NODE_ENV === 'development') {
-      console.log(`📊 API: ${metrics.method} ${metrics.endpoint} - ${metrics.statusCode} (${metrics.responseTime}ms)`);
+      // console.log(`📊 API: ${metrics.method} ${metrics.endpoint} - ${metrics.statusCode} (${metrics.responseTime}ms)`);
     }
   }
 
@@ -100,22 +113,22 @@ export class MonitoringService {
   }
 
   // Get API metrics summary
-  getApiMetricsSummary(hours: number = 24): {
+  getApiMetricsSummary(hours = DEFAULT_HOURS): {
     totalRequests: number;
     averageResponseTime: number;
     errorRate: number;
     statusCodes: Record<number, number>;
     topEndpoints: Array<{ endpoint: string; count: number }>;
   } {
-    const cutoffTime = new Date(Date.now() - hours * 60 * 60 * 1000);
+    const cutoffTime = new Date(Date.now() - hours * MINUTES_IN_HOUR * SECONDS_IN_MINUTE * MS_IN_SECOND);
     const recentMetrics = this.metrics.filter(m => m.timestamp > cutoffTime);
 
     const totalRequests = recentMetrics.length;
     const totalResponseTime = recentMetrics.reduce((sum, m) => sum + m.responseTime, 0);
     const averageResponseTime = totalRequests > 0 ? totalResponseTime / totalRequests : 0;
 
-    const errors = recentMetrics.filter(m => m.statusCode >= 400).length;
-    const errorRate = totalRequests > 0 ? (errors / totalRequests) * 100 : 0;
+    const errors = recentMetrics.filter(m => m.statusCode >= HTTP_BAD_REQUEST).length;
+    const errorRate = totalRequests > 0 ? (errors / totalRequests) * PERCENTAGE_MULTIPLIER : 0;
 
     const statusCodes: Record<number, number> = {};
     recentMetrics.forEach(m => {
@@ -129,7 +142,7 @@ export class MonitoringService {
 
     const topEndpoints = Object.entries(endpointCounts)
       .sort(([, a], [, b]) => b - a)
-      .slice(0, 10)
+      .slice(0, TOP_ITEMS_COUNT)
       .map(([endpoint, count]) => ({ endpoint, count }));
 
     return {
@@ -142,12 +155,12 @@ export class MonitoringService {
   }
 
   // Get error metrics summary
-  getErrorMetricsSummary(hours: number = 24): {
+  getErrorMetricsSummary(hours = DEFAULT_HOURS): {
     totalErrors: number;
     topErrors: Array<{ error: string; count: number }>;
     topEndpoints: Array<{ endpoint: string; count: number }>;
   } {
-    const cutoffTime = new Date(Date.now() - hours * 60 * 60 * 1000);
+    const cutoffTime = new Date(Date.now() - hours * MINUTES_IN_HOUR * SECONDS_IN_MINUTE * MS_IN_SECOND);
     const recentErrors = this.errors.filter(e => e.timestamp > cutoffTime);
 
     const totalErrors = recentErrors.length;
@@ -159,7 +172,7 @@ export class MonitoringService {
 
     const topErrors = Object.entries(errorCounts)
       .sort(([, a], [, b]) => b - a)
-      .slice(0, 10)
+      .slice(0, TOP_ITEMS_COUNT)
       .map(([error, count]) => ({ error, count }));
 
     const endpointCounts: Record<string, number> = {};
@@ -169,7 +182,7 @@ export class MonitoringService {
 
     const topEndpoints = Object.entries(endpointCounts)
       .sort(([, a], [, b]) => b - a)
-      .slice(0, 10)
+      .slice(0, TOP_ITEMS_COUNT)
       .map(([endpoint, count]) => ({ endpoint, count }));
 
     return {
@@ -180,12 +193,12 @@ export class MonitoringService {
   }
 
   // Get performance metrics summary
-  getPerformanceMetricsSummary(hours: number = 24): {
+  getPerformanceMetricsSummary(hours = DEFAULT_HOURS): {
     averageResponseTime: number;
     averageDatabaseQueries: number;
     slowestEndpoints: Array<{ endpoint: string; avgTime: number }>;
   } {
-    const cutoffTime = new Date(Date.now() - hours * 60 * 60 * 1000);
+    const cutoffTime = new Date(Date.now() - hours * MINUTES_IN_HOUR * SECONDS_IN_MINUTE * MS_IN_SECOND);
     const recentPerformance = this.performance.filter(p => p.timestamp > cutoffTime);
 
     const totalResponseTime = recentPerformance.reduce((sum, p) => sum + p.responseTime, 0);
@@ -209,7 +222,7 @@ export class MonitoringService {
         avgTime: totalTime / count,
       }))
       .sort((a, b) => b.avgTime - a.avgTime)
-      .slice(0, 10);
+      .slice(0, TOP_ITEMS_COUNT);
 
     return {
       averageResponseTime,
@@ -219,31 +232,35 @@ export class MonitoringService {
   }
 
   // Health check
-  async getHealthStatus(): Promise<{
+  getHealthStatus(): {
     status: 'healthy' | 'degraded' | 'unhealthy';
     uptime: number;
     memoryUsage: NodeJS.MemoryUsage;
     metrics: {
-      api: any;
-      errors: any;
-      performance: any;
+      api: ReturnType<typeof this.getApiMetricsSummary>;
+      errors: ReturnType<typeof this.getErrorMetricsSummary>;
+      performance: ReturnType<typeof this.getPerformanceMetricsSummary>;
     };
-  }> {
+  } {
     const uptime = process.uptime();
     const memoryUsage = process.memoryUsage();
 
-    const apiMetrics = this.getApiMetricsSummary(1); // Last hour
-    const errorMetrics = this.getErrorMetricsSummary(1);
-    const performanceMetrics = this.getPerformanceMetricsSummary(1);
+    const LAST_HOUR = 1;
+    const apiMetrics = this.getApiMetricsSummary(LAST_HOUR); // Last hour
+    const errorMetrics = this.getErrorMetricsSummary(LAST_HOUR);
+    const performanceMetrics = this.getPerformanceMetricsSummary(LAST_HOUR);
 
     // Determine health status
     let status: 'healthy' | 'degraded' | 'unhealthy' = 'healthy';
 
-    if (apiMetrics.errorRate > 5 || performanceMetrics.averageResponseTime > 5000) {
+    const ERROR_RATE_THRESHOLD = 5;
+    if (apiMetrics.errorRate > ERROR_RATE_THRESHOLD || performanceMetrics.averageResponseTime > MAX_RESPONSE_TIME_GOOD) {
       status = 'degraded';
     }
 
-    if (apiMetrics.errorRate > 10 || performanceMetrics.averageResponseTime > 10000 || errorMetrics.totalErrors > 50) {
+    const CRITICAL_ERROR_RATE = 10;
+    const MIN_ERROR_THRESHOLD = 50;
+    if (apiMetrics.errorRate > CRITICAL_ERROR_RATE || performanceMetrics.averageResponseTime > MAX_RESPONSE_TIME_OK || errorMetrics.totalErrors > MIN_ERROR_THRESHOLD) {
       status = 'unhealthy';
     }
 
@@ -277,7 +294,11 @@ export class MonitoringService {
 
         await query(`
           INSERT INTO api_metrics (endpoint, method, status_code, response_time, user_id, user_agent, ip_address, timestamp)
-          VALUES ${apiMetricsValues.map((_, i) => `($${i * 8 + 1}, $${i * 8 + 2}, $${i * 8 + 3}, $${i * 8 + 4}, $${i * 8 + 5}, $${i * 8 + 6}, $${i * 8 + 7}, $${i * 8 + 8})`).join(', ')}
+          VALUES ${apiMetricsValues.map((_, i) => {
+            const FIELDS_PER_METRIC = 8;
+            const baseIndex = i * FIELDS_PER_METRIC;
+            return `($${baseIndex + 1}, $${baseIndex + 2}, $${baseIndex + 3}, $${baseIndex + 4}, $${baseIndex + 5}, $${baseIndex + 6}, $${baseIndex + 7}, $${baseIndex + 8})`;
+          }).join(', ')}
         `, apiMetricsValues.flat());
       }
 
@@ -296,7 +317,11 @@ export class MonitoringService {
 
         await query(`
           INSERT INTO error_metrics (endpoint, method, error, stack, user_id, user_agent, ip_address, timestamp)
-          VALUES ${errorMetricsValues.map((_, i) => `($${i * 8 + 1}, $${i * 8 + 2}, $${i * 8 + 3}, $${i * 8 + 4}, $${i * 8 + 5}, $${i * 8 + 6}, $${i * 8 + 7}, $${i * 8 + 8})`).join(', ')}
+          VALUES ${errorMetricsValues.map((_, i) => {
+            const FIELDS_PER_ERROR = 8;
+            const baseIndex = i * FIELDS_PER_ERROR;
+            return `($${baseIndex + 1}, $${baseIndex + 2}, $${baseIndex + 3}, $${baseIndex + 4}, $${baseIndex + 5}, $${baseIndex + 6}, $${baseIndex + 7}, $${baseIndex + 8})`;
+          }).join(', ')}
         `, errorMetricsValues.flat());
       }
 

@@ -46,7 +46,7 @@ export function withAuth<T = any>(
     if (auth.error) {
       return Response.json(
         { error: auth.error },
-        { status: 401 },
+        { status: HTTP_UNAUTHORIZED },
       );
     }
 

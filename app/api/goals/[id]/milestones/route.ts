@@ -61,7 +61,7 @@ export const POST = requireAuth(async (request: AuthenticatedRequest, context?: 
     // Create milestone using service
     const milestone = await goalsService.createMilestone(id, body);
 
-    return createSuccessResponse(milestone, requestId, 201);
+    return createSuccessResponse(milestone, requestId, HTTP_CREATED);
 
   } catch (error) {
     return handleApiError(error, requestId);

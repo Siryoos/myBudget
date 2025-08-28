@@ -175,7 +175,7 @@ export function IncomeManager({
               {incomeSources.length > 1 && (
                 <button
                   onClick={() => handleRemoveSource(source.id)}
-                  className="p-1 rounded-full hover:bg-neutral-gray/20 text-neutral-gray hover:text-accent-warning-red transition-colors duration-200"
+                  className="p-1 rounded-full hover:bg-neutral-gray/20 text-neutral-gray hover:text-accent-warning-red transition-colors duration-HTTP_OK"
                   aria-label={`Remove ${source.name}`}
                 >
                   <XMarkIcon className="h-4 w-4" />

@@ -126,19 +126,19 @@ export function SecurityPanel({
           <form onSubmit={handlePasswordChange} className="space-y-4">
             {/* Error and Success Messages */}
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+              <div className="bg-red-50 border border-red-HTTP_OK rounded-lg p-3">
                 <p className="text-sm text-red-600">{error}</p>
               </div>
             )}
 
             {success && (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+              <div className="bg-green-50 border border-green-HTTP_OK rounded-lg p-3">
                 <div className="flex items-center justify-between">
                   <p className="text-sm text-green-600">{success}</p>
                   <button
                     type="button"
                     onClick={handleSuccessReset}
-                    className="text-green-500 hover:text-green-700 text-sm font-medium"
+                    className="text-green-HTTP_INTERNAL_SERVER_ERROR hover:text-green-700 text-sm font-medium"
                   >
                     Dismiss
                   </button>
@@ -182,7 +182,7 @@ export function SecurityPanel({
                   type={showNewPassword ? 'text' : 'password'}
                   className={`input-field pr-10 ${
                     newPassword && newPassword.length < 8
-                      ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
+                      ? 'border-red-300 focus:border-red-HTTP_INTERNAL_SERVER_ERROR focus:ring-red-HTTP_INTERNAL_SERVER_ERROR'
                       : ''
                   }`}
                   placeholder="Enter new password"
@@ -216,7 +216,7 @@ export function SecurityPanel({
                 type="password"
                 className={`input-field ${
                   confirmPassword && newPassword !== confirmPassword
-                    ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
+                    ? 'border-red-300 focus:border-red-HTTP_INTERNAL_SERVER_ERROR focus:ring-red-HTTP_INTERNAL_SERVER_ERROR'
                     : ''
                 }`}
                 placeholder="Confirm new password"

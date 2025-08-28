@@ -503,7 +503,7 @@ export const withPerformanceMonitoring = (handler: (request: NextRequest) => Pro
       // Stop monitoring
       stopPerformanceMonitoring(
         requestId,
-        response.status || 200,
+        response.status || HTTP_OK,
         request.headers.get('user-agent') || undefined,
         request.ip || request.headers.get('x-forwarded-for') || undefined,
       );
@@ -511,7 +511,7 @@ export const withPerformanceMonitoring = (handler: (request: NextRequest) => Pro
       return response;
     } catch (error) {
       // Stop monitoring with error status
-      stopPerformanceMonitoring(requestId, 500);
+      stopPerformanceMonitoring(requestId, HTTP_INTERNAL_SERVER_ERROR);
 
       throw error;
     }

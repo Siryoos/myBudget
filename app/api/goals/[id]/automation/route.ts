@@ -61,7 +61,7 @@ export const POST = requireAuth(async (request: AuthenticatedRequest, context?: 
     // Create automation rule using service
     const automationRule = await goalsService.createAutomationRule(id, body);
 
-    return createSuccessResponse(automationRule, requestId, 201);
+    return createSuccessResponse(automationRule, requestId, HTTP_CREATED);
 
   } catch (error) {
     return handleApiError(error, requestId);

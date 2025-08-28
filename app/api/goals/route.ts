@@ -55,7 +55,7 @@ export const POST = requireAuth(async (request: AuthenticatedRequest) => {
     // Create goal using service
     const goal = await goalsService.create(request.user.id, body);
 
-    return createSuccessResponse(goal, requestId, 201);
+    return createSuccessResponse(goal, requestId, HTTP_CREATED);
 
   } catch (error) {
     return handleApiError(error, requestId);

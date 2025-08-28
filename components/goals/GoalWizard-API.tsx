@@ -176,7 +176,7 @@ export function GoalWizard({
 
       // Handle completion
       xhr.addEventListener('load', () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
+        if (xhr.status >= HTTP_OK && xhr.status < 300) {
           try {
             const response = JSON.parse(xhr.responseText);
             if (response.success && response.data) {

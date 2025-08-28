@@ -28,13 +28,13 @@ app.prepare().then(() => {
       if (parsedUrl.pathname?.startsWith('/api/')) {
         await handle(req, res, parsedUrl);
       } else {
-        // For non-API routes, return 404
-        res.statusCode = 404;
+        // For non-API routes, return HTTP_NOT_FOUND
+        res.statusCode = HTTP_NOT_FOUND;
         res.end('Not Found');
       }
     } catch (err) {
       console.error('Error occurred handling request:', err);
-      res.statusCode = 500;
+      res.statusCode = HTTP_INTERNAL_SERVER_ERROR;
       res.end('Internal Server Error');
     }
   })

@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
           error: 'Unauthorized',
           message: 'Missing or invalid authorization header',
         },
-        { status: 401 },
+        { status: HTTP_UNAUTHORIZED },
       );
     }
 
@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
           error: 'Unauthorized',
           message: 'Invalid or expired token',
         },
-        { status: 401 },
+        { status: HTTP_UNAUTHORIZED },
       );
     }
 
@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
           error: 'Invalid file type',
           message: 'Allowed types: JPEG, PNG, GIF, WebP',
         },
-        { status: 400 },
+        { status: HTTP_BAD_REQUEST },
       );
     }
 
@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
           error: 'Invalid file size',
           message: `File size must be between 1 byte and ${MAX_FILE_SIZE / 1024 / 1024}MB`,
         },
-        { status: 400 },
+        { status: HTTP_BAD_REQUEST },
       );
     }
 
@@ -143,7 +143,7 @@ export async function POST(request: NextRequest) {
         error: 'Failed to generate upload URL',
         message: error instanceof Error ? error.message : 'Unknown error',
       },
-      { status: 500 },
+      { status: HTTP_INTERNAL_SERVER_ERROR },
     );
   }
 }

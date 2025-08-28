@@ -41,8 +41,8 @@ export class UserService extends BaseService {
     }
 
     // Hash password
-    const saltRounds = 12;
-    const passwordHash = await bcrypt.hash(validatedData.password, saltRounds);
+    const SALT_ROUNDS = 12;
+    const passwordHash = await bcrypt.hash(validatedData.password, SALT_ROUNDS);
 
     const result = await query(`
       INSERT INTO users (
@@ -62,7 +62,7 @@ export class UserService extends BaseService {
       'moderate',
     ]);
 
-    const user = result.rows[0];
+    const user = result.rows[0] as Record<string, unknown>;
     return this.mapDbUserToProfile(user);
   }
 
@@ -76,11 +76,11 @@ export class UserService extends BaseService {
       return null;
     }
 
-    return this.mapDbUserToProfile(result.rows[0]);
+    return this.mapDbUserToProfile(result.rows[0] as Record<string, unknown>);
   }
 
   async findById(id: string): Promise<UserProfile | null> {
-    const user = await super.findById(id);
+    const user = await super.findById<Record<string, unknown>>(id);
     return user ? this.mapDbUserToProfile(user) : null;
   }
 
@@ -104,7 +104,7 @@ export class UserService extends BaseService {
 
     // Build dynamic update query
     const updates: string[] = [];
-    const values: any[] = [];
+    const values: unknown[] = [];
     let paramCount = 1;
 
     Object.entries(validatedData).forEach(([key, value]) => {
@@ -130,12 +130,12 @@ export class UserService extends BaseService {
     values.push(id);
 
     const result = await query(queryString, values);
-    return this.mapDbUserToProfile(result.rows[0]);
+    return this.mapDbUserToProfile(result.rows[0] as Record<string, unknown>);
   }
 
   async updatePassword(id: string, currentPassword: string, newPassword: string): Promise<void> {
     // Validate new password
-    const validatedData = this.validateData(userSchemas.changePassword, {
+    this.validateData(userSchemas.changePassword, {
       currentPassword,
       newPassword,
       confirmPassword: newPassword,
@@ -151,7 +151,7 @@ export class UserService extends BaseService {
       throw new NotFoundError('User', id);
     }
 
-    const user = result.rows[0];
+    const user = result.rows[0] as { password_hash: string };
 
     // Verify current password
     const isValidPassword = await bcrypt.compare(currentPassword, user.password_hash);
@@ -160,8 +160,8 @@ export class UserService extends BaseService {
     }
 
     // Hash new password
-    const saltRounds = 12;
-    const newPasswordHash = await bcrypt.hash(newPassword, saltRounds);
+    const SALT_ROUNDS = 12;
+    const newPasswordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
 
     // Update password
     await query(
@@ -178,7 +178,7 @@ export class UserService extends BaseService {
     }
 
     // Delete user (cascade will handle related data)
-    return await super.delete(id);
+    return super.delete(id);
   }
 
   async getProfile(id: string): Promise<UserProfile> {
@@ -199,10 +199,10 @@ export class UserService extends BaseService {
       return null;
     }
 
-    const user = result.rows[0];
+    const user = result.rows[0] as Record<string, unknown>;
 
     // Verify password
-    const isValidPassword = await bcrypt.compare(password, user.password_hash);
+    const isValidPassword = await bcrypt.compare(password, user.password_hash as string);
     if (!isValidPassword) {
       return null;
     }
@@ -210,23 +210,23 @@ export class UserService extends BaseService {
     return this.mapDbUserToProfile(user);
   }
 
-  private mapDbUserToProfile(dbUser: any): UserProfile {
+  private mapDbUserToProfile(dbUser: Record<string, unknown>): UserProfile {
     return {
-      id: dbUser.id,
-      email: dbUser.email,
-      name: dbUser.name,
+      id: dbUser.id as string,
+      email: dbUser.email as string,
+      name: dbUser.name as string,
       role: (dbUser.role as UserRole) ?? UserRole.USER,
-      avatar: dbUser.avatar,
-      currency: dbUser.currency,
-      language: dbUser.language,
-      monthlyIncome: dbUser.monthly_income,
-      riskTolerance: dbUser.risk_tolerance,
-      savingsRate: dbUser.savings_rate,
-      debtToIncomeRatio: dbUser.debt_to_income_ratio,
-      creditScore: dbUser.credit_score,
-      dependents: dbUser.dependents,
-      createdAt: dbUser.created_at.toISOString(),
-      updatedAt: dbUser.updated_at.toISOString(),
+      avatar: dbUser.avatar as string | undefined,
+      currency: dbUser.currency as string,
+      language: dbUser.language as string,
+      monthlyIncome: dbUser.monthly_income as number | undefined,
+      riskTolerance: dbUser.risk_tolerance as string,
+      savingsRate: dbUser.savings_rate as number | undefined,
+      debtToIncomeRatio: dbUser.debt_to_income_ratio as number | undefined,
+      creditScore: dbUser.credit_score as number | undefined,
+      dependents: dbUser.dependents as number,
+      createdAt: new Date(dbUser.created_at as string | Date).toISOString(),
+      updatedAt: new Date(dbUser.updated_at as string | Date).toISOString(),
     };
   }
 }

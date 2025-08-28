@@ -63,7 +63,7 @@ export class AppError extends Error {
   constructor(
     message: string,
     code: ErrorCode = ErrorCode.INTERNAL_SERVER_ERROR,
-    statusCode: number = 500,
+    statusCode: number = HTTP_INTERNAL_SERVER_ERROR,
     severity: ErrorSeverity = ErrorSeverity.MEDIUM,
     isOperational: boolean = true,
     details?: any,
@@ -93,28 +93,28 @@ export class AppError extends Error {
 // Specific error types
 export class ValidationError extends AppError {
   constructor(message: string, details?: any, requestId?: string) {
-    super(message, ErrorCode.VALIDATION_ERROR, 400, ErrorSeverity.LOW, true, details, requestId);
+    super(message, ErrorCode.VALIDATION_ERROR, HTTP_BAD_REQUEST, ErrorSeverity.LOW, true, details, requestId);
     this.name = 'ValidationError';
   }
 }
 
 export class AuthenticationError extends AppError {
   constructor(message: string, details?: any, requestId?: string) {
-    super(message, ErrorCode.UNAUTHORIZED, 401, ErrorSeverity.MEDIUM, true, details, requestId);
+    super(message, ErrorCode.UNAUTHORIZED, HTTP_UNAUTHORIZED, ErrorSeverity.MEDIUM, true, details, requestId);
     this.name = 'AuthenticationError';
   }
 }
 
 export class AuthorizationError extends AppError {
   constructor(message: string, details?: any, requestId?: string) {
-    super(message, ErrorCode.INSUFFICIENT_PERMISSIONS, 403, ErrorSeverity.MEDIUM, true, details, requestId);
+    super(message, ErrorCode.INSUFFICIENT_PERMISSIONS, HTTP_FORBIDDEN, ErrorSeverity.MEDIUM, true, details, requestId);
     this.name = 'AuthorizationError';
   }
 }
 
 export class NotFoundError extends AppError {
   constructor(message: string, details?: any, requestId?: string) {
-    super(message, ErrorCode.RECORD_NOT_FOUND, 404, ErrorSeverity.LOW, true, details, requestId);
+    super(message, ErrorCode.RECORD_NOT_FOUND, HTTP_NOT_FOUND, ErrorSeverity.LOW, true, details, requestId);
     this.name = 'NotFoundError';
   }
 }
@@ -213,7 +213,7 @@ export class ErrorHandler {
     const appError = new AppError(
       'An unexpected error occurred',
       ErrorCode.INTERNAL_SERVER_ERROR,
-      500,
+      HTTP_INTERNAL_SERVER_ERROR,
       ErrorSeverity.HIGH,
       false,
       this.isDevelopment ? { originalError: error.message, stack: error.stack } : undefined,
@@ -350,7 +350,7 @@ export const createDatabaseError = (
   const dbError = new AppError(
     'Database operation failed',
     ErrorCode.DATABASE_ERROR,
-    500,
+    HTTP_INTERNAL_SERVER_ERROR,
     ErrorSeverity.HIGH,
     true,
     process.env.NODE_ENV === 'development' ? { originalError: error.message } : undefined,

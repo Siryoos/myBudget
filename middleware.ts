@@ -127,14 +127,14 @@ const mergeHeadersSafely = (target: Headers, source: Headers): void => {
  * (from request.nextUrl.locale or `'en'`) and redirects to the
  * locale-prefixed path when missing. After locale handling, it invokes
  * `securityMiddleware(request)` and, if that returns a terminal
- * response (status not 200 and not 302), returns that response.
+ * response (status not HTTP_OK and not 302), returns that response.
  * On success it allows normal processing to continue by returning
  * `NextResponse.next()`. Any unhandled error is caught and a generic
- * 500 response is returned.
+ * HTTP_INTERNAL_SERVER_ERROR response is returned.
  *
  * @param request - The incoming NextRequest to process.
  * @returns A NextResponse (redirect, terminal security response,
- * next response, or a 500 error response).
+ * next response, or a HTTP_INTERNAL_SERVER_ERROR error response).
  */
 export const middleware = async (request: NextRequest) => {
   try {
@@ -163,9 +163,9 @@ export const middleware = async (request: NextRequest) => {
     // Then apply security middleware
     const securityResponse = await securityMiddleware(request);
 
-    // Check if securityResponse is a terminal response (status !== 200 and !== 302)
+    // Check if securityResponse is a terminal response (status !== HTTP_OK and !== 302)
     // Terminal responses include 204 (preflight), 429 (rate limit), etc.
-    if (securityResponse && securityResponse.status !== 200 && securityResponse.status !== 302) {
+    if (securityResponse && securityResponse.status !== HTTP_OK && securityResponse.status !== 302) {
       return securityResponse;
     }
 
@@ -175,7 +175,7 @@ export const middleware = async (request: NextRequest) => {
     console.error('Middleware error:', error);
 
     // Return a generic error response
-    return new NextResponse('Internal Server Error', { status: 500 });
+    return new NextResponse('Internal Server Error', { status: HTTP_INTERNAL_SERVER_ERROR });
   }
 };
 

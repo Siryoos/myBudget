@@ -55,9 +55,9 @@ export function withDevLogging(
 
       // Log response (development only)
       if (process.env.NODE_ENV === 'development') {
-        const statusColor = response.status >= 400 ? '\x1b[31m' :
+        const statusColor = response.status >= HTTP_BAD_REQUEST ? '\x1b[31m' :
                            response.status >= 300 ? '\x1b[33m' :
-                           response.status >= 200 ? '\x1b[32m' : '\x1b[37m';
+                           response.status >= HTTP_OK ? '\x1b[32m' : '\x1b[37m';
 
         console.log(`✅ [${requestId}] ${statusColor}${response.status}\x1b[0m - ${duration}ms`);
 
@@ -85,7 +85,7 @@ export function withDevLogging(
 /**
  * Middleware wrapper that serves an in-browser API documentation page for requests to /api/docs.
  *
- * If the incoming request's pathname is `/api/docs` or `/api/docs/`, returns a 200 HTML response
+ * If the incoming request's pathname is `/api/docs` or `/api/docs/`, returns a HTTP_OK HTML response
  * produced by `generateApiDocs()` with `Content-Type: text/html` and `x-dev-api-docs: true`.
  * For all other requests, delegates to the provided handler and returns its response.
  */
@@ -99,7 +99,7 @@ export function withDevApiDocs(
     if (url.pathname === '/api/docs' || url.pathname === '/api/docs/') {
       const apiDocs = generateApiDocs();
       return new NextResponse(apiDocs, {
-        status: 200,
+        status: HTTP_OK,
         headers: {
           'Content-Type': 'text/html',
           'x-dev-api-docs': 'true',
@@ -159,7 +159,7 @@ export function withDevPerformance(
 /**
  * Wraps a request handler to render a development-friendly HTML error overlay on thrown errors.
  *
- * When the wrapped handler throws and NODE_ENV === 'development', returns a 500 HTML response
+ * When the wrapped handler throws and NODE_ENV === 'development', returns a HTTP_INTERNAL_SERVER_ERROR HTML response
  * produced by `generateErrorHtml(error)` with `Content-Type: text/html` and header `x-dev-error: true`.
  * In non-development environments the original error is rethrown.
  *
@@ -177,7 +177,7 @@ export function withDevErrorOverlay(
       if (process.env.NODE_ENV === 'development') {
         const errorHtml = generateErrorHtml(error);
         return new NextResponse(errorHtml, {
-          status: 500,
+          status: HTTP_INTERNAL_SERVER_ERROR,
           headers: {
             'Content-Type': 'text/html',
             'x-dev-error': 'true',

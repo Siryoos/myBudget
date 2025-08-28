@@ -200,7 +200,7 @@ export function BudgetSummary({
         <div className="flex space-x-1 bg-neutral-light-gray rounded-lg p-1 mt-4">
           <button
             onClick={() => setSelectedPeriod('week')}
-            className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+            className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-all duration-HTTP_OK ${
               selectedPeriod === 'week'
                 ? 'bg-white text-primary-trust-blue shadow-sm'
                 : 'text-neutral-gray hover:text-neutral-dark-gray'
@@ -210,7 +210,7 @@ export function BudgetSummary({
           </button>
           <button
             onClick={() => setSelectedPeriod('month')}
-            className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+            className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-all duration-HTTP_OK ${
               selectedPeriod === 'month'
                 ? 'bg-white text-primary-trust-blue shadow-sm'
                 : 'text-neutral-gray hover:text-neutral-dark-gray'
@@ -245,7 +245,7 @@ export function BudgetSummary({
               {t('budget:overview.remaining', { defaultValue: 'Remaining' })}
             </div>
             <div className={`text-xl font-bold ${
-              totalRemaining >= 0 ? 'text-secondary-growth-green' : 'text-red-500'
+              totalRemaining >= 0 ? 'text-secondary-growth-green' : 'text-red-HTTP_INTERNAL_SERVER_ERROR'
             }`}>
               {formatCurrency(totalRemaining)}
             </div>
@@ -254,9 +254,9 @@ export function BudgetSummary({
 
         {/* Spending Alerts */}
         {showSpendingAlerts && overBudgetCategories.length > 0 && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="bg-red-50 border border-red-HTTP_OK rounded-lg p-4">
             <div className="flex items-center mb-3">
-              <ExclamationTriangleIcon className="h-5 w-5 text-red-500 mr-2" />
+              <ExclamationTriangleIcon className="h-5 w-5 text-red-HTTP_INTERNAL_SERVER_ERROR mr-2" />
               <h4 className="font-medium text-red-800">
                 {t('budget:alerts.title', { defaultValue: 'Budget Alerts' })}
               </h4>

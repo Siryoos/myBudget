@@ -89,7 +89,7 @@ export class PerformanceMonitor {
         type: 'database',
         name: 'query_time',
         warning: 100, // 100ms
-        critical: 500, // 500ms
+        critical: HTTP_INTERNAL_SERVER_ERROR, // 500ms
         unit: 'ms',
       },
       {
@@ -188,7 +188,7 @@ export class PerformanceMonitor {
     );
 
     // Record error rate for non-2xx status codes
-    if (statusCode >= 400) {
+    if (statusCode >= HTTP_BAD_REQUEST) {
       this.recordMetric(
         'api',
         'error_rate',

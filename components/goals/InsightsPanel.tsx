@@ -187,7 +187,7 @@ export function InsightsPanel({
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
-          <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+          <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-HTTP_OK">
             <CardContent className="p-4 text-center">
               <div className="text-2xl font-bold text-blue-600">{userStats.totalGoals}</div>
               <div className="text-sm text-blue-800">
@@ -202,7 +202,7 @@ export function InsightsPanel({
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+          <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-HTTP_OK">
             <CardContent className="p-4 text-center">
               <div className="text-2xl font-bold text-green-600">{userStats.completedGoals}</div>
               <div className="text-sm text-green-800">
@@ -217,7 +217,7 @@ export function InsightsPanel({
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+          <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-HTTP_OK">
             <CardContent className="p-4 text-center">
               <div className="text-2xl font-bold text-purple-600">{Math.round(userStats.averageProgress)}%</div>
               <div className="text-sm text-purple-800">
@@ -232,7 +232,7 @@ export function InsightsPanel({
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
         >
-          <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
+          <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-HTTP_OK">
             <CardContent className="p-4 text-center">
               <div className="text-2xl font-bold text-orange-600">{formatCurrency(userStats.monthlySavings)}</div>
               <div className="text-sm text-orange-800">
@@ -279,7 +279,7 @@ export function InsightsPanel({
   const renderPeerComparisonTab = () => (
     <div className="space-y-6">
       {/* Peer Comparison Summary */}
-      <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
+      <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-HTTP_OK">
         <CardContent className="p-6">
           <div className="flex items-center space-x-3 mb-4">
             <UsersIcon className="w-8 h-8 text-blue-600" />
@@ -296,7 +296,7 @@ export function InsightsPanel({
               <div className="text-sm text-gray-600">
                 {t('insights:peer.emergencyFund', { defaultValue: 'Emergency Fund' })}
               </div>
-              <div className="text-xs text-gray-500 mt-1">
+              <div className="text-xs text-gray-HTTP_INTERNAL_SERVER_ERROR mt-1">
                 vs {peerData.peerStats.averageEmergencyFund} avg
               </div>
             </div>
@@ -308,7 +308,7 @@ export function InsightsPanel({
               <div className="text-sm text-gray-600">
                 {t('insights:peer.savingsRate', { defaultValue: 'Savings Rate' })}
               </div>
-              <div className="text-xs text-gray-500 mt-1">
+              <div className="text-xs text-gray-HTTP_INTERNAL_SERVER_ERROR mt-1">
                 vs {peerData.peerStats.averageSavingsRate}% avg
               </div>
             </div>
@@ -320,7 +320,7 @@ export function InsightsPanel({
               <div className="text-sm text-gray-600">
                 {t('insights:peer.goalCompletion', { defaultValue: 'Goal Completion' })}
               </div>
-              <div className="text-xs text-gray-500 mt-1">
+              <div className="text-xs text-gray-HTTP_INTERNAL_SERVER_ERROR mt-1">
                 vs {peerData.peerStats.averageGoalCompletion}% avg
               </div>
             </div>
@@ -513,7 +513,7 @@ export function InsightsPanel({
   const renderRisksTab = () => (
     <div className="space-y-6">
       {/* Risk Summary */}
-      <Card className="bg-gradient-to-r from-red-50 to-orange-50 border-red-200">
+      <Card className="bg-gradient-to-r from-red-50 to-orange-50 border-red-HTTP_OK">
         <CardContent className="p-6">
           <div className="flex items-center space-x-3 mb-4">
             <ExclamationTriangleIcon className="w-8 h-8 text-red-600" />
@@ -561,9 +561,9 @@ export function InsightsPanel({
             transition={{ delay: 0.1 }}
           >
             <Card className={`border-l-4 ${
-              risk.risk === 'high' ? 'border-red-500' :
-              risk.risk === 'medium' ? 'border-yellow-500' :
-              'border-green-500'
+              risk.risk === 'high' ? 'border-red-HTTP_INTERNAL_SERVER_ERROR' :
+              risk.risk === 'medium' ? 'border-yellow-HTTP_INTERNAL_SERVER_ERROR' :
+              'border-green-HTTP_INTERNAL_SERVER_ERROR'
             }`}>
               <CardContent className="p-6">
                 <div className="flex items-start space-x-4">
@@ -627,7 +627,7 @@ export function InsightsPanel({
       </div>
 
       {/* Tab Navigation */}
-      <div className="border-b border-gray-200">
+      <div className="border-b border-gray-HTTP_OK">
         <nav className="-mb-px flex space-x-8">
           {[
             { id: 'overview', label: t('insights:tabs.overview', { defaultValue: 'Overview' }), icon: ChartBarIcon },
@@ -641,7 +641,7 @@ export function InsightsPanel({
               className={`py-2 px-1 border-b-2 font-medium text-sm ${
                 activeTab === tab.id
                   ? 'border-primary-trust-blue text-primary-trust-blue'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  : 'border-transparent text-gray-HTTP_INTERNAL_SERVER_ERROR hover:text-gray-700 hover:border-gray-300'
               }`}
             >
               <div className="flex items-center space-x-2">

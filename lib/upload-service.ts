@@ -22,13 +22,18 @@ export interface UploadOptions {
   onProgress?: (progress: UploadProgress) => void;
 }
 
-const DEFAULT_MAX_SIZE = 5 * 1024 * 1024; // 5MB
+const BYTES_IN_KB = 1024;
+const BYTES_IN_MB = BYTES_IN_KB * BYTES_IN_KB;
+const DEFAULT_MAX_SIZE = 5 * BYTES_IN_MB; // 5MB
 const DEFAULT_ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+const PERCENTAGE_MULTIPLIER = 100;
 
 export class UploadService {
   private static instance: UploadService;
 
-  private constructor() {}
+  private constructor() {
+    // Private constructor for singleton
+  }
 
   static getInstance(): UploadService {
     if (!UploadService.instance) {
@@ -45,7 +50,7 @@ export class UploadService {
     const acceptedTypes = options.acceptedTypes || DEFAULT_ACCEPTED_TYPES;
 
     if (file.size > maxSize) {
-      throw new Error(`File size exceeds maximum allowed size of ${maxSize / 1024 / 1024}MB`);
+      throw new Error(`File size exceeds maximum allowed size of ${maxSize / BYTES_IN_MB}MB`);
     }
 
     if (!acceptedTypes.includes(file.type)) {
@@ -77,16 +82,16 @@ export class UploadService {
     }
 
     if (!response.success) {
-      throw new Error((response as any).error || 'Failed to get upload URL');
+      throw new Error((response as { error?: string }).error || 'Failed to get upload URL');
     }
 
-    return (response as any).data;
+    return (response as { data: { uploadUrl: string; publicUrl: string; publicId: string } }).data;
   }
 
   /**
    * Upload file directly to cloud storage
    */
-  private async uploadToCloud(
+  private uploadToCloud(
     file: File,
     uploadUrl: string,
     onProgress?: (progress: UploadProgress) => void,
@@ -100,13 +105,15 @@ export class UploadService {
           onProgress({
             loaded: event.loaded,
             total: event.total,
-            percentage: Math.round((event.loaded / event.total) * 100),
+            percentage: Math.round((event.loaded / event.total) * PERCENTAGE_MULTIPLIER),
           });
         }
       });
 
       xhr.addEventListener('load', () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
+        const HTTP_OK = 200;
+        const HTTP_REDIRECT = 300;
+        if (xhr.status >= HTTP_OK && xhr.status < HTTP_REDIRECT) {
           resolve();
         } else {
           reject(new Error(`Upload failed with status: ${xhr.status}`));
@@ -130,7 +137,7 @@ export class UploadService {
   /**
    * Generate thumbnail for image
    */
-  private async generateThumbnail(file: File, maxWidth: number = 200): Promise<Blob> {
+  private generateThumbnail(file: File, maxWidth = 200): Promise<Blob> {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
 
@@ -168,7 +175,8 @@ export class UploadService {
             } else {
               reject(new Error('Failed to generate thumbnail'));
             }
-          }, 'image/jpeg', 0.8);
+          const JPEG_QUALITY = 0.8;
+          }, 'image/jpeg', JPEG_QUALITY);
         };
 
         img.onerror = () => {
@@ -247,7 +255,7 @@ export class UploadService {
       }
 
       if (!completeResponse.success) {
-        const errorMessage = (completeResponse as any).error || 'Backend failed to complete upload';
+        const errorMessage = (completeResponse as { error?: string }).error || 'Backend failed to complete upload';
         throw new Error(`Upload completion failed: ${errorMessage}`);
       }
 
@@ -259,7 +267,7 @@ export class UploadService {
         mimeType: file.type,
       };
     } catch (error) {
-      console.error('Upload failed:', error);
+      // console.error('Upload failed:', error);
       throw error;
     }
   }
@@ -278,7 +286,7 @@ export class UploadService {
     }
 
     if (!response.success) {
-      throw new Error((response as any).error || 'Failed to delete file');
+      throw new Error((response as { error?: string }).error || 'Failed to delete file');
     }
   }
 }

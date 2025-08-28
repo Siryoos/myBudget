@@ -6,8 +6,8 @@ import type { ReactElement } from 'react';
 
 // Note: These context providers would need to exist
 // For now, we'll create mock versions
-const MockAppProvider: React.FC<{ children: React.ReactNode; initialState?: any }> = ({ children }) => <div data-testid="app-provider">{children}</div>;
-const MockAuthProvider: React.FC<{ children: React.ReactNode; initialState?: any }> = ({ children }) => <div data-testid="auth-provider">{children}</div>;
+const MockAppProvider: React.FC<{ children: React.ReactNode; initialState?: unknown }> = ({ children }) => <div data-testid="app-provider">{children}</div>;
+const MockAuthProvider: React.FC<{ children: React.ReactNode; initialState?: unknown }> = ({ children }) => <div data-testid="auth-provider">{children}</div>;
 const MockThemeProvider: React.FC<{ children: React.ReactNode; initialTheme?: string }> = ({ children }) => <div data-testid="theme-provider">{children}</div>;
 
 /**
@@ -25,7 +25,7 @@ const MockThemeProvider: React.FC<{ children: React.ReactNode; initialTheme?: st
 interface TestWrapperProps {
   children: React.ReactNode;
   initialAuthState?: {
-    user?: any;
+    user?: Record<string, unknown>;
     isAuthenticated?: boolean;
     isLoading?: boolean;
   };
@@ -48,12 +48,12 @@ interface TestWrapperProps {
  * @param router - Optional partial Next.js router object that can be passed alongside the wrapper (not used directly by the wrapper).
  * @returns A JSX element that wraps `children` with MockThemeProvider, MockAuthProvider, and MockAppProvider.
  */
-export function TestWrapper({
+export const TestWrapper = ({
   children,
   initialAuthState = {},
   initialAppState = {},
   router = {},
-}: TestWrapperProps) {
+}: TestWrapperProps) => {
   return (
     <MockThemeProvider initialTheme={initialAppState.theme || 'light'}>
       <MockAuthProvider initialState={initialAuthState}>
@@ -63,7 +63,7 @@ export function TestWrapper({
       </MockAuthProvider>
     </MockThemeProvider>
   );
-}
+};
 
 /**
  * Renders a React element wrapped with the library's test providers (theme, auth, app).
@@ -77,14 +77,14 @@ export function TestWrapper({
  * @param options.router - Optional partial Next.js router to provide to the TestWrapper.
  * @returns The RenderResult returned by React Testing Library's `render`.
  */
-export function renderWithProviders(
+export const renderWithProviders = (
   ui: ReactElement,
   options: RenderOptions & {
     initialAuthState?: TestWrapperProps['initialAuthState'];
     initialAppState?: TestWrapperProps['initialAppState'];
     router?: Partial<NextRouter>;
   } = {},
-) {
+) => {
   const {
     initialAuthState,
     initialAppState,
@@ -104,7 +104,7 @@ export function renderWithProviders(
     ),
     ...renderOptions,
   });
-}
+};
 
 // Mock data generators
 export const mockData = {
@@ -145,7 +145,7 @@ export const mockData = {
       {
         id: 'cat-2',
         name: 'Food',
-        allocated: 500,
+        allocated: HTTP_INTERNAL_SERVER_ERROR,
         spent: 480,
         color: '#10B981',
         icon: 'utensils',
@@ -208,14 +208,14 @@ export const mockData = {
 
 // API response mocks
 export const mockApiResponses = {
-  success: <T extends unknown>(data: T) => ({
+  success: <T>(data: T) => ({
     success: true,
     data,
     timestamp: new Date().toISOString(),
     requestId: 'test-request-id',
   }),
 
-  error: (code: string, message: string, details?: any) => ({
+  error: (code: string, message: string, details?: unknown) => ({
     success: false,
     error: {
       code,
@@ -226,7 +226,7 @@ export const mockApiResponses = {
     requestId: 'test-request-id',
   }),
 
-  paginated: <T extends unknown>(data: T[], page: number, limit: number, total: number) => ({
+  paginated: <T>(data: T[], page: number, limit: number, total: number) => ({
     success: true,
     data: {
       data,
@@ -317,12 +317,16 @@ export const mockFunctions = {
  * must be called from a Jest test context (e.g., at the top level of a test file or inside a
  * test setup module).
  */
-export function setupTestEnvironment() {
+export const setupTestEnvironment = () => {
   // Mock fetch globally
   global.fetch = jest.fn();
 
   // Mock console methods in tests
-  const originalConsole = { ...console };
+  const originalConsole = {
+    log: console.log.bind(console),
+    warn: console.warn.bind(console),
+    error: console.error.bind(console),
+  };
   beforeAll(() => {
     console.log = jest.fn();
     console.warn = jest.fn();
@@ -340,7 +344,7 @@ export function setupTestEnvironment() {
     jest.clearAllMocks();
     jest.resetAllMocks();
   });
-}
+};
 
 // Database testing utilities
 export const dbTestUtils = {
@@ -351,7 +355,7 @@ export const dbTestUtils = {
   }),
 
   // Mock database results
-  mockQueryResult: <T extends unknown>(rows: T[]) => ({
+  mockQueryResult: <T>(rows: T[]) => ({
     rows,
     rowCount: rows.length,
     command: 'SELECT',
@@ -360,7 +364,7 @@ export const dbTestUtils = {
   }),
 
   // Mock transaction
-  mockTransaction: (fn: Function) => {
+  mockTransaction: (fn: () => unknown) => {
     const client = {
       query: jest.fn(),
       release: jest.fn(),
@@ -372,13 +376,15 @@ export const dbTestUtils = {
 // Authentication testing utilities
 export const authTestUtils = {
   // Create mock JWT token
-  createMockToken: (payload: any = {}) => {
+  createMockToken: (payload: Record<string, unknown> = {}) => {
+    const SECONDS_IN_HOUR = 3600;
+    const MS_IN_SECOND = 1000;
     const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
     const body = btoa(JSON.stringify({
       sub: 'user-123',
       email: 'test@example.com',
-      iat: Math.floor(Date.now() / 1000),
-      exp: Math.floor(Date.now() / 1000) + 3600,
+      iat: Math.floor(Date.now() / MS_IN_SECOND),
+      exp: Math.floor(Date.now() / MS_IN_SECOND) + SECONDS_IN_HOUR,
       ...payload,
     }));
     const signature = 'mock-signature';
@@ -386,7 +392,7 @@ export const authTestUtils = {
   },
 
   // Mock authentication context
-  mockAuthContext: (overrides: any = {}) => ({
+  mockAuthContext: (overrides: Record<string, unknown> = {}) => ({
     user: mockData.user,
     isAuthenticated: true,
     isLoading: false,
@@ -403,8 +409,8 @@ export const componentTestUtils = {
   // Test component with different states
   testComponentStates: (
     Component: React.ComponentType<any>,
-    props: any,
-    states: Array<{ name: string; props: any; expectedText?: string }>,
+    props: Record<string, unknown>,
+    states: Array<{ name: string; props: Record<string, unknown>; expectedText?: string }>,
   ) => {
     states.forEach(({ name, props: stateProps, expectedText }) => {
       it(`renders correctly in ${name} state`, () => {
@@ -422,7 +428,7 @@ export const componentTestUtils = {
   // Test component interactions
   testComponentInteractions: (
     Component: React.ComponentType<any>,
-    props: any,
+    props: Record<string, unknown>,
     interactions: Array<{
       name: string;
       action: (utils: ReturnType<typeof renderWithProviders>) => void;
@@ -442,7 +448,7 @@ export const componentTestUtils = {
 // Performance testing utilities
 export const performanceTestUtils = {
   // Measure render time
-  measureRenderTime: (Component: React.ComponentType<any>, props: any) => {
+  measureRenderTime: (Component: React.ComponentType<Record<string, unknown>>, props: Record<string, unknown>) => {
     const start = performance.now();
     renderWithProviders(<Component {...props} />);
     const end = performance.now();
@@ -452,8 +458,8 @@ export const performanceTestUtils = {
   // Test component re-renders
   testReRenders: (
     Component: React.ComponentType<any>,
-    props: any,
-    propChanges: any[],
+    props: Record<string, unknown>,
+    propChanges: Array<Record<string, unknown>>,
   ) => {
     const { rerender } = renderWithProviders(<Component {...props} />);
 
@@ -462,7 +468,7 @@ export const performanceTestUtils = {
       rerender(<Component {...props} {...newProps} />);
       const end = performance.now();
 
-      console.log(`Re-render ${index + 1} took ${end - start}ms`);
+      // console.log(`Re-render ${index + 1} took ${end - start}ms`);
     });
   },
 };

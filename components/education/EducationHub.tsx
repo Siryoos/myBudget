@@ -152,7 +152,7 @@ export function EducationHub({
 
   const ModuleCard = ({ module }: { module: EducationModule }) => (
     <div
-      className={`bg-white border rounded-lg p-6 cursor-pointer transition-all duration-200 hover:shadow-md ${
+      className={`bg-white border rounded-lg p-6 cursor-pointer transition-all duration-HTTP_OK hover:shadow-md ${
         selectedModule === module.id ? 'border-primary-trust-blue shadow-md' : 'border-neutral-gray/20'
       }`}
       onClick={() => setSelectedModule(module.id)}
@@ -256,7 +256,7 @@ export function EducationHub({
               <button
                 key={filterType}
                 onClick={() => setFilter(filterType)}
-                className={`px-3 py-1 text-sm font-medium rounded-md transition-all duration-200 ${
+                className={`px-3 py-1 text-sm font-medium rounded-md transition-all duration-HTTP_OK ${
                   filter === filterType
                     ? 'bg-white text-primary-trust-blue shadow-sm'
                     : 'text-neutral-gray hover:text-neutral-dark-gray'

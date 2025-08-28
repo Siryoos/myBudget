@@ -1,4 +1,4 @@
-import type { QueryResult } from 'pg';
+// QueryResult import removed - not used
 import { z } from 'zod';
 
 import { query } from '@/lib/database';
@@ -12,24 +12,24 @@ export abstract class BaseService {
   }
 
   // Generic find by ID
-  async findById(id: string): Promise<any | null> {
+  async findById<T = Record<string, unknown>>(id: string): Promise<T | null> {
     const result = await query(
       `SELECT * FROM ${this.tableName} WHERE id = $1`,
       [id],
     );
 
-    return result.rows[0] || null;
+    return (result.rows[0] as T) || null;
   }
 
   // Generic find all with optional filtering
-  async findAll(filters: Record<string, any> = {}, options: {
+  async findAll<T = Record<string, unknown>>(filters: Record<string, unknown> = {}, options: {
     limit?: number;
     offset?: number;
     orderBy?: string;
     orderDirection?: 'ASC' | 'DESC';
-  } = {}): Promise<any[]> {
+  } = {}): Promise<T[]> {
     let queryString = `SELECT * FROM ${this.tableName}`;
-    const values: any[] = [];
+    const values: unknown[] = [];
     const conditions: string[] = [];
 
     // Build WHERE clause from filters
@@ -61,13 +61,13 @@ export abstract class BaseService {
     }
 
     const result = await query(queryString, values);
-    return result.rows;
+    return result.rows as T[];
   }
 
   // Generic count with filters
-  async count(filters: Record<string, any> = {}): Promise<number> {
+  async count(filters: Record<string, unknown> = {}): Promise<number> {
     let queryString = `SELECT COUNT(*) as count FROM ${this.tableName}`;
-    const values: any[] = [];
+    const values: unknown[] = [];
     const conditions: string[] = [];
 
     Object.entries(filters).forEach(([key, value], index) => {
@@ -82,7 +82,7 @@ export abstract class BaseService {
     }
 
     const result = await query(queryString, values);
-    return parseInt(result.rows[0].count);
+    return parseInt(result.rows[0].count as string, 10);
   }
 
   // Generic delete by ID
@@ -96,7 +96,7 @@ export abstract class BaseService {
   }
 
   // Validate data against schema
-  protected validateData<T>(schema: z.ZodSchema<T>, data: any): T {
+  protected validateData<T>(schema: z.ZodSchema<T>, data: unknown): T {
     try {
       return schema.parse(data);
     } catch (error) {

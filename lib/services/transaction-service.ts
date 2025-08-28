@@ -3,7 +3,7 @@ import type { TransactionCreate, TransactionUpdate, TransactionFilter } from '@/
 import { transactionSchemas } from '@/lib/validation-schemas';
 import type { Transaction } from '@/types';
 
-import { BaseService, NotFoundError, ValidationError } from './base-service';
+import { BaseService, NotFoundError } from './base-service';
 import type { PaginatedResult, PaginationOptions } from './base-service';
 
 export class TransactionService extends BaseService {
@@ -35,11 +35,11 @@ export class TransactionService extends BaseService {
       validatedData.recurringFrequency || null,
     ]);
 
-    return this.mapDbTransactionToTransaction(result.rows[0]);
+    return this.mapDbTransactionToTransaction(result.rows[0] as Record<string, unknown>);
   }
 
   async findById(id: string): Promise<Transaction | null> {
-    const transaction = await super.findById(id);
+    const transaction = await super.findById<Record<string, unknown>>(id);
     return transaction ? this.mapDbTransactionToTransaction(transaction) : null;
   }
 
@@ -55,7 +55,7 @@ export class TransactionService extends BaseService {
       SELECT * FROM transactions
       WHERE user_id = $1
     `;
-    const values: any[] = [userId];
+    const values: unknown[] = [userId];
     let paramCount = 2;
 
     // Build WHERE clause from filters
@@ -107,11 +107,12 @@ export class TransactionService extends BaseService {
     // Get total count
     const countQuery = queryString.replace('SELECT *', 'SELECT COUNT(*) as count');
     const countResult = await query(countQuery, values);
-    const total = parseInt(countResult.rows[0].count);
+    const total = parseInt(countResult.rows[0].count, 10);
 
     // Add pagination
     const page = pagination?.page || 1;
-    const limit = pagination?.limit || 20;
+    const DEFAULT_PAGE_SIZE = 20;
+    const limit = pagination?.limit || DEFAULT_PAGE_SIZE;
     const offset = (page - 1) * limit;
 
     queryString += ` LIMIT $${paramCount} OFFSET $${paramCount + 1}`;
@@ -148,7 +149,7 @@ export class TransactionService extends BaseService {
 
     // Build dynamic update query
     const updates: string[] = [];
-    const values: any[] = [];
+    const values: unknown[] = [];
     let paramCount = 1;
 
     Object.entries(validatedData).forEach(([key, value]) => {
@@ -184,7 +185,7 @@ export class TransactionService extends BaseService {
       throw new NotFoundError('Transaction', id);
     }
 
-    return await super.delete(id);
+    return super.delete(id);
   }
 
   async getSummary(userId: string, startDate?: string, endDate?: string): Promise<{
@@ -201,7 +202,7 @@ export class TransactionService extends BaseService {
       FROM transactions
       WHERE user_id = $1
     `;
-    const values: any[] = [userId];
+    const values: unknown[] = [userId];
     let paramCount = 2;
 
     if (startDate) {
@@ -217,7 +218,11 @@ export class TransactionService extends BaseService {
     }
 
     const result = await query(queryString, values);
-    const row = result.rows[0];
+    const row = result.rows[0] as {
+      total_income: string;
+      total_expenses: string;
+      transaction_count: string;
+    };
 
     const totalIncome = parseFloat(row.total_income);
     const totalExpenses = parseFloat(row.total_expenses);
@@ -226,7 +231,7 @@ export class TransactionService extends BaseService {
       totalIncome,
       totalExpenses,
       netIncome: totalIncome - totalExpenses,
-      transactionCount: parseInt(row.transaction_count),
+      transactionCount: parseInt(row.transaction_count, 10),
     };
   }
 
@@ -245,7 +250,7 @@ export class TransactionService extends BaseService {
       FROM transactions
       WHERE user_id = $1
     `;
-    const values: any[] = [userId];
+    const values: unknown[] = [userId];
     let paramCount = 2;
 
     if (startDate) {
@@ -266,25 +271,30 @@ export class TransactionService extends BaseService {
     `;
 
     const result = await query(queryString, values);
-    return result.rows.map(row => ({
+    return result.rows.map((row: {
+      category: string;
+      total_income: string;
+      total_expenses: string;
+      transaction_count: string;
+    }) => ({
       category: row.category,
       totalIncome: parseFloat(row.total_income),
       totalExpenses: parseFloat(row.total_expenses),
-      transactionCount: parseInt(row.transaction_count),
+      transactionCount: parseInt(row.transaction_count, 10),
     }));
   }
 
-  private mapDbTransactionToTransaction(dbTransaction: any): Transaction {
+  private mapDbTransactionToTransaction(dbTransaction: Record<string, unknown>): Transaction {
     return {
-      id: dbTransaction.id,
-      amount: parseFloat(dbTransaction.amount),
-      description: dbTransaction.description,
-      category: dbTransaction.category,
-      date: new Date(dbTransaction.date),
-      type: dbTransaction.type,
-      account: dbTransaction.account,
-      tags: dbTransaction.tags,
-      isRecurring: dbTransaction.is_recurring,
+      id: dbTransaction.id as string,
+      amount: parseFloat(dbTransaction.amount as string),
+      description: dbTransaction.description as string,
+      category: dbTransaction.category as string,
+      date: new Date(dbTransaction.date as string),
+      type: dbTransaction.type as 'income' | 'expense',
+      account: dbTransaction.account as string | undefined,
+      tags: dbTransaction.tags as string[] | undefined,
+      isRecurring: dbTransaction.is_recurring as boolean,
     };
   }
 }

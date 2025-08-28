@@ -29,7 +29,7 @@ export async function GET(
     return NextResponse.json(
       { error: 'Invalid locale or namespace' },
       {
-        status: 404,
+        status: HTTP_NOT_FOUND,
         headers: {
           'Access-Control-Allow-Origin': '*',
           'Access-Control-Allow-Methods': 'GET',
@@ -48,7 +48,7 @@ export async function GET(
       return NextResponse.json(
         { error: 'Translation file not found' },
         {
-          status: 404,
+          status: HTTP_NOT_FOUND,
           headers: {
             'Access-Control-Allow-Origin': '*',
             'Access-Control-Allow-Methods': 'GET',
@@ -77,7 +77,7 @@ export async function GET(
     return NextResponse.json(
       { error: 'Failed to parse translation file' },
       {
-        status: 500,
+        status: HTTP_INTERNAL_SERVER_ERROR,
         headers: {
           'Access-Control-Allow-Origin': '*',
           'Access-Control-Allow-Methods': 'GET',
@@ -91,7 +91,7 @@ export async function GET(
 // Handle preflight requests
 export async function OPTIONS() {
   return new NextResponse(null, {
-    status: 200,
+    status: HTTP_OK,
     headers: {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, OPTIONS',

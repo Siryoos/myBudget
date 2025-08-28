@@ -96,7 +96,7 @@ export function RecentTransactions({
                 <button
                   key={type}
                   onClick={() => setFilterType(type)}
-                  className={`px-3 py-1 text-xs font-medium rounded-md transition-all duration-200 ${
+                  className={`px-3 py-1 text-xs font-medium rounded-md transition-all duration-HTTP_OK ${
                     filterType === type
                       ? 'bg-white text-primary-trust-blue shadow-sm'
                       : 'text-neutral-gray hover:text-neutral-dark-gray'
@@ -132,7 +132,7 @@ export function RecentTransactions({
             {filteredTransactions.map((transaction) => (
               <div
                 key={transaction.id}
-                className="flex items-center p-3 rounded-lg hover:bg-neutral-light-gray/50 transition-colors duration-200 cursor-pointer group"
+                className="flex items-center p-3 rounded-lg hover:bg-neutral-light-gray/50 transition-colors duration-HTTP_OK cursor-pointer group"
               >
                 {/* Transaction Icon */}
                 <div className="flex-shrink-0 mr-3">
@@ -181,7 +181,7 @@ export function RecentTransactions({
                 </div>
 
                 {/* Arrow icon on hover */}
-                <div className="flex-shrink-0 ml-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                <div className="flex-shrink-0 ml-2 opacity-0 group-hover:opacity-100 transition-opacity duration-HTTP_OK">
                   <ArrowRightIcon className="h-4 w-4 text-neutral-gray" />
                 </div>
               </div>
@@ -193,7 +193,7 @@ export function RecentTransactions({
         <div className="mt-6 pt-4 border-t border-neutral-gray/20">
           <Button variant="outline" size="sm" className="w-full group">
             <span>{t('transactions:viewAll', { defaultValue: 'View All Transactions' })}</span>
-            <ArrowRightIcon className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform duration-200" />
+            <ArrowRightIcon className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform duration-HTTP_OK" />
           </Button>
         </div>
 

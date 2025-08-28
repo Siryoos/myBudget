@@ -70,7 +70,7 @@ export const POST = requireAuth(async (request: AuthenticatedRequest) => {
     // Create transaction using service
     const transaction = await transactionService.create(request.user.id, body);
 
-    return createSuccessResponse({ ...transaction, requestId }, requestId, 201);
+    return createSuccessResponse({ ...transaction, requestId }, requestId, HTTP_CREATED);
 
   } catch (error) {
     return handleApiError(error, requestId);

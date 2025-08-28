@@ -13,14 +13,14 @@ interface ErrorBoundaryProps {
 }
 
 const DefaultErrorFallback: React.FC<{ error: Error | null; retry: () => void }> = ({ error, retry }) => (
-  <div className="p-6 bg-red-50 border border-red-200 rounded-lg">
+  <div className="p-6 bg-red-50 border border-red-HTTP_OK rounded-lg">
     <h3 className="text-lg font-semibold text-red-800 mb-2">Something went wrong</h3>
     <p className="text-sm text-red-600 mb-4">
       {error?.message || 'An unexpected error occurred while loading this component.'}
     </p>
     <button
       onClick={retry}
-      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200"
+      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-HTTP_OK"
     >
       Try Again
     </button>

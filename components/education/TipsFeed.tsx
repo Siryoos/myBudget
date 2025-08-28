@@ -209,7 +209,7 @@ export function TipsFeed({
             <button
               key={filterType}
               onClick={() => setFilter(filterType)}
-              className={`flex-1 px-3 py-1 text-sm font-medium rounded-md transition-all duration-200 ${
+              className={`flex-1 px-3 py-1 text-sm font-medium rounded-md transition-all duration-HTTP_OK ${
                 filter === filterType
                   ? 'bg-white text-primary-trust-blue shadow-sm'
                   : 'text-neutral-gray hover:text-neutral-dark-gray'
@@ -257,7 +257,7 @@ export function TipsFeed({
             {filteredTips.map((tip) => (
               <div
                 key={tip.id}
-                className="bg-white border border-neutral-gray/20 rounded-lg p-4 hover:shadow-sm transition-shadow duration-200"
+                className="bg-white border border-neutral-gray/20 rounded-lg p-4 hover:shadow-sm transition-shadow duration-HTTP_OK"
               >
                 {/* Tip Header */}
                 <div className="flex items-start justify-between mb-3">
@@ -291,7 +291,7 @@ export function TipsFeed({
 
                   <button
                     onClick={() => handleDismiss(tip.id)}
-                    className="p-1 rounded-full hover:bg-neutral-light-gray text-neutral-gray hover:text-neutral-dark-gray transition-colors duration-200"
+                    className="p-1 rounded-full hover:bg-neutral-light-gray text-neutral-gray hover:text-neutral-dark-gray transition-colors duration-HTTP_OK"
                   >
                     <XMarkIcon className="h-4 w-4" />
                   </button>
@@ -307,7 +307,7 @@ export function TipsFeed({
                   <div className="flex items-center space-x-3">
                     <button
                       onClick={() => handleLike(tip.id)}
-                      className={`flex items-center space-x-1 px-2 py-1 rounded-full transition-colors duration-200 ${
+                      className={`flex items-center space-x-1 px-2 py-1 rounded-full transition-colors duration-HTTP_OK ${
                         tip.isLiked
                           ? 'bg-accent-warning-red/10 text-accent-warning-red'
                           : 'hover:bg-neutral-light-gray text-neutral-gray hover:text-neutral-dark-gray'
@@ -319,7 +319,7 @@ export function TipsFeed({
 
                     <button
                       onClick={() => handleBookmark(tip.id)}
-                      className={`p-1 rounded-full transition-colors duration-200 ${
+                      className={`p-1 rounded-full transition-colors duration-HTTP_OK ${
                         tip.isBookmarked
                           ? 'bg-primary-trust-blue/10 text-primary-trust-blue'
                           : 'hover:bg-neutral-light-gray text-neutral-gray hover:text-neutral-dark-gray'
@@ -328,7 +328,7 @@ export function TipsFeed({
                       <BookmarkIcon className={`h-4 w-4 ${tip.isBookmarked ? 'fill-current' : ''}`} />
                     </button>
 
-                    <button className="p-1 rounded-full hover:bg-neutral-light-gray text-neutral-gray hover:text-neutral-dark-gray transition-colors duration-200">
+                    <button className="p-1 rounded-full hover:bg-neutral-light-gray text-neutral-gray hover:text-neutral-dark-gray transition-colors duration-HTTP_OK">
                       <ShareIcon className="h-4 w-4" />
                     </button>
                   </div>

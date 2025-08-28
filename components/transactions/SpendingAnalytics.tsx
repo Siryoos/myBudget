@@ -121,7 +121,7 @@ export function SpendingAnalytics({
             </div>
             <div className="w-full bg-neutral-light-gray rounded-full h-2">
               <div
-                className="h-2 rounded-full transition-all duration-500"
+                className="h-2 rounded-full transition-all duration-HTTP_INTERNAL_SERVER_ERROR"
                 style={{
                   width: `${(category.amount / maxAmount) * 100}%`,
                   backgroundColor: category.color,
@@ -160,7 +160,7 @@ export function SpendingAnalytics({
                 <button
                   key={range}
                   onClick={() => setSelectedPeriod(range)}
-                  className={`px-3 py-1 text-sm font-medium rounded-md transition-all duration-200 ${
+                  className={`px-3 py-1 text-sm font-medium rounded-md transition-all duration-HTTP_OK ${
                     selectedPeriod === range
                       ? 'bg-white text-primary-trust-blue shadow-sm'
                       : 'text-neutral-gray hover:text-neutral-dark-gray'

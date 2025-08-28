@@ -140,7 +140,7 @@ async function insertSampleData() {
     const categories = [
       { name: 'Housing', allocated: 2500, color: '#3B82F6', isEssential: true }, // 50% - Blue
       { name: 'Food', allocated: 750, color: '#10B981', isEssential: true }, // 15% - Green
-      { name: 'Transportation', allocated: 500, color: '#F59E0B', isEssential: true }, // 10% - Orange
+      { name: 'Transportation', allocated: HTTP_INTERNAL_SERVER_ERROR, color: '#F59E0B', isEssential: true }, // 10% - Orange
       { name: 'Entertainment', allocated: 250, color: '#8B5CF6', isEssential: false }, // 5% - Purple
       { name: 'Savings', allocated: 1000, color: '#EF4444', isEssential: false }, // 20% - Red
     ];

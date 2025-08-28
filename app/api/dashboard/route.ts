@@ -215,13 +215,13 @@ export const GET = requireAuth(async (request: AuthenticatedRequest) => {
     if (error instanceof Error && error.message.includes('Unauthorized')) {
       return NextResponse.json(
         { success: false, error: 'Authentication required' },
-        { status: 401 },
+        { status: HTTP_UNAUTHORIZED },
       );
     }
 
     return NextResponse.json(
       { success: false, error: 'Failed to fetch dashboard data' },
-      { status: 500 },
+      { status: HTTP_INTERNAL_SERVER_ERROR },
     );
   }
 });

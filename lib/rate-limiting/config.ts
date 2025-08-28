@@ -128,7 +128,7 @@ export const DEFAULT_RATE_LIMIT_CONFIG: RateLimitConfig = {
     },
     '/api/metrics': {
       windowMs: 60000, // 1 minute
-      maxRequests: 500,
+      maxRequests: HTTP_INTERNAL_SERVER_ERROR,
       adaptive: false,
       bypass: true,
     },
