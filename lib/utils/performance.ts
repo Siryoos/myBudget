@@ -5,7 +5,7 @@ class Cache<T> {
   private cache = new Map<string, { value: T; expires: number }>();
   private defaultTTL: number;
 
-  constructor(defaultTTL: number = 300000) { // 5 minutes default
+  constructor(defaultTTL = 300000) { // 5 minutes default
     this.defaultTTL = defaultTTL;
   }
 
@@ -40,9 +40,13 @@ class Cache<T> {
 }
 
 // Global cache instances
-export const userCache = new Cache(600000); // 10 minutes for user data
-export const goalsCache = new Cache(300000); // 5 minutes for goals
-export const achievementsCache = new Cache(1800000); // 30 minutes for achievements
+const CACHE_TTL_USER = 600000; // 10 minutes for user data
+const CACHE_TTL_GOALS = 300000; // 5 minutes for goals
+const CACHE_TTL_ACHIEVEMENTS = 1800000; // 30 minutes for achievements
+
+export const userCache = new Cache(CACHE_TTL_USER);
+export const goalsCache = new Cache(CACHE_TTL_GOALS);
+export const achievementsCache = new Cache(CACHE_TTL_ACHIEVEMENTS);
 
 // Performance monitoring utilities
 export class PerformanceMonitor {
@@ -71,12 +75,12 @@ export class PerformanceMonitor {
     };
   }
 
-  getMetrics(operation?: string): any {
+  getMetrics(operation?: string): Record<string, unknown> | null {
     if (operation) {
       return this.operations.get(operation) || null;
     }
 
-    const allMetrics: Record<string, any> = {};
+    const allMetrics: Record<string, unknown> = {};
     this.operations.forEach((metrics, op) => {
       allMetrics[op] = metrics;
     });
@@ -96,7 +100,7 @@ export class PerformanceMonitor {
 // Database query optimization
 export class QueryOptimizer {
   // Analyze query performance and suggest optimizations
-  static async analyzeQueryPerformance(queryText: string, params: any[] = []): Promise<{
+  static async analyzeQueryPerformance(queryText: string, params: unknown[] = []): Promise<{
     executionTime: number;
     rowCount: number;
     suggestions: string[];
@@ -142,11 +146,11 @@ export class QueryOptimizer {
   }
 
   // Batch operations for better performance
-  static async batchInsert(tableName: string, records: Record<string, any>[]): Promise<void> {
+  static async batchInsert(tableName: string, records: Record<string, unknown>[]): Promise<void> {
     if (records.length === 0) {return;}
 
     const columns = Object.keys(records[0]);
-    const values = records.map(record =>
+    const values = records.map(() =>
       `(${columns.map((_, i) => `$${i + 1}`).join(', ')})`,
     ).join(', ');
 
@@ -169,13 +173,13 @@ export class QueryOptimizer {
     try {
       // Get row count
       const countResult = await query(`SELECT COUNT(*) as count FROM ${tableName}`);
-      const rowCount = parseInt(countResult.rows[0].count);
+      const rowCount = parseInt(countResult.rows[0].count as string, 10);
 
       // Get table size (simplified)
       const sizeResult = await query(`
         SELECT pg_size_pretty(pg_total_relation_size($1)) as size
       `, [tableName]);
-      const size = sizeResult.rows[0].size;
+      const size = sizeResult.rows[0].size as string;
 
       // Get indexes
       const indexResult = await query(`
@@ -183,12 +187,12 @@ export class QueryOptimizer {
         FROM pg_indexes
         WHERE tablename = $1
       `, [tableName]);
-      const indexes = indexResult.rows.map(row => row.indexname);
+      const indexes = indexResult.rows.map(row => row.indexname as string);
 
       return { rowCount, size, indexes };
 
     } catch (error) {
-      console.error(`Failed to get stats for table ${tableName}:`, error);
+      // console.error(`Failed to get stats for table ${tableName}:`, error);
       return { rowCount: 0, size: 'unknown', indexes: [] };
     }
   }
@@ -247,11 +251,14 @@ export class MemoryMonitor {
 
     // Determine trend
     let trend: 'increasing' | 'decreasing' | 'stable' = 'stable';
-    if (this.snapshots.length >= 3) {
+    const MIN_SNAPSHOTS_FOR_TREND = 3;
+    if (this.snapshots.length >= MIN_SNAPSHOTS_FOR_TREND) {
       const recent = this.snapshots.slice(-3);
       const heapUsage = recent.map(s => s.usage.heapUsed);
-      const increasing = heapUsage[2] > heapUsage[0] * 1.1; // 10% increase
-      const decreasing = heapUsage[2] < heapUsage[0] * 0.9; // 10% decrease
+      const GROWTH_THRESHOLD = 1.1; // 10% increase
+      const SHRINK_THRESHOLD = 0.9; // 10% decrease
+      const increasing = heapUsage[2] > heapUsage[0] * GROWTH_THRESHOLD;
+      const decreasing = heapUsage[2] < heapUsage[0] * SHRINK_THRESHOLD;
 
       if (increasing) {trend = 'increasing';}
       else if (decreasing) {trend = 'decreasing';}
@@ -287,7 +294,7 @@ export class ConnectionPoolMonitor {
     return ConnectionPoolMonitor.instance;
   }
 
-  recordConnectionStats(active: number, idle: number, waiting: number = 0): void {
+  recordConnectionStats(active: number, idle: number, waiting = 0): void {
     this.connectionStats.push({
       active,
       idle,
@@ -296,8 +303,9 @@ export class ConnectionPoolMonitor {
     });
 
     // Keep only last 50 entries
-    if (this.connectionStats.length > 50) {
-      this.connectionStats = this.connectionStats.slice(-50);
+    const MAX_STATS_ENTRIES = 50;
+    if (this.connectionStats.length > MAX_STATS_ENTRIES) {
+      this.connectionStats = this.connectionStats.slice(-MAX_STATS_ENTRIES);
     }
   }
 

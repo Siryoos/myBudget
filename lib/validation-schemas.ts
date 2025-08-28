@@ -1,5 +1,32 @@
 import { z } from 'zod';
 
+// Constants
+const MIN_PASSWORD_LENGTH = 8;
+const MIN_NAME_LENGTH = 2;
+const MAX_NAME_LENGTH = 255;
+const MIN_PERCENTAGE = 0;
+const MAX_PERCENTAGE = 100;
+const MS_IN_DAY = 24 * 60 * 60 * 1000;
+const HOURS_IN_DAY = 24;
+const MINUTES_IN_HOUR = 60;
+const SECONDS_IN_MINUTE = 60;
+const MS_IN_SECOND = 1000;
+const MIN_CREDIT_SCORE = 300;
+const MAX_CREDIT_SCORE = 850;
+const MAX_DESCRIPTION_LENGTH = 500;
+const MAX_ACHIEVEMENT_NAME_LENGTH = 50;
+const MAX_BUDGET_NAME_LENGTH = 50;
+const MAX_GOAL_NAME_LENGTH = 50;
+const MAX_TAG_LENGTH = 50;
+const PROFILE_IMAGE_MAX_WIDTH = 480;
+const MAX_TAGS = 10;
+const MIN_SESSION_TIMEOUT = 5;
+const MAX_SESSION_TIMEOUT = 480;
+const MAX_TRANSACTION_DESCRIPTION_LENGTH = 500;
+const MAX_GOAL_DESCRIPTION_LENGTH = 1000;
+const MAX_CATEGORY_NAME_LENGTH = 100;
+const MAX_ICON_LENGTH = 100;
+
 // Common validation schemas
 export const commonSchemas = {
   email: z.string()
@@ -7,7 +34,7 @@ export const commonSchemas = {
     .regex(/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/, 'Invalid email format'),
 
   password: z.string()
-    .min(8, 'Password must be at least 8 characters')
+    .min(MIN_PASSWORD_LENGTH, `Password must be at least ${MIN_PASSWORD_LENGTH} characters`)
     .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain at least one lowercase letter, one uppercase letter, and one number'),
 
   currency: z.enum([
@@ -110,7 +137,7 @@ export const commonSchemas = {
 
   nonNegativeDecimal: z.number().min(0, 'Must be non-negative'),
 
-  percentage: z.number().min(0).max(100, 'Must be between 0 and 100'),
+  percentage: z.number().min(MIN_PERCENTAGE).max(MAX_PERCENTAGE, `Must be between ${MIN_PERCENTAGE} and ${MAX_PERCENTAGE}`),
 
   hexColor: z.string().regex(/^#[0-9A-F]{6}$/i, 'Must be a valid hex color'),
 
@@ -123,7 +150,7 @@ export const commonSchemas = {
 
   pastDate: z.string().refine((date) => {
     const parsedDate = new Date(date);
-    return parsedDate <= new Date(Date.now() + 24 * 60 * 60 * 1000); // Allow up to 1 day in future
+    return parsedDate <= new Date(Date.now() + MS_IN_DAY); // Allow up to 1 day in future
   }, 'Date cannot be more than 1 day in the future'),
 };
 
@@ -131,7 +158,7 @@ export const commonSchemas = {
 export const userSchemas = {
   create: z.object({
     email: commonSchemas.email,
-    name: z.string().min(2, 'Name must be at least 2 characters').max(255),
+    name: z.string().min(MIN_NAME_LENGTH, `Name must be at least ${MIN_NAME_LENGTH} characters`).max(MAX_NAME_LENGTH),
     password: commonSchemas.password,
     dateOfBirth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format (YYYY-MM-DD)'),
     monthlyIncome: commonSchemas.nonNegativeDecimal.optional(),
@@ -141,7 +168,7 @@ export const userSchemas = {
 
   update: z.object({
     email: commonSchemas.email.optional(),
-    name: z.string().min(2).max(255).optional(),
+    name: z.string().min(MIN_NAME_LENGTH).max(MAX_NAME_LENGTH).optional(),
     avatar: z.string().url().optional().or(z.literal('')),
     currency: commonSchemas.currency.optional(),
     language: commonSchemas.language.optional(),
@@ -150,7 +177,7 @@ export const userSchemas = {
     riskTolerance: commonSchemas.riskTolerance.optional(),
     savingsRate: commonSchemas.percentage.optional(),
     debtToIncomeRatio: commonSchemas.percentage.optional(),
-    creditScore: z.number().min(300).max(850).optional(),
+    creditScore: z.number().min(MIN_CREDIT_SCORE).max(MAX_CREDIT_SCORE).optional(),
     dependents: z.number().min(0).optional(),
   }).partial(),
 
@@ -229,12 +256,12 @@ export const transactionSchemas = {
   create: z.object({
     type: commonSchemas.transactionType,
     amount: z.number().refine((val) => val !== 0, 'Amount cannot be zero'),
-    category: z.string().min(1, 'Category is required').max(100),
-    description: z.string().min(1, 'Description is required').max(HTTP_INTERNAL_SERVER_ERROR),
+    category: z.string().min(1, 'Category is required').max(MAX_CATEGORY_NAME_LENGTH),
+    description: z.string().min(1, 'Description is required').max(MAX_TRANSACTION_DESCRIPTION_LENGTH),
     date: commonSchemas.pastDate,
     budgetCategoryId: z.string().uuid().optional(),
-    account: z.string().max(100).optional(),
-    tags: z.array(z.string().max(50)).max(10, 'Maximum 10 tags allowed').optional(),
+    account: z.string().max(MAX_CATEGORY_NAME_LENGTH).optional(),
+    tags: z.array(z.string().max(MAX_TAG_LENGTH)).max(MAX_TAGS, `Maximum ${MAX_TAGS} tags allowed`).optional(),
     isRecurring: z.boolean().optional(),
     recurringFrequency: z.enum(['daily', 'weekly', 'monthly', 'yearly']).optional(),
   }),
@@ -242,19 +269,19 @@ export const transactionSchemas = {
   update: z.object({
     type: commonSchemas.transactionType.optional(),
     amount: z.number().refine((val) => val !== 0).optional(),
-    category: z.string().min(1).max(100).optional(),
-    description: z.string().min(1).max(HTTP_INTERNAL_SERVER_ERROR).optional(),
+    category: z.string().min(1).max(MAX_CATEGORY_NAME_LENGTH).optional(),
+    description: z.string().min(1).max(MAX_TRANSACTION_DESCRIPTION_LENGTH).optional(),
     date: commonSchemas.pastDate.optional(),
     budgetCategoryId: z.string().uuid().optional(),
-    account: z.string().max(100).optional(),
-    tags: z.array(z.string().max(50)).max(10).optional(),
+    account: z.string().max(MAX_CATEGORY_NAME_LENGTH).optional(),
+    tags: z.array(z.string().max(MAX_TAG_LENGTH)).max(MAX_TAGS).optional(),
     isRecurring: z.boolean().optional(),
     recurringFrequency: z.enum(['daily', 'weekly', 'monthly', 'yearly']).optional(),
   }).partial(),
 
   filter: z.object({
     page: z.number().min(1).optional(),
-    limit: z.number().min(1).max(100).optional(),
+    limit: z.number().min(1).max(MAX_CATEGORY_NAME_LENGTH).optional(),
     category: z.string().optional(),
     type: commonSchemas.transactionType.optional(),
     startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
@@ -269,7 +296,7 @@ export const transactionSchemas = {
 export const savingsGoalSchemas = {
   create: z.object({
     name: z.string().min(1, 'Name is required').max(255),
-    description: z.string().max(1000).optional(),
+    description: z.string().max(MAX_GOAL_DESCRIPTION_LENGTH).optional(),
     targetAmount: commonSchemas.positiveDecimal,
     targetDate: commonSchemas.futureDate,
     priority: commonSchemas.priority,
@@ -278,13 +305,13 @@ export const savingsGoalSchemas = {
     color: commonSchemas.hexColor.optional(),
     photoUrl: commonSchemas.url.optional(),
     framingType: commonSchemas.framingType.optional(),
-    lossAvoidanceDescription: z.string().max(1000).optional(),
-    achievementDescription: z.string().max(1000).optional(),
+    lossAvoidanceDescription: z.string().max(MAX_GOAL_DESCRIPTION_LENGTH).optional(),
+    achievementDescription: z.string().max(MAX_GOAL_DESCRIPTION_LENGTH).optional(),
   }),
 
   update: z.object({
     name: z.string().min(1).max(255).optional(),
-    description: z.string().max(1000).optional(),
+    description: z.string().max(MAX_GOAL_DESCRIPTION_LENGTH).optional(),
     targetAmount: commonSchemas.positiveDecimal.optional(),
     targetDate: commonSchemas.futureDate.optional(),
     priority: commonSchemas.priority.optional(),
@@ -293,8 +320,8 @@ export const savingsGoalSchemas = {
     color: commonSchemas.hexColor.optional(),
     photoUrl: commonSchemas.url.optional(),
     framingType: commonSchemas.framingType.optional(),
-    lossAvoidanceDescription: z.string().max(1000).optional(),
-    achievementDescription: z.string().max(1000).optional(),
+    lossAvoidanceDescription: z.string().max(MAX_GOAL_DESCRIPTION_LENGTH).optional(),
+    achievementDescription: z.string().max(MAX_GOAL_DESCRIPTION_LENGTH).optional(),
     isActive: z.boolean().optional(),
   }).partial(),
 };
@@ -304,12 +331,12 @@ export const milestoneSchemas = {
   create: z.object({
     goalId: z.string().uuid('Invalid goal ID'),
     amount: commonSchemas.positiveDecimal,
-    description: z.string().min(1, 'Description is required').max(HTTP_INTERNAL_SERVER_ERROR),
+    description: z.string().min(1, 'Description is required').max(MAX_TRANSACTION_DESCRIPTION_LENGTH),
   }),
 
   update: z.object({
     amount: commonSchemas.positiveDecimal.optional(),
-    description: z.string().min(1).max(HTTP_INTERNAL_SERVER_ERROR).optional(),
+    description: z.string().min(1).max(MAX_TRANSACTION_DESCRIPTION_LENGTH).optional(),
     isCompleted: z.boolean().optional(),
   }).partial(),
 };
@@ -351,7 +378,7 @@ export const achievementSchemas = {
     name: z.string().min(1, 'Name is required').max(255),
     description: z.string().min(1, 'Description is required'),
     category: z.string().min(1, 'Category is required').max(50),
-    icon: z.string().min(1, 'Icon is required').max(100),
+    icon: z.string().min(1, 'Icon is required').max(MAX_ICON_LENGTH),
     requirementType: commonSchemas.achievementRequirementType,
     requirementValue: z.number().int().positive('Requirement value must be positive'),
     requirementTimeframe: z.enum(['daily', 'weekly', 'monthly', 'yearly']).optional(),
@@ -363,7 +390,7 @@ export const achievementSchemas = {
     name: z.string().min(1).max(255).optional(),
     description: z.string().min(1).optional(),
     category: z.string().min(1).max(50).optional(),
-    icon: z.string().min(1).max(100).optional(),
+    icon: z.string().min(1).max(MAX_ICON_LENGTH).optional(),
     requirementType: commonSchemas.achievementRequirementType.optional(),
     requirementValue: z.number().int().positive().optional(),
     requirementTimeframe: z.enum(['daily', 'weekly', 'monthly', 'yearly']).optional(),
@@ -400,7 +427,7 @@ export const settingsSchemas = {
     security: z.object({
       twoFactorEnabled: z.boolean().optional(),
       loginAlerts: z.boolean().optional(),
-      sessionTimeout: z.number().min(5).max(480).optional(), // 5 minutes to 8 hours
+      sessionTimeout: z.number().min(MIN_SESSION_TIMEOUT).max(MAX_SESSION_TIMEOUT).optional(), // 5 minutes to 8 hours
     }).optional(),
   }).partial(),
 };

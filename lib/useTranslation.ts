@@ -19,7 +19,7 @@ import { useTranslation as useI18nTranslation } from 'react-i18next';
  *    `getDataByLanguage`, `hasLoadedNamespace`, `getResource`, `addResource`, `addResources`,
  *    `addResourceBundle`, `removeResourceBundle`.
  */
-export function useTranslation(namespace?: string) {
+export const useTranslation = (namespace?: string) => {
   const { t, i18n, ready } = useI18nTranslation(namespace);
   const [isReady, setIsReady] = useState(ready);
 
@@ -31,7 +31,7 @@ export function useTranslation(namespace?: string) {
     try {
       return t(key, options);
     } catch (error) {
-      console.error('Translation error:', error);
+      // console.error('Translation error:', error);
       return key;
     }
   }, [t]);
@@ -40,7 +40,7 @@ export function useTranslation(namespace?: string) {
     try {
       await i18n.changeLanguage(language);
     } catch (error) {
-      console.error('Language change error:', error);
+      // console.error('Language change error:', error);
     }
   }, [i18n]);
 
@@ -48,13 +48,16 @@ export function useTranslation(namespace?: string) {
 
   const getAvailableLanguages = useCallback((): readonly string[] => i18n.languages, [i18n]);
 
-  const hasResourceBundle = useCallback((language: string, ns: string): boolean => i18n.hasResourceBundle(language, ns), [i18n]);
+  const hasResourceBundle = useCallback(
+    (language: string, ns: string): boolean => i18n.hasResourceBundle(language, ns),
+    [i18n]
+  );
 
   const loadNamespaces = useCallback(async (namespaces: string | string[]) => {
     try {
       await i18n.loadNamespaces(namespaces);
     } catch (error) {
-      console.error('Namespace loading error:', error);
+      // console.error('Namespace loading error:', error);
     }
   }, [i18n]);
 
@@ -62,35 +65,66 @@ export function useTranslation(namespace?: string) {
     try {
       await i18n.loadLanguages(languages);
     } catch (error) {
-      console.error('Language loading error:', error);
+      // console.error('Language loading error:', error);
     }
   }, [i18n]);
 
-  const reloadResources = useCallback(async (languages?: string | string[], namespaces?: string | string[]) => {
-    try {
-      await i18n.reloadResources(languages, namespaces);
-    } catch (error) {
-      console.error('Resource reload error:', error);
-    }
-  }, [i18n]);
+  const reloadResources = useCallback(
+    async (languages?: string | string[], namespaces?: string | string[]) => {
+      try {
+        await i18n.reloadResources(languages, namespaces);
+      } catch (error) {
+        // console.error('Resource reload error:', error);
+      }
+    },
+    [i18n]
+  );
 
-  const getDataByLanguage = useCallback((language: string) => i18n.getDataByLanguage(language), [i18n]);
+  const getDataByLanguage = useCallback(
+    (language: string) => i18n.getDataByLanguage(language),
+    [i18n]
+  );
 
-  const hasLoadedNamespace = useCallback((namespace: string): boolean => i18n.hasLoadedNamespace(namespace), [i18n]);
+  const hasLoadedNamespace = useCallback(
+    (namespace: string): boolean => i18n.hasLoadedNamespace(namespace),
+    [i18n]
+  );
 
-  const getResource = useCallback((language: string, namespace: string, key: string, options?: Record<string, unknown>) => i18n.getResource(language, namespace, key, options), [i18n]);
+  const getResource = useCallback(
+    (language: string, namespace: string, key: string, options?: Record<string, unknown>) =>
+      i18n.getResource(language, namespace, key, options),
+    [i18n]
+  );
 
-  const addResource = useCallback((language: string, namespace: string, key: string, value: string, options?: Record<string, unknown>) => {
-    i18n.addResource(language, namespace, key, value, options);
-  }, [i18n]);
+  const addResource = useCallback(
+    (
+      language: string,
+      namespace: string,
+      key: string,
+      value: string,
+      options?: Record<string, unknown>
+    ) => {
+      i18n.addResource(language, namespace, key, value, options);
+    },
+    [i18n]
+  );
 
   const addResources = useCallback((language: string, namespace: string, resources: Record<string, string>) => {
     i18n.addResources(language, namespace, resources);
   }, [i18n]);
 
-  const addResourceBundle = useCallback((language: string, namespace: string, resources: Record<string, unknown>, deep?: boolean, overwrite?: boolean) => {
-    i18n.addResourceBundle(language, namespace, resources, deep, overwrite);
-  }, [i18n]);
+  const addResourceBundle = useCallback(
+    (
+      language: string,
+      namespace: string,
+      resources: Record<string, unknown>,
+      deep?: boolean,
+      overwrite?: boolean
+    ) => {
+      i18n.addResourceBundle(language, namespace, resources, deep, overwrite);
+    },
+    [i18n]
+  );
 
   const removeResourceBundle = useCallback((language: string, namespace: string) => {
     i18n.removeResourceBundle(language, namespace);
@@ -115,4 +149,4 @@ export function useTranslation(namespace?: string) {
     addResourceBundle,
     removeResourceBundle,
   };
-}
+};
