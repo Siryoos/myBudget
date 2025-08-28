@@ -3,16 +3,18 @@ import { NextRequest } from 'next/server';
 import { RequestValidator, REQUEST_LIMITS } from '@/lib/api-validation';
 import { requireAuth } from '@/lib/auth-middleware';
 import { GoalsService } from '@/lib/services/goals-service';
-import { savingsGoalSchemas } from '@/lib/validation-schemas';
+import { automationRuleSchemas } from '@/lib/validation-schemas';
 import {
   handleApiError,
   createSuccessResponse,
+  createPaginatedResponse,
   generateRequestId
 } from '@/lib/services/error-handler';
 import type { AuthenticatedRequest } from '@/types/auth';
 
 const goalsService = new GoalsService();
 
+// GET - List automation rules for a goal
 export const GET = requireAuth(async (request: AuthenticatedRequest, context?: { params: { id: string } }) => {
   const requestId = generateRequestId();
 
@@ -23,17 +25,18 @@ export const GET = requireAuth(async (request: AuthenticatedRequest, context?: {
 
     const { id } = context.params;
 
-    // Get goal using service
+    // Get goal to verify it exists and get automation rules
     const goal = await goalsService.findById(id);
 
-    return createSuccessResponse(goal, requestId);
+    return createSuccessResponse(goal.automationRules, requestId);
 
   } catch (error) {
     return handleApiError(error, requestId);
   }
 });
 
-export const PUT = requireAuth(async (request: AuthenticatedRequest, context?: { params: { id: string } }) => {
+// POST - Create new automation rule for a goal
+export const POST = requireAuth(async (request: AuthenticatedRequest, context?: { params: { id: string } }) => {
   const requestId = generateRequestId();
 
   try {
@@ -48,44 +51,13 @@ export const PUT = requireAuth(async (request: AuthenticatedRequest, context?: {
     await validator.validateRequestSize();
     validator.validateHeaders();
 
-    // Parse and validate request body
-    const body = await request.json();
-    const { ...updateData } = body;
+    // Validate and parse request body
+    const body = await validator.validateAndParseBody(automationRuleSchemas.create);
 
-    // Validate update data
-    const validatedData = goalsService.validateData(savingsGoalSchemas.update, updateData);
+    // Create automation rule using service
+    const automationRule = await goalsService.createAutomationRule(id, body);
 
-    // Update goal using service
-    const goal = await goalsService.update(id, validatedData);
-
-    return createSuccessResponse(goal, requestId);
-
-  } catch (error) {
-    return handleApiError(error, requestId);
-  }
-});
-
-export const DELETE = requireAuth(async (request: AuthenticatedRequest, context?: { params: { id: string } }) => {
-  const requestId = generateRequestId();
-
-  try {
-    if (!context?.params?.id) {
-      throw new Error('Goal ID is required');
-    }
-
-    const { id } = context.params;
-
-    // Delete goal using service
-    const deleted = await goalsService.delete(id);
-
-    if (!deleted) {
-      throw new Error('Goal not found or could not be deleted');
-    }
-
-    return createSuccessResponse(
-      { message: 'Goal deleted successfully', requestId },
-      requestId
-    );
+    return createSuccessResponse(automationRule, requestId, 201);
 
   } catch (error) {
     return handleApiError(error, requestId);

@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 
-import { useGoals, useAnalytics } from '@/lib/api-hooks';
+import { useGoals, useMutation, useAuth } from '@/contexts/AppProvider';
+import { GoalsService } from '@/lib/services/goals-service';
 import { useTranslation } from '@/lib/useTranslation';
 import type { SavingsGoal, Achievement, QuickSaveData } from '@/types';
 
@@ -25,8 +26,34 @@ export function BehavioralDashboard({
   enableNotifications = true,
 }: BehavioralDashboardProps) {
   const { t, ready } = useTranslation('goals');
-  const { goals, loading: goalsLoading, createGoal, addContribution } = useGoals();
-  const { analytics } = useAnalytics();
+  const { user } = useAuth();
+  const { goals, loading: goalsLoading, refreshGoals } = useGoals();
+
+  // Mutations for goal operations
+  const createGoalState = useMutation(
+    async (goalData: any) => {
+      if (!user?.id) throw new Error('User not authenticated');
+      const goalsService = new GoalsService();
+      return await goalsService.create(user.id, goalData);
+    },
+    {
+      onSuccess: () => {
+        refreshGoals();
+      },
+    }
+  );
+
+  const addContributionState = useMutation(
+    async ({ goalId, amount }: { goalId: string; amount: number }) => {
+      const goalsService = new GoalsService();
+      return await goalsService.contribute(goalId, amount);
+    },
+    {
+      onSuccess: () => {
+        refreshGoals();
+      },
+    }
+  );
   const [quickSaveHistory, setQuickSaveHistory] = useState<QuickSaveData[]>([]);
   const [activeTab, setActiveTab] = useState<'goals' | 'quick-save' | 'achievements' | 'insights'>('goals');
   const [showGoalWizard, setShowGoalWizard] = useState(false);
@@ -49,7 +76,7 @@ export function BehavioralDashboard({
     }
   }, [analytics]);
 
-  if (!ready || goalsLoading) {
+  if (!ready || goalsLoading || createGoalState.loading || addContributionState.loading) {
     return (
       <div className="flex items-center justify-center min-h-64">
         <div className="text-center">
@@ -63,7 +90,7 @@ export function BehavioralDashboard({
   // Handle goal creation
   const handleGoalCreated = async (newGoal: Partial<SavingsGoal>) => {
     try {
-      await createGoal(newGoal);
+      await createGoalState.mutate(newGoal);
       setShowGoalWizard(false);
 
       // Show achievement notification
@@ -93,7 +120,7 @@ export function BehavioralDashboard({
     try {
       // Add contribution to the goal if goalId is provided
       if (saveData.goalId) {
-        await addContribution(saveData.goalId, saveData.amount);
+        await addContributionState.mutate({ goalId: saveData.goalId, amount: saveData.amount });
       }
 
       // Update local history

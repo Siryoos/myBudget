@@ -380,3 +380,54 @@ CREATE TRIGGER validate_transaction_date_trigger
 CREATE TRIGGER check_achievement_unlock_trigger
     AFTER INSERT ON transactions
     FOR EACH ROW EXECUTE FUNCTION check_achievement_unlock();
+
+-- Monitoring and logging tables
+CREATE TABLE api_metrics (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  endpoint VARCHAR(500) NOT NULL,
+  method VARCHAR(10) NOT NULL,
+  status_code INTEGER NOT NULL,
+  response_time INTEGER NOT NULL, -- in milliseconds
+  user_id UUID REFERENCES users(id),
+  user_agent TEXT,
+  ip_address INET,
+  timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE error_metrics (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  endpoint VARCHAR(500) NOT NULL,
+  method VARCHAR(10) NOT NULL,
+  error TEXT NOT NULL,
+  stack TEXT,
+  user_id UUID REFERENCES users(id),
+  user_agent TEXT,
+  ip_address INET,
+  timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE performance_metrics (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  endpoint VARCHAR(500) NOT NULL,
+  method VARCHAR(10) NOT NULL,
+  response_time INTEGER NOT NULL,
+  database_queries INTEGER DEFAULT 0,
+  memory_usage BIGINT,
+  timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Indexes for monitoring tables
+CREATE INDEX idx_api_metrics_timestamp ON api_metrics(timestamp);
+CREATE INDEX idx_api_metrics_endpoint ON api_metrics(endpoint);
+CREATE INDEX idx_api_metrics_user_id ON api_metrics(user_id);
+CREATE INDEX idx_api_metrics_status_code ON api_metrics(status_code);
+
+CREATE INDEX idx_error_metrics_timestamp ON error_metrics(timestamp);
+CREATE INDEX idx_error_metrics_endpoint ON error_metrics(endpoint);
+CREATE INDEX idx_error_metrics_user_id ON error_metrics(user_id);
+
+CREATE INDEX idx_performance_metrics_timestamp ON performance_metrics(timestamp);
+CREATE INDEX idx_performance_metrics_endpoint ON performance_metrics(endpoint);

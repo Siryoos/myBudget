@@ -2,19 +2,18 @@ import { NextRequest } from 'next/server';
 
 import { RequestValidator, REQUEST_LIMITS } from '@/lib/api-validation';
 import { requireAuth } from '@/lib/auth-middleware';
-import { GoalsService } from '@/lib/services/goals-service';
-import { savingsGoalSchemas } from '@/lib/validation-schemas';
+import { AchievementsService } from '@/lib/services/achievements-service';
 import {
   handleApiError,
   createSuccessResponse,
   generateRequestId
 } from '@/lib/services/error-handler';
-import { withFullOptimization, OptimizedRequest } from '@/lib/middleware/performance';
 import type { AuthenticatedRequest } from '@/types/auth';
 
-const goalsService = new GoalsService();
+const achievementsService = new AchievementsService();
 
-const getGoalsHandler = async (request: AuthenticatedRequest) => {
+// GET - Get user's achievements and progress
+export const GET = requireAuth(async (request: AuthenticatedRequest) => {
   const requestId = generateRequestId();
 
   try {
@@ -23,25 +22,23 @@ const getGoalsHandler = async (request: AuthenticatedRequest) => {
     await validator.validateRequestSize();
     validator.validateHeaders();
 
-    // Parse query parameters
-    const { searchParams } = new URL(request.url);
-    const priority = searchParams.get('priority') as 'low' | 'medium' | 'high' | undefined;
+    // Get user's achievements with progress
+    const userAchievements = await achievementsService.getUserAchievements(request.user.id);
 
-    // Get goals using service
-    const goals = await goalsService.findByUserId(request.user.id, priority);
+    // Get user progress stats
+    const progressStats = await achievementsService.getUserProgress(request.user.id);
 
-    return createSuccessResponse(goals, requestId);
+    return createSuccessResponse({
+      achievements: userAchievements,
+      progress: progressStats
+    }, requestId);
 
   } catch (error) {
     return handleApiError(error, requestId);
   }
-};
+});
 
-export const GET = withFullOptimization(
-  (request: OptimizedRequest) => `${request.url}-user-${(request as any).user?.id}`,
-  'get-goals'
-)(requireAuth(getGoalsHandler));
-
+// POST - Check and unlock achievements for user
 export const POST = requireAuth(async (request: AuthenticatedRequest) => {
   const requestId = generateRequestId();
 
@@ -51,13 +48,15 @@ export const POST = requireAuth(async (request: AuthenticatedRequest) => {
     await validator.validateRequestSize();
     validator.validateHeaders();
 
-    // Validate and parse request body
-    const body = await validator.validateAndParseBody(savingsGoalSchemas.create);
+    // Check and unlock achievements
+    const unlockedAchievements = await achievementsService.checkAndUnlockAchievements(request.user.id);
 
-    // Create goal using service
-    const goal = await goalsService.create(request.user.id, body);
-
-    return createSuccessResponse(goal, requestId, 201);
+    return createSuccessResponse({
+      unlockedAchievements,
+      message: unlockedAchievements.length > 0
+        ? `Unlocked ${unlockedAchievements.length} new achievement(s)!`
+        : 'No new achievements unlocked'
+    }, requestId);
 
   } catch (error) {
     return handleApiError(error, requestId);
