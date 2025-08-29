@@ -13,6 +13,9 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { apiClient } from '@/lib/api-client';
 import { useTranslation } from '@/lib/useTranslation';
+import { TextInput, NumberInput, Select, type SelectOption } from '@/components/ui/Input';
+import { Card, CardContent, CardHeader } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
 
 interface ProfileManagerProps {
   personalInfo?: boolean
@@ -200,8 +203,9 @@ export function ProfileManager({
 
       {/* Personal Information */}
       {personalInfo && (
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <div className="flex justify-between items-center mb-6">
+        <Card>
+          <CardHeader>
+            <div className="flex justify-between items-center">
             <div className="flex items-center">
               <UserIcon className="w-5 h-5 text-primary-trust-blue mr-2" />
               <h3 className="text-lg font-semibold text-neutral-charcoal">
@@ -210,50 +214,51 @@ export function ProfileManager({
             </div>
             {editingSection === 'personal' ? (
               <div className="flex space-x-2">
-                <button
+                <Button
                   onClick={() => handleSave('personal')}
                   disabled={loading}
-                  className="px-3 py-1 bg-primary-trust-blue text-white rounded-md hover:bg-primary-trust-blue/90 disabled:opacity-50"
+                  variant="primary"
+                  size="sm"
                 >
+                  <CheckIcon className="h-4 w-4 mr-2" />
                   {loading ? t('common:actions.saving') : t('common:actions.save')}
-                </button>
-                <button
+                </Button>
+                <Button
                   onClick={() => handleCancel('personal')}
                   disabled={loading}
-                  className="px-3 py-1 bg-neutral-gray/10 text-neutral-charcoal rounded-md hover:bg-neutral-gray/20 disabled:opacity-50"
+                  variant="ghost"
+                  size="sm"
                 >
+                  <XMarkIcon className="h-4 w-4 mr-2" />
                   {t('common:actions.cancel')}
-                </button>
+                </Button>
               </div>
             ) : (
-              <button
+              <Button
                 onClick={() => setEditingSection('personal')}
-                className="p-2 hover:bg-neutral-gray/10 rounded-lg transition-colors"
+                variant="ghost"
+                size="sm"
+                className="p-2"
               >
-                <PencilIcon className="w-4 h-4 text-neutral-gray" />
-              </button>
+                <PencilIcon className="w-4 h-4" />
+              </Button>
             )}
           </div>
-
-          <div className="space-y-4">
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-neutral-gray mb-1">
                 {t('profile.personalInfo.name')}
               </label>
               {editingSection === 'personal' ? (
-                <>
-                  <input
-                    type="text"
-                    value={profileData.name}
-                    onChange={(e) => setProfileData(prev => ({ ...prev, name: e.target.value }))}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-trust-blue focus:border-transparent ${
-                      errors.name ? 'border-accent-coral-red' : 'border-neutral-gray/30'
-                    }`}
-                  />
-                  {errors.name && (
-                    <p className="text-sm text-accent-coral-red mt-1">{errors.name}</p>
-                  )}
-                </>
+                <TextInput
+                  value={profileData.name}
+                  onChange={(e) => setProfileData(prev => ({ ...prev, name: e.target.value }))}
+                  error={errors.name}
+                  placeholder="Enter your full name"
+                  required
+                />
               ) : (
                 <p className="text-neutral-charcoal">{profileData.name}</p>
               )}
@@ -264,19 +269,14 @@ export function ProfileManager({
                 {t('profile.personalInfo.email')}
               </label>
               {editingSection === 'personal' ? (
-                <>
-                  <input
-                    type="email"
-                    value={profileData.email}
-                    onChange={(e) => setProfileData(prev => ({ ...prev, email: e.target.value }))}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-trust-blue focus:border-transparent ${
-                      errors.email ? 'border-accent-coral-red' : 'border-neutral-gray/30'
-                    }`}
-                  />
-                  {errors.email && (
-                    <p className="text-sm text-accent-coral-red mt-1">{errors.email}</p>
-                  )}
-                </>
+                <TextInput
+                  type="email"
+                  value={profileData.email}
+                  onChange={(e) => setProfileData(prev => ({ ...prev, email: e.target.value }))}
+                  error={errors.email}
+                  placeholder="Enter your email address"
+                  required
+                />
               ) : (
                 <p className="text-neutral-charcoal">{profileData.email}</p>
               )}
@@ -287,11 +287,11 @@ export function ProfileManager({
                 {t('profile.personalInfo.dateOfBirth')}
               </label>
               {editingSection === 'personal' ? (
-                <input
+                <TextInput
                   type="date"
                   value={profileData.dateOfBirth}
                   onChange={(e) => setProfileData(prev => ({ ...prev, dateOfBirth: e.target.value }))}
-                  className="w-full px-3 py-2 border border-neutral-gray/30 rounded-lg focus:ring-2 focus:ring-primary-trust-blue focus:border-transparent"
+                  placeholder="Select your date of birth"
                 />
               ) : (
                 <p className="text-neutral-charcoal">
@@ -299,14 +299,15 @@ export function ProfileManager({
                 </p>
               )}
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Financial Profile */}
       {financialProfile && (
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <div className="flex justify-between items-center mb-6">
+        <Card>
+          <CardHeader>
+            <div className="flex justify-between items-center">
             <div className="flex items-center">
               <CurrencyDollarIcon className="w-5 h-5 text-primary-trust-blue mr-2" />
               <h3 className="text-lg font-semibold text-neutral-charcoal">
@@ -315,52 +316,53 @@ export function ProfileManager({
             </div>
             {editingSection === 'financial' ? (
               <div className="flex space-x-2">
-                <button
+                <Button
                   onClick={() => handleSave('financial')}
                   disabled={loading}
-                  className="px-3 py-1 bg-primary-trust-blue text-white rounded-md hover:bg-primary-trust-blue/90 disabled:opacity-50"
+                  variant="primary"
+                  size="sm"
                 >
+                  <CheckIcon className="h-4 w-4 mr-2" />
                   {loading ? t('common:actions.saving') : t('common:actions.save')}
-                </button>
-                <button
+                </Button>
+                <Button
                   onClick={() => handleCancel('financial')}
                   disabled={loading}
-                  className="px-3 py-1 bg-neutral-gray/10 text-neutral-charcoal rounded-md hover:bg-neutral-gray/20 disabled:opacity-50"
+                  variant="ghost"
+                  size="sm"
                 >
+                  <XMarkIcon className="h-4 w-4 mr-2" />
                   {t('common:actions.cancel')}
-                </button>
+                </Button>
               </div>
             ) : (
-              <button
+              <Button
                 onClick={() => setEditingSection('financial')}
-                className="p-2 hover:bg-neutral-gray/10 rounded-lg transition-colors"
+                variant="ghost"
+                size="sm"
+                className="p-2"
               >
-                <PencilIcon className="w-4 h-4 text-neutral-gray" />
-              </button>
+                <PencilIcon className="w-4 h-4" />
+              </Button>
             )}
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-neutral-gray mb-1">
                 {t('profile.financialProfile.monthlyIncome')}
               </label>
               {editingSection === 'financial' ? (
-                <>
-                  <input
-                    type="number"
-                    value={profileData.monthlyIncome}
-                    onChange={(e) => setProfileData(prev => ({ ...prev, monthlyIncome: parseFloat(e.target.value) || 0 }))}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-trust-blue focus:border-transparent ${
-                      errors.monthlyIncome ? 'border-accent-coral-red' : 'border-neutral-gray/30'
-                    }`}
-                    min="0"
-                    step="100"
-                  />
-                  {errors.monthlyIncome && (
-                    <p className="text-sm text-accent-coral-red mt-1">{errors.monthlyIncome}</p>
-                  )}
-                </>
+                <NumberInput
+                  value={profileData.monthlyIncome.toString()}
+                  onChange={(e) => setProfileData(prev => ({ ...prev, monthlyIncome: parseFloat(e.target.value) || 0 }))}
+                  error={errors.monthlyIncome}
+                  min={0}
+                  leftAdornment={<span className="text-neutral-gray">$</span>}
+                  placeholder="Enter monthly income"
+                  required
+                />
               ) : (
                 <p className="text-neutral-charcoal">${profileData.monthlyIncome.toLocaleString()}</p>
               )}
@@ -371,22 +373,16 @@ export function ProfileManager({
                 {t('profile.financialProfile.savingsRate')}
               </label>
               {editingSection === 'financial' ? (
-                <>
-                  <input
-                    type="number"
-                    value={profileData.savingsRate}
-                    onChange={(e) => setProfileData(prev => ({ ...prev, savingsRate: parseFloat(e.target.value) || 0 }))}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-trust-blue focus:border-transparent ${
-                      errors.savingsRate ? 'border-accent-coral-red' : 'border-neutral-gray/30'
-                    }`}
-                    min="0"
-                    max="100"
-                    step="1"
-                  />
-                  {errors.savingsRate && (
-                    <p className="text-sm text-accent-coral-red mt-1">{errors.savingsRate}</p>
-                  )}
-                </>
+                <NumberInput
+                  value={profileData.savingsRate.toString()}
+                  onChange={(e) => setProfileData(prev => ({ ...prev, savingsRate: parseFloat(e.target.value) || 0 }))}
+                  error={errors.savingsRate}
+                  min={0}
+                  max={100}
+                  rightAdornment={<span className="text-neutral-gray">%</span>}
+                  placeholder="Enter savings rate"
+                  required
+                />
               ) : (
                 <p className="text-neutral-charcoal">{profileData.savingsRate}%</p>
               )}
@@ -397,15 +393,16 @@ export function ProfileManager({
                 {t('profile.financialProfile.riskTolerance')}
               </label>
               {editingSection === 'financial' ? (
-                <select
+                <Select
                   value={profileData.riskTolerance}
                   onChange={(e) => setProfileData(prev => ({ ...prev, riskTolerance: e.target.value }))}
-                  className="w-full px-3 py-2 border border-neutral-gray/30 rounded-lg focus:ring-2 focus:ring-primary-trust-blue focus:border-transparent"
-                >
-                  <option value="conservative">{t('profile.financialProfile.conservative')}</option>
-                  <option value="moderate">{t('profile.financialProfile.moderate')}</option>
-                  <option value="aggressive">{t('profile.financialProfile.aggressive')}</option>
-                </select>
+                  options={[
+                    { value: 'conservative', label: t('profile.financialProfile.conservative') },
+                    { value: 'moderate', label: t('profile.financialProfile.moderate') },
+                    { value: 'aggressive', label: t('profile.financialProfile.aggressive') }
+                  ] as SelectOption[]}
+                  placeholder="Select risk tolerance"
+                />
               ) : (
                 <p className="text-neutral-charcoal capitalize">{profileData.riskTolerance}</p>
               )}
@@ -416,26 +413,26 @@ export function ProfileManager({
                 {t('profile.financialProfile.dependents')}
               </label>
               {editingSection === 'financial' ? (
-                <input
-                  type="number"
-                  value={profileData.dependents}
+                <NumberInput
+                  value={profileData.dependents.toString()}
                   onChange={(e) => setProfileData(prev => ({ ...prev, dependents: parseInt(e.target.value, 10) || 0 }))}
-                  className="w-full px-3 py-2 border border-neutral-gray/30 rounded-lg focus:ring-2 focus:ring-primary-trust-blue focus:border-transparent"
-                  min="0"
-                  max="20"
+                  min={0}
+                  max={20}
+                  placeholder="Enter number of dependents"
                 />
               ) : (
                 <p className="text-neutral-charcoal">{profileData.dependents}</p>
               )}
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Preferences */}
       {preferences && (
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <div className="flex justify-between items-center mb-6">
+        <Card>
+          <CardHeader>
+            <div className="flex justify-between items-center">
             <div className="flex items-center">
               <GlobeAltIcon className="w-5 h-5 text-primary-trust-blue mr-2" />
               <h3 className="text-lg font-semibold text-neutral-charcoal">
@@ -444,49 +441,57 @@ export function ProfileManager({
             </div>
             {editingSection === 'preferences' ? (
               <div className="flex space-x-2">
-                <button
+                <Button
                   onClick={() => handleSave('preferences')}
                   disabled={loading}
-                  className="px-3 py-1 bg-primary-trust-blue text-white rounded-md hover:bg-primary-trust-blue/90 disabled:opacity-50"
+                  variant="primary"
+                  size="sm"
                 >
+                  <CheckIcon className="h-4 w-4 mr-2" />
                   {loading ? t('common:actions.saving') : t('common:actions.save')}
-                </button>
-                <button
+                </Button>
+                <Button
                   onClick={() => handleCancel('preferences')}
                   disabled={loading}
-                  className="px-3 py-1 bg-neutral-gray/10 text-neutral-charcoal rounded-md hover:bg-neutral-gray/20 disabled:opacity-50"
+                  variant="ghost"
+                  size="sm"
                 >
+                  <XMarkIcon className="h-4 w-4 mr-2" />
                   {t('common:actions.cancel')}
-                </button>
+                </Button>
               </div>
             ) : (
-              <button
+              <Button
                 onClick={() => setEditingSection('preferences')}
-                className="p-2 hover:bg-neutral-gray/10 rounded-lg transition-colors"
+                variant="ghost"
+                size="sm"
+                className="p-2"
               >
-                <PencilIcon className="w-4 h-4 text-neutral-gray" />
-              </button>
+                <PencilIcon className="w-4 h-4" />
+              </Button>
             )}
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-neutral-gray mb-1">
                 {t('profile.preferences.currency')}
               </label>
               {editingSection === 'preferences' ? (
-                <select
+                <Select
                   value={profileData.currency}
                   onChange={(e) => setProfileData(prev => ({ ...prev, currency: e.target.value }))}
-                  className="w-full px-3 py-2 border border-neutral-gray/30 rounded-lg focus:ring-2 focus:ring-primary-trust-blue focus:border-transparent"
-                >
-                  <option value="USD">USD ($)</option>
-                  <option value="EUR">EUR (€)</option>
-                  <option value="GBP">GBP (£)</option>
-                  <option value="JPY">JPY (¥)</option>
-                  <option value="CAD">CAD ($)</option>
-                  <option value="AUD">AUD ($)</option>
-                </select>
+                  options={[
+                    { value: 'USD', label: 'USD ($)' },
+                    { value: 'EUR', label: 'EUR (€)' },
+                    { value: 'GBP', label: 'GBP (£)' },
+                    { value: 'JPY', label: 'JPY (¥)' },
+                    { value: 'CAD', label: 'CAD ($)' },
+                    { value: 'AUD', label: 'AUD ($)' }
+                  ] as SelectOption[]}
+                  placeholder="Select currency"
+                />
               ) : (
                 <p className="text-neutral-charcoal">{profileData.currency}</p>
               )}
@@ -497,18 +502,19 @@ export function ProfileManager({
                 {t('profile.preferences.language')}
               </label>
               {editingSection === 'preferences' ? (
-                <select
+                <Select
                   value={profileData.language}
                   onChange={(e) => setProfileData(prev => ({ ...prev, language: e.target.value }))}
-                  className="w-full px-3 py-2 border border-neutral-gray/30 rounded-lg focus:ring-2 focus:ring-primary-trust-blue focus:border-transparent"
-                >
-                  <option value="en">English</option>
-                  <option value="es">Español</option>
-                  <option value="fr">Français</option>
-                  <option value="de">Deutsch</option>
-                  <option value="ja">日本語</option>
-                  <option value="zh">中文</option>
-                </select>
+                  options={[
+                    { value: 'en', label: 'English' },
+                    { value: 'es', label: 'Español' },
+                    { value: 'fr', label: 'Français' },
+                    { value: 'de', label: 'Deutsch' },
+                    { value: 'ja', label: '日本語' },
+                    { value: 'zh', label: '中文' }
+                  ] as SelectOption[]}
+                  placeholder="Select language"
+                />
               ) : (
                 <p className="text-neutral-charcoal">
                   {profileData.language === 'en' ? 'English' :
@@ -526,26 +532,27 @@ export function ProfileManager({
                 {t('profile.preferences.timezone')}
               </label>
               {editingSection === 'preferences' ? (
-                <select
+                <Select
                   value={profileData.timezone}
                   onChange={(e) => setProfileData(prev => ({ ...prev, timezone: e.target.value }))}
-                  className="w-full px-3 py-2 border border-neutral-gray/30 rounded-lg focus:ring-2 focus:ring-primary-trust-blue focus:border-transparent"
-                >
-                  <option value="America/New_York">Eastern Time</option>
-                  <option value="America/Chicago">Central Time</option>
-                  <option value="America/Denver">Mountain Time</option>
-                  <option value="America/Los_Angeles">Pacific Time</option>
-                  <option value="Europe/London">London</option>
-                  <option value="Europe/Paris">Paris</option>
-                  <option value="Asia/Tokyo">Tokyo</option>
-                  <option value="Asia/Shanghai">Shanghai</option>
-                </select>
+                  options={[
+                    { value: 'America/New_York', label: 'Eastern Time' },
+                    { value: 'America/Chicago', label: 'Central Time' },
+                    { value: 'America/Denver', label: 'Mountain Time' },
+                    { value: 'America/Los_Angeles', label: 'Pacific Time' },
+                    { value: 'Europe/London', label: 'London' },
+                    { value: 'Europe/Paris', label: 'Paris' },
+                    { value: 'Asia/Tokyo', label: 'Tokyo' },
+                    { value: 'Asia/Shanghai', label: 'Shanghai' }
+                  ] as SelectOption[]}
+                  placeholder="Select timezone"
+                />
               ) : (
                 <p className="text-neutral-charcoal">{profileData.timezone}</p>
               )}
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

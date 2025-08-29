@@ -75,7 +75,7 @@ export function WelcomeHeader({
   ];
 
   return (
-    <div className="bg-gradient-to-r from-primary-trust-blue to-primary-trust-blue-light rounded-lg p-6 text-white animate-fade-in">
+    <div className="welcome-header bg-gradient-to-r from-primary-trust-blue to-primary-trust-blue-light rounded-lg p-6 text-white animate-fade-in">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div className="flex-1">
           {showGreeting && (

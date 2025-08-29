@@ -9,6 +9,8 @@ import { Toaster } from '@/components/ui/Toaster';
 import { Header } from '@/components/layout/Header';
 import { Navigation } from '@/components/layout/Navigation';
 import KeyboardShortcuts from '@/components/layout/KeyboardShortcuts';
+import { FeedbackContainer } from '@/components/ui/FeedbackSystem';
+import { ScreenReaderAnnouncer } from '@/components/ui/ScreenReaderAnnouncer';
 
 interface ClientLayoutProps {
   children: React.ReactNode;
@@ -40,17 +42,20 @@ export default function ClientLayout({ children, locale }: ClientLayoutProps) {
   return (
     <I18nProvider locale={locale}>
       <AppProvider>
-        <div className="min-h-screen bg-neutral-light-gray">
-          <Header onMenuToggle={() => setNavOpen(true)} isMenuOpen={navOpen} />
-          <div className="flex">
-            <Navigation isOpen={navOpen} onClose={() => setNavOpen(false)} />
-            <main className="flex-1 lg:ml-0" id="main-content">
-              <div className="container-responsive py-6">{children}</div>
-            </main>
+        <ScreenReaderAnnouncer>
+          <div className="min-h-screen bg-neutral-light-gray">
+            <Header onMenuToggle={() => setNavOpen(true)} isMenuOpen={navOpen} />
+            <div className="flex">
+              <Navigation isOpen={navOpen} onClose={() => setNavOpen(false)} />
+              <main className="flex-1 lg:ml-0" id="main-content">
+                <div className="container-responsive py-6">{children}</div>
+              </main>
+            </div>
+            <KeyboardShortcuts locale={locale} onOpenNav={() => setNavOpen(true)} onCloseNav={() => setNavOpen(false)} />
           </div>
-          <KeyboardShortcuts locale={locale} onOpenNav={() => setNavOpen(true)} onCloseNav={() => setNavOpen(false)} />
-        </div>
-        <Toaster />
+          <Toaster />
+          <FeedbackContainer />
+        </ScreenReaderAnnouncer>
       </AppProvider>
     </I18nProvider>
   );

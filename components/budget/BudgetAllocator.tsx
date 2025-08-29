@@ -8,6 +8,7 @@ import {
 import { useState, useEffect } from 'react';
 
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
+import { NumberInput } from '@/components/ui/Input';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { formatCurrency, formatPercentage, sanitizeNumberInput } from '@/lib/utils';
 import type { BudgetCategory } from '@/types';
@@ -208,19 +209,13 @@ export function BudgetAllocator({
 
                 <div className="flex items-center space-x-4">
                   <div className="flex-1">
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span className="text-neutral-gray text-sm">$</span>
-                      </div>
-                      <input
-                        type="number"
-                        min="0"
-                        step="1"
-                        value={category.allocated}
-                        onChange={(e) => handleAllocationChange(category.id, sanitizeNumberInput(e.target.value))}
-                        className="block w-full pl-7 pr-3 py-2 border border-neutral-gray/30 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary-trust-blue focus:border-primary-trust-blue"
-                      />
-                    </div>
+                    <NumberInput
+                      min={0}
+                      value={category.allocated.toString()}
+                      onChange={(e) => handleAllocationChange(category.id, sanitizeNumberInput(e.target.value))}
+                      leftAdornment={<span className="text-neutral-gray text-sm">$</span>}
+                      placeholder="0"
+                    />
                   </div>
 
                   {visualAllocation && (

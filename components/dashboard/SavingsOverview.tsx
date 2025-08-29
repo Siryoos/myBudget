@@ -10,7 +10,7 @@ import {
 import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { useState, useEffect } from 'react';
 
-import { Card, CardContent } from '@/components/ui/Card';
+import { Card, CardContent, CardError } from '@/components/ui/Card';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useDashboard } from '@/hooks/use-api';
@@ -108,19 +108,16 @@ export function SavingsOverview({
 
   if (error) {
     return (
-      <Card className="overflow-hidden">
-        <CardContent className="p-6">
-          <div className="text-center text-neutral-gray">
-            <p className="mb-2">{t('savingsOverview.errorLoading', { defaultValue: 'Unable to load savings data' })}</p>
-            <p className="text-sm">{error.message}</p>
-          </div>
-        </CardContent>
-      </Card>
+      <CardError 
+        message={t('savingsOverview.errorLoading', { defaultValue: 'Unable to load savings data' })}
+        onRetry={() => window.location.reload()}
+        className="overflow-hidden"
+      />
     );
   }
 
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden" data-tour="savings-overview">
       <CardContent className="p-0">
         <div className="bg-gradient-to-br from-secondary-growth-green to-secondary-growth-green-light p-6 text-white">
           <div className="flex items-center justify-between mb-4">
