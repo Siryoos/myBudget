@@ -9,6 +9,7 @@ import {
 import { useState } from 'react';
 
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
+import { Select, TextInput, Checkbox, type SelectOption } from '@/components/ui/Input';
 import { useTranslation } from '@/lib/useTranslation';
 
 interface RegionalizationSettingsProps {
@@ -167,17 +168,15 @@ export function RegionalizationSettings({
                 <CurrencyDollarIcon className="h-4 w-4 inline mr-1" />
                 {t('regional.primaryCurrency', { defaultValue: 'Primary Currency' })}
               </label>
-              <select
+              <Select
                 value={settings.currency}
                 onChange={(e) => setSettings(prev => ({ ...prev, currency: e.target.value }))}
-                className="input-field"
-              >
-                {currencies.map((curr) => (
-                  <option key={curr.code} value={curr.code}>
-                    {curr.code} - {curr.name} ({curr.symbol})
-                  </option>
-                ))}
-              </select>
+                options={currencies.map((curr) => ({
+                  value: curr.code,
+                  label: `${curr.code} - ${curr.name} (${curr.symbol})`
+                })) as SelectOption[]}
+                placeholder="Select currency"
+              />
               <p className="text-xs text-neutral-gray mt-1">
                 {t('regional.currencyNote', { defaultValue: 'All amounts will be displayed in this currency' })}
               </p>
@@ -191,17 +190,15 @@ export function RegionalizationSettings({
                 <LanguageIcon className="h-4 w-4 inline mr-1" />
                 {t('regional.displayLanguage', { defaultValue: 'Display Language' })}
               </label>
-              <select
+              <Select
                 value={settings.language}
                 onChange={(e) => setSettings(prev => ({ ...prev, language: e.target.value }))}
-                className="input-field"
-              >
-                {languages.map((lang) => (
-                  <option key={lang.code} value={lang.code}>
-                    {lang.native} ({lang.name})
-                  </option>
-                ))}
-              </select>
+                options={languages.map((lang) => ({
+                  value: lang.code,
+                  label: `${lang.native} (${lang.name})`
+                })) as SelectOption[]}
+                placeholder="Select language"
+              />
               {settings.language === 'ar' && (
                 <div className="mt-2 p-2 bg-accent-action-orange/10 rounded-lg">
                   <p className="text-xs text-accent-action-orange">

@@ -11,6 +11,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 
 import { apiClient } from '@/lib/api-client';
 import { useTranslation } from '@/lib/useTranslation';
+import { TextInput, NumberInput, Textarea, RadioGroup, type RadioOption } from '@/components/ui/Input';
+import { Button } from '@/components/ui/Button';
 import type { SavingsGoal, GoalPhoto, GoalCategory } from '@/types';
 
 // Date handling helper functions
@@ -423,12 +425,11 @@ export function GoalWizard({
                 <label className="block text-sm font-medium text-neutral-charcoal mb-2">
                   {t('goalWizard.goalName')}
                 </label>
-                <input
-                  type="text"
+                <TextInput
                   value={goalData.name}
                   onChange={(e) => setGoalData(prev => ({ ...prev, name: e.target.value }))}
-                  className="w-full px-3 py-2 border border-neutral-gray/30 rounded-lg focus:ring-2 focus:ring-primary-trust-blue focus:border-transparent"
                   placeholder={t('goalWizard.enterGoalName')}
+                  required
                 />
               </div>
 
@@ -436,11 +437,10 @@ export function GoalWizard({
                 <label className="block text-sm font-medium text-neutral-charcoal mb-2">
                   {t('goalWizard.description')}
                 </label>
-                <textarea
+                <Textarea
                   value={goalData.description}
                   onChange={(e) => setGoalData(prev => ({ ...prev, description: e.target.value }))}
-                  className="w-full px-3 py-2 border border-neutral-gray/30 rounded-lg focus:ring-2 focus:ring-primary-trust-blue focus:border-transparent"
-                  rows={3}
+                  minRows={3}
                   placeholder={t('goalWizard.enterDescription')}
                 />
               </div>
@@ -450,13 +450,13 @@ export function GoalWizard({
                   <label className="block text-sm font-medium text-neutral-charcoal mb-2">
                     {t('goalWizard.targetAmount')}
                   </label>
-                  <input
-                    type="number"
-                    value={goalData.targetAmount}
+                  <NumberInput
+                    value={goalData.targetAmount?.toString() || ''}
                     onChange={(e) => setGoalData(prev => ({ ...prev, targetAmount: parseFloat(e.target.value) || 0 }))}
-                    className="w-full px-3 py-2 border border-neutral-gray/30 rounded-lg focus:ring-2 focus:ring-primary-trust-blue focus:border-transparent"
-                    min="0"
-                    step="100"
+                    min={0}
+                    leftAdornment={<span className="text-neutral-gray">$</span>}
+                    placeholder="Enter target amount"
+                    required
                   />
                 </div>
 
@@ -464,12 +464,13 @@ export function GoalWizard({
                   <label className="block text-sm font-medium text-neutral-charcoal mb-2">
                     {t('goalWizard.targetDate')}
                   </label>
-                  <input
+                  <TextInput
                     type="date"
                     value={formatDateInput(goalData.targetDate instanceof Date ? goalData.targetDate : (goalData.targetDate ? new Date(goalData.targetDate) : new Date()))}
                     onChange={(e) => setGoalData(prev => ({ ...prev, targetDate: parseDateInput(e.target.value) }))}
-                    className="w-full px-3 py-2 border border-neutral-gray/30 rounded-lg focus:ring-2 focus:ring-primary-trust-blue focus:border-transparent"
                     min={formatDateInput(new Date())}
+                    placeholder="Select target date"
+                    required
                   />
                 </div>
               </div>
@@ -489,15 +490,17 @@ export function GoalWizard({
                     alt="Goal"
                     className="w-64 h-64 object-cover rounded-lg"
                   />
-                  <button
+                  <Button
                     onClick={() => {
                       setUploadedPhoto(null);
                       setGoalData(prev => ({ ...prev, photoUrl: undefined }));
                     }}
+                    variant="ghost"
+                    size="sm"
                     className="absolute top-2 right-2 p-1 bg-white rounded-full shadow-md hover:shadow-lg"
                   >
-                    <XMarkIcon className="w-5 h-5 text-neutral-gray" />
-                  </button>
+                    <XMarkIcon className="w-5 h-5" />
+                  </Button>
                 </div>
               ) : (
                 <label className="block">
@@ -559,12 +562,14 @@ export function GoalWizard({
         <h2 className="text-2xl font-bold text-neutral-charcoal">
           {t('goalWizard.title')}
         </h2>
-        <button
+        <Button
           onClick={onClose}
-          className="p-2 hover:bg-neutral-gray/10 rounded-lg transition-colors"
+          variant="ghost"
+          size="sm"
+          className="p-2"
         >
-          <XMarkIcon className="w-6 h-6 text-neutral-gray" />
-        </button>
+          <XMarkIcon className="w-6 h-6" />
+        </Button>
       </div>
 
       {/* Progress indicator */}
@@ -598,31 +603,25 @@ export function GoalWizard({
 
       {/* Navigation */}
       <div className="flex justify-between">
-        <button
+        <Button
           onClick={() => setStep(Math.max(1, step - 1))}
           disabled={step === 1}
-          className={`flex items-center px-4 py-2 rounded-lg font-medium transition-colors ${
-            step === 1
-              ? 'bg-neutral-gray/10 text-neutral-gray/50 cursor-not-allowed'
-              : 'bg-neutral-gray/10 text-neutral-charcoal hover:bg-neutral-gray/20'
-          }`}
+          variant="outline"
+          size="sm"
         >
           <ArrowLeftIcon className="w-4 h-4 mr-2" />
           {t('common:actions.back')}
-        </button>
+        </Button>
 
-        <button
+        <Button
           onClick={handleNext}
           disabled={isUploading || !selectedTemplate || !goalData.name}
-          className={`flex items-center px-4 py-2 rounded-lg font-medium transition-colors ${
-            isUploading || !selectedTemplate || !goalData.name
-              ? 'bg-primary-trust-blue/50 text-white/70 cursor-not-allowed'
-              : 'bg-primary-trust-blue text-white hover:bg-primary-trust-blue/90'
-          }`}
+          variant="primary"
+          size="sm"
         >
           {step === 4 ? t('common:actions.create') : t('common:actions.next')}
           <ArrowRightIcon className="w-4 h-4 ml-2" />
-        </button>
+        </Button>
       </div>
     </div>
   );

@@ -10,6 +10,7 @@ import { useState } from 'react';
 
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
+import { TextInput, NumberInput, Select, Checkbox, type SelectOption } from '@/components/ui/Input';
 import { formatCurrency, sanitizeNumberInput } from '@/lib/utils';
 
 interface IncomeSource {
@@ -173,13 +174,15 @@ export function IncomeManager({
               </div>
 
               {incomeSources.length > 1 && (
-                <button
+                <Button
                   onClick={() => handleRemoveSource(source.id)}
-                  className="p-1 rounded-full hover:bg-neutral-gray/20 text-neutral-gray hover:text-accent-warning-red transition-colors duration-200"
+                  variant="ghost"
+                  size="sm"
+                  className="p-1 rounded-full text-neutral-gray hover:text-accent-warning-red"
                   aria-label={`Remove ${source.name}`}
                 >
                   <XMarkIcon className="h-4 w-4" />
-                </button>
+                </Button>
               )}
             </div>
           ))}
@@ -197,13 +200,12 @@ export function IncomeManager({
                 <label htmlFor="source-name" className="block text-sm font-medium text-neutral-dark-gray mb-1">
                   Source Name
                 </label>
-                <input
+                <TextInput
                   id="source-name"
-                  type="text"
                   placeholder="e.g., Part-time job, Freelance"
                   value={newSource.name}
                   onChange={(e) => setNewSource(prev => ({ ...prev, name: e.target.value }))}
-                  className="input-field"
+                  required
                 />
               </div>
 
@@ -211,48 +213,42 @@ export function IncomeManager({
                 <label htmlFor="source-amount" className="block text-sm font-medium text-neutral-dark-gray mb-1">
                   Amount
                 </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <span className="text-neutral-gray">$</span>
-                  </div>
-                  <input
-                    id="source-amount"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    placeholder="0.00"
-                    value={newSource.amount}
-                    onChange={(e) => setNewSource(prev => ({ ...prev, amount: e.target.value }))}
-                    className="input-field pl-7"
-                  />
-                </div>
+                <NumberInput
+                  id="source-amount"
+                  min={0}
+                  placeholder="0.00"
+                  value={newSource.amount}
+                  onChange={(e) => setNewSource(prev => ({ ...prev, amount: e.target.value }))}
+                  leftAdornment={<span className="text-neutral-gray">$</span>}
+                  required
+                />
               </div>
 
               <div>
                 <label htmlFor="source-frequency" className="block text-sm font-medium text-neutral-dark-gray mb-1">
                   Frequency
                 </label>
-                <select
+                <Select
                   id="source-frequency"
                   value={newSource.frequency}
                   onChange={(e) => setNewSource(prev => ({ ...prev, frequency: e.target.value as any }))}
-                  className="input-field"
-                >
-                  <option value="weekly">Weekly</option>
-                  <option value="biweekly">Bi-weekly</option>
-                  <option value="monthly">Monthly</option>
-                  <option value="yearly">Yearly</option>
-                </select>
+                  options={[
+                    { value: 'weekly', label: 'Weekly' },
+                    { value: 'biweekly', label: 'Bi-weekly' },
+                    { value: 'monthly', label: 'Monthly' },
+                    { value: 'yearly', label: 'Yearly' }
+                  ] as SelectOption[]}
+                  placeholder="Select frequency"
+                />
               </div>
 
               {irregularIncomeSupport && (
                 <div className="flex items-center">
                   <label className="flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
+                    <Checkbox
                       checked={newSource.isRegular}
                       onChange={(e) => setNewSource(prev => ({ ...prev, isRegular: e.target.checked }))}
-                      className="rounded border-neutral-gray/30 text-primary-trust-blue focus:ring-primary-trust-blue mr-2"
+                      className="mr-2"
                     />
                     <span className="text-sm text-neutral-dark-gray">
                       Regular/Predictable Income
