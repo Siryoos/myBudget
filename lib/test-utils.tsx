@@ -145,7 +145,7 @@ export const mockData = {
       {
         id: 'cat-2',
         name: 'Food',
-        allocated: HTTP_INTERNAL_SERVER_ERROR,
+        allocated: 500,
         spent: 480,
         color: '#10B981',
         icon: 'utensils',
@@ -208,7 +208,7 @@ export const mockData = {
 
 // API response mocks
 export const mockApiResponses = {
-  success: <T>(data: T) => ({
+  success: <T,>(data: T) => ({
     success: true,
     data,
     timestamp: new Date().toISOString(),
@@ -226,7 +226,7 @@ export const mockApiResponses = {
     requestId: 'test-request-id',
   }),
 
-  paginated: <T>(data: T[], page: number, limit: number, total: number) => ({
+  paginated: <T,>(data: T[], page: number, limit: number, total: number) => ({
     success: true,
     data: {
       data,
@@ -355,7 +355,7 @@ export const dbTestUtils = {
   }),
 
   // Mock database results
-  mockQueryResult: <T>(rows: T[]) => ({
+  mockQueryResult: <T,>(rows: T[]) => ({
     rows,
     rowCount: rows.length,
     command: 'SELECT',
@@ -364,7 +364,7 @@ export const dbTestUtils = {
   }),
 
   // Mock transaction
-  mockTransaction: (fn: () => unknown) => {
+  mockTransaction: (fn: (client: { query: jest.Mock; release: jest.Mock }) => unknown) => {
     const client = {
       query: jest.fn(),
       release: jest.fn(),

@@ -1,4 +1,13 @@
 import { NextResponse } from 'next/server';
+import {
+  HTTP_OK,
+  HTTP_INTERNAL_SERVER_ERROR,
+  HTTP_UNAUTHORIZED,
+  HTTP_FORBIDDEN,
+  HTTP_NOT_FOUND,
+  HTTP_CONFLICT,
+  HTTP_CREATED,
+} from '@/lib/services/error-handler';
 
 import type { ApiResponse, ErrorResponse, SuccessResponse } from '@/types';
 

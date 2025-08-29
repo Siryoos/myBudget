@@ -6,6 +6,7 @@ import { parse } from 'url';
 import next from 'next';
 
 import { validateJWTSecret } from '@/lib/auth';
+import { HTTP_NOT_FOUND, HTTP_INTERNAL_SERVER_ERROR } from '@/lib/services/error-handler';
 
 // Validate JWT_SECRET before starting the server
 validateJWTSecret();

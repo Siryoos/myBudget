@@ -38,9 +38,9 @@ export class TransactionService extends BaseService {
     return this.mapDbTransactionToTransaction(result.rows[0] as Record<string, unknown>);
   }
 
-  async findById(id: string): Promise<Transaction | null> {
+  async findById<T = Transaction>(id: string): Promise<T | null> {
     const transaction = await super.findById<Record<string, unknown>>(id);
-    return transaction ? this.mapDbTransactionToTransaction(transaction) : null;
+    return transaction ? (this.mapDbTransactionToTransaction(transaction) as unknown as T) : null;
   }
 
   async findByUserId(

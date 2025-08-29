@@ -85,7 +85,7 @@ export class UploadService {
       throw new Error((response as { error?: string }).error || 'Failed to get upload URL');
     }
 
-    return (response as { data: { uploadUrl: string; publicUrl: string; publicId: string } }).data;
+    return (response as any).data as { uploadUrl: string; publicUrl: string; publicId: string };
   }
 
   /**
@@ -169,13 +169,13 @@ export class UploadService {
           ctx.drawImage(img, 0, 0, width, height);
 
           // Convert to blob
+          const JPEG_QUALITY = 0.8;
           canvas.toBlob((blob) => {
             if (blob) {
               resolve(blob);
             } else {
               reject(new Error('Failed to generate thumbnail'));
             }
-          const JPEG_QUALITY = 0.8;
           }, 'image/jpeg', JPEG_QUALITY);
         };
 

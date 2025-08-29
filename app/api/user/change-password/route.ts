@@ -5,6 +5,7 @@ import { comparePassword, hashPassword } from '@/lib/auth';
 import { requireAuth } from '@/lib/auth-middleware';
 import { query } from '@/lib/database';
 import type { AuthenticatedRequest } from '@/types/auth';
+import { HTTP_NOT_FOUND, HTTP_BAD_REQUEST, HTTP_INTERNAL_SERVER_ERROR } from '@/lib/services/error-handler';
 
 const changePasswordSchema = z.object({
   currentPassword: z.string().min(1, 'Current password is required'),

@@ -1,18 +1,27 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
+// HTTP_* constants are provided globally via '@/lib/setup-globals' to avoid importing server-only code in Edge runtime.
 
-// Conditional import for Redis - only import in Node.js runtime
+// Redis is not available in Edge Runtime; disable dynamic imports to avoid bundling Node APIs.
 let rateLimiter: unknown = null;
-// Unused variable - will be removed
-// let rateLimitConfig: unknown = null;
 
-if (typeof process !== 'undefined' && process.env && process.env.NODE_ENV) {
-  try {
-    const redisModule = require('@/lib/redis');
-    rateLimiter = redisModule.rateLimiter;
-  } catch (error) {
-    console.warn('Redis rate limiter not available in Edge Runtime');
+// Lightweight Edge-compatible in-memory rate limiter (per-runtime instance)
+type InMemoryBucket = { windowStart: number; count: number };
+const inMemoryBuckets: Map<string, InMemoryBucket> = new Map();
+
+function checkInMemoryRateLimit(identifier: string, cfg: { windowMs: number; maxRequests: number }) {
+  const now = Date.now();
+  const bucket = inMemoryBuckets.get(identifier);
+  if (!bucket || now - bucket.windowStart >= cfg.windowMs) {
+    inMemoryBuckets.set(identifier, { windowStart: now, count: 1 });
+    return { allowed: true, remaining: cfg.maxRequests - 1, retryAfter: 0, resetTime: now + cfg.windowMs };
   }
+  if (bucket.count < cfg.maxRequests) {
+    bucket.count += 1;
+    return { allowed: true, remaining: Math.max(0, cfg.maxRequests - bucket.count), retryAfter: 0, resetTime: bucket.windowStart + cfg.windowMs };
+  }
+  const retryAfterMs = bucket.windowStart + cfg.windowMs - now;
+  return { allowed: false, remaining: 0, retryAfter: Math.ceil(retryAfterMs / 1000), resetTime: bucket.windowStart + cfg.windowMs };
 }
 
 // Enhanced environment validation with better error handling
@@ -481,11 +490,10 @@ export async function middleware(request: NextRequest) {
         const identifier = request.ip || request.headers.get('x-forwarded-for') || 'anonymous';
 
         try {
-          // Check rate limit asynchronously
-          if (!rateLimiter || typeof (rateLimiter as any).checkRateLimit !== 'function') {
-            throw new Error('Rate limiter is unavailable');
-          }
-          const rateLimitResult = await (rateLimiter as any).checkRateLimit(identifier, rateLimitConfig);
+          // Use Edge-compatible in-memory limiter when Redis is unavailable
+          const rateLimitResult = rateLimiter && typeof (rateLimiter as any).checkRateLimit === 'function'
+            ? await (rateLimiter as any).checkRateLimit(identifier, rateLimitConfig)
+            : checkInMemoryRateLimit(identifier, rateLimitConfig);
 
           if (!rateLimitResult.allowed) {
             // Create rate limit response
@@ -585,30 +593,11 @@ export async function GET(request: NextRequest) {
         latency: undefined,
         error: 'Not checked',
       };
-      if (rateLimiter) {
-        try {
-          const { checkRedisHealth } = await import('@/lib/redis');
-          const healthResult = await checkRedisHealth();
-          redisHealth = {
-            healthy: healthResult.healthy,
-            latency: healthResult.latency,
-            error: healthResult.error || 'Unknown error',
-          };
-        } catch (error) {
-          console.error('Failed to check Redis health:', error);
-          redisHealth = {
-            healthy: false,
-            latency: undefined,
-            error: 'Health check failed',
-          };
-        }
-      } else {
-        redisHealth = {
-          healthy: false,
-          latency: undefined,
-          error: 'Redis not available in Edge Runtime',
-        };
-      }
+      redisHealth = {
+        healthy: false,
+        latency: undefined,
+        error: 'Redis not available in Edge Runtime',
+      };
 
       const isHealthy = redisHealth.healthy;
       const health = {

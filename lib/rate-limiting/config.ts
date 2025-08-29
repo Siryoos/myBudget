@@ -58,6 +58,8 @@ export interface EndpointConfig {
 }
 
 // Default configuration
+import { HTTP_INTERNAL_SERVER_ERROR } from '@/lib/services/error-handler';
+
 export const DEFAULT_RATE_LIMIT_CONFIG: RateLimitConfig = {
   enabled: process.env.RATE_LIMITING_ENABLED !== 'false',
   defaultLimits: {

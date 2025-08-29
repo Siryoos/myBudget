@@ -44,14 +44,17 @@ export class AchievementsService extends BaseService {
     return this.mapDbAchievementToAchievement(result.rows[0]);
   }
 
-  async findAll(): Promise<Achievement[]> {
+  async findAll<T = Achievement>(): Promise<T[]> {
     const result = await query('SELECT * FROM achievements ORDER BY points DESC, name');
-    return result.rows.map(row => this.mapDbAchievementToAchievement(row));
+    return result.rows.map(row => this.mapDbAchievementToAchievement(row)) as unknown as T[];
   }
 
-  async findById(id: string): Promise<Achievement | null> {
-    const achievement = await super.findById(id);
-    return achievement ? this.mapDbAchievementToAchievement(achievement) : null;
+  async findById<T = Achievement>(id: string): Promise<T | null> {
+    const achievement = await super.findById<{
+      id: string; name: string; description: string; category: string; icon: string;
+      requirement_type: string; requirement_value: number; points: number;
+    }>(id);
+    return achievement ? (this.mapDbAchievementToAchievement(achievement) as unknown as T) : null;
   }
 
   async findByCategory(category: string): Promise<Achievement[]> {
@@ -380,6 +383,14 @@ export class AchievementsService extends BaseService {
     requirement_value: number;
     points: number;
   }): Achievement {
+    const allowedRequirementTypes = [
+      'consecutive-days', 'total-amount', 'goal-completion', 'education-modules',
+      'custom', 'transaction_count', 'saving_streak', 'budget_adherence',
+      'goal-completion', 'goal_completion',
+    ] as const;
+    const reqType = (allowedRequirementTypes as readonly string[]).includes(dbAchievement.requirement_type)
+      ? (dbAchievement.requirement_type as typeof allowedRequirementTypes[number])
+      : 'custom';
     return {
       id: dbAchievement.id,
       name: dbAchievement.name,
@@ -387,7 +398,7 @@ export class AchievementsService extends BaseService {
       category: dbAchievement.category,
       icon: dbAchievement.icon,
       requirement: {
-        type: dbAchievement.requirement_type as string,
+        type: reqType,
         value: Number(dbAchievement.requirement_value),
         description: dbAchievement.description as string
       },

@@ -136,8 +136,8 @@ export function WelcomeHeader({
           <div className="ml-3">
             <p className="text-sm font-medium">
               {t('dashboard:achievements.monthlySaving', {
-                amount: formatCurrency(HTTP_INTERNAL_SERVER_ERROR, i18n.language),
-                defaultValue: 'You\'ve saved $HTTP_INTERNAL_SERVER_ERROR this month!',
+                amount: formatCurrency(500, i18n.language),
+                defaultValue: "You've saved $500 this month!",
               })}
             </p>
             <p className="text-xs text-primary-trust-blue-light mt-1">

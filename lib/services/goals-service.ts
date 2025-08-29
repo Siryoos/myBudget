@@ -68,7 +68,7 @@ export class GoalsService extends BaseService {
     };
   }
 
-  async findById(id: string): Promise<SavingsGoalWithDetails | null> {
+  async findById<T = SavingsGoalWithDetails>(id: string): Promise<T | null> {
     const goal = await super.findById<{
       id: string;
       user_id: string;
@@ -102,7 +102,7 @@ export class GoalsService extends BaseService {
       ...this.mapDbGoalToGoal(goal),
       milestones,
       automationRules,
-    };
+    } as unknown as T;
   }
 
   async findByUserId(userId: string, priority?: 'low' | 'medium' | 'high'): Promise<SavingsGoalWithDetails[]> {
@@ -486,12 +486,12 @@ export class GoalsService extends BaseService {
         ? dbGoal.target_date
         : dbGoal.target_date.toISOString().slice(0, 10),
       category: dbGoal.category,
-      priority: dbGoal.priority,
+      priority: (['low','medium','high'] as const).includes(dbGoal.priority as any) ? (dbGoal.priority as 'low'|'medium'|'high') : 'medium',
       isActive: dbGoal.is_active,
-      icon: dbGoal.icon,
-      color: dbGoal.color,
-      photoUrl: dbGoal.photo_url,
-      framingType: dbGoal.framing_type,
+      icon: dbGoal.icon ?? undefined,
+      color: dbGoal.color ?? undefined,
+      photoUrl: dbGoal.photo_url ?? undefined,
+      framingType: (dbGoal.framing_type === 'achievement' || dbGoal.framing_type === 'loss-avoidance') ? dbGoal.framing_type : undefined,
       lossAvoidanceDescription: dbGoal.loss_avoidance_description,
       achievementDescription: dbGoal.achievement_description,
       createdAt: typeof dbGoal.created_at === 'string' ? dbGoal.created_at : dbGoal.created_at.toISOString(),
@@ -511,7 +511,7 @@ export class GoalsService extends BaseService {
       id: dbMilestone.id,
       // goalId is not part of Milestone type
       amount: dbMilestone.amount === null || dbMilestone.amount === undefined ? 0 : Number(dbMilestone.amount),
-      description: dbMilestone.description,
+      description: dbMilestone.description ?? '',
       isCompleted: dbMilestone.is_completed,
       completedDate: dbMilestone.completed_date ? new Date(dbMilestone.completed_date) : undefined,
       // createdAt is not part of Milestone type
@@ -529,7 +529,9 @@ export class GoalsService extends BaseService {
   }): AutomationRule {
     const base = {
       id: dbRule.id,
-      frequency: dbRule.frequency,
+      frequency: (['monthly','weekly','daily','biweekly'] as const).includes(dbRule.frequency as any)
+        ? (dbRule.frequency as 'monthly'|'weekly'|'daily'|'biweekly')
+        : 'monthly',
       isActive: dbRule.is_active,
     };
 

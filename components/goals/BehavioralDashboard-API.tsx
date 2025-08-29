@@ -240,7 +240,7 @@ export function BehavioralDashboard({
                   </div>
                   <div className="h-2 bg-neutral-gray/20 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-primary-trust-blue rounded-full transition-all duration-HTTP_INTERNAL_SERVER_ERROR"
+                      className="h-full bg-primary-trust-blue rounded-full transition-all duration-500"
                       style={{ width: `${(goal.currentAmount / goal.targetAmount) * 100}%` }}
                     />
                   </div>

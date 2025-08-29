@@ -89,7 +89,7 @@ export class BudgetService extends BaseService {
     });
   }
 
-  async findById(id: string): Promise<BudgetWithCategories | null> {
+  async findById<T = BudgetWithCategories>(id: string): Promise<T | null> {
     const budget = await super.findById<{
       id: string;
       user_id: string;
@@ -108,10 +108,11 @@ export class BudgetService extends BaseService {
     }
 
     const categories = await this.getBudgetCategories(id);
-    return {
+    const result = {
       ...this.mapDbBudgetToBudget(budget),
       categories,
-    };
+    } as unknown as T;
+    return result;
   }
 
   async findByUserId(userId: string): Promise<BudgetWithCategories[]> {
@@ -409,9 +410,9 @@ export class BudgetService extends BaseService {
       id: dbBudget.id,
       userId: dbBudget.user_id,
       name: dbBudget.name,
-      method: dbBudget.method,
-      totalIncome: parseFloat(dbBudget.total_income),
-      period: dbBudget.period,
+      method: dbBudget.method as Budget['method'],
+      totalIncome: Number(dbBudget.total_income),
+      period: dbBudget.period as Budget['period'],
       startDate: new Date(dbBudget.start_date).toISOString().split('T')[0],
       endDate: new Date(dbBudget.end_date).toISOString().split('T')[0],
       createdAt: new Date(dbBudget.created_at).toISOString(),
@@ -434,11 +435,11 @@ export class BudgetService extends BaseService {
       id: dbCategory.id,
       // budgetId is not part of BudgetCategory type
       name: dbCategory.name,
-      allocated: parseFloat(dbCategory.allocated),
-      spent: parseFloat(dbCategory.spent),
-      remaining: parseFloat(dbCategory.allocated) - parseFloat(dbCategory.spent),
+      allocated: Number(dbCategory.allocated),
+      spent: Number(dbCategory.spent),
+      remaining: Number(dbCategory.allocated) - Number(dbCategory.spent),
       color: dbCategory.color,
-      icon: dbCategory.icon,
+      icon: dbCategory.icon ?? undefined,
       isEssential: dbCategory.is_essential,
       // timestamps are not part of BudgetCategory type
     };

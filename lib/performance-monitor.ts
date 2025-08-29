@@ -1,4 +1,5 @@
 // Performance metrics types are defined below
+import { HTTP_INTERNAL_SERVER_ERROR, HTTP_BAD_REQUEST } from '@/lib/services/error-handler';
 
 /**
  * Performance Monitoring System

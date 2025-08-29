@@ -430,6 +430,8 @@ interface MFARequest {
 }
 
 // MFA middleware
+import { HTTP_UNAUTHORIZED, HTTP_FORBIDDEN } from '@/lib/services/error-handler';
+
 export const requireMFA = (handler: (request: MFARequest) => Promise<Response>) => async (request: MFARequest) => {
     const userId = request.user?.id;
 

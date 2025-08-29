@@ -1,6 +1,7 @@
 import type { NextRequest } from 'next/server';
 
 import type { AuthenticatedUser, AuthenticatedRequest, AuthenticatedHandler } from '@/types/auth';
+import { HTTP_UNAUTHORIZED } from '@/lib/services/error-handler';
 
 import { verifyToken } from './auth';
 import { query } from './database';

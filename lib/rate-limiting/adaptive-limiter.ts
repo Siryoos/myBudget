@@ -1,4 +1,5 @@
 import { getRedisClient } from '../redis/connection-manager';
+import { HTTP_INTERNAL_SERVER_ERROR } from '@/lib/services/error-handler';
 
 import { rateLimitConfig } from './config';
 

@@ -1,33 +1,13 @@
 import type { Metadata } from 'next';
-import { Inter, Roboto, Roboto_Mono } from 'next/font/google';
 import { headers } from 'next/headers';
 import React from 'react';
 import './globals.css';
+import '@/lib/setup-globals';
 
 import { Header } from '@/components/layout/Header';
 import { Navigation } from '@/components/layout/Navigation';
 
 import ClientLayout from './ClientLayout';
-
-
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-inter',
-  display: 'swap',
-});
-
-const roboto = Roboto({
-  weight: ['300', '400', '500', '700'],
-  subsets: ['latin'],
-  variable: '--font-roboto',
-  display: 'swap',
-});
-
-const robotoMono = Roboto_Mono({
-  subsets: ['latin'],
-  variable: '--font-roboto-mono',
-  display: 'swap',
-});
 
 export const metadata: Metadata = {
   title: {
@@ -74,11 +54,13 @@ export default function RootLayout({ children }: RootLayoutProps) {
   const locale = headersList.get('x-locale') || 'en';
 
   return (
-    <html
-      lang={locale}
-      dir={textDirection}
-      className={`${inter.variable} ${roboto.variable} ${robotoMono.variable}`}
-    >
+    <html lang={locale} dir={textDirection}>
+      <head>
+        <link rel="preload" href="/fonts/Inter-Variable.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        <link rel="preload" href="/fonts/Roboto-Regular.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        <link rel="preload" href="/fonts/Roboto-Medium.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        <link rel="preload" href="/fonts/RobotoMono-Regular.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+      </head>
       <body className="font-primary antialiased">
         <ClientLayout locale={locale}>
           <div className="min-h-screen bg-neutral-light-gray">

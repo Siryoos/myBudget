@@ -10,6 +10,7 @@ import {
 } from '@/lib/api-validation';
 import { verifyToken } from '@/lib/auth';
 import { getStorageProvider, validateFileType, validateFileSize } from '@/lib/cloud-storage';
+import { HTTP_UNAUTHORIZED, HTTP_BAD_REQUEST, HTTP_INTERNAL_SERVER_ERROR } from '@/lib/services/error-handler';
 
 
 // File upload validation schema

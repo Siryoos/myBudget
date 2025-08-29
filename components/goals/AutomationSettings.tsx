@@ -44,7 +44,7 @@ export function AutomationSettings({
 }: AutomationSettingsProps) {
   const { t, ready } = useTranslation('goals');
   const [activeTab, setActiveTab] = useState<'transfers' | 'roundup' | 'rules'>('transfers');
-  const [transferAmount, setTransferAmount] = useState('HTTP_OK');
+  const [transferAmount, setTransferAmount] = useState('200');
   const [transferFrequency, setTransferFrequency] = useState('weekly');
 
   if (!ready) {

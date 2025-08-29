@@ -489,6 +489,7 @@ export const recordRedisOperation = (operation: string, duration: number): void 
 
 // Performance monitoring middleware
 export const withPerformanceMonitoring = (handler: (request: NextRequest) => Promise<Response>) => async (request: NextRequest) => {
+    const { HTTP_OK, HTTP_INTERNAL_SERVER_ERROR } = await import('@/lib/services/error-handler');
     const requestId = crypto.randomUUID();
     const endpoint = request.nextUrl.pathname;
     const method = request.method;

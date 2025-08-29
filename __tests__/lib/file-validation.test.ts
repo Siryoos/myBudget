@@ -80,7 +80,7 @@ const createMockFile = (
     // Fill remainder deterministically
     for (let i = base.byteLength; i < desired; i++) payload[i] = 0x41; // 'A'
   }
-  const blob = new Blob([payload], options);
+  const blob = new Blob([payload.slice().buffer], options);
 
   // Create a proper File object
   const file = new File([blob], name, {

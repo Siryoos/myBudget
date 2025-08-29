@@ -1,6 +1,13 @@
 import { ZodError } from 'zod';
 
 import { loggingService } from '@/lib/logging-service';
+import {
+  HTTP_INTERNAL_SERVER_ERROR,
+  HTTP_BAD_REQUEST,
+  HTTP_UNAUTHORIZED,
+  HTTP_FORBIDDEN,
+  HTTP_NOT_FOUND,
+} from '@/lib/services/error-handler';
 
 // Error codes for consistent error handling
 export enum ErrorCode {

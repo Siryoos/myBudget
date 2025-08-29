@@ -143,7 +143,8 @@ describe('Security Middleware', () => {
     it('should handle nonce generation failures gracefully', async () => {
       // Mock crypto to fail
       const originalCrypto = global.crypto;
-      global.crypto = undefined as any;
+      // Override crypto safely for the test
+      Object.defineProperty(globalThis, 'crypto', { value: undefined, configurable: true, writable: true } as any);
 
       const request = mockNextRequest();
       const response = await securityMiddleware(request);
@@ -153,7 +154,7 @@ describe('Security Middleware', () => {
       expect(response.headers.get('X-Nonce')).toBeNull();
 
       // Restore crypto
-      global.crypto = originalCrypto;
+      Object.defineProperty(globalThis, 'crypto', { value: originalCrypto, configurable: true, writable: true } as any);
     });
   });
 

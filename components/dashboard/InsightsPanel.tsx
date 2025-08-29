@@ -43,7 +43,7 @@ const TabButton = React.memo(({
       aria-controls={`${tab}-panel`}
       tabIndex={activeTab === tab ? 0 : -1}
       onClick={() => onClick(tab)}
-      className={`flex items-center justify-center sm:justify-start px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium rounded-lg transition-all duration-HTTP_OK flex-1 sm:flex-none min-w-0 min-h-[44px] touch-manipulation ${
+      className={`flex items-center justify-center sm:justify-start px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium rounded-lg transition-all duration-200 flex-1 sm:flex-none min-w-0 min-h-[44px] touch-manipulation ${
         activeTab === tab
           ? 'bg-primary-trust-blue text-white'
           : 'text-neutral-gray hover:text-neutral-dark-gray hover:bg-neutral-light-gray'
@@ -124,7 +124,7 @@ function InsightsPanelContent({
       .replace(/javascript:/gi, '') // Remove javascript: protocols
       .replace(/on\w+=/gi, '') // Remove event handlers
       .trim()
-      .substring(0, HTTP_OK); // Limit length
+      .substring(0, 200); // Limit length
   }, []);
 
   // Comprehensive input validation and sanitization
@@ -144,8 +144,8 @@ function InsightsPanelContent({
       throw new Error(`${fieldName} cannot be empty`);
     }
 
-    if (sanitized.length > HTTP_INTERNAL_SERVER_ERROR) {
-      throw new Error(`${fieldName} is too long (max HTTP_INTERNAL_SERVER_ERROR characters)`);
+    if (sanitized.length > 500) {
+      throw new Error(`${fieldName} is too long (max 500 characters)`);
     }
 
     return sanitized;
@@ -289,9 +289,9 @@ function InsightsPanelContent({
       // Show success feedback
       const tipElement = document.querySelector(`[data-tip-id="${tipId}"]`);
       if (tipElement) {
-        tipElement.classList.add('animate-pulse', 'bg-green-50', 'border-green-HTTP_OK');
+        tipElement.classList.add('animate-pulse', 'bg-green-50', 'border-green-200');
         setTimeout(() => {
-          tipElement.classList.remove('animate-pulse', 'bg-green-50', 'border-green-HTTP_OK');
+          tipElement.classList.remove('animate-pulse', 'bg-green-50', 'border-green-200');
         }, 2000);
       }
 
@@ -313,7 +313,7 @@ function InsightsPanelContent({
         // Wait for translations to be ready
         if (ready) {
           // Simulate API call delay
-          await new Promise(resolve => setTimeout(resolve, HTTP_INTERNAL_SERVER_ERROR));
+          await new Promise(resolve => setTimeout(resolve, 500));
           setIsInitialLoading(false);
         }
       } catch (error) {
@@ -456,11 +456,11 @@ function InsightsPanelContent({
       <CardContent>
         {/* Error Display */}
         {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-HTTP_OK rounded-lg">
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
             <p className="text-sm text-red-600">{sanitizeErrorMessage(error)}</p>
             <button
               onClick={() => setError(null)}
-              className="text-xs text-red-HTTP_INTERNAL_SERVER_ERROR hover:text-red-700 underline mt-1 p-2 min-h-[44px] touch-manipulation"
+              className="text-xs text-red-500 hover:text-red-700 underline mt-1 p-2 min-h-[44px] touch-manipulation"
             >
               {getTranslationWithFallback('actions.dismiss', 'Dismiss')}
             </button>
@@ -524,7 +524,7 @@ function InsightsPanelContent({
                 <div key={insight.id} className="border border-neutral-gray/20 rounded-lg p-4 relative">
                   <button
                     onClick={() => handleDismissInsight(insight.id)}
-                    className="absolute top-2 right-2 p-2 rounded-full hover:bg-neutral-light-gray text-neutral-gray hover:text-neutral-dark-gray transition-colors duration-HTTP_OK min-h-[44px] min-w-[44px] touch-manipulation flex items-center justify-center"
+                    className="absolute top-2 right-2 p-2 rounded-full hover:bg-neutral-light-gray text-neutral-gray hover:text-neutral-dark-gray transition-colors duration-200 min-h-[44px] min-w-[44px] touch-manipulation flex items-center justify-center"
                     aria-label={getTranslationWithFallback('actions.dismissInsight', 'Dismiss insight')}
                   >
                     <XMarkIcon className="h-4 w-4" />

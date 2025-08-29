@@ -79,9 +79,9 @@ export class UserService extends BaseService {
     return this.mapDbUserToProfile(result.rows[0] as Record<string, unknown>);
   }
 
-  async findById(id: string): Promise<UserProfile | null> {
+  async findById<T = UserProfile>(id: string): Promise<T | null> {
     const user = await super.findById<Record<string, unknown>>(id);
-    return user ? this.mapDbUserToProfile(user) : null;
+    return user ? (this.mapDbUserToProfile(user) as unknown as T) : null;
   }
 
   async update(id: string, data: UserUpdate): Promise<UserProfile> {
