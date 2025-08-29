@@ -1,6 +1,21 @@
 version: '3.8'
 
 services:
+  # Generate TLS certs for Nginx if missing (one-shot)
+  nginx-certgen:
+    image: alpine:3.19
+    container_name: smartsave-nginx-certgen
+    restart: "no"
+    volumes:
+      - ./nginx/ssl:/etc/nginx/ssl
+      - ./nginx/scripts/generate-certs.sh:/scripts/generate-certs.sh:ro
+    environment:
+      CERT_COMMON_NAME: ${CERT_COMMON_NAME:-yourdomain.com}
+      CERT_DAYS: ${CERT_DAYS:-365}
+    entrypoint: ["/bin/sh", "/scripts/generate-certs.sh"]
+    networks:
+      - smartsave-network
+
   # Main Application
   frontend:
     build:
@@ -19,8 +34,7 @@ services:
       - LOG_LEVEL=info
       - RATE_LIMIT_WINDOW=900000
       - RATE_LIMIT_MAX=1000
-    ports:
-      - "3000:3000"
+    # Do not expose directly in production; Nginx is the ingress
     depends_on:
       - postgres
       - redis
@@ -88,7 +102,10 @@ services:
       - ./nginx/ssl:/etc/nginx/ssl
       - ./logs/nginx:/var/log/nginx
     depends_on:
+      - nginx-certgen
       - frontend
+    networks:
+      - smartsave-network
 
   # One-off migrations runner (executes then exits)
   migrations:

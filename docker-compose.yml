@@ -23,6 +23,23 @@ x-security: &default-security
 # Note: Docker Compose v2 doesn't support env_file, use .env file in same directory
 
 services:
+  # One-shot: generate Nginx TLS certs if missing (dev)
+  nginx-certgen:
+    image: alpine:3.19
+    container_name: mybudget-nginx-certgen
+    restart: "no"
+    logging: *default-logging
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - ./nginx/ssl:/etc/nginx/ssl
+      - ./nginx/scripts/generate-certs.sh:/scripts/generate-certs.sh:ro
+    environment:
+      CERT_COMMON_NAME: ${CERT_COMMON_NAME:-localhost}
+      CERT_DAYS: ${CERT_DAYS:-365}
+    entrypoint: ["/bin/sh", "/scripts/generate-certs.sh"]
+    networks:
+      - mybudget-network
   # Database Service
   postgres:
     image: postgres:15-alpine
@@ -275,6 +292,8 @@ services:
       - ./nginx/ssl:/etc/nginx/ssl:ro
       - ./logs/nginx:/var/log/nginx
     depends_on:
+      nginx-certgen:
+        condition: service_completed_successfully
       frontend:
         condition: service_healthy
       minio:
