@@ -8,7 +8,7 @@ import { IncomeManager } from '@/components/budget/IncomeManager';
 
 export default function BudgetPage() {
   return (
-    <div className="space-y-6" id="main-content">
+    <div className="space-y-6">
       {/* Page Header */}
       <BudgetHeader />
 
@@ -44,4 +44,3 @@ export default function BudgetPage() {
     </div>
   );
 }
-

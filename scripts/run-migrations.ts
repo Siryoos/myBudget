@@ -17,22 +17,15 @@ async function runMigrations() {
     try {
       console.log(`Running migration: ${migrationFile}`);
       const migrationSQL = readFileSync(join(process.cwd(), migrationFile), 'utf8');
-
-      // Split by semicolon and execute each statement
-      const statements = migrationSQL
-        .split(';')
-        .map(stmt => stmt.trim())
-        .filter(stmt => stmt.length > 0 && !stmt.startsWith('--'));
-
-      for (const statement of statements) {
-        if (statement.trim()) {
-          await query(statement);
-        }
-      }
+      // Execute the entire file as a single batch to preserve blocks (e.g., DO $$ ... $$)
+      await query(migrationSQL);
 
       console.log(`✓ Migration completed: ${migrationFile}`);
     } catch (error) {
-      console.error(`✗ Migration failed: ${migrationFile}`, error);
+      console.error(`✗ Migration failed: ${migrationFile}`);
+      if (error instanceof Error) {
+        console.error('Error message:', error.message);
+      }
       process.exit(1);
     }
   }

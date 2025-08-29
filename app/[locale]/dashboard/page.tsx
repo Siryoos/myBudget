@@ -10,7 +10,7 @@ import { OnboardingChecklist } from '@/components/dashboard/OnboardingChecklist'
 
 export default function DashboardPage() {
   return (
-    <div className="space-y-6" id="main-content">
+    <div className="space-y-6">
       <OnboardingChecklist />
       {/* Welcome Header */}
       <WelcomeHeader

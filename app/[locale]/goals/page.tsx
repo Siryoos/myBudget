@@ -30,7 +30,7 @@ export default function GoalsPage() {
   }
 
   return (
-    <div className="space-y-6" id="main-content">
+    <div className="space-y-6">
       {/* Page Header */}
       <div className="bg-gradient-to-r from-secondary-growth-green to-secondary-growth-green-light rounded-lg p-6 text-white">
         <h1 className="text-3xl font-bold mb-2">
@@ -81,4 +81,3 @@ export default function GoalsPage() {
     </div>
   );
 }
-

@@ -1,11 +1,13 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { getDirection } from '@/lib/i18n';
 import { I18nProvider } from '@/lib/i18n-provider';
 import { AppProvider } from '@/contexts/AppProvider';
 import { Toaster } from '@/components/ui/Toaster';
+import { Header } from '@/components/layout/Header';
+import { Navigation } from '@/components/layout/Navigation';
 
 interface ClientLayoutProps {
   children: React.ReactNode;
@@ -13,6 +15,7 @@ interface ClientLayoutProps {
 }
 
 export default function ClientLayout({ children, locale }: ClientLayoutProps) {
+  const [navOpen, setNavOpen] = useState(false);
   useEffect(() => {
     // Set document direction based on locale
     const dir = getDirection(locale);
@@ -23,7 +26,15 @@ export default function ClientLayout({ children, locale }: ClientLayoutProps) {
   return (
     <I18nProvider locale={locale}>
       <AppProvider>
-        {children}
+        <div className="min-h-screen bg-neutral-light-gray">
+          <Header onMenuToggle={() => setNavOpen(true)} />
+          <div className="flex">
+            <Navigation isOpen={navOpen} onClose={() => setNavOpen(false)} />
+            <main className="flex-1 lg:ml-0" id="main-content">
+              <div className="container-responsive py-6">{children}</div>
+            </main>
+          </div>
+        </div>
         <Toaster />
       </AppProvider>
     </I18nProvider>

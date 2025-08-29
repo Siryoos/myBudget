@@ -17,7 +17,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
@@ -86,6 +86,51 @@ export function GoalWizard({
   const [uploadedPhoto, setUploadedPhoto] = useState<GoalPhoto | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeBtnRef = useRef<HTMLButtonElement>(null);
+
+  // Manage focus trap and scroll lock when wizard opens
+  useEffect(() => {
+    if (!showWizard) {return;}
+
+    // Focus close button initially
+    closeBtnRef.current?.focus();
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowWizard(false);
+      }
+      if (e.key === 'Tab' && dialogRef.current) {
+        const focusable = dialogRef.current.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])',
+        );
+        if (focusable.length === 0) {return;}
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        const active = document.activeElement as HTMLElement | null;
+        if (e.shiftKey) {
+          if (active === first || !dialogRef.current.contains(active)) {
+            e.preventDefault();
+            last.focus();
+          }
+        } else {
+          if (active === last || !dialogRef.current.contains(active)) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
+      }
+    };
+
+    document.addEventListener('keydown', onKeyDown);
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [showWizard]);
 
   if (!ready) {
     return (
@@ -347,6 +392,9 @@ export function GoalWizard({
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
             onClick={() => setShowWizard(false)}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="goal-wizard-title"
           >
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
@@ -354,10 +402,11 @@ export function GoalWizard({
               exit={{ scale: 0.9, opacity: 0 }}
               className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
+              ref={dialogRef}
             >
               <div className="p-6">
                 <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900">
+                  <h2 id="goal-wizard-title" className="text-2xl font-bold text-gray-900">
                     {currentStep === 1
                       ? t('wizard.step1.title', { defaultValue: 'Choose Your Goal' })
                       : t('wizard.step2.title', { defaultValue: 'Customize Your Goal' })
@@ -366,6 +415,8 @@ export function GoalWizard({
                   <button
                     onClick={() => setShowWizard(false)}
                     className="text-gray-400 hover:text-gray-600"
+                    aria-label={t('wizard.actions.close', { defaultValue: 'Close' })}
+                    ref={closeBtnRef}
                   >
                     <XMarkIcon className="w-6 h-6" />
                   </button>
@@ -377,13 +428,21 @@ export function GoalWizard({
                     animate={{ x: 0, opacity: 1 }}
                     className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
                   >
-                    {goalTemplates.map((template) => (
+                      {goalTemplates.map((template) => (
                       <motion.div
                         key={template.id}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         className="cursor-pointer"
                         onClick={() => handleTemplateSelect(template)}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            handleTemplateSelect(template);
+                          }
+                        }}
                       >
                         <Card className="h-full hover:shadow-lg transition-shadow">
                           <CardContent className="p-4">
@@ -421,6 +480,14 @@ export function GoalWizard({
                               : 'border-gray-200 hover:border-gray-300'
                           }`}
                           onClick={() => setGoalData(prev => ({ ...prev, framingType: 'achievement' }))}
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              setGoalData(prev => ({ ...prev, framingType: 'achievement' }));
+                            }
+                          }}
                         >
                           <div className="flex items-center space-x-2 mb-2">
                             <SparklesIcon className="w-5 h-5 text-green-600" />
@@ -438,6 +505,14 @@ export function GoalWizard({
                               : 'border-gray-200 hover:border-gray-300'
                           }`}
                           onClick={() => setGoalData(prev => ({ ...prev, framingType: 'loss-avoidance' }))}
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              setGoalData(prev => ({ ...prev, framingType: 'loss-avoidance' }));
+                            }
+                          }}
                         >
                           <div className="flex items-center space-x-2 mb-2">
                             <ExclamationTriangleIcon className="w-5 h-5 text-red-600" />

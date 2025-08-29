@@ -69,8 +69,8 @@
     @apply border-neutral-gray/20;
   }
   
-  /* Focus styles for accessibility */
-  *:focus {
+  /* Focus styles for accessibility - only for keyboard focus */
+  *:focus-visible {
     @apply outline-none ring-2 ring-primary-trust-blue ring-offset-2;
   }
   
@@ -151,6 +151,14 @@
   
   .animate-pulse-gentle {
     animation: pulseGentle 2s ease-in-out infinite;
+  }
+
+  /* Shimmer animation for skeleton wave */
+  .animate-shimmer {
+    background-size: 200% 100%;
+    animation: shimmer 1.6s linear infinite;
+    background-repeat: no-repeat;
+    background-position: 200% 0;
   }
   
   /* Responsive utilities */
@@ -248,5 +256,14 @@
   }
   50% {
     opacity: 0.8;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
   }
 }

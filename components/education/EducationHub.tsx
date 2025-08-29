@@ -158,6 +158,14 @@ export function EducationHub({
         selectedModule === module.id ? 'border-primary-trust-blue shadow-md' : 'border-neutral-gray/20'
       }`}
       onClick={() => setSelectedModule(module.id)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          setSelectedModule(module.id);
+        }
+      }}
     >
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center">

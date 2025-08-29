@@ -4,8 +4,6 @@ import React from 'react';
 import './globals.css';
 import '@/lib/setup-globals';
 
-import { Header } from '@/components/layout/Header';
-import { Navigation } from '@/components/layout/Navigation';
 
 import ClientLayout from './ClientLayout';
 
@@ -62,28 +60,14 @@ export default function RootLayout({ children }: RootLayoutProps) {
         <link rel="preload" href="/fonts/RobotoMono-Regular.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
       </head>
       <body className="font-primary antialiased">
-        <ClientLayout locale={locale}>
-          <div className="min-h-screen bg-neutral-light-gray">
-            <Header />
-            <div className="flex">
-              <Navigation />
-              <main className="flex-1 lg:ml-0" id="main-content">
-                <div className="container-responsive py-6">
-                  {children}
-                </div>
-              </main>
-            </div>
-          </div>
-
-          {/* Accessibility skip link */}
-          <a
-            href="#main-content"
-            className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-primary-trust-blue text-white px-4 py-2 rounded-md z-50"
-          >
-            {/* Intentionally not using i18n hook in server component; client will still be localized */}
-            Skip to main content
-          </a>
-        </ClientLayout>
+        {/* Accessibility skip link at top for keyboard users */}
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-primary-trust-blue text-white px-4 py-2 rounded-md z-50"
+        >
+          Skip to main content
+        </a>
+        <ClientLayout locale={locale}>{children}</ClientLayout>
       </body>
     </html>
   );

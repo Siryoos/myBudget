@@ -23,8 +23,9 @@ import { useEffect, useRef, useState } from 'react';
 
 import { useI18n } from '@/lib/i18n-provider';
 import { useTranslation } from '@/lib/useTranslation';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrency } from '@/lib/utils';
 import type { NavigationItem } from '@/types';
+import { useFinancialSummary, useTransactions } from '@/contexts/AppProvider';
 
 const getNavigationItems = (t: any, locale: string): NavigationItem[] => [
   {
@@ -86,19 +87,52 @@ export function Navigation({ isOpen = false, onClose }: NavigationProps) {
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const closeBtnRef = useRef<HTMLButtonElement | null>(null);
   const navRef = useRef<HTMLElement | null>(null);
+  const { netIncome } = useFinancialSummary();
+  const { loading: txLoading } = useTransactions();
 
   // Manage focus and Escape key when mobile nav opens
   useEffect(() => {
     if (!isOpen) {return;}
     // Focus close button for accessibility
     closeBtnRef.current?.focus();
+
+    // Close on Escape
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         onClose?.();
       }
+      // Simple focus trap when drawer is open
+      if (e.key === 'Tab' && navRef.current) {
+        const focusable = navRef.current.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        );
+        if (focusable.length === 0) {return;}
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        const active = document.activeElement as HTMLElement | null;
+        if (e.shiftKey) {
+          if (active === first || !navRef.current.contains(active)) {
+            e.preventDefault();
+            last.focus();
+          }
+        } else {
+          if (active === last || !navRef.current.contains(active)) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
+      }
     };
     document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
+
+    // Lock body scroll when open
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = originalOverflow;
+    };
   }, [isOpen, onClose]);
 
   // Get navigation items with translations
@@ -139,8 +173,6 @@ export function Navigation({ isOpen = false, onClose }: NavigationProps) {
           isOpen ? 'translate-x-0' : '-translate-x-full',
         )}
         aria-label="Main navigation"
-        role={isOpen ? 'dialog' : undefined}
-        aria-modal={isOpen ? true : undefined}
         tabIndex={isOpen ? -1 : undefined}
         ref={navRef as any}
       >
@@ -204,7 +236,7 @@ export function Navigation({ isOpen = false, onClose }: NavigationProps) {
           })}
         </div>
 
-        {/* Footer section */}
+        {/* Footer section - show a live financial summary instead of static placeholder */}
         <div className="p-4 border-t border-neutral-gray/10">
           <div className="bg-gradient-to-r from-primary-trust-blue to-secondary-growth-green rounded-lg p-4 text-white">
             <div className="flex items-center">
@@ -212,25 +244,10 @@ export function Navigation({ isOpen = false, onClose }: NavigationProps) {
                 <BanknotesIcon className="h-8 w-8" />
               </div>
               <div className="ml-3">
-                <p className="text-sm font-medium">Total Savings</p>
-                <p className="text-lg font-bold">$12,450</p>
-              </div>
-            </div>
-            <div className="mt-3">
-              <div className="flex justify-between text-xs">
-                <span>Goal Progress</span>
-                <span>68%</span>
-              </div>
-              <div className="mt-1 w-full bg-white/20 rounded-full h-2">
-                <div
-                  className="bg-white h-2 rounded-full transition-all duration-300"
-                  style={{ width: '68%' }}
-                  role="progressbar"
-                  aria-valuenow={68}
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                  aria-label="Goal progress: 68%"
-                />
+                <p className="text-sm font-medium">{t('navigation.summary.totalBalance', { defaultValue: 'Total Balance' })}</p>
+                <p className="text-lg font-bold" aria-live="polite">
+                  {txLoading ? '—' : formatCurrency(netIncome || 0, undefined, locale)}
+                </p>
               </div>
             </div>
           </div>

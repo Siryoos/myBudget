@@ -308,7 +308,7 @@ export function TransactionTable({
         {/* Bulk Actions */}
         {bulkActions && selectedTransactions.length > 0 && (
           <div className="flex items-center justify-between bg-primary-trust-blue/5 border border-primary-trust-blue/20 rounded-lg p-3 mt-4">
-            <div className="flex items-center">
+            <div className="flex items-center" aria-live="polite">
               <span className="text-sm font-medium text-primary-trust-blue">
                 {selectedTransactions.length} transaction{selectedTransactions.length !== 1 ? 's' : ''} selected
               </span>
@@ -346,19 +346,26 @@ export function TransactionTable({
                 ? t('empty.adjust', { defaultValue: 'Try adjusting your search or filters' })
                 : t('empty.start', { defaultValue: 'Your transactions will appear here once you start tracking' })}
             </p>
+            <div className="mt-4">
+              <Button variant="primary" size="sm">
+                {t('empty.ctaImport', { defaultValue: 'Import Transactions' })}
+              </Button>
+            </div>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
+              <caption className="sr-only">{t('table.caption', { defaultValue: 'Transactions table with sorting and filters' })}</caption>
               <thead>
                 <tr className="border-b border-neutral-gray/20">
                   {bulkActions && (
-                    <th className="text-left py-3 px-2">
+                    <th className="text-left py-3 px-2" scope="col">
                       <input
                         type="checkbox"
                         checked={selectedTransactions.length === filteredTransactions.length}
                         onChange={handleSelectAll}
                         className="rounded border-neutral-gray/30 text-primary-trust-blue focus:ring-primary-trust-blue"
+                        aria-label={t('table.aria.selectAll', { defaultValue: 'Select all transactions' })}
                       />
                     </th>
                   )}
@@ -367,6 +374,8 @@ export function TransactionTable({
                       sortable ? 'cursor-pointer hover:text-neutral-dark-gray' : ''
                     }`}
                     onClick={() => sortable && handleSort('date')}
+                    scope="col"
+                    aria-sort={sortBy === 'date' ? (sortOrder === 'asc' ? 'ascending' : 'descending') : undefined}
                   >
                     <div className="flex items-center">
                       Date
@@ -380,6 +389,8 @@ export function TransactionTable({
                       sortable ? 'cursor-pointer hover:text-neutral-dark-gray' : ''
                     }`}
                     onClick={() => sortable && handleSort('description')}
+                    scope="col"
+                    aria-sort={sortBy === 'description' ? (sortOrder === 'asc' ? 'ascending' : 'descending') : undefined}
                   >
                     <div className="flex items-center">
                       Description
@@ -388,7 +399,7 @@ export function TransactionTable({
                       )}
                     </div>
                   </th>
-                  <th className="text-left py-3 px-2 text-sm font-medium text-neutral-gray">
+                  <th className="text-left py-3 px-2 text-sm font-medium text-neutral-gray" scope="col">
                     Category
                   </th>
                   <th
@@ -396,6 +407,8 @@ export function TransactionTable({
                       sortable ? 'cursor-pointer hover:text-neutral-dark-gray' : ''
                     }`}
                     onClick={() => sortable && handleSort('amount')}
+                    scope="col"
+                    aria-sort={sortBy === 'amount' ? (sortOrder === 'asc' ? 'ascending' : 'descending') : undefined}
                   >
                     <div className="flex items-center justify-end">
                       Amount
@@ -404,10 +417,10 @@ export function TransactionTable({
                       )}
                     </div>
                   </th>
-                  <th className="text-left py-3 px-2 text-sm font-medium text-neutral-gray">
+                  <th className="text-left py-3 px-2 text-sm font-medium text-neutral-gray" scope="col">
                     Account
                   </th>
-                  <th className="text-center py-3 px-2 text-sm font-medium text-neutral-gray">
+                  <th className="text-center py-3 px-2 text-sm font-medium text-neutral-gray" scope="col">
                     Actions
                   </th>
                 </tr>
@@ -418,16 +431,17 @@ export function TransactionTable({
                     key={transaction.id}
                     className="border-b border-neutral-gray/10 hover:bg-neutral-light-gray/30 transition-colors duration-150"
                   >
-                    {bulkActions && (
-                      <td className="py-4 px-2">
-                        <input
-                          type="checkbox"
-                          checked={selectedTransactions.includes(transaction.id)}
-                          onChange={() => handleSelectTransaction(transaction.id)}
-                          className="rounded border-neutral-gray/30 text-primary-trust-blue focus:ring-primary-trust-blue"
-                        />
-                      </td>
-                    )}
+                  {bulkActions && (
+                    <td className="py-4 px-2">
+                      <input
+                        type="checkbox"
+                        checked={selectedTransactions.includes(transaction.id)}
+                        onChange={() => handleSelectTransaction(transaction.id)}
+                        className="rounded border-neutral-gray/30 text-primary-trust-blue focus:ring-primary-trust-blue"
+                        aria-label={t('table.aria.selectRow', { defaultValue: `Select transaction ${transaction.description || transaction.id}` })}
+                      />
+                    </td>
+                  )}
                     <td className="py-4 px-2">
                       <div className="text-sm text-neutral-dark-gray">
                         {formatRelativeTime(transaction.date, locale)}
@@ -533,7 +547,7 @@ export function TransactionTable({
                               setEditingTransaction(transaction.id);
                               setEditCategory(transaction.category);
                             }}
-                            className="p-1 text-neutral-gray hover:text-primary-trust-blue hover:bg-primary-trust-blue/10 rounded transition-colors duration-150"
+                            className="p-2 min-h-[36px] min-w-[36px] text-neutral-gray hover:text-primary-trust-blue hover:bg-primary-trust-blue/10 rounded transition-colors duration-150"
                             title="Edit category"
                             aria-label="Edit category"
                           >
@@ -542,15 +556,16 @@ export function TransactionTable({
                         )}
                         <button
                           onClick={() => handleDeleteTransactions([transaction.id])}
-                          className="p-1 text-neutral-gray hover:text-accent-warning-red hover:bg-accent-warning-red/10 rounded transition-colors duration-150"
+                          className="p-2 min-h-[36px] min-w-[36px] text-neutral-gray hover:text-accent-warning-red hover:bg-accent-warning-red/10 rounded transition-colors duration-150"
                           title="Delete transaction"
                           aria-label="Delete transaction"
                         >
                           <TrashIcon className="h-4 w-4" />
                         </button>
                         <button
-                          className="p-1 text-neutral-gray hover:text-neutral-dark-gray hover:bg-neutral-gray/10 rounded transition-colors duration-150"
+                          className="p-2 min-h-[36px] min-w-[36px] text-neutral-gray hover:text-neutral-dark-gray hover:bg-neutral-gray/10 rounded transition-colors duration-150"
                           title="More options"
+                          aria-label="More options"
                         >
                           <EllipsisHorizontalIcon className="h-4 w-4" />
                         </button>

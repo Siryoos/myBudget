@@ -15,7 +15,7 @@ export function Skeleton({
 }: SkeletonProps) {
   const animationClasses = {
     pulse: 'motion-safe:animate-pulse motion-reduce:animate-none',
-    wave: 'motion-safe:animate-shimmer motion-reduce:animate-none bg-gradient-to-r from-neutral-gray/20 via-neutral-light-gray/40 to-neutral-gray/20 bg-[length:HTTP_OK%_100%]',
+    wave: 'motion-safe:animate-shimmer motion-reduce:animate-none bg-gradient-to-r from-neutral-gray/20 via-neutral-light-gray/40 to-neutral-gray/20 bg-[length:200%_100%]',
     none: '',
   };
 

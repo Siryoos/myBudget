@@ -33,6 +33,7 @@ export default function LanguageSwitcher({ currentLocale = 'en' }: LanguageSwitc
   const searchParams = useSearchParams();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   // Use the passed locale prop, fallback to extracting from pathname if not provided
   const locale = (currentLocale && languages.find(lang => lang.code === currentLocale))
@@ -52,6 +53,38 @@ export default function LanguageSwitcher({ currentLocale = 'en' }: LanguageSwitc
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Keyboard navigation and Escape to close
+  useEffect(() => {
+    if (!isOpen) {return;}
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsOpen(false);
+        buttonRef.current?.focus();
+        return;
+      }
+
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Home' || e.key === 'End') {
+        const items = dropdownRef.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]');
+        if (!items || items.length === 0) {return;}
+        const currentIndex = Array.from(items).findIndex(el => el === document.activeElement);
+        let nextIndex = 0;
+        if (e.key === 'ArrowDown') nextIndex = currentIndex >= 0 ? (currentIndex + 1) % items.length : 0;
+        if (e.key === 'ArrowUp') nextIndex = currentIndex >= 0 ? (currentIndex - 1 + items.length) % items.length : items.length - 1;
+        if (e.key === 'Home') nextIndex = 0;
+        if (e.key === 'End') nextIndex = items.length - 1;
+        e.preventDefault();
+        items[nextIndex].focus();
+      }
+    };
+
+    document.addEventListener('keydown', onKeyDown);
+    // Focus first item on open
+    const items = dropdownRef.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]');
+    if (items && items[0]) { setTimeout(() => items[0].focus(), 0); }
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [isOpen]);
 
   const handleLanguageChange = async (newLocale: Locale) => {
     // Calculate the new path first so it's available in both try and catch blocks
@@ -98,10 +131,8 @@ export default function LanguageSwitcher({ currentLocale = 'en' }: LanguageSwitc
       document.documentElement.dir = getDirection(newLocale);
       document.documentElement.lang = newLocale;
 
-      // Force a complete page reload to ensure all components are re-rendered with new language
-      // This ensures instant language switching across all modules
-      window.location.href = newPath;
-
+      // Prefer client-side navigation for smoother UX
+      router.replace(newPath);
       setIsOpen(false);
     } catch (error) {
       console.error('Error changing language:', error);
@@ -118,6 +149,7 @@ export default function LanguageSwitcher({ currentLocale = 'en' }: LanguageSwitc
         aria-label="Change language"
         aria-expanded={isOpen}
         aria-haspopup="true"
+        ref={buttonRef}
       >
         <GlobeAltIcon className="w-5 h-5" />
         <span className="hidden sm:block">{currentLanguage.flag} {currentLanguage.nativeName}</span>

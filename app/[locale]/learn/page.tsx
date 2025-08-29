@@ -5,7 +5,7 @@ import { TipsFeed } from '@/components/education/TipsFeed';
 
 export default function LearnPage() {
   return (
-    <div className="space-y-6" id="main-content">
+    <div className="space-y-6">
       {/* Page Header */}
       <div className="bg-gradient-to-r from-primary-trust-blue to-primary-trust-blue-light rounded-lg p-6 text-white">
         <h1 className="text-3xl font-bold mb-2">Financial Education</h1>
@@ -45,4 +45,3 @@ export default function LearnPage() {
     </div>
   );
 }
-

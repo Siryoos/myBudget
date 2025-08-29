@@ -13,6 +13,7 @@ import { useState, useEffect , Fragment } from 'react';
 import { useI18n } from '@/lib/i18n-provider';
 import { useTranslation } from '@/lib/useTranslation';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AppProvider';
 
 import LanguageSwitcher from './LanguageSwitcher';
 
@@ -37,6 +38,7 @@ export function Header({ onMenuToggle }: HeaderProps) {
   const [greetingKey, setGreetingKey] = useState('app.greeting.morning'); // Default to morning
   const { t, ready } = useTranslation('common');
   const { locale } = useI18n();
+  const { user } = useAuth();
 
   // Set greeting based on current time (client-side only to avoid hydration mismatch)
   useEffect(() => {
@@ -79,7 +81,7 @@ export function Header({ onMenuToggle }: HeaderProps) {
               {/* Greeting - hidden on mobile */}
               <div className="hidden md:block ml-6">
                 <p className="text-sm text-neutral-gray">
-                  {greeting}, <span className="font-medium text-neutral-dark-gray">User</span>
+                  {greeting}, <span className="font-medium text-neutral-dark-gray">{user?.name || 'User'}</span>
                 </p>
               </div>
             </div>

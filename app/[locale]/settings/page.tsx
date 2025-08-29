@@ -9,7 +9,7 @@ import { useTranslation } from '@/lib/useTranslation';
 export default function SettingsPage() {
   const { t } = useTranslation('settings');
   return (
-    <div className="space-y-6" id="main-content">
+    <div className="space-y-6">
       {/* Page Header */}
       <div className="bg-gradient-to-r from-neutral-dark-gray to-neutral-gray rounded-lg p-6 text-white">
         <h1 className="text-3xl font-bold mb-2">{t('title', { defaultValue: 'Settings' })}</h1>
