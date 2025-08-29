@@ -117,7 +117,7 @@ export function SavingsOverview({
   }
 
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden" data-tour="savings-overview">
       <CardContent className="p-0">
         <div className="bg-gradient-to-br from-secondary-growth-green to-secondary-growth-green-light p-6 text-white">
           <div className="flex items-center justify-between mb-4">

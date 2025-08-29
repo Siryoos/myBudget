@@ -6,6 +6,7 @@ import '@/lib/setup-globals';
 
 
 import ClientLayout from './ClientLayout';
+import { SkipLink } from '@/components/ui/SkipLink';
 
 export const metadata: Metadata = {
   title: {
@@ -61,12 +62,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
       </head>
       <body className="font-primary antialiased">
         {/* Accessibility skip link at top for keyboard users */}
-        <a
-          href="#main-content"
-          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-primary-trust-blue text-white px-4 py-2 rounded-md z-50"
-        >
-          Skip to main content
-        </a>
+        <SkipLink />
         <ClientLayout locale={locale}>{children}</ClientLayout>
       </body>
     </html>

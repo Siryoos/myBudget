@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { useTranslation } from '@/lib/useTranslation';
 import { formatCurrency, sanitizeNumberInput } from '@/lib/utils';
+import { useFeedback } from '@/components/ui/FeedbackSystem';
 import { useToast } from '@/hooks/useToast';
 
 interface QuickSaveWidgetProps {
@@ -41,6 +42,7 @@ export function QuickSaveWidget({
   const [isLoading, setIsLoading] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const { toast } = useToast();
+  const { saveSuccess } = useFeedback();
 
   const handleQuickSave = async (amount: number) => {
     setIsLoading(true);
@@ -58,7 +60,9 @@ export function QuickSaveWidget({
       setSelectedAmount(null);
       setCustomAmount('');
       setShowCustomInput(false);
-      toast({ title: t('quickSave.successTitle', { defaultValue: 'Saved!' }), description: `${formatCurrency(amount)} ${t('quickSave.saved', { defaultValue: 'added to savings' })}`, variant: 'success', duration: 2500 });
+      
+      // Show enhanced feedback
+      saveSuccess(amount);
     } catch (error) {
       toast({ title: t('quickSave.errorTitle', { defaultValue: 'Save failed' }), description: t('quickSave.errorMessage', { defaultValue: 'Please try again' }), variant: 'error' });
     } finally {
@@ -81,7 +85,7 @@ export function QuickSaveWidget({
   };
 
   return (
-    <Card className="relative overflow-hidden">
+    <Card className="relative overflow-hidden" data-tour="quick-save">
       <CardHeader>
         <div className="flex items-center">
           <div className="bg-secondary-growth-green/10 rounded-lg p-2 mr-3">

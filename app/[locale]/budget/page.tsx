@@ -1,10 +1,10 @@
 'use client';
 
-import { BudgetAllocator } from '@/components/budget/BudgetAllocator';
+import { Suspense } from 'react';
 import BudgetHeader from '@/components/budget/BudgetHeader';
 import { BudgetMethodSelector } from '@/components/budget/BudgetMethodSelector';
-import { BudgetVisualization } from '@/components/budget/BudgetVisualization';
-import { IncomeManager } from '@/components/budget/IncomeManager';
+import { LazyBudgetAllocator, LazyBudgetVisualization, LazyIncomeManager } from '@/components/lazy';
+import { CardLoading } from '@/components/ui/Card';
 
 export default function BudgetPage() {
   return (
@@ -19,26 +19,32 @@ export default function BudgetPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left Column - Input and Configuration */}
         <div className="space-y-6">
-          <IncomeManager
-            allowMultipleSources={true}
-            recurringIncomeTracking={true}
-            irregularIncomeSupport={true}
-          />
+          <Suspense fallback={<CardLoading />}>
+            <LazyIncomeManager
+              allowMultipleSources={true}
+              recurringIncomeTracking={true}
+              irregularIncomeSupport={true}
+            />
+          </Suspense>
 
-          <BudgetAllocator
-            visualAllocation={true}
-            dragAndDrop={true}
-            warningThresholds={true}
-          />
+          <Suspense fallback={<CardLoading />}>
+            <LazyBudgetAllocator
+              visualAllocation={true}
+              dragAndDrop={true}
+              warningThresholds={true}
+            />
+          </Suspense>
         </div>
 
         {/* Right Column - Visualization */}
         <div>
-          <BudgetVisualization
-            chartTypes={['pie', 'bar', 'sankey']}
-            interactive={true}
-            showComparison={true}
-          />
+          <Suspense fallback={<CardLoading />}>
+            <LazyBudgetVisualization
+              chartTypes={['pie', 'bar', 'sankey']}
+              interactive={true}
+              showComparison={true}
+            />
+          </Suspense>
         </div>
       </div>
     </div>

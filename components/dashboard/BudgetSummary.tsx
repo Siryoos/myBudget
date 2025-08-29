@@ -182,7 +182,7 @@ export function BudgetSummary({
   }
 
   return (
-    <Card>
+    <Card data-tour="budget-summary">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center">

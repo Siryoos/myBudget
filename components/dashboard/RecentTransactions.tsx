@@ -93,7 +93,7 @@ export function RecentTransactions({
   }
 
   return (
-    <Card>
+    <Card data-tour="recent-transactions">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>

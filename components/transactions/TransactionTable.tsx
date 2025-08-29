@@ -30,6 +30,9 @@ interface TransactionTableProps {
   categoryEditing?: boolean
 }
 
+// Export both regular and virtual versions
+export { VirtualTransactionTable } from './VirtualTransactionTable';
+
 export function TransactionTable({
   sortable = true,
   filterable = true,
