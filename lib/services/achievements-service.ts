@@ -370,7 +370,16 @@ export class AchievementsService extends BaseService {
     return parseFloat(result.rows[0].adherence) || 0;
   }
 
-  private mapDbAchievementToAchievement(dbAchievement: {\n    id: string;\n    name: string;\n    description: string;\n    category: string;\n    icon: string;\n    requirement_type: string;\n    requirement_value: number;\n    points: number;\n  }): Achievement {
+  private mapDbAchievementToAchievement(dbAchievement: {
+    id: string;
+    name: string;
+    description: string;
+    category: string;
+    icon: string;
+    requirement_type: string;
+    requirement_value: number;
+    points: number;
+  }): Achievement {
     return {
       id: dbAchievement.id,
       name: dbAchievement.name,

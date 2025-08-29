@@ -7,6 +7,7 @@ import {
   createSuccessResponse,
   createPaginatedResponse,
   generateRequestId,
+  HTTP_CREATED,
 } from '@/lib/services/error-handler';
 import { GoalsService } from '@/lib/services/goals-service';
 import { automationRuleSchemas } from '@/lib/validation-schemas';

@@ -8,6 +8,7 @@ import {
   createSuccessResponse,
   createPaginatedResponse,
   generateRequestId,
+  HTTP_CREATED,
 } from '@/lib/services/error-handler';
 import { budgetSchemas } from '@/lib/validation-schemas';
 import type { AuthenticatedRequest } from '@/types/auth';

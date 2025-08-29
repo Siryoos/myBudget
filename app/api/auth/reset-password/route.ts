@@ -6,6 +6,7 @@ import { hashPassword } from '@/lib/auth';
 import { query } from '@/lib/database';
 import { createErrorResponse, createValidationError } from '@/lib/error-handling';
 import { rateLimiter } from '@/lib/redis';
+import { HTTP_BAD_REQUEST, HTTP_INTERNAL_SERVER_ERROR } from '@/lib/services/error-handler';
 
 const resetPasswordSchema = z.object({
   token: z.string().min(1, 'Reset token is required'),

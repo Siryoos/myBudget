@@ -7,6 +7,7 @@ import {
   createSuccessResponse,
   createPaginatedResponse,
   generateRequestId,
+  HTTP_CREATED,
 } from '@/lib/services/error-handler';
 import { TransactionService } from '@/lib/services/transaction-service';
 import { transactionSchemas } from '@/lib/validation-schemas';

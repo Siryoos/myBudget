@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 
 import { getAuthenticatedUser } from '@/lib/auth-middleware';
 import { getStorageProvider } from '@/lib/cloud-storage';
+import { HTTP_BAD_REQUEST, HTTP_INTERNAL_SERVER_ERROR } from '@/lib/services/error-handler';
 
 export async function POST(request: NextRequest) {
   try {

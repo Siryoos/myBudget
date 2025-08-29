@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 
 import { checkRedisHealth } from '@/lib/redis';
 import { securityMonitor } from '@/middleware/security';
+import { HTTP_OK, HTTP_SERVICE_UNAVAILABLE, HTTP_INTERNAL_SERVER_ERROR } from '@/lib/services/error-handler';
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
   try {

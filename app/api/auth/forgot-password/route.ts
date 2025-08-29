@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { query } from '@/lib/database';
 import { emailService } from '@/lib/email-service';
 import { createErrorResponse, createValidationError } from '@/lib/error-handling';
+import { HTTP_BAD_REQUEST, HTTP_INTERNAL_SERVER_ERROR } from '@/lib/services/error-handler';
 import { rateLimiter } from '@/lib/redis';
 
 const forgotPasswordSchema = z.object({

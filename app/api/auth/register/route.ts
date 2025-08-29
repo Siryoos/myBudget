@@ -5,6 +5,7 @@ import { z, ZodError } from 'zod';
 import { hashPassword, generateToken } from '@/lib/auth';
 import { SUPPORTED_CURRENCIES, SUPPORTED_LANGUAGES, DEFAULT_CURRENCY, DEFAULT_LANGUAGE } from '@/lib/constants';
 import { query } from '@/lib/database';
+import { HTTP_BAD_REQUEST, HTTP_INTERNAL_SERVER_ERROR } from '@/lib/services/error-handler';
 
 const registerSchema = z.object({
   email: z.string().email().transform(s => s.trim().toLowerCase()),

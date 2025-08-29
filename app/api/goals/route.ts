@@ -8,6 +8,7 @@ import {
   handleApiError,
   createSuccessResponse,
   generateRequestId,
+  HTTP_CREATED,
 } from '@/lib/services/error-handler';
 import { GoalsService } from '@/lib/services/goals-service';
 import { savingsGoalSchemas } from '@/lib/validation-schemas';

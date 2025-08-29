@@ -7,6 +7,7 @@ import {
   handleApiError,
   createSuccessResponse,
   generateRequestId,
+  HTTP_CREATED,
 } from '@/lib/services/error-handler';
 import { achievementSchemas } from '@/lib/validation-schemas';
 import type { AuthenticatedRequest } from '@/types/auth';

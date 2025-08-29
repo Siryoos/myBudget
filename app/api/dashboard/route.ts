@@ -4,6 +4,7 @@ import { requireAuth } from '@/lib/auth-middleware';
 import { query } from '@/lib/database';
 import type { DashboardData } from '@/types';
 import type { AuthenticatedRequest } from '@/types/auth';
+import { HTTP_UNAUTHORIZED, HTTP_INTERNAL_SERVER_ERROR } from '@/lib/services/error-handler';
 
 export const GET = requireAuth(async (request: AuthenticatedRequest) => {
   try {

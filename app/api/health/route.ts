@@ -2,7 +2,7 @@ import type { NextRequest } from 'next/server';
 
 import { query } from '@/lib/database';
 import { getHealthData } from '@/lib/middleware/monitoring';
-import { createSuccessResponse, generateRequestId } from '@/lib/services/error-handler';
+import { createSuccessResponse, generateRequestId, HTTP_SERVICE_UNAVAILABLE } from '@/lib/services/error-handler';
 
 export const GET = async (request: NextRequest) => {
   const requestId = generateRequestId();

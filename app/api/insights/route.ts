@@ -5,6 +5,7 @@ import { requireAuth } from '@/lib/auth-middleware';
 import { query } from '@/lib/database';
 import type { FinancialInsight, Notification } from '@/types';
 import type { AuthenticatedRequest } from '@/types/auth';
+import { HTTP_BAD_REQUEST, HTTP_INTERNAL_SERVER_ERROR, HTTP_UNAUTHORIZED, HTTP_OK } from '@/lib/services/error-handler';
 
 // Validation schema for query parameters
 const insightsQuerySchema = z.object({

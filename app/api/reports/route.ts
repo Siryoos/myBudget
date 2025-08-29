@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth-middleware';
 import { query } from '@/lib/database';
 import type { AuthenticatedRequest } from '@/types/auth';
+import { HTTP_BAD_REQUEST, HTTP_INTERNAL_SERVER_ERROR } from '@/lib/services/error-handler';
 
 export const GET = requireAuth(async (request: AuthenticatedRequest) => {
   try {

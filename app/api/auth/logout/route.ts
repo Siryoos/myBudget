@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth-middleware';
 import { query } from '@/lib/database';
 import { createErrorResponse } from '@/lib/error-handling';
+import { HTTP_INTERNAL_SERVER_ERROR } from '@/lib/services/error-handler';
 import type { AuthenticatedRequest } from '@/types/auth';
 
 export const POST = requireAuth(async (request: AuthenticatedRequest) => {

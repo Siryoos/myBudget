@@ -31,6 +31,7 @@ import {
 } from '@/lib/error-handling';
 import { generateRefreshToken, verify } from '@/lib/jwt-wrapper';
 import { rateLimiter } from '@/lib/redis';
+import { HTTP_UNAUTHORIZED, HTTP_NOT_FOUND, HTTP_BAD_REQUEST, HTTP_INTERNAL_SERVER_ERROR } from '@/lib/services/error-handler';
 
 const refreshTokenSchema = z.object({
   refreshToken: z.string().min(1, 'Refresh token is required'),

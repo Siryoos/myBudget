@@ -3,6 +3,7 @@ import { join } from 'path';
 
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
+import { HTTP_NOT_FOUND, HTTP_INTERNAL_SERVER_ERROR, HTTP_OK } from '@/lib/services/error-handler';
 
 
 const ALLOWED_LOCALES = ['en', 'fa', 'ar'] as const;

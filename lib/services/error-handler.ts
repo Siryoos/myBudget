@@ -45,14 +45,15 @@ export class ApiError extends Error {
 }
 
 // Constants for HTTP status codes
-const HTTP_OK = HTTP_OK;
-const HTTP_BAD_REQUEST = HTTP_BAD_REQUEST;
-const HTTP_UNAUTHORIZED = HTTP_UNAUTHORIZED;
-const HTTP_FORBIDDEN = HTTP_FORBIDDEN;
-const HTTP_NOT_FOUND = HTTP_NOT_FOUND;
-const HTTP_CONFLICT = HTTP_CONFLICT;
-const HTTP_INTERNAL_SERVER_ERROR = HTTP_INTERNAL_SERVER_ERROR;
-const HTTP_SERVICE_UNAVAILABLE = HTTP_SERVICE_UNAVAILABLE;
+export const HTTP_OK = 200;
+export const HTTP_CREATED = 201;
+export const HTTP_BAD_REQUEST = 400;
+export const HTTP_UNAUTHORIZED = 401;
+export const HTTP_FORBIDDEN = 403;
+export const HTTP_NOT_FOUND = 404;
+export const HTTP_CONFLICT = 409;
+export const HTTP_INTERNAL_SERVER_ERROR = 500;
+export const HTTP_SERVICE_UNAVAILABLE = 503;
 
 // Error factory functions
 export const createValidationError = (message: string, details?: Record<string, unknown>): ApiError => new ApiError(message, ERROR_CODES.VALIDATION_ERROR, HTTP_BAD_REQUEST, details);
@@ -197,7 +198,7 @@ export const createSuccessResponse = <T>(
   data: T,
   requestId?: string,
   status: number = HTTP_OK,
-): NextResponse<{ success: true; data: T; requestId?: string }> {
+): NextResponse<{ success: true; data: T; requestId?: string }> => {
   return NextResponse.json({
     success: true,
     data,
@@ -237,7 +238,7 @@ export const createPaginatedResponse = <T>(
   data: T[];
   pagination: typeof pagination;
   requestId?: string;
-}> {
+}> => {
   return NextResponse.json({
     success: true,
     data,
