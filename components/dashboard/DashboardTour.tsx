@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { OnboardingTour, TourStep, useOnboardingTour } from '@/components/ui/OnboardingTour';
 import { useTranslation } from '@/lib/useTranslation';
 import { useRouter } from 'next/navigation';
-import { useToast } from '@/lib/useToast';
+import { useToast } from '@/hooks/useToast';
 
 export function DashboardTour() {
   const { t } = useTranslation('onboarding');

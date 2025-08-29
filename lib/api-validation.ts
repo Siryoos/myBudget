@@ -42,7 +42,7 @@ export const commonSchemas = {
 
   // Search parameters
   search: z.object({
-    query: z.string().min(1).max(HTTP_OK).optional(),
+    query: z.string().min(1).max(200).optional(),
     category: z.string().max(100).optional(),
     tags: z.array(z.string().max(50)).max(10).optional(),
   }),
@@ -67,7 +67,7 @@ export const commonSchemas = {
   // Description validation
   description: z.string()
     .min(1, 'Description is required')
-    .max(HTTP_INTERNAL_SERVER_ERROR, 'Description cannot exceed HTTP_INTERNAL_SERVER_ERROR characters')
+    .max(500, 'Description cannot exceed 500 characters')
     .transform(s => s.trim()),
 
   // Category validation

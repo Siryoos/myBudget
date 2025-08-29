@@ -1,6 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-// HTTP_* constants are provided globally via '@/lib/setup-globals' to avoid importing server-only code in Edge runtime.
+import { HTTP_OK, HTTP_BAD_REQUEST, HTTP_INTERNAL_SERVER_ERROR, HTTP_SERVICE_UNAVAILABLE } from '@/lib/http-status';
+// Avoid relying on globals for HTTP status codes in Edge runtime.
 
 // Redis is not available in Edge Runtime; disable dynamic imports to avoid bundling Node APIs.
 let rateLimiter: unknown = null;

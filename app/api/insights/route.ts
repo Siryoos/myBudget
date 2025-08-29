@@ -180,7 +180,7 @@ export const POST = requireAuth(async (request: AuthenticatedRequest) => {
     // Validate request body
     const createInsightSchema = z.object({
       type: z.enum(['insight', 'budget_alert', 'achievement']),
-      title: z.string().min(1, 'Title is required').max(HTTP_OK, 'Title too long'),
+      title: z.string().min(1, 'Title is required').max(200, 'Title too long'),
       message: z.string().min(1, 'Message is required').max(1000, 'Message too long'),
       category: z.string().max(100, 'Category too long').optional(),
       priority: z.enum(['low', 'medium', 'high']).default('medium'),

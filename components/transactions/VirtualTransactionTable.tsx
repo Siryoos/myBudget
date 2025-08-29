@@ -7,8 +7,8 @@ import { TextInput } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { useTranslation } from '@/lib/useTranslation';
 import { useCurrency } from '@/lib/useCurrency';
-import { formatRelativeTime } from '@/lib/utils';
-import { useToast } from '@/lib/useToast';
+import { formatRelativeTime } from '@/lib/i18n';
+import { useToast } from '@/hooks/useToast';
 import {
   MagnifyingGlassIcon,
   FunnelIcon,
@@ -19,7 +19,7 @@ import {
   XMarkIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  PhotographIcon,
+  PhotoIcon,
 } from '@heroicons/react/24/outline';
 
 interface Transaction {
@@ -281,9 +281,20 @@ export function VirtualTransactionTable({
                 <PencilIcon className="h-4 w-4" />
               </button>
             )}
-            {showReceipts && transaction.receipt && (
-              <button className="p-1 text-neutral-gray hover:text-primary-trust-blue hover:bg-primary-trust-blue/10 rounded">
-                <PhotographIcon className="h-4 w-4" />
+            {showReceipts && (
+              <button
+                className="p-1 text-neutral-gray hover:text-primary-trust-blue hover:bg-primary-trust-blue/10 rounded"
+                aria-label="View receipt"
+                onClick={() => {
+                  if (transaction.receipt) {
+                    toast({ title: 'Opening receipt…', variant: 'info' });
+                    // Placeholder: integrate lightbox/viewer here
+                  } else {
+                    toast({ title: 'No receipt available for this transaction', variant: 'info' });
+                  }
+                }}
+              >
+                <PhotoIcon className="h-4 w-4" />
               </button>
             )}
             <button className="p-1 text-neutral-gray hover:text-accent-savings-orange hover:bg-accent-savings-orange/10 rounded">
@@ -362,7 +373,7 @@ export function VirtualTransactionTable({
                 {t('bulk.clear', { defaultValue: 'Clear' })}
               </Button>
               <Button
-                variant="danger"
+                variant="outline"
                 size="sm"
                 onClick={() => {
                   toast({

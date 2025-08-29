@@ -13,7 +13,7 @@ interface ErrorBoundaryProps {
 }
 
 const DefaultErrorFallback: React.FC<{ error: Error | null; retry: () => void }> = ({ error, retry }) => (
-  <div className="p-6 bg-red-50 border border-red-HTTP_OK rounded-lg">
+  <div className="p-6 bg-red-50 border border-red-200 rounded-lg">
     <h3 className="text-lg font-semibold text-red-800 mb-2">Something went wrong</h3>
     <p className="text-sm text-red-600 mb-4">
       {error?.message || 'An unexpected error occurred while loading this component.'}

@@ -360,7 +360,7 @@ export function AchievementSystem({
                 </span>
               </div>
 
-              <div className="w-full bg-gray-HTTP_OK rounded-full h-2">
+              <div className="w-full bg-gray-200 rounded-full h-2">
                 <motion.div
                   className={`h-2 rounded-full ${
                     isUnlocked ? 'bg-green-500' : 'bg-blue-500'

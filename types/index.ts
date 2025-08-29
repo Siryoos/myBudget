@@ -272,10 +272,13 @@ export interface CardProps extends ComponentProps {
   subtitle?: string
   actions?: ReactNode
   hoverable?: boolean
+  hover?: boolean
+  noPadding?: boolean
+  onClick?: () => void
 }
 
 export interface ButtonProps extends ComponentProps {
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost'
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger'
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'small'
   loading?: boolean
   disabled?: boolean
@@ -285,6 +288,7 @@ export interface ButtonProps extends ComponentProps {
   rightIcon?: ReactNode
   iconOnly?: boolean
   ariaLabel?: string
+  fullWidth?: boolean
 }
 
 // Chart and visualization types

@@ -12,7 +12,6 @@ x-logging: &default-logging
 x-security: &default-security
   security_opt:
     - no-new-privileges:true
-    - seccomp:unconfined
   read_only: false
   tmpfs:
     - /tmp

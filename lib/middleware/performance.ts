@@ -25,8 +25,7 @@ export function withCompression(
   return async (request: OptimizedRequest): Promise<NextResponse> => {
     const response = await handler(request);
 
-    // Add compression headers for better performance
-    response.headers.set('Content-Encoding', 'gzip');
+    // Add short public cache for non-sensitive responses
     response.headers.set('Cache-Control', 'public, max-age=300'); // 5 minute cache
 
     return response;

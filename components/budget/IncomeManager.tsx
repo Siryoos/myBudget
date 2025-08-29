@@ -42,10 +42,15 @@ export function IncomeManager({
     },
   ]);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [newSource, setNewSource] = useState({
+  const [newSource, setNewSource] = useState<{
+    name: string;
+    amount: string;
+    frequency: IncomeSource['frequency'];
+    isRegular: boolean;
+  }>({
     name: '',
     amount: '',
-    frequency: 'monthly' as const,
+    frequency: 'monthly',
     isRegular: true,
   });
 
@@ -232,7 +237,7 @@ export function IncomeManager({
                   label="Frequency"
                   name="frequency"
                   value={newSource.frequency}
-                  onChange={(value) => setNewSource(prev => ({ ...prev, frequency: value as IncomeSource['frequency'] }))}
+                  onChange={(e) => setNewSource(prev => ({ ...prev, frequency: (e.target.value as IncomeSource['frequency']) }))}
                   options={[
                     { value: 'weekly', label: 'Weekly' },
                     { value: 'biweekly', label: 'Bi-weekly' },

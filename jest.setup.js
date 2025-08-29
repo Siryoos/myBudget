@@ -1,4 +1,6 @@
 import '@testing-library/jest-dom'
+// Define global HTTP_* constants for tests
+import '@/lib/setup-globals';
 
 // Add TextEncoder/TextDecoder polyfills for Node.js environment
 if (typeof global.TextEncoder === 'undefined') {

@@ -25,12 +25,36 @@ export class ApiClient {
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
+    const token = this.getToken();
+
+    // Merge headers and attach Authorization if available
+    const mergedHeaders: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...(options.headers instanceof Headers
+        ? Object.fromEntries(options.headers.entries())
+        : (options.headers as Record<string, string> | undefined) || {}),
+    };
+    if (token && !mergedHeaders.Authorization) {
+      mergedHeaders.Authorization = `Bearer ${token}`;
+    }
+
+    // Apply a default timeout (10s) unless a signal is provided
+    let controller: AbortController | null = null;
+    let timeoutId: NodeJS.Timeout | null = null;
+    const signal = options.signal;
+    if (!signal) {
+      controller = new AbortController();
+      timeoutId = setTimeout(() => controller?.abort(), 10000);
+    }
+
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
       ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
+      headers: mergedHeaders,
+      signal: signal || controller?.signal,
+    }).finally(() => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
     });
 
     if (!response.ok) {

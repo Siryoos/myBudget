@@ -1,5 +1,10 @@
 version: '3.8'
 
+# Global environment file anchor
+x-env-file: &env-file
+  env_file:
+    - docker.env
+
 services:
   # Generate TLS certs for Nginx if missing (one-shot)
   nginx-certgen:
@@ -18,6 +23,7 @@ services:
 
   # Main Application
   frontend:
+    <<: *env-file
     build:
       context: .
       dockerfile: Dockerfile.prod
@@ -34,6 +40,7 @@ services:
       - LOG_LEVEL=info
       - RATE_LIMIT_WINDOW=900000
       - RATE_LIMIT_MAX=1000
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
     # Do not expose directly in production; Nginx is the ingress
     depends_on:
       - postgres
@@ -162,8 +169,6 @@ services:
     networks:
       - smartsave-network
     command: ["sh", "./scripts/docker-init.sh"]
-    networks:
-      - smartsave-network
 
   # Monitoring - Prometheus (Internal only in production)
   prometheus:

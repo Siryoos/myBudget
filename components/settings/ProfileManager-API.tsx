@@ -299,8 +299,9 @@ export function ProfileManager({
                 </p>
               )}
             </div>
+            </div>
           </CardContent>
-        </Card>
+          </Card>
       )}
 
       {/* Financial Profile */}
@@ -424,8 +425,9 @@ export function ProfileManager({
                 <p className="text-neutral-charcoal">{profileData.dependents}</p>
               )}
             </div>
+            </div>
           </CardContent>
-        </Card>
+          </Card>
       )}
 
       {/* Preferences */}
@@ -551,8 +553,9 @@ export function ProfileManager({
                 <p className="text-neutral-charcoal">{profileData.timezone}</p>
               )}
             </div>
+            </div>
           </CardContent>
-        </Card>
+          </Card>
       )}
     </div>
   );

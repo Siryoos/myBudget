@@ -197,7 +197,7 @@ export const CurrencyInput = forwardRef<HTMLInputElement, CurrencyInputProps>(fu
     const v = e.currentTarget.value;
     const num = Number(v.replace(/[^0-9.-]/g, ''));
     if (!Number.isNaN(num)) {
-      e.currentTarget.value = formatCurrency(num, locale);
+      e.currentTarget.value = formatCurrency(num);
     }
     onBlur?.(e);
   }
@@ -373,4 +373,3 @@ export type DateInputProps = Omit<TextInputProps, 'type'>;
 export const DateInput = forwardRef<HTMLInputElement, DateInputProps>(function DateInput(props, ref) {
   return <TextInput ref={ref} type="date" {...props} />;
 });
-

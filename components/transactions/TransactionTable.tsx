@@ -403,6 +403,7 @@ export function TransactionTable({
             </div>
           </div>
         ) : (
+          <>
           <div className="overflow-x-auto">
             <table className="w-full">
               <caption className="sr-only">{t('table.caption', { defaultValue: 'Transactions table with sorting and filters' })}</caption>
@@ -699,6 +700,7 @@ export function TransactionTable({
               </div>
             </div>
           )}
+        </>
         )}
       </CardContent>
     </Card>

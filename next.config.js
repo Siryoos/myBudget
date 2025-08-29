@@ -9,20 +9,22 @@ const nextConfig = {
     formats: ['image/webp', 'image/avif'],
     minimumCacheTTL: 60,
     dangerouslyAllowSVG: false,
-    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
-    unoptimized: true, // Disable image optimization during build
+    // Let application-level middleware/headers manage CSP
+    unoptimized: false,
   },
   
   // ESLint configuration
   eslint: {
-    // Limit lint scope to core app directories and skip lint blocking the build.
+    // Limit lint scope to core app directories
     dirs: ['components', 'lib', 'app'],
+    // Skip ESLint during builds to prevent build failures
     ignoreDuringBuilds: true,
   },
   
   // TypeScript configuration
   typescript: {
-    ignoreBuildErrors: true, // Ignore TypeScript errors during build
+    // Fail builds on type errors to prevent shipping broken code
+    ignoreBuildErrors: false,
   },
   
   // Security headers are handled by middleware/security.ts

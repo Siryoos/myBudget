@@ -254,7 +254,7 @@ export function BudgetSummary({
               {t('budget:overview.remaining', { defaultValue: 'Remaining' })}
             </div>
             <div className={`text-xl font-bold ${
-              totalRemaining >= 0 ? 'text-secondary-growth-green' : 'text-red-HTTP_INTERNAL_SERVER_ERROR'
+              totalRemaining >= 0 ? 'text-secondary-growth-green' : 'text-red-600'
             }`}>
               {formatCurrency(totalRemaining)}
             </div>
@@ -263,9 +263,9 @@ export function BudgetSummary({
 
         {/* Spending Alerts */}
         {showSpendingAlerts && overBudgetCategories.length > 0 && (
-          <div className="bg-red-50 border border-red-HTTP_OK rounded-lg p-4">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
             <div className="flex items-center mb-3">
-              <ExclamationTriangleIcon className="h-5 w-5 text-red-HTTP_INTERNAL_SERVER_ERROR mr-2" />
+              <ExclamationTriangleIcon className="h-5 w-5 text-red-600 mr-2" />
               <h4 className="font-medium text-red-800">
                 {t('budget:alerts.title', { defaultValue: 'Budget Alerts' })}
               </h4>
