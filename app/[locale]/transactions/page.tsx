@@ -1,8 +1,7 @@
 'use client';
 
-import { Suspense } from 'react';
-import { LazySpendingAnalytics, LazyTransactionTable } from '@/components/lazy';
-import { CardLoading } from '@/components/ui/Card';
+import { SpendingAnalytics } from '@/components/transactions/SpendingAnalytics';
+import { TransactionTable } from '@/components/transactions/TransactionTable';
 
 export default function TransactionsPage() {
   return (
@@ -16,25 +15,21 @@ export default function TransactionsPage() {
       </div>
 
       {/* Analytics Overview */}
-      <Suspense fallback={<CardLoading />}>
-        <LazySpendingAnalytics
-          timeRanges={['week', 'month', 'quarter', 'year']}
-          categoryBreakdown={true}
-          trendAnalysis={true}
-          anomalyDetection={true}
-        />
-      </Suspense>
+      <SpendingAnalytics
+        timeRanges={['week', 'month', 'quarter', 'year']}
+        categoryBreakdown={true}
+        trendAnalysis={true}
+        anomalyDetection={true}
+      />
 
       {/* Transaction Table */}
-      <Suspense fallback={<CardLoading />}>
-        <LazyTransactionTable
-          sortable={true}
-          filterable={true}
-          searchable={true}
-          bulkActions={true}
-          categoryEditing={true}
-        />
-      </Suspense>
+      <TransactionTable
+        sortable={true}
+        filterable={true}
+        searchable={true}
+        bulkActions={true}
+        categoryEditing={true}
+      />
     </div>
   );
 }

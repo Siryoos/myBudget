@@ -98,92 +98,21 @@ export type NumberInputProps = Omit<TextInputProps, 'type' | 'inputMode'> & {
   locale?: string;
   min?: number;
   max?: number;
-  step?: number;
 };
 
 export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(function NumberInput(
-  { locale = 'en', min, max, step, onChange, onBlur, value, defaultValue, ...props },
+  { locale = 'en', onBlur, ...props },
   ref,
 ) {
-  const [internalValue, setInternalValue] = useState<number | ''>(
-    value !== undefined ? Number(value) : defaultValue !== undefined ? Number(defaultValue) : ''
-  );
-
-  // Keep internal value in sync with controlled value
-  useEffect(() => {
-    if (value !== undefined) {
-      setInternalValue(Number(value));
+  function formatOnBlur(e: React.FocusEvent<HTMLInputElement>) {
+    const value = e.currentTarget.value;
+    const num = Number(value.replace(/[^0-9.-]/g, ''));
+    if (!Number.isNaN(num)) {
+      e.currentTarget.value = formatNumber(num, locale);
     }
-  }, [value]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const inputValue = e.target.value;
-    
-    // Strip non-numeric characters except minus and decimal
-    const cleanedValue = inputValue.replace(/[^0-9.-]/g, '');
-    
-    // Parse to number
-    const numValue = cleanedValue === '' || cleanedValue === '-' ? '' : Number(cleanedValue);
-    
-    // Update internal state
-    setInternalValue(numValue);
-    
-    // Call onChange with numeric value
-    if (onChange) {
-      const syntheticEvent = {
-        ...e,
-        target: { ...e.target, value: numValue === '' ? '' : String(numValue) },
-      } as React.ChangeEvent<HTMLInputElement>;
-      onChange(syntheticEvent);
-    }
-  };
-
-  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-    let finalValue = internalValue;
-    
-    // Apply min/max constraints
-    if (typeof finalValue === 'number') {
-      if (min !== undefined && finalValue < min) {
-        finalValue = min;
-      }
-      if (max !== undefined && finalValue > max) {
-        finalValue = max;
-      }
-    }
-    
-    // Update value if it changed
-    if (finalValue !== internalValue) {
-      setInternalValue(finalValue);
-      if (onChange) {
-        const syntheticEvent = {
-          ...e,
-          target: { ...e.target, value: String(finalValue) },
-        } as React.ChangeEvent<HTMLInputElement>;
-        onChange(syntheticEvent);
-      }
-    }
-    
-    // Format for display
-    if (typeof finalValue === 'number') {
-      e.currentTarget.value = formatNumber(finalValue, locale);
-    }
-    
     onBlur?.(e);
-  };
-
-  return (
-    <TextInput
-      ref={ref}
-      type="number"
-      value={internalValue}
-      onChange={handleChange}
-      onBlur={handleBlur}
-      min={min}
-      max={max}
-      step={step}
-      {...props}
-    />
-  );
+  }
+  return <TextInput ref={ref} inputMode="decimal" onBlur={formatOnBlur} {...props} />;
 });
 
 // CurrencyInput
@@ -299,32 +228,12 @@ export function RadioGroup({ id, label, required, helpText, error, name, options
 }
 
 // Textarea (auto-resize)
-export type TextareaProps = Omit<React.TextareaHTMLAttributes<HTMLTextAreaElement>, 'rows'> & FieldBaseProps & { 
-  minRows?: number; 
-  maxRows?: number;
-  showCharacterCount?: boolean;
-  maxLength?: number;
-};
-export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function Textarea(
-  { id, label, required, helpText, error, className, containerClassName, minRows = 3, maxRows = 10, onChange, showCharacterCount, maxLength, value, defaultValue, ...props }, 
-  ref
-) {
+export type TextareaProps = Omit<React.TextareaHTMLAttributes<HTMLTextAreaElement>, 'rows'> & FieldBaseProps & { minRows?: number; maxRows?: number };
+export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function Textarea({ id, label, required, helpText, error, className, containerClassName, minRows = 3, maxRows = 10, onChange, ...props }, ref) {
   const autoId = useId();
   const textareaId = id || `ta-${autoId}`;
   const innerRef = useRef<HTMLTextAreaElement | null>(null);
-  const [charCount, setCharCount] = useState(0);
-  
   useImperativeHandle(ref, () => innerRef.current as HTMLTextAreaElement);
-  
-  // Initialize character count
-  useEffect(() => {
-    if (innerRef.current) {
-      const initialValue = value || defaultValue || innerRef.current.value || '';
-      setCharCount(String(initialValue).length);
-    }
-  }, [value, defaultValue]);
-  
-  // Auto-resize effect
   useEffect(() => {
     if (innerRef.current) {
       const ta = innerRef.current;
@@ -332,20 +241,12 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function 
       ta.style.height = `${Math.min(ta.scrollHeight, maxRows * 24)}px`;
     }
   });
-  
   function handleChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
     const ta = e.currentTarget;
     ta.style.height = 'auto';
     ta.style.height = `${Math.min(ta.scrollHeight, maxRows * 24)}px`;
-    
-    // Update character count
-    if (showCharacterCount) {
-      setCharCount(ta.value.length);
-    }
-    
     onChange?.(e);
   }
-  
   return (
     <FieldWrapper id={textareaId} label={label} required={required} helpText={helpText} error={error} containerClassName={containerClassName}>
       <textarea
@@ -354,16 +255,8 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function 
         rows={minRows}
         className={cn('block w-full rounded-md border border-neutral-gray/30 bg-white placeholder-neutral-gray focus:outline-none focus:ring-2 focus:ring-primary-trust-blue focus:border-primary-trust-blue px-3 py-2', className)}
         onChange={handleChange}
-        maxLength={maxLength}
-        value={value}
-        defaultValue={defaultValue}
         {...props}
       />
-      {showCharacterCount && typeof maxLength === 'number' && (
-        <div className="mt-1 text-xs text-neutral-gray text-right" aria-live="polite">
-          {charCount} / {maxLength}
-        </div>
-      )}
     </FieldWrapper>
   );
 });

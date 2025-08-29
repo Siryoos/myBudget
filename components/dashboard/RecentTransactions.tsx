@@ -8,7 +8,7 @@ import {
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/Button';
-import { Card, CardContent, CardHeader, CardLoading, CardError } from '@/components/ui/Card';
+import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useTransactions } from '@/contexts/AppProvider';
 import { useTranslation } from '@/lib/useTranslation';
@@ -79,21 +79,8 @@ export function RecentTransactions({
     return colors[category] || 'text-neutral-gray';
   };
 
-  if (loading) {
-    return <CardLoading title={t('transactions:loading', { defaultValue: 'Loading transactions...' })} />;
-  }
-
-  if (error) {
-    return (
-      <CardError 
-        message={t('transactions:errorLoading', { defaultValue: 'Unable to load transactions' })}
-        onRetry={() => window.location.reload()}
-      />
-    );
-  }
-
   return (
-    <Card data-tour="recent-transactions">
+    <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>

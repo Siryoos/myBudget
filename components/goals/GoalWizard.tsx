@@ -21,7 +21,6 @@ import { useState, useRef, useEffect } from 'react';
 
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
-import { TextInput, NumberInput, Select, Textarea, type SelectOption } from '@/components/ui/Input';
 import { useCurrency } from '@/lib/useCurrency';
 import { useTranslation } from '@/lib/useTranslation';
 import { sanitizeNumberInput, formatDate } from '@/lib/utils';
@@ -625,11 +624,11 @@ export function GoalWizard({
                           <label className="block text-sm font-medium text-gray-700 mb-2">
                             {t('wizard.details.name', { defaultValue: 'Goal Name' })}
                           </label>
-                          <TextInput
+                          <input
+                            type="text"
                             value={goalData.name}
                             onChange={(e) => setGoalData(prev => ({ ...prev, name: e.target.value }))}
-                            placeholder="Enter goal name"
-                            required
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-trust-blue"
                           />
                         </div>
 
@@ -637,13 +636,11 @@ export function GoalWizard({
                           <label className="block text-sm font-medium text-gray-700 mb-2">
                             {t('wizard.details.amount', { defaultValue: 'Target Amount' })}
                           </label>
-                          <NumberInput
+                          <input
+                            type="number"
                             value={goalData.targetAmount}
                             onChange={(e) => setGoalData(prev => ({ ...prev, targetAmount: e.target.value }))}
-                            placeholder="Enter target amount"
-                            min={0}
-                            leftAdornment={<span className="text-neutral-gray">$</span>}
-                            required
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-trust-blue"
                           />
                         </div>
 
@@ -651,12 +648,11 @@ export function GoalWizard({
                           <label className="block text-sm font-medium text-gray-700 mb-2">
                             {t('wizard.details.date', { defaultValue: 'Target Date' })}
                           </label>
-                          <TextInput
+                          <input
                             type="date"
                             value={goalData.targetDate}
                             onChange={(e) => setGoalData(prev => ({ ...prev, targetDate: e.target.value }))}
-                            placeholder="Select target date"
-                            required
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-trust-blue"
                           />
                         </div>
 
@@ -664,16 +660,15 @@ export function GoalWizard({
                           <label className="block text-sm font-medium text-gray-700 mb-2">
                             {t('wizard.details.priority', { defaultValue: 'Priority' })}
                           </label>
-                          <Select
+                          <select
                             value={goalData.priority}
                             onChange={(e) => setGoalData(prev => ({ ...prev, priority: e.target.value as 'low' | 'medium' | 'high' }))}
-                            options={[
-                              { value: 'low', label: t('wizard.details.priority.low', { defaultValue: 'Low' }) },
-                              { value: 'medium', label: t('wizard.details.priority.medium', { defaultValue: 'Medium' }) },
-                              { value: 'high', label: t('wizard.details.priority.high', { defaultValue: 'High' }) }
-                            ] as SelectOption[]}
-                            placeholder="Select priority"
-                          />
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-trust-blue"
+                          >
+                            <option value="low">{t('wizard.details.priority.low', { defaultValue: 'Low' })}</option>
+                            <option value="medium">{t('wizard.details.priority.medium', { defaultValue: 'Medium' })}</option>
+                            <option value="high">{t('wizard.details.priority.high', { defaultValue: 'High' })}</option>
+                          </select>
                         </div>
                       </div>
 
@@ -681,11 +676,11 @@ export function GoalWizard({
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           {t('wizard.details.description', { defaultValue: 'Description' })}
                         </label>
-                        <Textarea
+                        <textarea
                           value={goalData.description}
                           onChange={(e) => setGoalData(prev => ({ ...prev, description: e.target.value }))}
-                          minRows={3}
-                          placeholder="Enter goal description (optional)"
+                          rows={3}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-trust-blue"
                         />
                       </div>
                     </div>

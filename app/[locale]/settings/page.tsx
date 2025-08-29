@@ -1,13 +1,9 @@
 'use client';
 
-import { Suspense } from 'react';
-import { 
-  LazyNotificationSettings, 
-  LazyProfileManager, 
-  LazyRegionalizationSettings, 
-  LazySecurityPanel 
-} from '@/components/lazy';
-import { CardLoading } from '@/components/ui/Card';
+import { NotificationSettings } from '@/components/settings/NotificationSettings';
+import { ProfileManager } from '@/components/settings/ProfileManager';
+import { RegionalizationSettings } from '@/components/settings/RegionalizationSettings';
+import { SecurityPanel } from '@/components/settings/SecurityPanel';
 import { useTranslation } from '@/lib/useTranslation';
 
 export default function SettingsPage() {
@@ -23,41 +19,33 @@ export default function SettingsPage() {
       {/* Settings Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Profile Settings */}
-        <Suspense fallback={<CardLoading />}>
-          <LazyProfileManager
-            personalInfo={true}
-            financialProfile={true}
-            preferences={true}
-          />
-        </Suspense>
+        <ProfileManager
+          personalInfo={true}
+          financialProfile={true}
+          preferences={true}
+        />
 
         {/* Notification Settings */}
-        <Suspense fallback={<CardLoading />}>
-          <LazyNotificationSettings
-            channels={['email', 'push', 'sms']}
-            frequency={['realtime', 'daily', 'weekly']}
-            types={['savings', 'budget', 'goals', 'insights']}
-          />
-        </Suspense>
+        <NotificationSettings
+          channels={['email', 'push', 'sms']}
+          frequency={['realtime', 'daily', 'weekly']}
+          types={['savings', 'budget', 'goals', 'insights']}
+        />
 
         {/* Security Settings */}
-        <Suspense fallback={<CardLoading />}>
-          <LazySecurityPanel
-            twoFactor={true}
-            biometric={true}
-            sessionManagement={true}
-          />
-        </Suspense>
+        <SecurityPanel
+          twoFactor={true}
+          biometric={true}
+          sessionManagement={true}
+        />
 
         {/* Regional Settings */}
-        <Suspense fallback={<CardLoading />}>
-          <LazyRegionalizationSettings
-            currency={true}
-            language={true}
-            dateFormat={true}
-            culturalPreferences={true}
-          />
-        </Suspense>
+        <RegionalizationSettings
+          currency={true}
+          language={true}
+          dateFormat={true}
+          culturalPreferences={true}
+        />
       </div>
     </div>
   );

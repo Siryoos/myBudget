@@ -45,7 +45,7 @@ export function OnboardingChecklist() {
   const toggle = (key: StepKey) => setSteps(s => ({ ...s, [key]: !s[key] }));
 
   return (
-    <Card data-tour="onboarding-checklist">
+    <Card>
       <CardContent className="p-4 md:p-6">
         <div className="flex items-start justify-between">
           <div>

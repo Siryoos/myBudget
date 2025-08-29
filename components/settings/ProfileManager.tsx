@@ -10,7 +10,6 @@ import { useState } from 'react';
 
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
-import { TextInput, NumberInput, Select, type SelectOption } from '@/components/ui/Input';
 import { useTranslation } from '@/lib/useTranslation';
 import { useToast } from '@/hooks/useToast';
 
@@ -107,11 +106,12 @@ export function ProfileManager({
                     {t('profile.personal.fullName', { defaultValue: 'Full Name' })}
                   </label>
                   {editingSection === 'personal' ? (
-                    <TextInput
+                    <input
+                      type="text"
                       required
                       value={profileData.name}
                       onChange={(e) => setProfileData(prev => ({ ...prev, name: e.target.value }))}
-                      placeholder="Enter your full name"
+                      className="input-field"
                     />
                   ) : (
                     <div className="py-2 text-neutral-dark-gray">{profileData.name}</div>
@@ -123,12 +123,12 @@ export function ProfileManager({
                     {t('profile.personal.email', { defaultValue: 'Email Address' })}
                   </label>
                   {editingSection === 'personal' ? (
-                    <TextInput
+                    <input
                       type="email"
                       required
                       value={profileData.email}
                       onChange={(e) => setProfileData(prev => ({ ...prev, email: e.target.value }))}
-                      placeholder="Enter your email address"
+                      className="input-field"
                     />
                   ) : (
                     <div className="py-2 text-neutral-dark-gray">{profileData.email}</div>
@@ -140,11 +140,11 @@ export function ProfileManager({
                     {t('profile.personal.phone', { defaultValue: 'Phone Number' })}
                   </label>
                   {editingSection === 'personal' ? (
-                    <TextInput
+                    <input
                       type="tel"
                       value={profileData.phone}
                       onChange={(e) => setProfileData(prev => ({ ...prev, phone: e.target.value }))}
-                      placeholder="Enter your phone number"
+                      className="input-field"
                     />
                   ) : (
                     <div className="py-2 text-neutral-dark-gray">{profileData.phone}</div>
@@ -213,14 +213,19 @@ export function ProfileManager({
                     Monthly Income
                   </label>
                   {editingSection === 'financial' ? (
-                    <NumberInput
-                      min={0}
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <span className="text-neutral-gray">$</span>
+                      </div>
+                    <input
+                      type="number"
+                      min="0"
                       required
-                      value={profileData.monthlyIncome.toString()}
+                      value={profileData.monthlyIncome}
                       onChange={(e) => setProfileData(prev => ({ ...prev, monthlyIncome: parseInt(e.target.value) || 0 }))}
-                      leftAdornment={<span className="text-neutral-gray">$</span>}
-                      placeholder="Enter monthly income"
+                      className="input-field pl-7"
                     />
+                    </div>
                   ) : (
                     <div className="py-2 text-neutral-dark-gray">${profileData.monthlyIncome.toLocaleString()}</div>
                   )}
@@ -231,16 +236,15 @@ export function ProfileManager({
                     Risk Tolerance
                   </label>
                   {editingSection === 'financial' ? (
-                    <Select
+                    <select
                       value={profileData.riskTolerance}
                       onChange={(e) => setProfileData(prev => ({ ...prev, riskTolerance: e.target.value }))}
-                      options={[
-                        { value: 'conservative', label: 'Conservative' },
-                        { value: 'moderate', label: 'Moderate' },
-                        { value: 'aggressive', label: 'Aggressive' }
-                      ] as SelectOption[]}
-                      placeholder="Select risk tolerance"
-                    />
+                      className="input-field"
+                    >
+                      <option value="conservative">Conservative</option>
+                      <option value="moderate">Moderate</option>
+                      <option value="aggressive">Aggressive</option>
+                    </select>
                   ) : (
                     <div className="py-2 text-neutral-dark-gray capitalize">{profileData.riskTolerance}</div>
                   )}
@@ -251,14 +255,14 @@ export function ProfileManager({
                     Target Savings Rate (%)
                   </label>
                   {editingSection === 'financial' ? (
-                    <NumberInput
-                      min={0}
-                      max={100}
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
                       required
-                      value={profileData.savingsRate.toString()}
+                      value={profileData.savingsRate}
                       onChange={(e) => setProfileData(prev => ({ ...prev, savingsRate: parseInt(e.target.value) || 0 }))}
-                      rightAdornment={<span className="text-neutral-gray">%</span>}
-                      placeholder="Enter savings rate"
+                      className="input-field"
                     />
                   ) : (
                     <div className="py-2 text-neutral-dark-gray">{profileData.savingsRate}%</div>
@@ -270,11 +274,12 @@ export function ProfileManager({
                     Number of Dependents
                   </label>
                   {editingSection === 'financial' ? (
-                    <NumberInput
-                      min={0}
-                      value={profileData.dependents.toString()}
+                    <input
+                      type="number"
+                      min="0"
+                      value={profileData.dependents}
                       onChange={(e) => setProfileData(prev => ({ ...prev, dependents: parseInt(e.target.value) || 0 }))}
-                      placeholder="Enter number of dependents"
+                      className="input-field"
                     />
                   ) : (
                     <div className="py-2 text-neutral-dark-gray">{profileData.dependents}</div>
@@ -342,19 +347,18 @@ export function ProfileManager({
                     Currency
                   </label>
                   {editingSection === 'preferences' ? (
-                    <Select
+                    <select
                       value={profileData.currency}
                       onChange={(e) => setProfileData(prev => ({ ...prev, currency: e.target.value }))}
-                      options={[
-                        { value: 'USD', label: 'USD - US Dollar' },
-                        { value: 'EUR', label: 'EUR - Euro' },
-                        { value: 'GBP', label: 'GBP - British Pound' },
-                        { value: 'SAR', label: 'SAR - Saudi Riyal' },
-                        { value: 'AED', label: 'AED - UAE Dirham' },
-                        { value: 'QAR', label: 'QAR - Qatari Riyal' }
-                      ] as SelectOption[]}
-                      placeholder="Select currency"
-                    />
+                      className="input-field"
+                    >
+                      <option value="USD">USD - US Dollar</option>
+                      <option value="EUR">EUR - Euro</option>
+                      <option value="GBP">GBP - British Pound</option>
+                      <option value="SAR">SAR - Saudi Riyal</option>
+                      <option value="AED">AED - UAE Dirham</option>
+                      <option value="QAR">QAR - Qatari Riyal</option>
+                    </select>
                   ) : (
                     <div className="py-2 text-neutral-dark-gray">{profileData.currency}</div>
                   )}
@@ -365,18 +369,17 @@ export function ProfileManager({
                     Language
                   </label>
                   {editingSection === 'preferences' ? (
-                    <Select
+                    <select
                       value={profileData.language}
                       onChange={(e) => setProfileData(prev => ({ ...prev, language: e.target.value }))}
-                      options={[
-                        { value: 'English', label: 'English' },
-                        { value: 'Arabic', label: 'العربية (Arabic)' },
-                        { value: 'Spanish', label: 'Español (Spanish)' },
-                        { value: 'French', label: 'Français (French)' },
-                        { value: 'German', label: 'Deutsch (German)' }
-                      ] as SelectOption[]}
-                      placeholder="Select language"
-                    />
+                      className="input-field"
+                    >
+                      <option value="English">English</option>
+                      <option value="Arabic">العربية (Arabic)</option>
+                      <option value="Spanish">Español (Spanish)</option>
+                      <option value="French">Français (French)</option>
+                      <option value="German">Deutsch (German)</option>
+                    </select>
                   ) : (
                     <div className="py-2 text-neutral-dark-gray">{profileData.language}</div>
                   )}
@@ -387,21 +390,20 @@ export function ProfileManager({
                     Timezone
                   </label>
                   {editingSection === 'preferences' ? (
-                    <Select
+                    <select
                       value={profileData.timezone}
                       onChange={(e) => setProfileData(prev => ({ ...prev, timezone: e.target.value }))}
-                      options={[
-                        { value: 'America/New_York', label: 'Eastern Time (US)' },
-                        { value: 'America/Chicago', label: 'Central Time (US)' },
-                        { value: 'America/Denver', label: 'Mountain Time (US)' },
-                        { value: 'America/Los_Angeles', label: 'Pacific Time (US)' },
-                        { value: 'Europe/London', label: 'London' },
-                        { value: 'Europe/Paris', label: 'Paris' },
-                        { value: 'Asia/Riyadh', label: 'Riyadh' },
-                        { value: 'Asia/Dubai', label: 'Dubai' }
-                      ] as SelectOption[]}
-                      placeholder="Select timezone"
-                    />
+                      className="input-field"
+                    >
+                      <option value="America/New_York">Eastern Time (US)</option>
+                      <option value="America/Chicago">Central Time (US)</option>
+                      <option value="America/Denver">Mountain Time (US)</option>
+                      <option value="America/Los_Angeles">Pacific Time (US)</option>
+                      <option value="Europe/London">London</option>
+                      <option value="Europe/Paris">Paris</option>
+                      <option value="Asia/Riyadh">Riyadh</option>
+                      <option value="Asia/Dubai">Dubai</option>
+                    </select>
                   ) : (
                     <div className="py-2 text-neutral-dark-gray">{profileData.timezone.replace('_', ' ')}</div>
                   )}

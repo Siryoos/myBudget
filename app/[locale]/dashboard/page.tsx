@@ -1,25 +1,17 @@
 'use client';
 
-import { Suspense } from 'react';
+import { BudgetSummary } from '@/components/dashboard/BudgetSummary';
+import { InsightsPanel } from '@/components/dashboard/InsightsPanel';
 import { QuickSaveWidget } from '@/components/dashboard/QuickSaveWidget';
+import { RecentTransactions } from '@/components/dashboard/RecentTransactions';
 import { SavingsOverview } from '@/components/dashboard/SavingsOverview';
 import { WelcomeHeader } from '@/components/dashboard/WelcomeHeader';
-import { DashboardTour } from '@/components/dashboard/DashboardTour';
-import { 
-  LazyBudgetSummary,
-  LazyInsightsPanel,
-  LazyRecentTransactions,
-  LazyOnboardingChecklist
-} from '@/components/lazy';
-import { CardLoading } from '@/components/ui/Card';
+import { OnboardingChecklist } from '@/components/dashboard/OnboardingChecklist';
 
 export default function DashboardPage() {
   return (
     <div className="space-y-6">
-      <DashboardTour />
-      <Suspense fallback={<CardLoading />}>
-        <LazyOnboardingChecklist />
-      </Suspense>
+      <OnboardingChecklist />
       {/* Welcome Header */}
       <WelcomeHeader
         showGreeting={true}
@@ -45,13 +37,11 @@ export default function DashboardPage() {
               Budget Summary
             </summary>
             <div className="p-0 lg:p-0">
-              <Suspense fallback={<CardLoading />}>
-                <LazyBudgetSummary
-                  showCategories={true}
-                  showSpendingAlerts={true}
-                  visualType="donutChart"
-                />
-              </Suspense>
+              <BudgetSummary
+                showCategories={true}
+                showSpendingAlerts={true}
+                visualType="donutChart"
+              />
             </div>
           </details>
 
@@ -61,13 +51,11 @@ export default function DashboardPage() {
               Recent Transactions
             </summary>
             <div>
-              <Suspense fallback={<CardLoading />}>
-                <LazyRecentTransactions
-                  limit={5}
-                  showCategories={true}
-                  showAmounts={true}
-                />
-              </Suspense>
+              <RecentTransactions
+                limit={5}
+                showCategories={true}
+                showAmounts={true}
+              />
             </div>
           </details>
         </div>
@@ -82,13 +70,11 @@ export default function DashboardPage() {
           />
 
           {/* Insights Panel */}
-          <Suspense fallback={<CardLoading />}>
-            <LazyInsightsPanel
-              showSavingTips={true}
-              personalizedRecommendations={true}
-              comparePeers={true}
-            />
-          </Suspense>
+          <InsightsPanel
+            showSavingTips={true}
+            personalizedRecommendations={true}
+            comparePeers={true}
+          />
         </div>
       </div>
     </div>

@@ -8,7 +8,7 @@ import {
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/Button';
-import { Card, CardContent, CardHeader, CardError } from '@/components/ui/Card';
+import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useBudgets } from '@/contexts/AppProvider';
@@ -155,23 +155,14 @@ export function BudgetSummary({
     );
   }
 
-  if (error) {
-    return (
-      <CardError 
-        message={t('budget:errorLoading', { defaultValue: 'Unable to load budget data' })}
-        onRetry={() => window.location.reload()}
-      />
-    );
-  }
-
-  if (!activeBudget) {
+  if (error || !activeBudget) {
     return (
       <Card>
         <CardContent className="p-6">
           <div className="text-center text-neutral-gray">
             <ChartPieIcon className="h-12 w-12 mx-auto mb-4 text-neutral-gray/50" />
             <p className="mb-2">{t('budget:noActiveBudget', { defaultValue: 'No active budget found' })}</p>
-            <p className="text-sm mb-4">{t('budget:createBudgetPrompt', { defaultValue: 'Create a budget to start tracking your expenses' })}</p>
+            <p className="text-sm mb-4">{error || t('budget:createBudgetPrompt', { defaultValue: 'Create a budget to start tracking your expenses' })}</p>
             <Button>
               {t('budget:createBudget', { defaultValue: 'Create Budget' })}
             </Button>
@@ -182,7 +173,7 @@ export function BudgetSummary({
   }
 
   return (
-    <Card data-tour="budget-summary">
+    <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center">

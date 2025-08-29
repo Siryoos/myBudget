@@ -9,7 +9,6 @@ import {
 import { useState } from 'react';
 
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
-import { TextInput, Checkbox } from '@/components/ui/Input';
 import { useTranslation } from '@/lib/useTranslation';
 
 interface NotificationSettingsProps {
@@ -246,20 +245,20 @@ export function NotificationSettings({
                 <label className="block text-sm font-medium text-neutral-dark-gray mb-1">
                   {t('notifications.quiet.from', { defaultValue: 'From' })}
                 </label>
-                <TextInput
+                <input
                   type="time"
                   defaultValue="22:00"
-                  placeholder="Select start time"
+                  className="input-field"
                 />
               </div>
               <div className="flex-1">
                 <label className="block text-sm font-medium text-neutral-dark-gray mb-1">
                   {t('notifications.quiet.to', { defaultValue: 'To' })}
                 </label>
-                <TextInput
+                <input
                   type="time"
                   defaultValue="08:00"
-                  placeholder="Select end time"
+                  className="input-field"
                 />
               </div>
             </div>

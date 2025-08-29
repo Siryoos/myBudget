@@ -13,8 +13,7 @@ import {
 import { useState, useRef } from 'react';
 
 import { Button } from '@/components/ui/Button';
-import { Card, CardContent, CardHeader, CardLoading, CardError } from '@/components/ui/Card';
-import { TextInput } from '@/components/ui/Input';
+import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { formatCurrency } from '@/lib/utils';
 import { formatRelativeTime } from '@/lib/i18n';
 import { useI18n } from '@/lib/i18n-provider';
@@ -29,9 +28,6 @@ interface TransactionTableProps {
   bulkActions?: boolean
   categoryEditing?: boolean
 }
-
-// Export both regular and virtual versions
-export { VirtualTransactionTable } from './VirtualTransactionTable';
 
 export function TransactionTable({
   sortable = true,
@@ -50,10 +46,6 @@ export function TransactionTable({
   const [selectedTransactions, setSelectedTransactions] = useState<string[]>([]);
   const [editingTransaction, setEditingTransaction] = useState<string | null>(null);
   const [editCategory, setEditCategory] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
   const lastDeletedRef = useRef<Transaction[] | null>(null);
 
@@ -277,31 +269,6 @@ export function TransactionTable({
     return colors[category] || 'bg-neutral-gray/10 text-neutral-gray';
   };
 
-  // Pagination logic
-  const totalPages = Math.ceil(filteredTransactions.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedTransactions = filteredTransactions.slice(startIndex, endIndex);
-
-  // Loading state simulation (in real app, this would be from API)
-  if (isLoading) {
-    return <CardLoading title={t('loading', { defaultValue: 'Loading transactions...' })} />;
-  }
-
-  if (error) {
-    return (
-      <CardError 
-        message={error}
-        onRetry={() => {
-          setError(null);
-          setIsLoading(true);
-          // In real app, retry the API call
-          setTimeout(() => setIsLoading(false), 1000);
-        }}
-      />
-    );
-  }
-
   return (
     <Card>
       <CardHeader>
@@ -318,13 +285,18 @@ export function TransactionTable({
           {/* Search and Filters */}
           <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
             {searchable && (
-              <TextInput
-                placeholder={t('search.placeholder', { defaultValue: 'Search transactions...' })}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                leftAdornment={<MagnifyingGlassIcon className="h-4 w-4 text-neutral-gray" />}
-                className="min-w-[250px]"
-              />
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <MagnifyingGlassIcon className="h-4 w-4 text-neutral-gray" />
+                </div>
+                <input
+                  type="text"
+                  placeholder={t('search.placeholder', { defaultValue: 'Search transactions...' })}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 pr-3 py-2 border border-neutral-gray/30 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-trust-blue focus:border-primary-trust-blue"
+                />
+              </div>
             )}
 
             {filterable && (
@@ -476,7 +448,7 @@ export function TransactionTable({
                 </tr>
               </thead>
               <tbody>
-                {paginatedTransactions.map((transaction) => (
+                {filteredTransactions.map((transaction) => (
                   <tr
                     key={transaction.id}
                     className="border-b border-neutral-gray/10 hover:bg-neutral-light-gray/30 transition-colors duration-150"
@@ -626,79 +598,6 @@ export function TransactionTable({
               </tbody>
             </table>
           </div>
-
-          {/* Pagination Controls */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between mt-4 pt-4 border-t border-neutral-gray/10">
-              <div className="flex items-center space-x-2">
-                <span className="text-sm text-neutral-gray">
-                  {t('pagination.showing', { defaultValue: 'Showing' })} {startIndex + 1}-{Math.min(endIndex, filteredTransactions.length)} {t('pagination.of', { defaultValue: 'of' })} {filteredTransactions.length}
-                </span>
-                <select
-                  value={itemsPerPage}
-                  onChange={(e) => {
-                    setItemsPerPage(Number(e.target.value));
-                    setCurrentPage(1);
-                  }}
-                  className="px-2 py-1 text-sm border border-neutral-gray/30 rounded focus:outline-none focus:ring-2 focus:ring-primary-trust-blue"
-                >
-                  <option value={10}>10</option>
-                  <option value={25}>25</option>
-                  <option value={50}>50</option>
-                  <option value={100}>100</option>
-                </select>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                  disabled={currentPage === 1}
-                >
-                  {t('pagination.previous', { defaultValue: 'Previous' })}
-                </Button>
-                
-                <div className="flex items-center space-x-1">
-                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                    let pageNumber;
-                    if (totalPages <= 5) {
-                      pageNumber = i + 1;
-                    } else if (currentPage <= 3) {
-                      pageNumber = i + 1;
-                    } else if (currentPage >= totalPages - 2) {
-                      pageNumber = totalPages - 4 + i;
-                    } else {
-                      pageNumber = currentPage - 2 + i;
-                    }
-                    
-                    return (
-                      <button
-                        key={i}
-                        onClick={() => setCurrentPage(pageNumber)}
-                        className={`px-3 py-1 text-sm rounded ${
-                          currentPage === pageNumber
-                            ? 'bg-primary-trust-blue text-white'
-                            : 'text-neutral-gray hover:bg-neutral-light-gray'
-                        }`}
-                      >
-                        {pageNumber}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                  disabled={currentPage === totalPages}
-                >
-                  {t('pagination.next', { defaultValue: 'Next' })}
-                </Button>
-              </div>
-            </div>
-          )}
         )}
       </CardContent>
     </Card>

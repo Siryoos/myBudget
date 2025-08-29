@@ -1,9 +1,9 @@
 'use client';
 
-import { Suspense } from 'react';
-import { LazyAutomationSettings, LazyGoalProgressTracker, LazyGoalWizard } from '@/components/lazy';
+import { AutomationSettings } from '@/components/goals/AutomationSettings';
+import { GoalProgressTracker } from '@/components/goals/GoalProgressTracker';
+import { GoalWizard } from '@/components/goals/GoalWizard';
 import { useTranslation } from '@/lib/useTranslation';
-import { CardLoading } from '@/components/ui/Card';
 
 /**
  * Client-side page for viewing and creating savings goals.
@@ -45,43 +45,37 @@ export default function GoalsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column - Goal Creation */}
         <div className="lg:col-span-2 space-y-6">
-          <Suspense fallback={<CardLoading />}>
-            <LazyGoalWizard
-              templates={[
-                'Emergency Fund',
-                'Vacation',
-                'Home Down Payment',
-                'Car Purchase',
-                'Wedding',
-                'Education',
-                'Retirement',
-                'Custom',
-              ]}
-              visualGoalSetting={true}
-              milestoneBreakdown={true}
-            />
-          </Suspense>
+          <GoalWizard
+            templates={[
+              'Emergency Fund',
+              'Vacation',
+              'Home Down Payment',
+              'Car Purchase',
+              'Wedding',
+              'Education',
+              'Retirement',
+              'Custom',
+            ]}
+            visualGoalSetting={true}
+            milestoneBreakdown={true}
+          />
 
-          <Suspense fallback={<CardLoading />}>
-            <LazyGoalProgressTracker
-              visualStyles={['progressBar', 'thermometer', 'jar']}
-              showTimeRemaining={true}
-              showProjectedCompletion={true}
-              celebrationAnimations={true}
-            />
-          </Suspense>
+          <GoalProgressTracker
+            visualStyles={['progressBar', 'thermometer', 'jar']}
+            showTimeRemaining={true}
+            showProjectedCompletion={true}
+            celebrationAnimations={true}
+          />
         </div>
 
         {/* Right Column - Automation */}
         <div>
-          <Suspense fallback={<CardLoading />}>
-            <LazyAutomationSettings
-              autoTransfer={true}
-              roundUpSavings={true}
-              ruleBasedSaving={true}
-              customRules={true}
-            />
-          </Suspense>
+          <AutomationSettings
+            autoTransfer={true}
+            roundUpSavings={true}
+            ruleBasedSaving={true}
+            customRules={true}
+          />
         </div>
       </div>
     </div>

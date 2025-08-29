@@ -401,7 +401,7 @@ function InsightsPanelContent({
         {announcement}
       </div>
 
-      <Card className="h-fit" data-tour="insights-panel">
+      <Card className="h-fit">
         <CardHeader>
         <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
           <div className={`bg-accent-action-orange/10 rounded-lg p-2 ${isRTL ? 'ml-3' : 'mr-3'}`}>
