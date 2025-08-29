@@ -5,6 +5,7 @@ import React, { useEffect } from 'react';
 import { getDirection } from '@/lib/i18n';
 import { I18nProvider } from '@/lib/i18n-provider';
 import { AppProvider } from '@/contexts/AppProvider';
+import { Toaster } from '@/components/ui/Toaster';
 
 interface ClientLayoutProps {
   children: React.ReactNode;
@@ -23,6 +24,7 @@ export default function ClientLayout({ children, locale }: ClientLayoutProps) {
     <I18nProvider locale={locale}>
       <AppProvider>
         {children}
+        <Toaster />
       </AppProvider>
     </I18nProvider>
   );

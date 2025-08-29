@@ -6,10 +6,12 @@ import { QuickSaveWidget } from '@/components/dashboard/QuickSaveWidget';
 import { RecentTransactions } from '@/components/dashboard/RecentTransactions';
 import { SavingsOverview } from '@/components/dashboard/SavingsOverview';
 import { WelcomeHeader } from '@/components/dashboard/WelcomeHeader';
+import { OnboardingChecklist } from '@/components/dashboard/OnboardingChecklist';
 
 export default function DashboardPage() {
   return (
     <div className="space-y-6" id="main-content">
+      <OnboardingChecklist />
       {/* Welcome Header */}
       <WelcomeHeader
         showGreeting={true}
@@ -64,4 +66,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-

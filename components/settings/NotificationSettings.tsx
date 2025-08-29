@@ -9,6 +9,7 @@ import {
 import { useState } from 'react';
 
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
+import { useTranslation } from '@/lib/useTranslation';
 
 interface NotificationSettingsProps {
   channels?: string[]
@@ -21,6 +22,7 @@ export function NotificationSettings({
   frequency = ['realtime', 'daily', 'weekly'],
   types = ['savings', 'budget', 'goals', 'insights'],
 }: NotificationSettingsProps) {
+  const { t } = useTranslation('settings');
   const [settings, setSettings] = useState({
     email: {
       enabled: true,
@@ -81,34 +83,36 @@ export function NotificationSettings({
     return icons[channel as keyof typeof icons] || BellIcon;
   };
 
-  const getChannelLabel = (channel: string) => {
-    const labels = {
-      email: 'Email Notifications',
-      push: 'Push Notifications',
-      sms: 'SMS Notifications',
-    };
-    return labels[channel as keyof typeof labels] || channel;
-  };
+  const getChannelLabel = (channel: string) =>
+    channel === 'email'
+      ? t('notifications.channels.email', { defaultValue: 'Email Notifications' })
+      : channel === 'push'
+      ? t('notifications.channels.push', { defaultValue: 'Push Notifications' })
+      : channel === 'sms'
+      ? t('notifications.channels.sms', { defaultValue: 'SMS Notifications' })
+      : channel;
 
-  const getTypeLabel = (type: string) => {
-    const labels = {
-      savings: 'Savings Milestones',
-      budget: 'Budget Alerts',
-      goals: 'Goal Progress',
-      insights: 'Financial Insights',
-    };
-    return labels[type as keyof typeof labels] || type;
-  };
+  const getTypeLabel = (type: string) =>
+    type === 'savings'
+      ? t('notifications.types.savings', { defaultValue: 'Savings Milestones' })
+      : type === 'budget'
+      ? t('notifications.types.budget', { defaultValue: 'Budget Alerts' })
+      : type === 'goals'
+      ? t('notifications.types.goals', { defaultValue: 'Goal Progress' })
+      : type === 'insights'
+      ? t('notifications.types.insights', { defaultValue: 'Financial Insights' })
+      : type;
 
-  const getTypeDescription = (type: string) => {
-    const descriptions = {
-      savings: 'Get notified when you reach savings milestones',
-      budget: 'Alerts when you exceed budget categories',
-      goals: 'Updates on your financial goal progress',
-      insights: 'Personalized financial tips and recommendations',
-    };
-    return descriptions[type as keyof typeof descriptions] || '';
-  };
+  const getTypeDescription = (type: string) =>
+    type === 'savings'
+      ? t('notifications.types.savings_desc', { defaultValue: 'Get notified when you reach savings milestones' })
+      : type === 'budget'
+      ? t('notifications.types.budget_desc', { defaultValue: 'Alerts when you exceed budget categories' })
+      : type === 'goals'
+      ? t('notifications.types.goals_desc', { defaultValue: 'Updates on your financial goal progress' })
+      : type === 'insights'
+      ? t('notifications.types.insights_desc', { defaultValue: 'Personalized financial tips and recommendations' })
+      : '';
 
   return (
     <Card>
@@ -119,10 +123,10 @@ export function NotificationSettings({
           </div>
           <div>
             <h3 className="text-lg font-semibold text-neutral-dark-gray">
-              Notification Preferences
+              {t('notifications.title', { defaultValue: 'Notification Preferences' })}
             </h3>
             <p className="text-sm text-neutral-gray">
-              Choose how and when you want to be notified
+              {t('notifications.subtitle', { defaultValue: 'Choose how and when you want to be notified' })}
             </p>
           </div>
         </div>
@@ -133,27 +137,31 @@ export function NotificationSettings({
           {/* Global Frequency Setting */}
           <div>
             <h4 className="font-medium text-neutral-dark-gray mb-3">
-              Notification Frequency
+              {t('notifications.frequency.title', { defaultValue: 'Notification Frequency' })}
             </h4>
             <div className="flex bg-neutral-light-gray rounded-lg p-1">
               {frequency.map((freq) => (
                 <button
                   key={freq}
                   onClick={() => setSettings(prev => ({ ...prev, frequency: freq }))}
-                  className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-all duration-HTTP_OK ${
+                    className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
                     settings.frequency === freq
                       ? 'bg-white text-primary-trust-blue shadow-sm'
                       : 'text-neutral-gray hover:text-neutral-dark-gray'
                   }`}
                 >
-                  {freq.charAt(0).toUpperCase() + freq.slice(1)}
+                  {freq === 'realtime'
+                    ? t('notifications.frequency.realtime', { defaultValue: 'Realtime' })
+                    : freq === 'daily'
+                    ? t('notifications.frequency.daily', { defaultValue: 'Daily' })
+                    : t('notifications.frequency.weekly', { defaultValue: 'Weekly' })}
                 </button>
               ))}
             </div>
             <p className="text-xs text-neutral-gray mt-2">
-              {settings.frequency === 'realtime' && 'Receive notifications immediately as events occur'}
-              {settings.frequency === 'daily' && 'Receive a daily summary of important updates'}
-              {settings.frequency === 'weekly' && 'Receive a weekly digest of your financial activity'}
+              {settings.frequency === 'realtime' && t('notifications.frequency.realtime_desc', { defaultValue: 'Receive notifications immediately as events occur' })}
+              {settings.frequency === 'daily' && t('notifications.frequency.daily_desc', { defaultValue: 'Receive a daily summary of important updates' })}
+              {settings.frequency === 'weekly' && t('notifications.frequency.weekly_desc', { defaultValue: 'Receive a weekly digest of your financial activity' })}
             </p>
           </div>
 
@@ -174,9 +182,9 @@ export function NotificationSettings({
                         {getChannelLabel(channel)}
                       </h4>
                       <p className="text-sm text-neutral-gray">
-                        {channel === 'email' && 'Receive notifications via email'}
-                        {channel === 'push' && 'Browser and mobile push notifications'}
-                        {channel === 'sms' && 'Text message notifications (charges may apply)'}
+                        {channel === 'email' && t('notifications.channels.email_desc', { defaultValue: 'Receive notifications via email' })}
+                        {channel === 'push' && t('notifications.channels.push_desc', { defaultValue: 'Browser and mobile push notifications' })}
+                        {channel === 'sms' && t('notifications.channels.sms_desc', { defaultValue: 'Text message notifications (charges may apply)' })}
                       </p>
                     </div>
                   </div>
@@ -226,16 +234,16 @@ export function NotificationSettings({
           {/* Quiet Hours */}
           <div className="bg-neutral-light-gray/50 rounded-lg p-4">
             <h4 className="font-medium text-neutral-dark-gray mb-3">
-              Quiet Hours
+              {t('notifications.quiet.title', { defaultValue: 'Quiet Hours' })}
             </h4>
             <p className="text-sm text-neutral-gray mb-3">
-              Pause non-urgent notifications during these hours
+              {t('notifications.quiet.desc', { defaultValue: 'Pause non-urgent notifications during these hours' })}
             </p>
 
             <div className="flex items-center space-x-4">
               <div className="flex-1">
                 <label className="block text-sm font-medium text-neutral-dark-gray mb-1">
-                  From
+                  {t('notifications.quiet.from', { defaultValue: 'From' })}
                 </label>
                 <input
                   type="time"
@@ -245,7 +253,7 @@ export function NotificationSettings({
               </div>
               <div className="flex-1">
                 <label className="block text-sm font-medium text-neutral-dark-gray mb-1">
-                  To
+                  {t('notifications.quiet.to', { defaultValue: 'To' })}
                 </label>
                 <input
                   type="time"
@@ -262,7 +270,7 @@ export function NotificationSettings({
                 className="rounded border-neutral-gray/30 text-primary-trust-blue focus:ring-primary-trust-blue mr-2"
               />
               <span className="text-sm text-neutral-gray">
-                Enable quiet hours
+                {t('notifications.quiet.enable', { defaultValue: 'Enable quiet hours' })}
               </span>
             </label>
           </div>
@@ -272,10 +280,10 @@ export function NotificationSettings({
             <div className="flex items-center justify-between">
               <div>
                 <h4 className="font-medium text-primary-trust-blue mb-1">
-                  Test Your Settings
+                  {t('notifications.test.title', { defaultValue: 'Test Your Settings' })}
                 </h4>
                 <p className="text-sm text-neutral-gray">
-                  Send a test notification to verify your preferences
+                  {t('notifications.test.desc', { defaultValue: 'Send a test notification to verify your preferences' })}
                 </p>
               </div>
               <div className="flex space-x-2">
@@ -285,9 +293,9 @@ export function NotificationSettings({
                 }).map((channel) => (
                   <button
                     key={channel}
-                    className="px-3 py-1 text-xs bg-primary-trust-blue text-white rounded-md hover:bg-primary-trust-blue-dark transition-colors duration-HTTP_OK"
+                    className="px-3 py-1 text-xs bg-primary-trust-blue text-white rounded-md hover:bg-primary-trust-blue-dark transition-colors duration-200"
                   >
-                    Test {channel.toUpperCase()}
+                    {t('notifications.test.button', { defaultValue: 'Test' })} {channel.toUpperCase()}
                   </button>
                 ))}
               </div>

@@ -13,6 +13,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { useChangePassword } from '@/hooks/useChangePassword';
+import { useTranslation } from '@/lib/useTranslation';
 
 interface SecurityPanelProps {
   twoFactor?: boolean
@@ -25,6 +26,7 @@ export function SecurityPanel({
   biometric = true,
   sessionManagement = true,
 }: SecurityPanelProps) {
+  const { t } = useTranslation('settings');
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
@@ -103,348 +105,251 @@ export function SecurityPanel({
   };
 
   return (
-    <div className="space-y-6">
-      {/* Password Change */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center">
-            <div className="bg-primary-trust-blue/10 rounded-lg p-2 mr-3">
-              <KeyIcon className="h-6 w-6 text-primary-trust-blue" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-neutral-dark-gray">
-                Change Password
-              </h3>
-              <p className="text-sm text-neutral-gray">
-                Update your password to keep your account secure
-              </p>
+    <Card>
+      <CardHeader>
+        <div className="flex items-center">
+          <div className="bg-accent-warning-red/10 rounded-lg p-2 mr-3">
+            <ShieldCheckIcon className="h-6 w-6 text-accent-warning-red" />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-neutral-dark-gray">
+              {t('security.title', { defaultValue: 'Security & Privacy' })}
+            </h3>
+            <p className="text-sm text-neutral-gray">
+              {t('security.subtitle', { defaultValue: 'Secure your account and protect your data' })}
+            </p>
+          </div>
+        </div>
+      </CardHeader>
+
+      <CardContent className="space-y-6">
+        {/* Password Change Section */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <KeyIcon className="h-5 w-5 text-neutral-gray mr-2" />
+              <h4 className="font-medium text-neutral-dark-gray">
+                {t('security.passwordChange.title', { defaultValue: 'Change Password' })}
+              </h4>
             </div>
           </div>
-        </CardHeader>
 
-        <CardContent>
           <form onSubmit={handlePasswordChange} className="space-y-4">
-            {/* Error and Success Messages */}
-            {error && (
-              <div className="bg-red-50 border border-red-HTTP_OK rounded-lg p-3">
-                <p className="text-sm text-red-600">{error}</p>
-              </div>
-            )}
-
-            {success && (
-              <div className="bg-green-50 border border-green-HTTP_OK rounded-lg p-3">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm text-green-600">{success}</p>
-                  <button
-                    type="button"
-                    onClick={handleSuccessReset}
-                    className="text-green-HTTP_INTERNAL_SERVER_ERROR hover:text-green-700 text-sm font-medium"
-                  >
-                    Dismiss
-                  </button>
-                </div>
-              </div>
-            )}
-
             <div>
               <label className="block text-sm font-medium text-neutral-dark-gray mb-1">
-                Current Password
+                {t('security.passwordChange.currentPassword', { defaultValue: 'Current Password' })}
               </label>
               <div className="relative">
                 <input
                   type={showCurrentPassword ? 'text' : 'password'}
-                  className="input-field pr-10"
-                  placeholder="Enter current password"
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
-                  required
+                  className="w-full px-3 py-2 border border-neutral-gray/20 rounded-lg focus:ring-2 focus:ring-primary-trust-blue focus:border-transparent"
+                  placeholder="Enter current password"
                 />
                 <button
                   type="button"
                   onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-neutral-gray hover:text-neutral-dark-gray"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-gray hover:text-neutral-dark-gray"
                 >
-                  {showCurrentPassword ? (
-                    <EyeSlashIcon className="h-5 w-5" />
-                  ) : (
-                    <EyeIcon className="h-5 w-5" />
-                  )}
+                  {showCurrentPassword ? <EyeSlashIcon className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
                 </button>
               </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-neutral-dark-gray mb-1">
-                New Password
+                {t('security.passwordChange.newPassword', { defaultValue: 'New Password' })}
               </label>
               <div className="relative">
                 <input
                   type={showNewPassword ? 'text' : 'password'}
-                  className={`input-field pr-10 ${
-                    newPassword && newPassword.length < 8
-                      ? 'border-red-300 focus:border-red-HTTP_INTERNAL_SERVER_ERROR focus:ring-red-HTTP_INTERNAL_SERVER_ERROR'
-                      : ''
-                  }`}
-                  placeholder="Enter new password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  minLength={8}
-                  required
+                  className="w-full px-3 py-2 border border-neutral-gray/20 rounded-lg focus:ring-2 focus:ring-primary-trust-blue focus:border-transparent"
+                  placeholder="Enter new password"
                 />
                 <button
                   type="button"
                   onClick={() => setShowNewPassword(!showNewPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-neutral-gray hover:text-neutral-dark-gray"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-gray hover:text-neutral-dark-gray"
                 >
-                  {showNewPassword ? (
-                    <EyeSlashIcon className="h-5 w-5" />
-                  ) : (
-                    <EyeIcon className="h-5 w-5" />
-                  )}
+                  {showNewPassword ? <EyeSlashIcon className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
                 </button>
               </div>
-              {newPassword && newPassword.length < 8 && (
-                <p className="text-sm text-red-600 mt-1">Password must be at least 8 characters long</p>
-              )}
             </div>
 
             <div>
               <label className="block text-sm font-medium text-neutral-dark-gray mb-1">
-                Confirm New Password
+                {t('security.passwordChange.confirmPassword', { defaultValue: 'Confirm New Password' })}
               </label>
               <input
                 type="password"
-                className={`input-field ${
-                  confirmPassword && newPassword !== confirmPassword
-                    ? 'border-red-300 focus:border-red-HTTP_INTERNAL_SERVER_ERROR focus:ring-red-HTTP_INTERNAL_SERVER_ERROR'
-                    : ''
-                }`}
-                placeholder="Confirm new password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                required
+                className="w-full px-3 py-2 border border-neutral-gray/20 rounded-lg focus:ring-2 focus:ring-primary-trust-blue focus:border-transparent"
+                placeholder="Confirm new password"
               />
-              {confirmPassword && newPassword !== confirmPassword && (
-                <p className="text-sm text-red-600 mt-1">Passwords do not match</p>
-              )}
             </div>
+
+            <p className="text-xs text-neutral-gray">
+              {t('security.passwordChange.requirements', { defaultValue: 'Password must be at least 8 characters long' })}
+            </p>
 
             <Button
               type="submit"
-              variant="primary"
-              size="sm"
-              disabled={
-                isLoading ||
-                !currentPassword ||
-                !newPassword ||
-                !confirmPassword ||
-                newPassword.length < 8 ||
-                newPassword !== confirmPassword
-              }
+              disabled={isLoading}
+              className="w-full"
             >
-              {isLoading ? 'Updating Password...' : 'Update Password'}
+              {isLoading ? 'Updating...' : t('security.passwordChange.submit', { defaultValue: 'Update Password' })}
             </Button>
-          </form>
-        </CardContent>
-      </Card>
 
-      {/* Two-Factor Authentication */}
-      {twoFactor && (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="bg-secondary-growth-green/10 rounded-lg p-2 mr-3">
-                  <ShieldCheckIcon className="h-6 w-6 text-secondary-growth-green" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-neutral-dark-gray">
-                    Two-Factor Authentication
-                  </h3>
-                  <p className="text-sm text-neutral-gray">
-                    Add an extra layer of security to your account
-                  </p>
-                </div>
-              </div>
-
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={twoFactorEnabled}
-                  onChange={(e) => setTwoFactorEnabled(e.target.checked)}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-neutral-gray/30 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-secondary-growth-green/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-neutral-gray after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-secondary-growth-green"></div>
-              </label>
-            </div>
-          </CardHeader>
-
-          <CardContent>
-            {twoFactorEnabled ? (
-              <div className="space-y-4">
-                <div className="bg-secondary-growth-green/5 rounded-lg p-4 border border-secondary-growth-green/20">
-                  <div className="flex items-center mb-2">
-                    <ShieldCheckIcon className="h-5 w-5 text-secondary-growth-green mr-2" />
-                    <span className="font-medium text-secondary-growth-green">
-                      Two-factor authentication is enabled
-                    </span>
-                  </div>
-                  <p className="text-sm text-neutral-gray">
-                    Your account is protected with two-factor authentication using your phone.
-                  </p>
-                </div>
-
-                <div className="flex space-x-3">
-                  <Button variant="outline" size="sm">
-                    View Recovery Codes
-                  </Button>
-                  <Button variant="ghost" size="sm">
-                    Disable 2FA
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <p className="text-sm text-neutral-gray">
-                  Enable two-factor authentication to secure your account with your phone or authenticator app.
-                </p>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="border border-neutral-gray/20 rounded-lg p-4 hover:bg-neutral-light-gray/30 cursor-pointer transition-colors">
-                    <div className="flex items-center mb-2">
-                      <DevicePhoneMobileIcon className="h-5 w-5 text-primary-trust-blue mr-2" />
-                      <span className="font-medium text-neutral-dark-gray">SMS</span>
-                    </div>
-                    <p className="text-sm text-neutral-gray">
-                      Receive codes via text message
-                    </p>
-                  </div>
-
-                  <div className="border border-neutral-gray/20 rounded-lg p-4 hover:bg-neutral-light-gray/30 cursor-pointer transition-colors">
-                    <div className="flex items-center mb-2">
-                      <ShieldCheckIcon className="h-5 w-5 text-primary-trust-blue mr-2" />
-                      <span className="font-medium text-neutral-dark-gray">Authenticator App</span>
-                    </div>
-                    <p className="text-sm text-neutral-gray">
-                      Use Google Authenticator or similar
-                    </p>
-                  </div>
-                </div>
-              </div>
+            {error && (
+              <p className="text-sm text-accent-warning-red">
+                {t('security.passwordChange.error', { defaultValue: 'Failed to update password. Please try again.' })}
+              </p>
             )}
-          </CardContent>
-        </Card>
-      )}
 
-      {/* Biometric Authentication */}
-      {biometric && (
-        <Card>
-          <CardHeader>
+            {success && (
+              <p className="text-sm text-secondary-growth-green">
+                {t('security.passwordChange.success', { defaultValue: 'Password updated successfully!' })}
+              </p>
+            )}
+          </form>
+        </div>
+
+        {/* Two-Factor Authentication */}
+        {twoFactor && (
+          <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center">
-                <div className="bg-accent-action-orange/10 rounded-lg p-2 mr-3">
-                  <DevicePhoneMobileIcon className="h-6 w-6 text-accent-action-orange" />
-                </div>
+                <DevicePhoneMobileIcon className="h-5 w-5 text-neutral-gray mr-2" />
                 <div>
-                  <h3 className="text-lg font-semibold text-neutral-dark-gray">
-                    Biometric Authentication
-                  </h3>
+                  <h4 className="font-medium text-neutral-dark-gray">
+                    {t('security.twoFactorAuth.title', { defaultValue: 'Two-Factor Authentication' })}
+                  </h4>
                   <p className="text-sm text-neutral-gray">
-                    Use fingerprint or face recognition for quick access
+                    {t('security.twoFactorAuth.subtitle', { defaultValue: 'Add an extra layer of security to your account' })}
                   </p>
                 </div>
               </div>
-
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={biometricEnabled}
-                  onChange={(e) => setBiometricEnabled(e.target.checked)}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-neutral-gray/30 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-accent-action-orange/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-neutral-gray after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accent-action-orange"></div>
-              </label>
-            </div>
-          </CardHeader>
-
-          <CardContent>
-            <div className="text-sm text-neutral-gray">
-              {biometricEnabled
-                ? 'Biometric authentication is enabled for supported devices.'
-                : 'Enable biometric authentication for faster and more secure login.'}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Session Management */}
-      {sessionManagement && (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="bg-neutral-gray/10 rounded-lg p-2 mr-3">
-                  <ComputerDesktopIcon className="h-6 w-6 text-neutral-gray" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-neutral-dark-gray">
-                    Active Sessions
-                  </h3>
-                  <p className="text-sm text-neutral-gray">
-                    Manage devices that have access to your account
-                  </p>
-                </div>
-              </div>
-
-              <Button variant="outline" size="sm">
-                Sign Out All
+              <Button
+                variant={twoFactorEnabled ? 'outline' : 'primary'}
+                size="sm"
+                onClick={() => setTwoFactorEnabled(!twoFactorEnabled)}
+              >
+                {twoFactorEnabled
+                  ? t('security.twoFactorAuth.disable', { defaultValue: 'Disable 2FA' })
+                  : t('security.twoFactorAuth.enable', { defaultValue: 'Enable 2FA' })
+                }
               </Button>
             </div>
-          </CardHeader>
+            <p className="text-sm text-neutral-gray">
+              {twoFactorEnabled
+                ? t('security.twoFactorAuth.enabled', { defaultValue: 'Two-factor authentication is enabled' })
+                : t('security.twoFactorAuth.disabled', { defaultValue: 'Two-factor authentication is disabled' })
+              }
+            </p>
+          </div>
+        )}
 
-          <CardContent>
-            <div className="space-y-4">
+        {/* Biometric Authentication */}
+        {biometric && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <ComputerDesktopIcon className="h-5 w-5 text-neutral-gray mr-2" />
+                <div>
+                  <h4 className="font-medium text-neutral-dark-gray">
+                    {t('security.biometric.title', { defaultValue: 'Biometric Authentication' })}
+                  </h4>
+                  <p className="text-sm text-neutral-gray">
+                    {t('security.biometric.subtitle', { defaultValue: 'Use fingerprint or face recognition for quick access' })}
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant={biometricEnabled ? 'outline' : 'primary'}
+                size="sm"
+                onClick={() => setBiometricEnabled(!biometricEnabled)}
+              >
+                {biometricEnabled
+                  ? t('security.biometric.disable', { defaultValue: 'Disable Biometric' })
+                  : t('security.biometric.enable', { defaultValue: 'Enable Biometric' })
+                }
+              </Button>
+            </div>
+            <p className="text-sm text-neutral-gray">
+              {biometricEnabled
+                ? t('security.biometric.enabled', { defaultValue: 'Biometric authentication is enabled' })
+                : t('security.biometric.disabled', { defaultValue: 'Biometric authentication is disabled' })
+              }
+            </p>
+          </div>
+        )}
+
+        {/* Active Sessions */}
+        {sessionManagement && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <ComputerDesktopIcon className="h-5 w-5 text-neutral-gray mr-2" />
+                <div>
+                  <h4 className="font-medium text-neutral-dark-gray">
+                    {t('security.sessions.title', { defaultValue: 'Active Sessions' })}
+                  </h4>
+                  <p className="text-sm text-neutral-gray">
+                    {t('security.sessions.subtitle', { defaultValue: 'Manage your active login sessions across devices' })}
+                  </p>
+                </div>
+              </div>
+              <Button variant="outline" size="sm">
+                {t('security.sessions.terminateAll', { defaultValue: 'Terminate All Other Sessions' })}
+              </Button>
+            </div>
+
+            <div className="space-y-3">
               {activeSessions.map((session) => (
                 <div
                   key={session.id}
-                  className="flex items-center justify-between p-4 border border-neutral-gray/20 rounded-lg"
+                  className={`flex items-center justify-between p-3 rounded-lg border ${
+                    session.current
+                      ? 'bg-primary-trust-blue/5 border-primary-trust-blue/20'
+                      : 'bg-neutral-light-gray/50 border-neutral-gray/20'
+                  }`}
                 >
-                  <div className="flex items-center">
-                    <div className="bg-neutral-light-gray rounded-lg p-2 mr-3">
-                      {session.device.includes('iPhone') ? (
-                        <DevicePhoneMobileIcon className="h-5 w-5 text-neutral-gray" />
-                      ) : (
-                        <ComputerDesktopIcon className="h-5 w-5 text-neutral-gray" />
-                      )}
+                  <div className="flex items-center space-x-3">
+                    <div className="flex items-center space-x-2">
+                      <span className={`w-2 h-2 rounded-full ${
+                        session.current ? 'bg-primary-trust-blue' : 'bg-neutral-gray'
+                      }`} />
+                      <span className="text-sm font-medium text-neutral-dark-gray">
+                        {session.device}
+                      </span>
                     </div>
-                    <div>
-                      <div className="flex items-center">
-                        <span className="font-medium text-neutral-dark-gray mr-2">
-                          {session.device}
-                        </span>
-                        {session.current && (
-                          <span className="text-xs px-2 py-1 bg-secondary-growth-green/10 text-secondary-growth-green rounded-full">
-                            Current
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-sm text-neutral-gray">
-                        {session.browser} • {session.location} • {session.lastActive}
-                      </div>
+                    <div className="text-xs text-neutral-gray">
+                      {session.location} • {session.browser}
                     </div>
                   </div>
-
-                  {!session.current && (
-                    <Button variant="ghost" size="sm">
-                      Sign Out
-                    </Button>
-                  )}
+                  <div className="flex items-center space-x-3">
+                    <span className="text-xs text-neutral-gray">
+                      {session.current
+                        ? t('security.sessions.current', { defaultValue: 'Current Session' })
+                        : session.lastActive
+                      }
+                    </span>
+                    {!session.current && (
+                      <Button variant="outline" size="sm">
+                        {t('security.sessions.terminate', { defaultValue: 'Terminate Session' })}
+                      </Button>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
-          </CardContent>
-        </Card>
-      )}
-    </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }

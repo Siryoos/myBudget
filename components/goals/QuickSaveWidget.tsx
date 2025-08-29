@@ -264,7 +264,7 @@ export function QuickSaveWidget({
                   }`}
                 >
                   <div className="text-lg font-semibold">{formatCurrency(amount)}</div>
-                  <div className="text-xs text-gray-HTTP_INTERNAL_SERVER_ERROR">
+                  <div className="text-xs text-gray-500">
                     {t('quickSave.amount.quick', { defaultValue: 'Quick' })}
                   </div>
                 </motion.button>
@@ -273,7 +273,7 @@ export function QuickSaveWidget({
 
             {/* Custom Amount Input */}
             <div className="relative">
-              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-HTTP_INTERNAL_SERVER_ERROR">
+              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
                 $
               </span>
               <input

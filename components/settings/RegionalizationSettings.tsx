@@ -9,6 +9,7 @@ import {
 import { useState } from 'react';
 
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
+import { useTranslation } from '@/lib/useTranslation';
 
 interface RegionalizationSettingsProps {
   currency?: boolean
@@ -23,6 +24,7 @@ export function RegionalizationSettings({
   dateFormat = true,
   culturalPreferences = true,
 }: RegionalizationSettingsProps) {
+  const { t } = useTranslation('settings');
   const [settings, setSettings] = useState({
     region: 'united-states',
     currency: 'USD',
@@ -96,10 +98,10 @@ export function RegionalizationSettings({
           </div>
           <div>
             <h3 className="text-lg font-semibold text-neutral-dark-gray">
-              Regional Settings
+              {t('regional.title', { defaultValue: 'Regional Settings' })}
             </h3>
             <p className="text-sm text-neutral-gray">
-              Customize your experience for your region and preferences
+              {t('regional.subtitle', { defaultValue: 'Customize your experience for your region and preferences' })}
             </p>
           </div>
         </div>
@@ -110,13 +112,13 @@ export function RegionalizationSettings({
           {/* Region Selection */}
           <div>
             <label className="block text-sm font-medium text-neutral-dark-gray mb-3">
-              Region
+              {t('regional.region', { defaultValue: 'Region' })}
             </label>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               {regions.map((region) => (
                 <div
                   key={region.id}
-                  className={`border-2 rounded-lg p-4 cursor-pointer transition-all duration-HTTP_OK ${
+                  className={`border-2 rounded-lg p-4 cursor-pointer transition-all duration-200 ${
                     settings.region === region.id
                       ? 'border-primary-trust-blue bg-primary-trust-blue/5'
                       : 'border-neutral-gray/30 hover:border-primary-trust-blue/50'
@@ -132,8 +134,8 @@ export function RegionalizationSettings({
                     {region.name}
                   </h4>
                   <div className="text-xs text-neutral-gray space-y-1">
-                    <div>Currencies: {region.currencies.join(', ')}</div>
-                    <div>Languages: {region.languages.length} supported</div>
+                    <div>{t('regional.currencies', { defaultValue: 'Currencies' })}: {region.currencies.join(', ')}</div>
+                    <div>{t('regional.languagesSupported', { defaultValue: 'Languages' })}: {region.languages.length} {t('regional.supported', { defaultValue: 'supported' })}</div>
                   </div>
                 </div>
               ))}
@@ -142,7 +144,7 @@ export function RegionalizationSettings({
             {selectedRegion && (
               <div className="mt-3 p-3 bg-neutral-light-gray/50 rounded-lg">
                 <h5 className="font-medium text-neutral-dark-gray mb-2">
-                  Regional Features
+                  {t('regional.features', { defaultValue: 'Regional Features' })}
                 </h5>
                 <div className="flex flex-wrap gap-2">
                   {selectedRegion.features.map((feature) => (
@@ -163,7 +165,7 @@ export function RegionalizationSettings({
             <div>
               <label className="block text-sm font-medium text-neutral-dark-gray mb-2">
                 <CurrencyDollarIcon className="h-4 w-4 inline mr-1" />
-                Primary Currency
+                {t('regional.primaryCurrency', { defaultValue: 'Primary Currency' })}
               </label>
               <select
                 value={settings.currency}
@@ -177,7 +179,7 @@ export function RegionalizationSettings({
                 ))}
               </select>
               <p className="text-xs text-neutral-gray mt-1">
-                All amounts will be displayed in this currency
+                {t('regional.currencyNote', { defaultValue: 'All amounts will be displayed in this currency' })}
               </p>
             </div>
           )}
@@ -187,7 +189,7 @@ export function RegionalizationSettings({
             <div>
               <label className="block text-sm font-medium text-neutral-dark-gray mb-2">
                 <LanguageIcon className="h-4 w-4 inline mr-1" />
-                Display Language
+                {t('regional.displayLanguage', { defaultValue: 'Display Language' })}
               </label>
               <select
                 value={settings.language}
@@ -203,7 +205,7 @@ export function RegionalizationSettings({
               {settings.language === 'ar' && (
                 <div className="mt-2 p-2 bg-accent-action-orange/10 rounded-lg">
                   <p className="text-xs text-accent-action-orange">
-                    ✨ Arabic language includes RTL (Right-to-Left) layout support
+                    {t('regional.rtlNote', { defaultValue: '✨ Arabic language includes RTL (Right-to-Left) layout support' })}
                   </p>
                 </div>
               )}
@@ -215,13 +217,13 @@ export function RegionalizationSettings({
             <div>
               <label className="block text-sm font-medium text-neutral-dark-gray mb-2">
                 <CalendarIcon className="h-4 w-4 inline mr-1" />
-                Date Format
+                {t('regional.dateFormat', { defaultValue: 'Date Format' })}
               </label>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                 {dateFormats.map((format) => (
                   <div
                     key={format.format}
-                    className={`border rounded-lg p-3 cursor-pointer text-center transition-all duration-HTTP_OK ${
+                    className={`border rounded-lg p-3 cursor-pointer text-center transition-all duration-200 ${
                       settings.dateFormat === format.format
                         ? 'border-primary-trust-blue bg-primary-trust-blue/5'
                         : 'border-neutral-gray/30 hover:border-primary-trust-blue/50'
@@ -244,7 +246,7 @@ export function RegionalizationSettings({
           {culturalPreferences && settings.region === 'middle-east' && (
             <div className="bg-secondary-growth-green/5 rounded-lg p-4 border border-secondary-growth-green/20">
               <h4 className="font-medium text-secondary-growth-green mb-3">
-                Cultural Preferences
+                {t('regional.cultural.title', { defaultValue: 'Cultural Preferences' })}
               </h4>
 
               <div className="space-y-3">
@@ -263,17 +265,17 @@ export function RegionalizationSettings({
                   />
                   <div>
                     <span className="text-sm font-medium text-neutral-dark-gray">
-                      Islamic Banking Features
+                      {t('regional.cultural.islamicBanking', { defaultValue: 'Islamic Banking Features' })}
                     </span>
                     <p className="text-xs text-neutral-gray">
-                      Enable Sharia-compliant financial tools and categories
+                      {t('regional.cultural.islamicBanking_desc', { defaultValue: 'Enable Sharia-compliant financial tools and categories' })}
                     </p>
                   </div>
                 </label>
 
                 <div>
                   <label className="block text-sm font-medium text-neutral-dark-gray mb-2">
-                    Additional Categories
+                    {t('regional.cultural.additionalCategories', { defaultValue: 'Additional Categories' })}
                   </label>
                   <div className="flex flex-wrap gap-2">
                     {['Zakat', 'Hajj Fund', 'Family Support', 'Islamic Investment'].map((category) => (
@@ -294,7 +296,7 @@ export function RegionalizationSettings({
           {culturalPreferences && (
             <div>
               <label className="block text-sm font-medium text-neutral-dark-gray mb-2">
-                Social Sharing
+                {t('regional.social.title', { defaultValue: 'Social Sharing' })}
               </label>
               <div className="flex bg-neutral-light-gray rounded-lg p-1">
                 {(['prominent', 'minimal', 'none'] as const).map((option) => (
@@ -307,20 +309,24 @@ export function RegionalizationSettings({
                         socialSharing: option,
                       },
                     }))}
-                    className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-all duration-HTTP_OK ${
+                    className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
                       settings.culturalFeatures.socialSharing === option
                         ? 'bg-white text-primary-trust-blue shadow-sm'
                         : 'text-neutral-gray hover:text-neutral-dark-gray'
                     }`}
                   >
-                    {option.charAt(0).toUpperCase() + option.slice(1)}
+                    {option === 'prominent'
+                      ? t('regional.social.prominent', { defaultValue: 'Prominent' })
+                      : option === 'minimal'
+                      ? t('regional.social.minimal', { defaultValue: 'Minimal' })
+                      : t('regional.social.none', { defaultValue: 'None' })}
                   </button>
                 ))}
               </div>
               <p className="text-xs text-neutral-gray mt-1">
-                {settings.culturalFeatures.socialSharing === 'prominent' && 'Show social sharing options prominently'}
-                {settings.culturalFeatures.socialSharing === 'minimal' && 'Show minimal social sharing options'}
-                {settings.culturalFeatures.socialSharing === 'none' && 'Hide all social sharing features'}
+                {settings.culturalFeatures.socialSharing === 'prominent' && t('regional.social.prominent_desc', { defaultValue: 'Show social sharing options prominently' })}
+                {settings.culturalFeatures.socialSharing === 'minimal' && t('regional.social.minimal_desc', { defaultValue: 'Show minimal social sharing options' })}
+                {settings.culturalFeatures.socialSharing === 'none' && t('regional.social.none_desc', { defaultValue: 'Hide all social sharing features' })}
               </p>
             </div>
           )}
@@ -328,28 +334,28 @@ export function RegionalizationSettings({
           {/* Regional Compliance */}
           <div className="bg-neutral-light-gray/50 rounded-lg p-4">
             <h4 className="font-medium text-neutral-dark-gray mb-2">
-              Compliance & Privacy
+              {t('regional.compliance.title', { defaultValue: 'Compliance & Privacy' })}
             </h4>
             <div className="text-sm text-neutral-gray space-y-1">
               {settings.region === 'europe' && (
                 <>
-                  <div>✓ GDPR compliant data handling</div>
-                  <div>✓ PSD2 banking integration</div>
-                  <div>✓ Minimal data collection</div>
+                  <div>✓ {t('regional.compliance.eu.gdpr', { defaultValue: 'GDPR compliant data handling' })}</div>
+                  <div>✓ {t('regional.compliance.eu.psd2', { defaultValue: 'PSD2 banking integration' })}</div>
+                  <div>✓ {t('regional.compliance.eu.minimal', { defaultValue: 'Minimal data collection' })}</div>
                 </>
               )}
               {settings.region === 'united-states' && (
                 <>
-                  <div>✓ CCPA privacy compliance</div>
-                  <div>✓ SOX financial reporting</div>
-                  <div>✓ FDIC insured partnerships</div>
+                  <div>✓ {t('regional.compliance.us.ccpa', { defaultValue: 'CCPA privacy compliance' })}</div>
+                  <div>✓ {t('regional.compliance.us.sox', { defaultValue: 'SOX financial reporting' })}</div>
+                  <div>✓ {t('regional.compliance.us.fdic', { defaultValue: 'FDIC insured partnerships' })}</div>
                 </>
               )}
               {settings.region === 'middle-east' && (
                 <>
-                  <div>✓ Local banking regulations</div>
-                  <div>✓ Cultural sensitivity</div>
-                  <div>✓ Arabic language support</div>
+                  <div>✓ {t('regional.compliance.me.banking', { defaultValue: 'Local banking regulations' })}</div>
+                  <div>✓ {t('regional.compliance.me.culture', { defaultValue: 'Cultural sensitivity' })}</div>
+                  <div>✓ {t('regional.compliance.me.arabic', { defaultValue: 'Arabic language support' })}</div>
                 </>
               )}
             </div>

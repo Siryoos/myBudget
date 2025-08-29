@@ -4,16 +4,16 @@ import { NotificationSettings } from '@/components/settings/NotificationSettings
 import { ProfileManager } from '@/components/settings/ProfileManager';
 import { RegionalizationSettings } from '@/components/settings/RegionalizationSettings';
 import { SecurityPanel } from '@/components/settings/SecurityPanel';
+import { useTranslation } from '@/lib/useTranslation';
 
 export default function SettingsPage() {
+  const { t } = useTranslation('settings');
   return (
     <div className="space-y-6" id="main-content">
       {/* Page Header */}
       <div className="bg-gradient-to-r from-neutral-dark-gray to-neutral-gray rounded-lg p-6 text-white">
-        <h1 className="text-3xl font-bold mb-2">Settings</h1>
-        <p className="text-neutral-light-gray">
-          Customize your SmartSave experience and manage your account preferences
-        </p>
+        <h1 className="text-3xl font-bold mb-2">{t('title', { defaultValue: 'Settings' })}</h1>
+        <p className="text-neutral-light-gray">{t('subtitle', { defaultValue: 'Customize your SmartSave experience and manage your account preferences' })}</p>
       </div>
 
       {/* Settings Grid */}
@@ -50,4 +50,3 @@ export default function SettingsPage() {
     </div>
   );
 }
-

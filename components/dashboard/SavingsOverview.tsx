@@ -17,6 +17,7 @@ import { useDashboard } from '@/hooks/use-api';
 import type { ApiResponse } from '@/types';
 import { useTranslation } from '@/lib/useTranslation';
 import { formatCurrency, calculateProgress, formatPercentage } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n-provider';
 
 
 interface SavingsOverviewProps {
@@ -48,6 +49,7 @@ export function SavingsOverview({
   animateOnLoad = true,
 }: SavingsOverviewProps) {
   const { t } = useTranslation('dashboard');
+  const { locale } = useI18n();
   const [isAnimated, setIsAnimated] = useState(!animateOnLoad);
   const { data: dashboardResponse, loading, error } = useDashboard();
   const dashboardData = (dashboardResponse as any)?.success ? (dashboardResponse as any).data : (dashboardResponse as any) || {};
@@ -148,7 +150,7 @@ export function SavingsOverview({
                   isAnimated ? 'opacity-100 transform-none' : 'opacity-0 transform translate-y-4'
                 }`}
               >
-                {formatCurrency(savingsData.totalSavings)}
+                {formatCurrency(savingsData.totalSavings, undefined, locale)}
               </div>
               <div className="flex items-center mt-2">
                 <div className={`flex items-center text-sm ${
@@ -161,8 +163,8 @@ export function SavingsOverview({
                   )}
                   <span>
                     {t('savingsOverview.fromLastMonth', {
-                      amount: formatCurrency(Math.abs(monthlyChange)),
-                      defaultValue: `${formatCurrency(Math.abs(monthlyChange))} from last month`,
+                      amount: formatCurrency(Math.abs(monthlyChange), undefined, locale),
+                      defaultValue: `${formatCurrency(Math.abs(monthlyChange), undefined, locale)} from last month`,
                     })}
                   </span>
                 </div>
@@ -183,12 +185,12 @@ export function SavingsOverview({
                 </div>
                 <div className="text-right">
                   <div className="font-semibold text-neutral-dark-gray">
-                    {formatCurrency(savingsData.monthlySaved)} / {formatCurrency(savingsData.monthlyGoal)}
+                    {formatCurrency(savingsData.monthlySaved, undefined, locale)} / {formatCurrency(savingsData.monthlyGoal, undefined, locale)}
                   </div>
                   <div className="text-sm text-neutral-gray">
                     {t('savingsOverview.remaining', {
-                      amount: formatCurrency(monthlyProgress.remaining),
-                      defaultValue: `${formatCurrency(monthlyProgress.remaining)} remaining`,
+                      amount: formatCurrency(monthlyProgress.remaining, undefined, locale),
+                      defaultValue: `${formatCurrency(monthlyProgress.remaining, undefined, locale)} remaining`,
                     })}
                   </div>
                 </div>
@@ -220,7 +222,7 @@ export function SavingsOverview({
                     {formatPercentage(annualProgress.percentage)}
                   </div>
                   <div className="text-sm text-neutral-gray">
-                    {t('savingsOverview.of', { defaultValue: 'of' })} {formatCurrency(savingsData.annualGoal)}
+                    {t('savingsOverview.of', { defaultValue: 'of' })} {formatCurrency(savingsData.annualGoal, undefined, locale)}
                   </div>
                 </div>
               </div>
@@ -238,7 +240,7 @@ export function SavingsOverview({
                     {t('savingsOverview.saved', { defaultValue: 'Saved' })}
                   </div>
                   <div className="text-lg font-bold text-secondary-growth-green">
-                    {formatCurrency(savingsData.totalSavings)}
+                    {formatCurrency(savingsData.totalSavings, undefined, locale)}
                   </div>
                 </div>
                 <div className="bg-neutral-light-gray rounded-lg p-3">
@@ -246,7 +248,7 @@ export function SavingsOverview({
                     {t('savingsOverview.remaining', { defaultValue: 'Remaining' })}
                   </div>
                   <div className="text-lg font-bold text-accent-action-orange">
-                    {formatCurrency(annualProgress.remaining)}
+                    {formatCurrency(annualProgress.remaining, undefined, locale)}
                   </div>
                 </div>
                 <div className="bg-neutral-light-gray rounded-lg p-3">
@@ -254,7 +256,7 @@ export function SavingsOverview({
                     {t('savingsOverview.monthlyNeed', { defaultValue: 'Monthly Need' })}
                   </div>
                   <div className="text-lg font-bold text-primary-trust-blue">
-                    {formatCurrency(annualProgress.remaining / 12)}
+                    {formatCurrency(annualProgress.remaining / 12, undefined, locale)}
                   </div>
                 </div>
               </div>

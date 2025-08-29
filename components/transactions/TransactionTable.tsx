@@ -14,7 +14,10 @@ import { useState } from 'react';
 
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
-import { formatCurrency, formatRelativeTime } from '@/lib/utils';
+import { formatCurrency } from '@/lib/utils';
+import { formatRelativeTime } from '@/lib/i18n';
+import { useI18n } from '@/lib/i18n-provider';
+import { useTranslation } from '@/lib/useTranslation';
 import type { Transaction } from '@/types';
 
 interface TransactionTableProps {
@@ -32,6 +35,8 @@ export function TransactionTable({
   bulkActions = true,
   categoryEditing = true,
 }: TransactionTableProps) {
+  const { locale } = useI18n();
+  const { t } = useTranslation('transactions');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedType, setSelectedType] = useState('all');
@@ -248,10 +253,10 @@ export function TransactionTable({
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
           <div>
             <h3 className="text-lg font-semibold text-neutral-dark-gray">
-              All Transactions
+              {t('title', { defaultValue: 'All Transactions' })}
             </h3>
             <p className="text-sm text-neutral-gray">
-              {filteredTransactions.length} of {transactions.length} transactions
+              {filteredTransactions.length} {t('count.of', { defaultValue: 'of' })} {transactions.length} {t('count.transactions', { defaultValue: 'transactions' })}
             </p>
           </div>
 
@@ -264,7 +269,7 @@ export function TransactionTable({
                 </div>
                 <input
                   type="text"
-                  placeholder="Search transactions..."
+                  placeholder={t('search.placeholder', { defaultValue: 'Search transactions...' })}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10 pr-3 py-2 border border-neutral-gray/30 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-trust-blue focus:border-primary-trust-blue"
@@ -291,9 +296,9 @@ export function TransactionTable({
                   onChange={(e) => setSelectedType(e.target.value)}
                   className="px-3 py-2 border border-neutral-gray/30 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-trust-blue"
                 >
-                  <option value="all">All Types</option>
-                  <option value="income">Income</option>
-                  <option value="expense">Expenses</option>
+                  <option value="all">{t('filters.allTypes', { defaultValue: 'All Types' })}</option>
+                  <option value="income">{t('filters.income', { defaultValue: 'Income' })}</option>
+                  <option value="expense">{t('filters.expense', { defaultValue: 'Expenses' })}</option>
                 </select>
               </div>
             )}
@@ -334,13 +339,12 @@ export function TransactionTable({
           <div className="text-center py-12">
             <MagnifyingGlassIcon className="h-12 w-12 text-neutral-gray mx-auto mb-4" />
             <h4 className="text-lg font-medium text-neutral-dark-gray mb-2">
-              No transactions found
+              {t('empty.title', { defaultValue: 'No transactions found' })}
             </h4>
             <p className="text-neutral-gray">
               {searchQuery || selectedCategory !== 'all' || selectedType !== 'all'
-                ? 'Try adjusting your search or filters'
-                : 'Your transactions will appear here once you start tracking'
-              }
+                ? t('empty.adjust', { defaultValue: 'Try adjusting your search or filters' })
+                : t('empty.start', { defaultValue: 'Your transactions will appear here once you start tracking' })}
             </p>
           </div>
         ) : (
@@ -426,7 +430,7 @@ export function TransactionTable({
                     )}
                     <td className="py-4 px-2">
                       <div className="text-sm text-neutral-dark-gray">
-                        {formatRelativeTime(transaction.date)}
+                        {formatRelativeTime(transaction.date, locale)}
                       </div>
                       <div className="text-xs text-neutral-gray">
                         {transaction.date.toLocaleDateString()}
@@ -508,7 +512,7 @@ export function TransactionTable({
                           : 'text-neutral-dark-gray'
                       }`}>
                         {transaction.type === 'income' ? '+' : ''}
-                        {formatCurrency(Math.abs(transaction.amount))}
+                        {formatCurrency(Math.abs(transaction.amount), undefined, locale)}
                       </div>
                       {transaction.isRecurring && (
                         <div className="text-xs text-neutral-gray">
@@ -531,6 +535,7 @@ export function TransactionTable({
                             }}
                             className="p-1 text-neutral-gray hover:text-primary-trust-blue hover:bg-primary-trust-blue/10 rounded transition-colors duration-150"
                             title="Edit category"
+                            aria-label="Edit category"
                           >
                             <PencilIcon className="h-4 w-4" />
                           </button>
@@ -539,6 +544,7 @@ export function TransactionTable({
                           onClick={() => handleDeleteTransactions([transaction.id])}
                           className="p-1 text-neutral-gray hover:text-accent-warning-red hover:bg-accent-warning-red/10 rounded transition-colors duration-150"
                           title="Delete transaction"
+                          aria-label="Delete transaction"
                         >
                           <TrashIcon className="h-4 w-4" />
                         </button>

@@ -20,7 +20,7 @@ const DefaultErrorFallback: React.FC<{ error: Error | null; retry: () => void }>
     </p>
     <button
       onClick={retry}
-      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-HTTP_OK"
+      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200"
     >
       Try Again
     </button>

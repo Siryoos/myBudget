@@ -67,7 +67,7 @@ export function ProgressBar({
       >
         <div
           className={cn(
-            'h-full rounded-full transition-all duration-HTTP_INTERNAL_SERVER_ERROR ease-out',
+            'h-full rounded-full transition-all duration-300 ease-out',
             colorClasses[color],
             animated && 'animate-pulse-gentle',
           )}

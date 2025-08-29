@@ -19,7 +19,7 @@ import {
 } from '@heroicons/react/24/solid';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { useI18n } from '@/lib/i18n-provider';
 import { useTranslation } from '@/lib/useTranslation';
@@ -84,6 +84,22 @@ export function Navigation({ isOpen = false, onClose }: NavigationProps) {
   const { t } = useTranslation('common');
   const { locale } = useI18n();
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+  const closeBtnRef = useRef<HTMLButtonElement | null>(null);
+  const navRef = useRef<HTMLElement | null>(null);
+
+  // Manage focus and Escape key when mobile nav opens
+  useEffect(() => {
+    if (!isOpen) {return;}
+    // Focus close button for accessibility
+    closeBtnRef.current?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose?.();
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [isOpen, onClose]);
 
   // Get navigation items with translations
   const navigationItems = getNavigationItems(t, locale);
@@ -123,6 +139,10 @@ export function Navigation({ isOpen = false, onClose }: NavigationProps) {
           isOpen ? 'translate-x-0' : '-translate-x-full',
         )}
         aria-label="Main navigation"
+        role={isOpen ? 'dialog' : undefined}
+        aria-modal={isOpen ? true : undefined}
+        tabIndex={isOpen ? -1 : undefined}
+        ref={navRef as any}
       >
         {/* Mobile header */}
         <div className="flex items-center justify-between p-4 border-b border-neutral-gray/10 lg:hidden">
@@ -134,6 +154,7 @@ export function Navigation({ isOpen = false, onClose }: NavigationProps) {
             className="p-2 rounded-md text-neutral-gray hover:bg-neutral-light-gray hover:text-neutral-dark-gray focus:outline-none focus:ring-2 focus:ring-primary-trust-blue"
             onClick={onClose}
             aria-label="Close navigation menu"
+            ref={closeBtnRef}
           >
             <XMarkIcon className="h-6 w-6" />
           </button>
@@ -150,7 +171,7 @@ export function Navigation({ isOpen = false, onClose }: NavigationProps) {
                 key={item.id}
                 href={item.href}
                 className={cn(
-                  'flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-HTTP_OK group',
+                  'flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 group',
                   isActive
                     ? 'bg-primary-trust-blue text-white shadow-sm'
                     : 'text-neutral-gray hover:bg-neutral-light-gray hover:text-neutral-dark-gray',
@@ -202,7 +223,7 @@ export function Navigation({ isOpen = false, onClose }: NavigationProps) {
               </div>
               <div className="mt-1 w-full bg-white/20 rounded-full h-2">
                 <div
-                  className="bg-white h-2 rounded-full transition-all duration-HTTP_INTERNAL_SERVER_ERROR"
+                  className="bg-white h-2 rounded-full transition-all duration-300"
                   style={{ width: '68%' }}
                   role="progressbar"
                   aria-valuenow={68}

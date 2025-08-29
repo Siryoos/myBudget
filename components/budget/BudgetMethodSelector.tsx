@@ -15,6 +15,7 @@ import { Card, CardContent } from '@/components/ui/Card';
 import { useTranslation } from '@/lib/useTranslation';
 import { getBudgetMethodConfig } from '@/lib/utils';
 import type { BudgetMethod } from '@/types';
+import { useToast } from '@/hooks/useToast';
 
 interface BudgetMethodOption {
   id: BudgetMethod
@@ -41,6 +42,7 @@ export function BudgetMethodSelector() {
   const { t, ready } = useTranslation('budget');
   const [selectedMethod, setSelectedMethod] = useState<BudgetMethod | null>(null);
   const [showDetails, setShowDetails] = useState(false);
+  const { toast } = useToast();
 
   if (!ready) {
     return (
@@ -128,6 +130,7 @@ export function BudgetMethodSelector() {
     if (selectedMethod) {
       console.log(`Selected budget method: ${selectedMethod}`);
       // This would typically update the user's budget configuration
+      toast({ title: t('methodSelector.confirmed', { defaultValue: 'Budget method selected' }), variant: 'success' });
     }
   };
 
@@ -165,7 +168,7 @@ export function BudgetMethodSelector() {
               <button
                 key={method.id}
                 onClick={() => handleMethodSelect(method.id)}
-                className={`p-4 rounded-lg border-2 text-left transition-all duration-HTTP_OK hover:shadow-md ${
+                className={`p-4 rounded-lg border-2 text-left transition-all duration-200 hover:shadow-md ${
                   isSelected
                     ? 'border-primary-trust-blue bg-primary-trust-blue/5'
                     : 'border-neutral-gray/30 hover:border-primary-trust-blue/50'

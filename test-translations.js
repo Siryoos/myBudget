@@ -124,9 +124,8 @@ function hasNestedKey(obj, keyPath) {
 function testTranslationAPI() {
   console.log('🌐 Testing Translation API...\n');
   
-  // This would test the actual API endpoint
-  // For now, just check if the route file exists
-  const routePath = path.join(process.cwd(), 'app', 'locales', '[lng]', '[ns]', 'route.ts');
+  // Check if the translation API route exists
+  const routePath = path.join(process.cwd(), 'app', 'api', 'locales', '[lng]', '[ns]', 'route.ts');
   
   if (fs.existsSync(routePath)) {
     console.log('✅ Translation API route exists');

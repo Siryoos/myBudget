@@ -330,7 +330,7 @@ export function AchievementSystem({
                       {achievement.points} pts
                     </span>
                     {isUnlocked && (
-                      <StarIcon className="w-5 h-5 text-yellow-HTTP_INTERNAL_SERVER_ERROR" />
+                      <StarIcon className="w-5 h-5 text-yellow-500" />
                     )}
                   </div>
                 </div>
@@ -363,7 +363,7 @@ export function AchievementSystem({
               <div className="w-full bg-gray-HTTP_OK rounded-full h-2">
                 <motion.div
                   className={`h-2 rounded-full ${
-                    isUnlocked ? 'bg-green-HTTP_INTERNAL_SERVER_ERROR' : 'bg-blue-HTTP_INTERNAL_SERVER_ERROR'
+                    isUnlocked ? 'bg-green-500' : 'bg-blue-500'
                   }`}
                   initial={{ width: 0 }}
                   animate={{ width: `${percent}%` }}

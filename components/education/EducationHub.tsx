@@ -14,6 +14,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { ProgressBar } from '@/components/ui/ProgressBar';
+import { useTranslation } from '@/lib/useTranslation';
 
 interface EducationModule {
   id: string
@@ -41,6 +42,7 @@ export function EducationHub({
   progressTracking = true,
   quizzes = true,
 }: EducationHubProps) {
+  const { t } = useTranslation('education');
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'in-progress' | 'completed'>('all');
 
@@ -152,7 +154,7 @@ export function EducationHub({
 
   const ModuleCard = ({ module }: { module: EducationModule }) => (
     <div
-      className={`bg-white border rounded-lg p-6 cursor-pointer transition-all duration-HTTP_OK hover:shadow-md ${
+      className={`bg-white border rounded-lg p-6 cursor-pointer transition-all duration-200 hover:shadow-md ${
         selectedModule === module.id ? 'border-primary-trust-blue shadow-md' : 'border-neutral-gray/20'
       }`}
       onClick={() => setSelectedModule(module.id)}
@@ -185,12 +187,12 @@ export function EducationHub({
           </div>
           <div className="flex items-center">
             <BookOpenIcon className="h-4 w-4 mr-1" />
-            {module.lessons} lessons
+            {module.lessons} {t('lessons', { defaultValue: 'lessons' })}
           </div>
           {quizzes && (
             <div className="flex items-center">
               <TrophyIcon className="h-4 w-4 mr-1" />
-              {module.quizzes} quizzes
+              {module.quizzes} {t('quizzes', { defaultValue: 'quizzes' })}
             </div>
           )}
         </div>
@@ -215,10 +217,10 @@ export function EducationHub({
       <div className="flex items-center justify-between">
         <div className="text-sm text-neutral-gray">
           {module.isCompleted
-            ? '✅ Completed'
+            ? t('status.completed', { defaultValue: '✅ Completed' })
             : module.progress > 0
-              ? `${module.progress}% complete`
-              : 'Not started'
+              ? t('status.percentComplete', { defaultValue: '{{percent}}% complete', percent: module.progress })
+              : t('status.notStarted', { defaultValue: 'Not started' })
           }
         </div>
         <Button
@@ -226,7 +228,7 @@ export function EducationHub({
           size="sm"
         >
           <PlayIcon className="h-4 w-4 mr-2" />
-          {module.isCompleted ? 'Review' : module.progress > 0 ? 'Continue' : 'Start'}
+          {module.isCompleted ? t('actions.review', { defaultValue: 'Review' }) : module.progress > 0 ? t('actions.continue', { defaultValue: 'Continue' }) : t('actions.start', { defaultValue: 'Start' })}
         </Button>
       </div>
     </div>
@@ -242,10 +244,10 @@ export function EducationHub({
             </div>
             <div>
               <h3 className="text-lg font-semibold text-neutral-dark-gray">
-                Learning Modules
+                {t('modules.title', { defaultValue: 'Learning Modules' })}
               </h3>
               <p className="text-sm text-neutral-gray">
-                Interactive lessons to boost your financial knowledge
+                {t('modules.subtitle', { defaultValue: 'Interactive lessons to boost your financial knowledge' })}
               </p>
             </div>
           </div>
@@ -256,14 +258,14 @@ export function EducationHub({
               <button
                 key={filterType}
                 onClick={() => setFilter(filterType)}
-                className={`px-3 py-1 text-sm font-medium rounded-md transition-all duration-HTTP_OK ${
+                className={`px-3 py-1 text-sm font-medium rounded-md transition-all duration-200 ${
                   filter === filterType
                     ? 'bg-white text-primary-trust-blue shadow-sm'
                     : 'text-neutral-gray hover:text-neutral-dark-gray'
                 }`}
               >
-                {filterType === 'all' ? 'All' :
-                 filterType === 'in-progress' ? 'In Progress' : 'Completed'}
+                {filterType === 'all' ? t('filters.all', { defaultValue: 'All' }) :
+                 filterType === 'in-progress' ? t('filters.inProgress', { defaultValue: 'In Progress' }) : t('filters.completed', { defaultValue: 'Completed' })}
               </button>
             ))}
           </div>
@@ -274,14 +276,14 @@ export function EducationHub({
           <div className="bg-gradient-to-r from-primary-trust-blue to-primary-trust-blue-light rounded-lg p-4 text-white mt-4">
             <div className="flex items-center justify-between mb-3">
               <div>
-                <h4 className="font-semibold">Your Learning Progress</h4>
+                <h4 className="font-semibold">{t('progress.title', { defaultValue: 'Your Learning Progress' })}</h4>
                 <p className="text-primary-trust-blue-light text-sm">
-                  {completedModules} of {modules.length} modules completed
+                  {t('progress.summary', { defaultValue: '{{completed}} of {{total}} modules completed', completed: completedModules, total: modules.length })}
                 </p>
               </div>
               <div className="text-right">
                 <div className="text-2xl font-bold">{totalProgress}%</div>
-                <div className="text-sm text-primary-trust-blue-light">Overall</div>
+                <div className="text-sm text-primary-trust-blue-light">{t('progress.overall', { defaultValue: 'Overall' })}</div>
               </div>
             </div>
 
@@ -295,10 +297,10 @@ export function EducationHub({
             />
 
             <div className="flex items-center justify-between mt-3 text-sm">
-              <span className="text-primary-trust-blue-light">Keep learning!</span>
+              <span className="text-primary-trust-blue-light">{t('progress.keepLearning', { defaultValue: 'Keep learning!' })}</span>
               <div className="flex items-center">
                 <StarIcon className="h-4 w-4 mr-1" />
-                <span>Level {Math.floor(totalProgress / 20) + 1}</span>
+              <span>{t('progress.level', { defaultValue: 'Level {{level}}', level: Math.floor(totalProgress / 20) + 1 })}</span>
               </div>
             </div>
           </div>
@@ -310,13 +312,12 @@ export function EducationHub({
           <div className="text-center py-8">
             <BookOpenIcon className="h-16 w-16 text-neutral-gray mx-auto mb-4" />
             <h4 className="text-lg font-medium text-neutral-dark-gray mb-2">
-              No modules found
+              {t('empty.title', { defaultValue: 'No modules found' })}
             </h4>
             <p className="text-neutral-gray">
               {filter === 'completed'
-                ? 'Complete some modules to see them here!'
-                : 'Start learning to track your progress.'
-              }
+                ? t('empty.completed', { defaultValue: 'Complete some modules to see them here!' })
+                : t('empty.start', { defaultValue: 'Start learning to track your progress.' })}
             </p>
           </div>
         ) : (
@@ -333,7 +334,7 @@ export function EducationHub({
             <div className="flex items-center mb-3">
               <TrophyIcon className="h-5 w-5 text-secondary-growth-green mr-2" />
               <h4 className="font-medium text-secondary-growth-green">
-                Recent Achievements
+                {t('achievements.recent', { defaultValue: 'Recent Achievements' })}
               </h4>
             </div>
 
@@ -345,7 +346,7 @@ export function EducationHub({
                   <div key={module.id} className="flex items-center text-sm">
                     <CheckCircleIcon className="h-4 w-4 text-secondary-growth-green mr-2 flex-shrink-0" />
                     <span className="text-neutral-gray">
-                      Completed <span className="font-medium text-neutral-dark-gray">{module.title}</span>
+                      {t('achievements.completed', { defaultValue: 'Completed {{title}}', title: module.title })}
                     </span>
                   </div>
                 ))}
@@ -363,10 +364,10 @@ export function EducationHub({
               <div className="flex items-center justify-between">
                 <div>
                   <h4 className="font-medium text-accent-action-orange mb-1">
-                    💡 Recommended Next
+                    {t('recommended.title', { defaultValue: '💡 Recommended Next' })}
                   </h4>
                   <p className="text-sm text-neutral-gray">
-                    Start with <span className="font-medium">{nextModule.title}</span> - perfect for your current level
+                    {t('recommended.desc', { defaultValue: 'Start with {{title}} - perfect for your current level', title: nextModule.title })}
                   </p>
                 </div>
                 <Button
@@ -374,7 +375,7 @@ export function EducationHub({
                   size="sm"
                   onClick={() => setSelectedModule(nextModule.id)}
                 >
-                  Start Learning
+                  {t('recommended.start', { defaultValue: 'Start Learning' })}
                 </Button>
               </div>
             </div>

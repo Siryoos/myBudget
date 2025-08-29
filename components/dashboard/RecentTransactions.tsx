@@ -12,7 +12,9 @@ import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useTransactions } from '@/contexts/AppProvider';
 import { useTranslation } from '@/lib/useTranslation';
-import { formatCurrency, formatRelativeTime } from '@/lib/utils';
+import { formatCurrency } from '@/lib/utils';
+import { formatRelativeTime } from '@/lib/i18n';
+import { useI18n } from '@/lib/i18n-provider';
 import type { Transaction } from '@/types';
 
 interface RecentTransactionsProps {
@@ -36,6 +38,7 @@ export function RecentTransactions({
   showCategories = true,
   showAmounts = true,
 }: RecentTransactionsProps) {
+  const { locale } = useI18n();
   const [filterType, setFilterType] = useState<'all' | 'income' | 'expense'>('all');
   const { t } = useTranslation('dashboard');
 
@@ -96,7 +99,7 @@ export function RecentTransactions({
                 <button
                   key={type}
                   onClick={() => setFilterType(type)}
-                  className={`px-3 py-1 text-xs font-medium rounded-md transition-all duration-HTTP_OK ${
+                className={`px-3 py-1 text-xs font-medium rounded-md transition-all duration-200 ${
                     filterType === type
                       ? 'bg-white text-primary-trust-blue shadow-sm'
                       : 'text-neutral-gray hover:text-neutral-dark-gray'
@@ -132,7 +135,7 @@ export function RecentTransactions({
             {filteredTransactions.map((transaction) => (
               <div
                 key={transaction.id}
-                className="flex items-center p-3 rounded-lg hover:bg-neutral-light-gray/50 transition-colors duration-HTTP_OK cursor-pointer group"
+                className="flex items-center p-3 rounded-lg hover:bg-neutral-light-gray/50 transition-colors duration-200 cursor-pointer group"
               >
                 {/* Transaction Icon */}
                 <div className="flex-shrink-0 mr-3">
@@ -157,7 +160,7 @@ export function RecentTransactions({
                           }`}
                         >
                           {transaction.type === 'income' ? '+' : ''}
-                          {formatCurrency(Math.abs(transaction.amount))}
+                          {formatCurrency(Math.abs(transaction.amount), undefined, locale)}
                         </span>
                       </div>
                     )}
@@ -175,13 +178,13 @@ export function RecentTransactions({
                       </span>
                     )}
                     <span className="text-xs text-neutral-gray ml-auto">
-                      {formatRelativeTime(transaction.date)}
+                      {formatRelativeTime(transaction.date, locale)}
                     </span>
                   </div>
                 </div>
 
                 {/* Arrow icon on hover */}
-                <div className="flex-shrink-0 ml-2 opacity-0 group-hover:opacity-100 transition-opacity duration-HTTP_OK">
+                <div className="flex-shrink-0 ml-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                   <ArrowRightIcon className="h-4 w-4 text-neutral-gray" />
                 </div>
               </div>
@@ -193,7 +196,7 @@ export function RecentTransactions({
         <div className="mt-6 pt-4 border-t border-neutral-gray/20">
           <Button variant="outline" size="sm" className="w-full group">
             <span>{t('transactions:viewAll', { defaultValue: 'View All Transactions' })}</span>
-            <ArrowRightIcon className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform duration-HTTP_OK" />
+            <ArrowRightIcon className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform duration-200" />
           </Button>
         </div>
 
@@ -205,6 +208,8 @@ export function RecentTransactions({
                 filteredTransactions
                   .filter(t => t.type === 'income')
                   .reduce((sum, t) => sum + t.amount, 0),
+                undefined,
+                locale,
               )}
             </div>
             <div className="text-xs text-neutral-gray">
@@ -218,6 +223,8 @@ export function RecentTransactions({
                 Math.abs(filteredTransactions
                   .filter(t => t.type === 'expense')
                   .reduce((sum, t) => sum + t.amount, 0)),
+                undefined,
+                locale,
               )}
             </div>
             <div className="text-xs text-neutral-gray">

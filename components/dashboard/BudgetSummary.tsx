@@ -200,7 +200,7 @@ export function BudgetSummary({
         <div className="flex space-x-1 bg-neutral-light-gray rounded-lg p-1 mt-4">
           <button
             onClick={() => setSelectedPeriod('week')}
-            className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-all duration-HTTP_OK ${
+            className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
               selectedPeriod === 'week'
                 ? 'bg-white text-primary-trust-blue shadow-sm'
                 : 'text-neutral-gray hover:text-neutral-dark-gray'
@@ -210,7 +210,7 @@ export function BudgetSummary({
           </button>
           <button
             onClick={() => setSelectedPeriod('month')}
-            className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-all duration-HTTP_OK ${
+            className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
               selectedPeriod === 'month'
                 ? 'bg-white text-primary-trust-blue shadow-sm'
                 : 'text-neutral-gray hover:text-neutral-dark-gray'

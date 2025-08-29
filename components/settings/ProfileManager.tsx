@@ -10,6 +10,8 @@ import { useState } from 'react';
 
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
+import { useTranslation } from '@/lib/useTranslation';
+import { useToast } from '@/hooks/useToast';
 
 interface ProfileManagerProps {
   personalInfo?: boolean
@@ -22,7 +24,10 @@ export function ProfileManager({
   financialProfile = true,
   preferences = true,
 }: ProfileManagerProps) {
+  const { t } = useTranslation('settings');
   const [editingSection, setEditingSection] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const { toast } = useToast();
   const [profileData, setProfileData] = useState({
     name: 'Alex Johnson',
     email: 'alex.johnson@email.com',
@@ -36,15 +41,27 @@ export function ProfileManager({
     timezone: 'America/New_York',
   });
 
-  const handleSave = (section: string) => {
-    // Here you would typically save to API
-    console.log(`Saving ${section}:`, profileData);
-    setEditingSection(null);
+  const handleSave = async (section: string) => {
+    setSaving(true);
+    try {
+      // Simulate async save
+      await new Promise((r) => setTimeout(r, 600));
+      toast({
+        title: 'Saved',
+        description: `${section.charAt(0).toUpperCase() + section.slice(1)} updated successfully`,
+        variant: 'success',
+      });
+      setEditingSection(null);
+    } catch (e) {
+      toast({ title: 'Save failed', description: 'Please try again', variant: 'error' });
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleCancel = (section: string) => {
-    // Reset changes
     setEditingSection(null);
+    toast({ title: 'Canceled', description: `Edits to ${section} discarded`, variant: 'info', duration: 3000 });
   };
 
   return (
@@ -60,10 +77,10 @@ export function ProfileManager({
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-neutral-dark-gray">
-                    Personal Information
+                    {t('profile.personal.title', { defaultValue: 'Personal Information' })}
                   </h3>
                   <p className="text-sm text-neutral-gray">
-                    Update your personal details
+                    {t('profile.personal.subtitle', { defaultValue: 'Update your personal details' })}
                   </p>
                 </div>
               </div>
@@ -75,7 +92,7 @@ export function ProfileManager({
                   onClick={() => setEditingSection('personal')}
                 >
                   <PencilIcon className="h-4 w-4 mr-2" />
-                  Edit
+                  {t('actions.edit', { defaultValue: 'Edit' })}
                 </Button>
               )}
             </div>
@@ -86,11 +103,12 @@ export function ProfileManager({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-neutral-dark-gray mb-1">
-                    Full Name
+                    {t('profile.personal.fullName', { defaultValue: 'Full Name' })}
                   </label>
                   {editingSection === 'personal' ? (
                     <input
                       type="text"
+                      required
                       value={profileData.name}
                       onChange={(e) => setProfileData(prev => ({ ...prev, name: e.target.value }))}
                       className="input-field"
@@ -102,11 +120,12 @@ export function ProfileManager({
 
                 <div>
                   <label className="block text-sm font-medium text-neutral-dark-gray mb-1">
-                    Email Address
+                    {t('profile.personal.email', { defaultValue: 'Email Address' })}
                   </label>
                   {editingSection === 'personal' ? (
                     <input
                       type="email"
+                      required
                       value={profileData.email}
                       onChange={(e) => setProfileData(prev => ({ ...prev, email: e.target.value }))}
                       className="input-field"
@@ -118,7 +137,7 @@ export function ProfileManager({
 
                 <div>
                   <label className="block text-sm font-medium text-neutral-dark-gray mb-1">
-                    Phone Number
+                    {t('profile.personal.phone', { defaultValue: 'Phone Number' })}
                   </label>
                   {editingSection === 'personal' ? (
                     <input
@@ -141,15 +160,16 @@ export function ProfileManager({
                     onClick={() => handleCancel('personal')}
                   >
                     <XMarkIcon className="h-4 w-4 mr-2" />
-                    Cancel
+                    {t('actions.cancel', { defaultValue: 'Cancel' })}
                   </Button>
                   <Button
                     variant="primary"
                     size="sm"
+                    disabled={saving}
                     onClick={() => handleSave('personal')}
                   >
                     <CheckIcon className="h-4 w-4 mr-2" />
-                    Save Changes
+                    {saving ? t('status.saving', { defaultValue: 'Saving...' }) : t('actions.saveChanges', { defaultValue: 'Save Changes' })}
                   </Button>
                 </div>
               )}
@@ -197,13 +217,14 @@ export function ProfileManager({
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <span className="text-neutral-gray">$</span>
                       </div>
-                      <input
-                        type="number"
-                        min="0"
-                        value={profileData.monthlyIncome}
-                        onChange={(e) => setProfileData(prev => ({ ...prev, monthlyIncome: parseInt(e.target.value) || 0 }))}
-                        className="input-field pl-7"
-                      />
+                    <input
+                      type="number"
+                      min="0"
+                      required
+                      value={profileData.monthlyIncome}
+                      onChange={(e) => setProfileData(prev => ({ ...prev, monthlyIncome: parseInt(e.target.value) || 0 }))}
+                      className="input-field pl-7"
+                    />
                     </div>
                   ) : (
                     <div className="py-2 text-neutral-dark-gray">${profileData.monthlyIncome.toLocaleString()}</div>
@@ -238,6 +259,7 @@ export function ProfileManager({
                       type="number"
                       min="0"
                       max="100"
+                      required
                       value={profileData.savingsRate}
                       onChange={(e) => setProfileData(prev => ({ ...prev, savingsRate: parseInt(e.target.value) || 0 }))}
                       className="input-field"

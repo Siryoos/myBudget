@@ -12,6 +12,9 @@ import { useState } from 'react';
 
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
+import { useTranslation } from '@/lib/useTranslation';
+import { useI18n } from '@/lib/i18n-provider';
+import { formatRelativeTime } from '@/lib/i18n';
 
 interface FinancialTip {
   id: string
@@ -38,6 +41,8 @@ export function TipsFeed({
   dailyTips = true,
   contextual = true,
 }: TipsFeedProps) {
+  const { t } = useTranslation('education');
+  const { locale } = useI18n();
   const [tips, setTips] = useState<FinancialTip[]>([
     {
       id: '1',
@@ -194,10 +199,10 @@ export function TipsFeed({
             </div>
             <div>
               <h3 className="text-lg font-semibold text-neutral-dark-gray">
-                Financial Tips
+                {t('tips.title', { defaultValue: 'Financial Tips' })}
               </h3>
               <p className="text-sm text-neutral-gray">
-                Daily insights to improve your financial health
+                {t('tips.subtitle', { defaultValue: 'Daily insights to improve your financial health' })}
               </p>
             </div>
           </div>
@@ -209,14 +214,14 @@ export function TipsFeed({
             <button
               key={filterType}
               onClick={() => setFilter(filterType)}
-              className={`flex-1 px-3 py-1 text-sm font-medium rounded-md transition-all duration-HTTP_OK ${
+              className={`flex-1 px-3 py-1 text-sm font-medium rounded-md transition-all duration-200 ${
                 filter === filterType
                   ? 'bg-white text-primary-trust-blue shadow-sm'
                   : 'text-neutral-gray hover:text-neutral-dark-gray'
               }`}
             >
-              {filterType === 'all' ? 'All Tips' :
-               filterType === 'personalized' ? 'For You' : 'Saved'}
+              {filterType === 'all' ? t('filters.allTips', { defaultValue: 'All Tips' }) :
+               filterType === 'personalized' ? t('filters.forYou', { defaultValue: 'For You' }) : t('filters.saved', { defaultValue: 'Saved' })}
             </button>
           ))}
         </div>
@@ -228,13 +233,13 @@ export function TipsFeed({
           <div className="bg-gradient-to-r from-secondary-growth-green to-secondary-growth-green-light rounded-lg p-4 text-white mb-6">
             <div className="flex items-center mb-2">
               <span className="text-2xl mr-2">☀️</span>
-              <h4 className="font-semibold">Tip of the Day</h4>
+              <h4 className="font-semibold">{t('tips.dailyTitle', { defaultValue: 'Tip of the Day' })}</h4>
             </div>
             <p className="text-sm text-secondary-growth-green-light mb-3">
-              Review your subscriptions monthly. Cancel unused services to save $20-50+ per month.
+              {t('tips.dailyCopy', { defaultValue: 'Review your subscriptions monthly. Cancel unused services to save $20-50+ per month.' })}
             </p>
             <Button variant="outline" size="sm" className="text-white border-white hover:bg-white hover:text-secondary-growth-green">
-              Learn More
+              {t('actions.learnMore', { defaultValue: 'Learn More' })}
             </Button>
           </div>
         )}
@@ -243,13 +248,12 @@ export function TipsFeed({
           <div className="text-center py-8">
             <LightBulbIcon className="h-16 w-16 text-neutral-gray mx-auto mb-4" />
             <h4 className="text-lg font-medium text-neutral-dark-gray mb-2">
-              No tips found
+              {t('tips.empty.title', { defaultValue: 'No tips found' })}
             </h4>
             <p className="text-neutral-gray">
               {filter === 'bookmarked'
-                ? 'Bookmark some tips to see them here!'
-                : 'Check back later for new financial insights.'
-              }
+                ? t('tips.empty.bookmarked', { defaultValue: 'Bookmark some tips to see them here!' })
+                : t('tips.empty.later', { defaultValue: 'Check back later for new financial insights.' })}
             </p>
           </div>
         ) : (
@@ -257,7 +261,7 @@ export function TipsFeed({
             {filteredTips.map((tip) => (
               <div
                 key={tip.id}
-                className="bg-white border border-neutral-gray/20 rounded-lg p-4 hover:shadow-sm transition-shadow duration-HTTP_OK"
+                className="bg-white border border-neutral-gray/20 rounded-lg p-4 hover:shadow-sm transition-shadow duration-200"
               >
                 {/* Tip Header */}
                 <div className="flex items-start justify-between mb-3">
@@ -272,7 +276,7 @@ export function TipsFeed({
                         </h4>
                         {tip.isPersonalized && (
                           <span className="text-xs px-2 py-1 bg-primary-trust-blue/10 text-primary-trust-blue rounded-full">
-                            For You
+                            {t('tips.forYou', { defaultValue: 'For You' })}
                           </span>
                         )}
                       </div>
@@ -284,14 +288,14 @@ export function TipsFeed({
                           <ClockIcon className="h-3 w-3 mr-1" />
                           {tip.readTime}
                         </div>
-                        <span>{formatTimeAgo(tip.createdAt)}</span>
+                        <span>{formatRelativeTime(tip.createdAt, locale)}</span>
                       </div>
                     </div>
                   </div>
 
                   <button
                     onClick={() => handleDismiss(tip.id)}
-                    className="p-1 rounded-full hover:bg-neutral-light-gray text-neutral-gray hover:text-neutral-dark-gray transition-colors duration-HTTP_OK"
+                    className="p-1 rounded-full hover:bg-neutral-light-gray text-neutral-gray hover:text-neutral-dark-gray transition-colors duration-200"
                   >
                     <XMarkIcon className="h-4 w-4" />
                   </button>
@@ -307,7 +311,7 @@ export function TipsFeed({
                   <div className="flex items-center space-x-3">
                     <button
                       onClick={() => handleLike(tip.id)}
-                      className={`flex items-center space-x-1 px-2 py-1 rounded-full transition-colors duration-HTTP_OK ${
+                      className={`flex items-center space-x-1 px-2 py-1 rounded-full transition-colors duration-200 ${
                         tip.isLiked
                           ? 'bg-accent-warning-red/10 text-accent-warning-red'
                           : 'hover:bg-neutral-light-gray text-neutral-gray hover:text-neutral-dark-gray'
@@ -319,7 +323,7 @@ export function TipsFeed({
 
                     <button
                       onClick={() => handleBookmark(tip.id)}
-                      className={`p-1 rounded-full transition-colors duration-HTTP_OK ${
+                      className={`p-1 rounded-full transition-colors duration-200 ${
                         tip.isBookmarked
                           ? 'bg-primary-trust-blue/10 text-primary-trust-blue'
                           : 'hover:bg-neutral-light-gray text-neutral-gray hover:text-neutral-dark-gray'
@@ -328,13 +332,13 @@ export function TipsFeed({
                       <BookmarkIcon className={`h-4 w-4 ${tip.isBookmarked ? 'fill-current' : ''}`} />
                     </button>
 
-                    <button className="p-1 rounded-full hover:bg-neutral-light-gray text-neutral-gray hover:text-neutral-dark-gray transition-colors duration-HTTP_OK">
+                    <button className="p-1 rounded-full hover:bg-neutral-light-gray text-neutral-gray hover:text-neutral-dark-gray transition-colors duration-200">
                       <ShareIcon className="h-4 w-4" />
                     </button>
                   </div>
 
                   <Button variant="outline" size="sm">
-                    Read More
+                    {t('actions.readMore', { defaultValue: 'Read More' })}
                   </Button>
                 </div>
               </div>
