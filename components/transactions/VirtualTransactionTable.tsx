@@ -56,7 +56,8 @@ export function VirtualTransactionTable({
   showReceipts = false,
   className = '',
 }: VirtualTransactionTableProps) {
-  const { t, locale } = useTranslation('transactions');
+  const { t, getCurrentLanguage } = useTranslation('transactions');
+  const locale = getCurrentLanguage();
   const { formatCurrency } = useCurrency();
   const { toast } = useToast();
 
@@ -122,8 +123,8 @@ export function VirtualTransactionTable({
       filtered = filtered.filter(t => t.category === selectedCategory);
     }
 
-    // Sort
-    filtered.sort((a, b) => {
+    // Sort (create a copy to avoid mutation)
+    const sorted = [...filtered].sort((a, b) => {
       let comparison = 0;
       if (sortBy === 'date') {
         comparison = a.date.getTime() - b.date.getTime();
@@ -133,7 +134,7 @@ export function VirtualTransactionTable({
       return sortOrder === 'asc' ? comparison : -comparison;
     });
 
-    return filtered;
+    return sorted;
   }, [transactions, searchTerm, selectedCategory, sortBy, sortOrder]);
 
   const getCategoryIcon = (category: string) => {
@@ -301,7 +302,7 @@ export function VirtualTransactionTable({
   if (error) {
     return (
       <CardError
-        error={error}
+        message={error?.message || t('table.error', { defaultValue: 'Unable to load transactions' })}
         onRetry={() => window.location.reload()}
       />
     );

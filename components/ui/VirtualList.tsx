@@ -140,6 +140,9 @@ export function VirtualList<T>({
             right: 0,
             height: getItemHeight(i),
           }}
+          role="listitem"
+          aria-setsize={items.length}
+          aria-posinset={i + 1}
         >
           {renderItem(item, i)}
         </div>

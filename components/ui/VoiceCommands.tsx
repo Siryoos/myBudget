@@ -12,12 +12,7 @@ interface VoiceCommand {
   description: string;
 }
 
-declare global {
-  interface Window {
-    webkitSpeechRecognition: any;
-    SpeechRecognition: any;
-  }
-}
+// Types are defined in types/speech-recognition.d.ts
 
 export function VoiceCommands({ enabled = false }: { enabled?: boolean }) {
   const { t } = useTranslation('accessibility');
@@ -26,7 +21,7 @@ export function VoiceCommands({ enabled = false }: { enabled?: boolean }) {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [isSupported, setIsSupported] = useState(false);
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
 
   // Define voice commands
   const commands: VoiceCommand[] = [
@@ -108,7 +103,7 @@ export function VoiceCommands({ enabled = false }: { enabled?: boolean }) {
         info('Voice commands activated. Say "help" for available commands.');
       };
       
-      recognition.onresult = (event: any) => {
+      recognition.onresult = (event: SpeechRecognitionEvent) => {
         const current = event.resultIndex;
         const transcript = event.results[current][0].transcript.toLowerCase();
         setTranscript(transcript);
@@ -118,7 +113,7 @@ export function VoiceCommands({ enabled = false }: { enabled?: boolean }) {
         }
       };
       
-      recognition.onerror = (event: any) => {
+      recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
         console.error('Speech recognition error:', event.error);
         error('Voice recognition error: ' + event.error);
         setIsListening(false);

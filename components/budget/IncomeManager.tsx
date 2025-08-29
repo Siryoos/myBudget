@@ -229,9 +229,10 @@ export function IncomeManager({
                   Frequency
                 </label>
                 <Select
-                  id="source-frequency"
+                  label="Frequency"
+                  name="frequency"
                   value={newSource.frequency}
-                  onChange={(e) => setNewSource(prev => ({ ...prev, frequency: e.target.value as any }))}
+                  onChange={(value) => setNewSource(prev => ({ ...prev, frequency: value as IncomeSource['frequency'] }))}
                   options={[
                     { value: 'weekly', label: 'Weekly' },
                     { value: 'biweekly', label: 'Bi-weekly' },

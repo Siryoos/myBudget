@@ -2,7 +2,7 @@
 
 import { useTranslation } from '@/lib/useTranslation';
 
-export function SkipLink() {
+export const SkipLink = () => {
   const { t } = useTranslation('common');
   
   return (
@@ -13,4 +13,4 @@ export function SkipLink() {
       {t('skipLink.main', { defaultValue: 'Skip to main content' })}
     </a>
   );
-}
+};

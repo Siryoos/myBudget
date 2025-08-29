@@ -125,11 +125,11 @@ describe('Dashboard User Flow', () => {
     renderWithProviders(<DashboardPage />);
 
     // Check for mobile-specific layouts
-    const budgetSummary = screen.getByTestId('budget-summary').parentElement;
-    expect(budgetSummary).toHaveClass('lg:open');
+    const budgetSummaryDetails = screen.getByTestId('budget-summary').closest('details');
+    expect(budgetSummaryDetails).toHaveClass('lg:open');
 
-    const recentTransactions = screen.getByTestId('recent-transactions').parentElement;
-    expect(recentTransactions).toHaveClass('lg:open');
+    const recentTransactionsDetails = screen.getByTestId('recent-transactions').closest('details');
+    expect(recentTransactionsDetails).toHaveClass('lg:open');
   });
 });
 
