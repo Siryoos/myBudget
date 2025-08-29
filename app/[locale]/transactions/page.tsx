@@ -1,12 +1,7 @@
-import type { Metadata } from 'next';
+'use client';
 
 import { SpendingAnalytics } from '@/components/transactions/SpendingAnalytics';
 import { TransactionTable } from '@/components/transactions/TransactionTable';
-
-export const metadata: Metadata = {
-  title: 'Transactions',
-  description: 'View and analyze your transaction history',
-};
 
 export default function TransactionsPage() {
   return (

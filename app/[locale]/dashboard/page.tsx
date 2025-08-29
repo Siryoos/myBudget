@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+'use client';
 
 import { BudgetSummary } from '@/components/dashboard/BudgetSummary';
 import { InsightsPanel } from '@/components/dashboard/InsightsPanel';
@@ -6,11 +6,6 @@ import { QuickSaveWidget } from '@/components/dashboard/QuickSaveWidget';
 import { RecentTransactions } from '@/components/dashboard/RecentTransactions';
 import { SavingsOverview } from '@/components/dashboard/SavingsOverview';
 import { WelcomeHeader } from '@/components/dashboard/WelcomeHeader';
-
-export const metadata: Metadata = {
-  title: 'Dashboard',
-  description: 'Your financial overview and insights',
-};
 
 export default function DashboardPage() {
   return (

@@ -1,8 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Disable static generation for problematic pages
-  output: 'standalone',
-  
   // Image optimization
   images: {
     domains: [],
@@ -10,7 +7,6 @@ const nextConfig = {
     minimumCacheTTL: 60,
     dangerouslyAllowSVG: false,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
-    unoptimized: true, // Disable image optimization during build
   },
   
   // ESLint configuration
@@ -22,7 +18,7 @@ const nextConfig = {
   
   // TypeScript configuration
   typescript: {
-    ignoreBuildErrors: true, // Ignore TypeScript errors during build
+    ignoreBuildErrors: false,
   },
   
   // Security headers are handled by middleware/security.ts

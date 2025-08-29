@@ -8,7 +8,8 @@
     "dev:debug": "NODE_OPTIONS='--inspect' next dev",
     "dev:watch": "next dev --turbo --experimental-app-only",
     "dev:ssl": "HTTPS=true SSL_CRT_FILE=./certs/localhost.crt SSL_KEY_FILE=./certs/localhost.key next dev --turbo",
-    "build": "next build",
+    "build": "NODE_ENV=production next build",
+    "build:docker": "NODE_ENV=production SKIP_DB_VALIDATION=true next build",
     "build:analyze": "ANALYZE=true next build",
     "start": "next start",
     "start:debug": "NODE_OPTIONS='--inspect' next start",
@@ -89,7 +90,7 @@
     "ci:full": "npm run ci:setup && npm run test:integration && npm run test:security && npm run build",
     "ci:deploy": "npm run build && npm run docker:build:prod",
     "prepare": "husky install",
-    "prebuild": "npm run security:check",
+    "prebuild": "NODE_ENV=production npm run security:check",
     "prestart": "npm run security:check",
     "precommit": "npm run code:quality",
     "prepush": "npm run test:unit"

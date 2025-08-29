@@ -2,52 +2,18 @@
 # Use with: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
 
 services:
-  # Backend with development settings
-  backend:
-    build:
-      context: .
-      dockerfile: Dockerfile.backend
-      target: base  # Use base stage for development
-    environment:
-      - NODE_ENV=development
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_NAME=${DB_NAME:-mybudget}
-      - DB_USER=${DB_USER:-mybudget}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
-      - JWT_SECRET=${JWT_SECRET}
-      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-7d}
-      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:3000}
-      - PORT=3001
-      - MINIO_ENDPOINT=minio
-      - MINIO_PORT=9000
-      - MINIO_ACCESS_KEY=${MINIO_ROOT_USER:-minioadmin}
-      - MINIO_SECRET_KEY=${MINIO_ROOT_PASSWORD}
-    volumes:
-      - .:/app
-      - /app/node_modules
-      - ./logs:/app/logs
-      - ./uploads:/app/uploads
-    command: ["npm", "run", "dev"]
-    ports:
-      - "127.0.0.1:3001:3001"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      minio:
-        condition: service_healthy
-
   # Frontend with development settings
   frontend:
     build:
       context: .
-      dockerfile: Dockerfile.frontend
-      target: base  # Use base stage for development
+      dockerfile: Dockerfile.dev
+      target: runner  # Use runner stage for development
+      args:
+        JWT_SECRET: ${JWT_SECRET}
+        DB_PASSWORD: ${DB_PASSWORD}
+        REDIS_PASSWORD: ${REDIS_PASSWORD}
+        ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
+        NODE_ENV: ${NODE_ENV:-development}
     environment:
       - NODE_ENV=development
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:3001}
@@ -61,7 +27,9 @@ services:
     ports:
       - "127.0.0.1:3000:3000"
     depends_on:
-      backend:
+      postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
 
   # Database with development settings
@@ -98,6 +66,7 @@ services:
 
   # Keycloak with development settings
   keycloak:
+    image: quay.io/keycloak/keycloak:latest
     environment:
       KC_HOSTNAME: ${KC_HOSTNAME:-localhost}
       KC_HOSTNAME_ADMIN: ${KC_HOSTNAME_ADMIN:-localhost}

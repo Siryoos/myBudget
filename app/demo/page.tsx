@@ -1,3 +1,5 @@
+'use client';
+
 import { BehavioralDashboard } from '@/components/goals/BehavioralDashboard';
 import { SkeletonDemo } from '@/components/ui/SkeletonDemo';
 

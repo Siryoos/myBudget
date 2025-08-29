@@ -8,10 +8,18 @@ import type {
   ApiResponse,
 } from '@/types';
 
-import { apiClient } from './api-client';
+import { apiClient } from '@/lib/api-client';
 
 // Hook for fetching insights with fallback
-export function useInsights(fallbackData: FinancialInsight[] = []) {
+type NotificationsClient = {
+  getNotifications: (unreadOnly?: boolean) => Promise<ApiResponse<any>>;
+  markNotificationRead: (id: string) => Promise<ApiResponse<{ message: string }>>;
+};
+
+export function useInsights(
+  fallbackData: FinancialInsight[] = [],
+  client: NotificationsClient = apiClient,
+) {
   const [insights, setInsights] = useState<FinancialInsight[]>(fallbackData);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -22,7 +30,7 @@ export function useInsights(fallbackData: FinancialInsight[] = []) {
       setError(null);
 
       // Fetch notifications as insights
-      const response = await apiClient.getNotifications(true);
+      const response = await client.getNotifications(true);
 
       if (response.success && response.data) {
         const apiInsights: FinancialInsight[] = (response.data as Notification[])
@@ -65,7 +73,7 @@ export function useInsights(fallbackData: FinancialInsight[] = []) {
   const dismissInsight = async (insightId: string) => {
     try {
       if (insightId.match(/^\d+$/)) {
-        await apiClient.markNotificationRead(insightId);
+        await client.markNotificationRead(insightId);
         setInsights(prev => prev.filter(i => i.id !== insightId));
       }
     } catch (err) {
@@ -90,19 +98,8 @@ export function useDashboardData() {
       const response = await apiClient.getDashboard();
 
       if (response.success && response.data) {
-        setData({
-          ...response.data,
-          totalSavings: response.data.totalSavings || 0,
-          monthlyBudget: response.data.monthlyBudget || 0,
-          currentMonthSavings: response.data.currentMonthSavings || 0,
-          previousMonthSavings: response.data.previousMonthSavings || 0,
-          annualSavingsGoal: response.data.annualSavingsGoal || 0,
-          savingsGrowthRate: response.data.savingsGrowthRate || 0,
-          recentTransactions: response.data.recentTransactions || [],
-          budgetProgress: response.data.budgetProgress || [],
-          goals: response.data.goals || [],
-          insights: response.data.insights || [],
-        });
+        // Preserve exact shape as returned by API to match consumers/tests
+        setData(response.data as DashboardData);
       } else {
         throw new Error('Failed to load dashboard data');
       }

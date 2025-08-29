@@ -4,10 +4,32 @@ import { query } from '@/lib/database';
 import { getHealthData } from '@/lib/middleware/monitoring';
 import { createSuccessResponse, generateRequestId, HTTP_SERVICE_UNAVAILABLE } from '@/lib/services/error-handler';
 
+// Ensure this route is never statically evaluated or prerendered
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export const GET = async (request: NextRequest) => {
   const requestId = generateRequestId();
 
   try {
+    // Short-circuit during build to avoid DB/Redis access
+    if (process.env.SKIP_DB_VALIDATION === 'true') {
+      const buildTimeResponse = {
+        status: 'healthy',
+        timestamp: new Date().toISOString(),
+        version: process.env.npm_package_version || '1.0.0',
+        environment: process.env.NODE_ENV || 'development',
+        database: {
+          healthy: true,
+          latency: 0,
+        },
+        build: {
+          note: 'Build-time health check placeholder (DB disabled)',
+        },
+      } as const;
+      return createSuccessResponse(buildTimeResponse, requestId);
+    }
+
     // Get monitoring health data
     const healthData = await getHealthData();
 

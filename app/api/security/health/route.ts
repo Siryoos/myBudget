@@ -5,7 +5,23 @@ import { checkRedisHealth } from '@/lib/redis';
 import { securityMonitor } from '@/middleware/security';
 import { HTTP_OK, HTTP_SERVICE_UNAVAILABLE, HTTP_INTERNAL_SERVER_ERROR } from '@/lib/services/error-handler';
 
+// Ensure this route is never statically evaluated or prerendered
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET(request: NextRequest): Promise<NextResponse> {
+  // Skip execution during build time
+  if (process.env.SKIP_DB_VALIDATION === 'true') {
+    return NextResponse.json(
+      {
+        status: 'healthy',
+        message: 'Build-time health check - services not available',
+        timestamp: new Date().toISOString(),
+      },
+      { status: HTTP_OK }
+    );
+  }
+
   try {
     const metrics = securityMonitor.getMetrics();
 
@@ -71,4 +87,3 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     );
   }
 }
-

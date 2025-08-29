@@ -3,50 +3,69 @@ import Redis from 'ioredis';
 
 dotenv.config();
 
+const SKIP_DB_VALIDATION = process.env.SKIP_DB_VALIDATION === 'true';
+
 // Validate Redis configuration
 const validateRedisConfig = (): void => {
+  if (SKIP_DB_VALIDATION) {
+    return;
+  }
+  
+  if (process.env.REDIS_URL) return;
   if (!process.env.REDIS_HOST) {
     throw new Error('REDIS_HOST environment variable is required');
   }
-
   const port = parseInt(process.env.REDIS_PORT || '6379');
   if (isNaN(port) || port < 1 || port > 65535) {
     throw new Error(`Invalid Redis port: ${process.env.REDIS_PORT}`);
   }
 };
 
-// Validate configuration before creating client
-validateRedisConfig();
+// Initialize Redis client only if not skipping validation
+let redis: Redis | null = null;
 
-// Create Redis client
-const redis = new Redis({
-  host: process.env.REDIS_HOST!,
-  port: parseInt(process.env.REDIS_PORT || '6379'),
-  password: process.env.REDIS_PASSWORD,
-  db: parseInt(process.env.REDIS_DB || '0'),
-  maxRetriesPerRequest: 3,
-  lazyConnect: true,
-  keepAlive: 30000,
-  connectTimeout: 10000,
-  commandTimeout: 5000,
-});
+if (!SKIP_DB_VALIDATION) {
+  // Validate configuration before creating client
+  validateRedisConfig();
 
-// Handle Redis connection events
-redis.on('connect', () => {
-  console.log('Connected to Redis');
-});
+  // Create Redis client
+  redis = process.env.REDIS_URL
+    ? new Redis(process.env.REDIS_URL, {
+        maxRetriesPerRequest: 3,
+        lazyConnect: true,
+        keepAlive: 30000,
+        connectTimeout: 10000,
+        commandTimeout: 5000,
+      })
+    : new Redis({
+        host: process.env.REDIS_HOST!,
+        port: parseInt(process.env.REDIS_PORT || '6379'),
+        password: process.env.REDIS_PASSWORD,
+        db: parseInt(process.env.REDIS_DB || '0'),
+        maxRetriesPerRequest: 3,
+        lazyConnect: true,
+        keepAlive: 30000,
+        connectTimeout: 10000,
+        commandTimeout: 5000,
+      });
 
-redis.on('error', (err) => {
-  console.error('Redis connection error:', err);
-});
+  // Handle Redis connection events
+  redis.on('connect', () => {
+    console.log('Connected to Redis');
+  });
 
-redis.on('close', () => {
-  console.log('Redis connection closed');
-});
+  redis.on('error', (err) => {
+    console.error('Redis connection error:', err);
+  });
 
-redis.on('reconnecting', () => {
-  console.log('Reconnecting to Redis...');
-});
+  redis.on('close', () => {
+    console.log('Redis connection closed');
+  });
+
+  redis.on('reconnecting', () => {
+    console.log('Reconnecting to Redis...');
+  });
+}
 
 // Rate limiting utilities
 export interface RateLimitConfig {
@@ -325,17 +344,33 @@ export class RedisCache {
 const SECURE_MODE = process.env.REDIS_SECURE_MODE !== 'false'; // Default to secure (fail closed)
 
 // Export instances with secure configuration
-export const rateLimiter = new RedisRateLimiter(redis, SECURE_MODE);
-export const cache = new RedisCache(redis);
+export const rateLimiter = redis ? new RedisRateLimiter(redis, SECURE_MODE) : null;
+export const cache = redis ? new RedisCache(redis) : null;
 
 // Export utility function to create rate limiters with different security configurations
-export const createRateLimiter = (secureMode: boolean = true) => new RedisRateLimiter(redis, secureMode);
+export const createRateLimiter = (secureMode: boolean = true) => {
+  if (!redis) {
+    if (SKIP_DB_VALIDATION) {
+      throw new Error('Redis operations are disabled during build (SKIP_DB_VALIDATION enabled)');
+    }
+    throw new Error('Redis client not initialized');
+  }
+  return new RedisRateLimiter(redis, secureMode);
+};
 
 // Export Redis connection for direct access when needed
 export default redis;
 
 // Export getRedisClient function for compatibility
-export const getRedisClient = (): Redis => redis;
+export const getRedisClient = (): Redis => {
+  if (!redis) {
+    if (SKIP_DB_VALIDATION) {
+      throw new Error('Redis operations are disabled during build (SKIP_DB_VALIDATION enabled)');
+    }
+    throw new Error('Redis client not initialized');
+  }
+  return redis;
+};
 
 // Export connection health check utility
 export const checkRedisHealth = async (): Promise<{
@@ -343,6 +378,13 @@ export const checkRedisHealth = async (): Promise<{
   latency?: number;
   error?: string;
 }> => {
+  if (!redis) {
+    if (SKIP_DB_VALIDATION) {
+      return { healthy: false, error: 'Redis operations are disabled during build' };
+    }
+    return { healthy: false, error: 'Redis client not initialized' };
+  }
+  
   try {
     const start = Date.now();
     await redis.ping();

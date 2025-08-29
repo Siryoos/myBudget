@@ -88,3 +88,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
     </html>
   );
 }
+
+// Ensure app-level layout opts out of static pre-rendering to keep client-context-only trees safe during build
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;

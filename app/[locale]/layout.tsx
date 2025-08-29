@@ -12,6 +12,10 @@ export default function LocaleLayout({
   return children;
 }
 
+// Force dynamic rendering for all locale-scoped pages to avoid SSG/pre-render issues
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 // Generate static params for all supported locales
 export const generateStaticParams = () => [
     { locale: 'en' },

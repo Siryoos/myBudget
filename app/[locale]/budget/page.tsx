@@ -1,15 +1,10 @@
-import type { Metadata } from 'next';
+'use client';
 
 import { BudgetAllocator } from '@/components/budget/BudgetAllocator';
 import BudgetHeader from '@/components/budget/BudgetHeader';
 import { BudgetMethodSelector } from '@/components/budget/BudgetMethodSelector';
 import { BudgetVisualization } from '@/components/budget/BudgetVisualization';
 import { IncomeManager } from '@/components/budget/IncomeManager';
-
-export const metadata: Metadata = {
-  title: 'Budget Planner',
-  description: 'Create and manage your budget with proven methods',
-};
 
 export default function BudgetPage() {
   return (

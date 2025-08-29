@@ -268,7 +268,8 @@ describe('Rate Limiting', () => {
   describe('Rate Limiter Configuration', () => {
     it('should have Redis-based rate limiting', () => {
       expect(rateLimiter).toBeDefined();
-      expect(typeof rateLimiter.checkRateLimit).toBe('function');
+      const limiter = rateLimiter!;
+      expect(typeof limiter.checkRateLimit).toBe('function');
     });
 
     it('should handle rate limit checks', async () => {
@@ -278,7 +279,8 @@ describe('Rate Limiting', () => {
         maxRequests: 5,
       };
 
-      const result = await rateLimiter.checkRateLimit(identifier, config);
+      const limiter = rateLimiter!;
+      const result = await limiter.checkRateLimit(identifier, config);
       expect(result).toHaveProperty('allowed');
       expect(result).toHaveProperty('remaining');
       expect(result).toHaveProperty('resetTime');

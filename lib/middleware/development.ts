@@ -1,6 +1,6 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-import { HTTP_BAD_REQUEST, HTTP_OK } from '@/lib/services/error-handler';
+import { HTTP_BAD_REQUEST, HTTP_OK, HTTP_INTERNAL_SERVER_ERROR } from '@/lib/http-status';
 
 // Development-specific middleware for enhanced development experience
 

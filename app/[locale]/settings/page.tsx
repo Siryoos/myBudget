@@ -1,14 +1,9 @@
-import type { Metadata } from 'next';
+'use client';
 
 import { NotificationSettings } from '@/components/settings/NotificationSettings';
 import { ProfileManager } from '@/components/settings/ProfileManager';
 import { RegionalizationSettings } from '@/components/settings/RegionalizationSettings';
 import { SecurityPanel } from '@/components/settings/SecurityPanel';
-
-export const metadata: Metadata = {
-  title: 'Settings',
-  description: 'Manage your account settings and preferences',
-};
 
 export default function SettingsPage() {
   return (

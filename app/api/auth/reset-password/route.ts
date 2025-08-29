@@ -18,10 +18,40 @@ const resetPasswordSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+  // Skip execution during build time
+  if (process.env.SKIP_DB_VALIDATION === 'true') {
+    return NextResponse.json(
+      {
+        success: false,
+        error: {
+          code: 'BUILD_TIME_ERROR',
+          message: 'API not available during build time',
+        },
+        requestId: 'build-time',
+      },
+      { status: 503 }
+    );
+  }
+
   const requestId = crypto.randomUUID();
 
   try {
     // Rate limiting for password reset attempts
+    // Ensure rate limiter is available (especially during certain builds/tests)
+    if (!rateLimiter) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: 'SERVICE_UNAVAILABLE',
+            message: 'Rate limiting service is unavailable',
+          },
+          requestId,
+        },
+        { status: 503 },
+      );
+    }
+
     const identifier = request.ip || request.headers.get('x-forwarded-for') || 'anonymous';
     const rateLimitResult = await rateLimiter.checkRateLimit(identifier, {
       windowMs: 60 * 60 * 1000, // 1 hour

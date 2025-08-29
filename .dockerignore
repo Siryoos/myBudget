@@ -1,0 +1,17 @@
+node_modules
+.next
+dist
+logs
+uploads
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-store
+Dockerfile*
+.dockerignore
+.git
+.gitignore
+.env*
+**/*.tsbuildinfo
+**/*.map
+

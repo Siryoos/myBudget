@@ -1,6 +1,6 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-import { HTTP_OK, HTTP_INTERNAL_SERVER_ERROR } from '@/lib/services/error-handler';
+import { HTTP_OK, HTTP_INTERNAL_SERVER_ERROR } from '@/lib/http-status';
 
 import { middleware as securityMiddleware } from './middleware/security';
 

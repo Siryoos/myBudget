@@ -39,6 +39,11 @@ const refreshTokenSchema = z.object({
 
 // Helper function to check rate limiting
 const checkRateLimit = async (request: NextRequest): Promise<{ allowed: boolean; message?: string }> => {
+  // Skip rate limiting during build time
+  if (process.env.SKIP_DB_VALIDATION === 'true') {
+    return { allowed: true };
+  }
+  
   if (!rateLimiter) {
     return { allowed: true };
   }

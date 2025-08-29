@@ -4,6 +4,7 @@ import React, { useEffect } from 'react';
 
 import { getDirection } from '@/lib/i18n';
 import { I18nProvider } from '@/lib/i18n-provider';
+import { AppProvider } from '@/contexts/AppProvider';
 
 interface ClientLayoutProps {
   children: React.ReactNode;
@@ -20,7 +21,9 @@ export default function ClientLayout({ children, locale }: ClientLayoutProps) {
 
   return (
     <I18nProvider locale={locale}>
-      {children}
+      <AppProvider>
+        {children}
+      </AppProvider>
     </I18nProvider>
   );
 }

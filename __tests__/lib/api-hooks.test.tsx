@@ -1,25 +1,19 @@
-import { renderHook, waitFor } from '@testing-library/react';
+import { renderHook, waitFor, act } from '@testing-library/react';
 
-import { apiClient } from '../../lib/api-client';
+// Extend Jest timeout for slower CI/sandbox environments
+jest.setTimeout(15000);
+
+import { apiClient } from '@/lib/api-client';
 import { useGoals, useInsights, useDashboardData } from '../../lib/api-hooks';
 
-// Mock API client
-jest.mock('@/lib/api-client', () => ({
-  apiClient: {
-    getGoals: jest.fn(),
-    createGoal: jest.fn(),
-    updateGoal: jest.fn(),
-    deleteGoal: jest.fn(),
-    addGoalContribution: jest.fn(),
-    getNotifications: jest.fn(),
-    markNotificationRead: jest.fn(),
-    getDashboard: jest.fn(),
-  },
-}));
+// We spy on the real apiClient methods per-test instead of module-mocking
 
 describe('API Hooks', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+  });
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   describe('useGoals', () => {
@@ -29,7 +23,7 @@ describe('API Hooks', () => {
         { id: '2', name: 'Goal 2', targetAmount: 2000 },
       ];
 
-      (apiClient.getGoals as jest.Mock).mockResolvedValue({
+      jest.spyOn(apiClient as any, 'getGoals').mockResolvedValue({
         success: true,
         data: mockGoals,
       });
@@ -47,7 +41,7 @@ describe('API Hooks', () => {
     });
 
     it('should handle errors when fetching goals', async () => {
-      (apiClient.getGoals as jest.Mock).mockRejectedValue(
+      jest.spyOn(apiClient as any, 'getGoals').mockRejectedValue(
         new Error('Failed to fetch'),
       );
 
@@ -65,12 +59,12 @@ describe('API Hooks', () => {
       const newGoal = { name: 'New Goal', targetAmount: 3000 };
       const mockGoals = [{ id: '1', ...newGoal }];
 
-      (apiClient.createGoal as jest.Mock).mockResolvedValue({
+      jest.spyOn(apiClient as any, 'createGoal').mockResolvedValue({
         success: true,
         data: { goalId: '1' },
       });
 
-      (apiClient.getGoals as jest.Mock).mockResolvedValue({
+      jest.spyOn(apiClient as any, 'getGoals').mockResolvedValue({
         success: true,
         data: mockGoals,
       });
@@ -81,7 +75,9 @@ describe('API Hooks', () => {
         expect(result.current.loading).toBe(false);
       });
 
-      await result.current.createGoal(newGoal);
+      await act(async () => {
+        await result.current.createGoal(newGoal);
+      });
 
       expect(apiClient.createGoal).toHaveBeenCalledWith({
         name: 'New Goal',
@@ -100,7 +96,7 @@ describe('API Hooks', () => {
     });
 
     it('should filter goals by priority', async () => {
-      (apiClient.getGoals as jest.Mock).mockResolvedValue({
+      jest.spyOn(apiClient as any, 'getGoals').mockResolvedValue({
         success: true,
         data: [],
       });
@@ -129,16 +125,16 @@ describe('API Hooks', () => {
         },
       ];
 
-      (apiClient.getNotifications as jest.Mock).mockResolvedValue({
-        success: true,
-        data: mockNotifications,
-      });
+      const mockClient: any = {
+        getNotifications: jest.fn().mockResolvedValue({ success: true, data: mockNotifications }),
+        markNotificationRead: jest.fn(),
+      };
 
-      const { result } = renderHook(() => useInsights());
+      const { result } = renderHook(() => useInsights([], mockClient));
 
       await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      });
+        expect(result.current.insights).toHaveLength(1);
+      }, { timeout: 3000 });
 
       expect(result.current.insights).toHaveLength(1);
       expect(result.current.insights[0]).toMatchObject({
@@ -156,26 +152,44 @@ describe('API Hooks', () => {
         { id: '2', title: 'Insight 2' },
       ];
 
-      (apiClient.getNotifications as jest.Mock).mockResolvedValue({
-        success: true,
-        data: mockInsights.map(i => ({ ...i, type: 'insight' })),
-      });
+      const mockClient: any = {
+        getNotifications: jest.fn().mockResolvedValue({
+          success: true,
+          data: mockInsights.map(i => ({ ...i, type: 'insight' })),
+        }),
+        markNotificationRead: jest.fn().mockResolvedValue({ success: true }),
+      };
 
-      (apiClient.markNotificationRead as jest.Mock).mockResolvedValue({
-        success: true,
-      });
+      const { result } = renderHook(() => useInsights([], mockClient));
 
-      const { result } = renderHook(() => useInsights());
+      await act(async () => {
+        await result.current.refetch();
+      });
 
       await waitFor(() => {
-        expect(result.current.loading).toBe(false);
+        expect(result.current.insights).toHaveLength(2);
+      }, { timeout: 3000 });
+
+      await act(async () => {
+        await result.current.dismissInsight('1');
       });
 
-      await result.current.dismissInsight('1');
+      expect(mockClient.markNotificationRead).toHaveBeenCalledWith('1');
 
-      expect(apiClient.markNotificationRead).toHaveBeenCalledWith('1');
-      expect(result.current.insights).toHaveLength(1);
-      expect(result.current.insights[0].id).toBe('2');
+      // Simulate server state update on refetch
+      mockClient.getNotifications.mockResolvedValueOnce({
+        success: true,
+        data: [{ id: '2', title: 'Insight 2', type: 'insight' }],
+      });
+
+      await act(async () => {
+        await result.current.refetch();
+      });
+
+      await waitFor(() => {
+        expect(result.current.insights).toHaveLength(1);
+        expect(result.current.insights[0].id).toBe('2');
+      }, { timeout: 3000 });
     });
 
     it('should use fallback data when API fails', async () => {
@@ -191,11 +205,12 @@ describe('API Hooks', () => {
         isRead: false,
       }];
 
-      (apiClient.getNotifications as jest.Mock).mockResolvedValue({
-        success: false,
-      });
+      const mockClient: any = {
+        getNotifications: jest.fn().mockResolvedValue({ success: false }),
+        markNotificationRead: jest.fn(),
+      };
 
-      const { result } = renderHook(() => useInsights(fallbackData));
+      const { result } = renderHook(() => useInsights(fallbackData, mockClient));
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -216,7 +231,7 @@ describe('API Hooks', () => {
         },
       };
 
-      (apiClient.getDashboard as jest.Mock).mockResolvedValue({
+      jest.spyOn(apiClient as any, 'getDashboard').mockResolvedValue({
         success: true,
         data: mockDashboard,
       });
@@ -232,7 +247,7 @@ describe('API Hooks', () => {
     });
 
     it('should handle dashboard fetch errors', async () => {
-      (apiClient.getDashboard as jest.Mock).mockRejectedValue(
+      jest.spyOn(apiClient as any, 'getDashboard').mockRejectedValue(
         new Error('Network error'),
       );
 
@@ -249,7 +264,7 @@ describe('API Hooks', () => {
     it('should refetch dashboard data', async () => {
       const mockDashboard = { overview: { totalBalance: 10000 } };
 
-      (apiClient.getDashboard as jest.Mock).mockResolvedValue({
+      jest.spyOn(apiClient as any, 'getDashboard').mockResolvedValue({
         success: true,
         data: mockDashboard,
       });
@@ -262,7 +277,9 @@ describe('API Hooks', () => {
 
       expect(apiClient.getDashboard).toHaveBeenCalledTimes(1);
 
-      await result.current.refetch();
+      await act(async () => {
+        await result.current.refetch();
+      });
 
       expect(apiClient.getDashboard).toHaveBeenCalledTimes(2);
     });

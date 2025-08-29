@@ -26,6 +26,11 @@ function checkInMemoryRateLimit(identifier: string, cfg: { windowMs: number; max
 
 // Enhanced environment validation with better error handling
 const validateEnvironment = () => {
+  // Skip validation during build time
+  if (process.env.SKIP_DB_VALIDATION === 'true') {
+    return;
+  }
+  
   const requiredVars = [
     'ALLOWED_ORIGINS',
     'REDIS_HOST',

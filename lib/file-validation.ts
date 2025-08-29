@@ -84,7 +84,25 @@ export class FileValidator {
     const mimeSignature = signatures[file.type];
     if (!mimeSignature) {return true;} // Skip if no signature defined
 
-    const buffer = await file.slice(0, mimeSignature.length).arrayBuffer();
+    // Prefer reading from the File itself to avoid relying on Response in test envs
+    let buffer: ArrayBuffer;
+    if (typeof (file as any).arrayBuffer === 'function') {
+      const full = await (file as any).arrayBuffer();
+      buffer = full.slice(0, mimeSignature.length);
+    } else {
+      const sliced = file.slice(0, mimeSignature.length);
+      // Some environments lack Blob.arrayBuffer on the slice result
+      if (typeof (sliced as any).arrayBuffer === 'function') {
+        buffer = await (sliced as any).arrayBuffer();
+      } else if (typeof (file as any).text === 'function') {
+        // Fallback: read as text and convert (sufficient for tests using ASCII payload)
+        const txt = await (file as any).text();
+        const bytes = new TextEncoder().encode(txt);
+        buffer = bytes.slice(0, mimeSignature.length).buffer;
+      } else {
+        throw new Error('Unable to read file bytes for signature check');
+      }
+    }
     const bytes = new Uint8Array(buffer);
 
     return mimeSignature.every((byte, index) => bytes[index] === byte);

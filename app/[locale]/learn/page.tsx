@@ -1,12 +1,7 @@
-import type { Metadata } from 'next';
+'use client';
 
 import { EducationHub } from '@/components/education/EducationHub';
 import { TipsFeed } from '@/components/education/TipsFeed';
-
-export const metadata: Metadata = {
-  title: 'Financial Education',
-  description: 'Learn and improve your financial knowledge with interactive modules and tips',
-};
 
 export default function LearnPage() {
   return (

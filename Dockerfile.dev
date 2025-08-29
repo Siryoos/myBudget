@@ -18,9 +18,10 @@ COPY . .
 
 # Set development environment
 ENV NODE_ENV=development
+ENV SKIP_DB_VALIDATION=true
 
 # Build the application for development
-RUN npm run build
+RUN npm run build:docker
 
 # Development image
 FROM base AS runner
