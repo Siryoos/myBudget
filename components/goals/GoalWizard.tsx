@@ -25,6 +25,7 @@ import { useCurrency } from '@/lib/useCurrency';
 import { useTranslation } from '@/lib/useTranslation';
 import { sanitizeNumberInput, formatDate } from '@/lib/utils';
 import type { SavingsGoal, GoalCategory, GoalPhoto } from '@/types';
+import { useToast } from '@/hooks/useToast';
 
 interface GoalTemplate {
   id: GoalCategory
@@ -88,6 +89,7 @@ export function GoalWizard({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeBtnRef = useRef<HTMLButtonElement>(null);
+  const { toast } = useToast();
 
   // Manage focus trap and scroll lock when wizard opens
   useEffect(() => {
@@ -131,6 +133,21 @@ export function GoalWizard({
       document.body.style.overflow = originalOverflow;
     };
   }, [showWizard]);
+
+  // Load and persist draft
+  useEffect(() => {
+    try {
+      const draft = localStorage.getItem('goalWizardDraft');
+      if (draft) {
+        const parsed = JSON.parse(draft);
+        setGoalData(prev => ({ ...prev, ...parsed }));
+      }
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useEffect(() => {
+    try { localStorage.setItem('goalWizardDraft', JSON.stringify(goalData)); } catch {}
+  }, [goalData]);
 
   if (!ready) {
     return (
@@ -324,7 +341,7 @@ export function GoalWizard({
       };
       reader.readAsDataURL(file);
     } catch (error) {
-      console.error('Error uploading photo:', error);
+      toast({ title: t('errors.uploadFailed', { defaultValue: 'Upload failed' }), description: t('errors.tryAgain', { defaultValue: 'Please try again' }), variant: 'error' });
       setIsUploading(false);
     }
   };
@@ -355,7 +372,7 @@ export function GoalWizard({
       onGoalCreated(goal);
     }
 
-    console.log('Creating goal:', goal);
+    toast({ title: t('wizard.created', { defaultValue: 'Goal created' }), description: goal.name || t('wizard.goal', { defaultValue: 'Goal' }), variant: 'success' });
     setShowWizard(false);
     setCurrentStep(1);
     setSelectedTemplate(null);
@@ -420,6 +437,14 @@ export function GoalWizard({
                   >
                     <XMarkIcon className="w-6 h-6" />
                   </button>
+                </div>
+
+                {/* Progress indicator */}
+                <div className="mb-6">
+                  <div className="w-full h-2 bg-neutral-light-gray rounded-full overflow-hidden">
+                    <div className="h-2 bg-secondary-growth-green transition-all duration-300" style={{ width: `${currentStep === 1 ? 50 : 100}%` }} />
+                  </div>
+                  <div className="mt-2 text-xs text-neutral-gray">{t('wizard.progress', { defaultValue: 'Step {{step}} of 2', step: currentStep })}</div>
                 </div>
 
                 {currentStep === 1 && (

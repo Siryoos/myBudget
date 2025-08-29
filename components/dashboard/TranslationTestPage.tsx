@@ -31,9 +31,7 @@ export function TranslationTestPage() {
 
   const handleLanguageChange = async (newLocale: string) => {
     try {
-      console.log(`Changing language to ${newLocale}...`);
       await changeLanguage(newLocale);
-      console.log(`Language changed to ${newLocale}`);
     } catch (error) {
       console.error('Failed to change language:', error);
     }
@@ -110,7 +108,7 @@ export function TranslationTestPage() {
               <li>Click any language button to instantly switch languages</li>
               <li>All components below will automatically update with new translations</li>
               <li>Watch the text direction change for Arabic and Persian (RTL)</li>
-              <li>Check the browser console for language change logs</li>
+              <li>Language switching is instantaneous; no reload needed</li>
               <li>Use the toggle button to show/hide components</li>
             </ul>
           </div>

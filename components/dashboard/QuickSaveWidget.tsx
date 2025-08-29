@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { useTranslation } from '@/lib/useTranslation';
 import { formatCurrency, sanitizeNumberInput } from '@/lib/utils';
+import { useToast } from '@/hooks/useToast';
 
 interface QuickSaveWidgetProps {
   defaultAmounts?: number[]
@@ -39,6 +40,7 @@ export function QuickSaveWidget({
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
+  const { toast } = useToast();
 
   const handleQuickSave = async (amount: number) => {
     setIsLoading(true);
@@ -56,10 +58,9 @@ export function QuickSaveWidget({
       setSelectedAmount(null);
       setCustomAmount('');
       setShowCustomInput(false);
-
-      console.log(`Saved ${formatCurrency(amount)}`);
+      toast({ title: t('quickSave.successTitle', { defaultValue: 'Saved!' }), description: `${formatCurrency(amount)} ${t('quickSave.saved', { defaultValue: 'added to savings' })}`, variant: 'success', duration: 2500 });
     } catch (error) {
-      console.error('Failed to save:', error);
+      toast({ title: t('quickSave.errorTitle', { defaultValue: 'Save failed' }), description: t('quickSave.errorMessage', { defaultValue: 'Please try again' }), variant: 'error' });
     } finally {
       setIsLoading(false);
     }

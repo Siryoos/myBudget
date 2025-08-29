@@ -19,6 +19,7 @@ import LanguageSwitcher from './LanguageSwitcher';
 
 interface HeaderProps {
   onMenuToggle?: () => void
+  isMenuOpen?: boolean
 }
 
 /**
@@ -33,7 +34,7 @@ interface HeaderProps {
  * @param onMenuToggle - Optional callback invoked when the mobile menu button is pressed.
  * @returns The header JSX element.
  */
-export function Header({ onMenuToggle }: HeaderProps) {
+export function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [greetingKey, setGreetingKey] = useState('app.greeting.morning'); // Default to morning
   const { t, ready } = useTranslation('common');
@@ -67,6 +68,8 @@ export function Header({ onMenuToggle }: HeaderProps) {
               className="lg:hidden p-2 rounded-md text-neutral-gray hover:bg-neutral-light-gray hover:text-neutral-dark-gray focus:outline-none focus:ring-2 focus:ring-primary-trust-blue"
               onClick={onMenuToggle}
               aria-label="Open navigation menu"
+              aria-controls="main-nav"
+              aria-expanded={isMenuOpen ? true : false}
             >
               <Bars3Icon className="h-6 w-6" />
             </button>
@@ -100,6 +103,7 @@ export function Header({ onMenuToggle }: HeaderProps) {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 aria-label="Search"
+                id="global-search"
               />
             </div>
           </div>
@@ -128,6 +132,19 @@ export function Header({ onMenuToggle }: HeaderProps) {
               {/* Notification badge */}
               <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-accent-action-orange transform translate-x-1/2 -translate-y-1/2"></span>
             </button>
+
+            {/* Theme toggle (light/dark/high-contrast) */}
+            <div className="hidden sm:block">
+              <a
+                href="#" onClick={(e) => { e.preventDefault(); const ev = new CustomEvent('toggle-theme'); window.dispatchEvent(ev); }}
+                className="p-2 rounded-md text-neutral-gray hover:bg-neutral-light-gray hover:text-neutral-dark-gray focus:outline-none focus:ring-2 focus:ring-primary-trust-blue"
+                aria-label="Toggle theme"
+                title="Toggle theme"
+              >
+                {/* simple icon imitation: sun/moon via emoji for minimal footprint */}
+                <span role="img" aria-hidden="true">🌓</span>
+              </a>
+            </div>
 
             {/* User menu */}
             <Menu as="div" className="relative">

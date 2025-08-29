@@ -422,6 +422,31 @@ function InsightsPanelContent({
           role="tablist"
           aria-label={getTranslationWithFallback('insights.title', 'Financial Insights')}
           className={`flex flex-col sm:flex-row gap-1 sm:space-x-1 mt-4 bg-neutral-light-gray rounded-lg p-1 overflow-hidden ${isRTL ? 'sm:flex-row-reverse' : ''}`}
+          onKeyDown={(e) => {
+            const order: TabType[] = ['tips', 'recommendations', 'compare'];
+            const enabled = order.filter((id) =>
+              (id === 'tips' && showSavingTips) || (id === 'recommendations' && personalizedRecommendations) || (id === 'compare' && comparePeers),
+            );
+            const idx = enabled.indexOf(activeTab);
+            if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+              e.preventDefault();
+              const next = enabled[(idx + 1) % enabled.length];
+              setActiveTab(next);
+            }
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+              e.preventDefault();
+              const prev = enabled[(idx - 1 + enabled.length) % enabled.length];
+              setActiveTab(prev);
+            }
+            if (e.key === 'Home') {
+              e.preventDefault();
+              setActiveTab(enabled[0]);
+            }
+            if (e.key === 'End') {
+              e.preventDefault();
+              setActiveTab(enabled[enabled.length - 1]);
+            }
+          }}
         >
           {showSavingTips && (
             <TabButton

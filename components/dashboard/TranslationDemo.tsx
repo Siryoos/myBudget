@@ -37,7 +37,6 @@ export function TranslationDemo() {
   const handleLanguageChange = async (newLocale: string) => {
     try {
       await changeLanguage(newLocale);
-      console.log(`Language changed to ${newLocale}`);
     } catch (error) {
       console.error('Failed to change language:', error);
     }

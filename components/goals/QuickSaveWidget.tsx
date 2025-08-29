@@ -16,6 +16,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { useCurrency } from '@/lib/useCurrency';
 import { useTranslation } from '@/lib/useTranslation';
 import type { QuickSaveData, SocialProof, SavingsGoal } from '@/types';
+import { useToast } from '@/hooks/useToast';
 
 interface QuickSaveWidgetProps {
   goals?: SavingsGoal[]
@@ -53,6 +54,7 @@ export function QuickSaveWidget({
   const [isSaving, setIsSaving] = useState(false);
   const [showSocialMessage, setShowSocialMessage] = useState(false);
   const [saveCount, setSaveCount] = useState(0);
+  const { toast } = useToast();
 
   // A/B testing for default amounts - persistent assignment
   const [abTestGroup] = useState<'control' | 'test'>(() => {
@@ -173,9 +175,7 @@ export function QuickSaveWidget({
       };
 
       // In production, you would send this to your analytics service
-      if (process.env.NODE_ENV === 'development') {
-        console.log('A/B Test Data:', abTestData);
-      }
+      // Optionally send to analytics in production; no console logs.
 
       if (onQuickSave) {
         onQuickSave(saveData);
@@ -198,7 +198,7 @@ export function QuickSaveWidget({
       setTimeout(() => setIsSaving(false), 1000);
 
     } catch (error) {
-      console.error('Error during quick save:', error);
+      toast({ title: t('errors.saveFailed', { defaultValue: 'Save failed' }), description: t('errors.tryAgain', { defaultValue: 'Please try again' }), variant: 'error' });
       setIsSaving(false);
     }
   };

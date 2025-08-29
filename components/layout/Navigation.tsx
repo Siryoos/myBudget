@@ -89,6 +89,8 @@ export function Navigation({ isOpen = false, onClose }: NavigationProps) {
   const navRef = useRef<HTMLElement | null>(null);
   const { netIncome } = useFinancialSummary();
   const { loading: txLoading } = useTransactions();
+  const touchStartX = useRef<number | null>(null);
+  const touchCurrentX = useRef<number | null>(null);
 
   // Manage focus and Escape key when mobile nav opens
   useEffect(() => {
@@ -135,6 +137,41 @@ export function Navigation({ isOpen = false, onClose }: NavigationProps) {
     };
   }, [isOpen, onClose]);
 
+  // Swipe to close on mobile
+  useEffect(() => {
+    if (!isOpen || !navRef.current) {return;}
+    const el = navRef.current;
+    const onTouchStart = (e: TouchEvent) => {
+      touchStartX.current = e.touches[0].clientX;
+      touchCurrentX.current = e.touches[0].clientX;
+    };
+    const onTouchMove = (e: TouchEvent) => {
+      touchCurrentX.current = e.touches[0].clientX;
+    };
+    const onTouchEnd = () => {
+      if (touchStartX.current != null && touchCurrentX.current != null) {
+        const deltaX = touchCurrentX.current - touchStartX.current;
+        // Close if swiped left sufficiently (LTR) or right sufficiently (RTL)
+        const dir = document.documentElement.dir || 'ltr';
+        const threshold = 60;
+        if ((dir === 'ltr' && deltaX < -threshold) || (dir === 'rtl' && deltaX > threshold)) {
+          onClose?.();
+        }
+      }
+      touchStartX.current = null;
+      touchCurrentX.current = null;
+    };
+
+    el.addEventListener('touchstart', onTouchStart, { passive: true });
+    el.addEventListener('touchmove', onTouchMove, { passive: true });
+    el.addEventListener('touchend', onTouchEnd);
+    return () => {
+      el.removeEventListener('touchstart', onTouchStart as any);
+      el.removeEventListener('touchmove', onTouchMove as any);
+      el.removeEventListener('touchend', onTouchEnd as any);
+    };
+  }, [isOpen, onClose]);
+
   // Get navigation items with translations
   const navigationItems = getNavigationItems(t, locale);
 
@@ -160,7 +197,7 @@ export function Navigation({ isOpen = false, onClose }: NavigationProps) {
       {/* Mobile overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          className="fixed inset-0 z-40 lg:hidden bg-black/40 backdrop-blur-sm transition-opacity"
           onClick={onClose}
           aria-hidden="true"
         />
@@ -169,16 +206,20 @@ export function Navigation({ isOpen = false, onClose }: NavigationProps) {
       {/* Navigation sidebar */}
       <nav
         className={cn(
-          'fixed top-0 left-0 z-50 h-full w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:z-auto',
+          'fixed top-0 left-0 z-50 h-full w-screen xs:w-screen sm:w-[100vw] md:w-[280px] lg:w-[320px] bg-white dark:bg-neutral-light-gray shadow-lg transform transition-transform duration-300 ease-out lg:translate-x-0 lg:static lg:z-auto',
           isOpen ? 'translate-x-0' : '-translate-x-full',
         )}
+        id="main-nav"
         aria-label="Main navigation"
+        role={isOpen ? 'dialog' : undefined}
+        aria-modal={isOpen ? true : undefined}
+        aria-labelledby="nav-title"
         tabIndex={isOpen ? -1 : undefined}
         ref={navRef as any}
       >
         {/* Mobile header */}
         <div className="flex items-center justify-between p-4 border-b border-neutral-gray/10 lg:hidden">
-          <h2 className="text-lg font-semibold text-primary-trust-blue">
+          <h2 id="nav-title" className="text-lg font-semibold text-primary-trust-blue">
             SmartSave
           </h2>
           <button
@@ -203,7 +244,7 @@ export function Navigation({ isOpen = false, onClose }: NavigationProps) {
                 key={item.id}
                 href={item.href}
                 className={cn(
-                  'flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 group',
+                  'flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 group min-h-[44px]',
                   isActive
                     ? 'bg-primary-trust-blue text-white shadow-sm'
                     : 'text-neutral-gray hover:bg-neutral-light-gray hover:text-neutral-dark-gray',
@@ -255,7 +296,7 @@ export function Navigation({ isOpen = false, onClose }: NavigationProps) {
       </nav>
 
       {/* Desktop spacer */}
-      <div className="hidden lg:block w-64 flex-shrink-0" aria-hidden="true" />
+      <div className="hidden lg:block w-[320px] flex-shrink-0" aria-hidden="true" />
     </>
   );
 }

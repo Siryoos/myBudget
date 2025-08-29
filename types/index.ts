@@ -276,11 +276,15 @@ export interface CardProps extends ComponentProps {
 
 export interface ButtonProps extends ComponentProps {
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost'
-  size?: 'sm' | 'md' | 'lg' | 'small'
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'small'
   loading?: boolean
   disabled?: boolean
   onClick?: () => void
   type?: 'button' | 'submit' | 'reset'
+  leftIcon?: ReactNode
+  rightIcon?: ReactNode
+  iconOnly?: boolean
+  ariaLabel?: string
 }
 
 // Chart and visualization types

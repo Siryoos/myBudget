@@ -19,7 +19,7 @@ export default function DashboardPage() {
         showQuickActions={true}
       />
 
-      {/* Main Dashboard Grid */}
+      {/* Main Dashboard Grid (mobile-first) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column - Primary Widgets */}
         <div className="lg:col-span-2 space-y-6">
@@ -32,18 +32,32 @@ export default function DashboardPage() {
           />
 
           {/* Budget Summary */}
-          <BudgetSummary
-            showCategories={true}
-            showSpendingAlerts={true}
-            visualType="donutChart"
-          />
+          <details className="lg:open bg-white rounded-md shadow-sm border border-neutral-gray/10">
+            <summary className="list-none cursor-pointer px-4 py-3 text-sm font-medium text-neutral-dark-gray lg:hidden">
+              Budget Summary
+            </summary>
+            <div className="p-0 lg:p-0">
+              <BudgetSummary
+                showCategories={true}
+                showSpendingAlerts={true}
+                visualType="donutChart"
+              />
+            </div>
+          </details>
 
           {/* Recent Transactions */}
-          <RecentTransactions
-            limit={5}
-            showCategories={true}
-            showAmounts={true}
-          />
+          <details className="lg:open bg-white rounded-md shadow-sm border border-neutral-gray/10">
+            <summary className="list-none cursor-pointer px-4 py-3 text-sm font-medium text-neutral-dark-gray lg:hidden">
+              Recent Transactions
+            </summary>
+            <div>
+              <RecentTransactions
+                limit={5}
+                showCategories={true}
+                showAmounts={true}
+              />
+            </div>
+          </details>
         </div>
 
         {/* Right Column - Secondary Widgets */}

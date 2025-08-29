@@ -6,6 +6,7 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useState, useRef, useEffect } from 'react';
 
 import { getDirection } from '@/lib/i18n';
+import { useToast } from '@/hooks/useToast';
 
 
 type Locale = 'en' | 'fa' | 'ar';
@@ -34,6 +35,7 @@ export default function LanguageSwitcher({ currentLocale = 'en' }: LanguageSwitc
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const { toast } = useToast();
 
   // Use the passed locale prop, fallback to extracting from pathname if not provided
   const locale = (currentLocale && languages.find(lang => lang.code === currentLocale))
@@ -135,7 +137,7 @@ export default function LanguageSwitcher({ currentLocale = 'en' }: LanguageSwitc
       router.replace(newPath);
       setIsOpen(false);
     } catch (error) {
-      console.error('Error changing language:', error);
+      toast({ title: 'Language change failed', description: 'Please try again', variant: 'error' });
       // Fallback to router navigation if something goes wrong
       router.push(newPath);
     }

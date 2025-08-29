@@ -128,7 +128,6 @@ export function BudgetMethodSelector() {
 
   const handleConfirmMethod = () => {
     if (selectedMethod) {
-      console.log(`Selected budget method: ${selectedMethod}`);
       // This would typically update the user's budget configuration
       toast({ title: t('methodSelector.confirmed', { defaultValue: 'Budget method selected' }), variant: 'success' });
     }
@@ -159,7 +158,27 @@ export function BudgetMethodSelector() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+        <div
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6"
+          role="radiogroup"
+          aria-label={t('methodSelector.title', { defaultValue: 'Choose Your Budgeting Method' })}
+          onKeyDown={(e) => {
+            const order = budgetMethods.map(m => m.id);
+            const idx = selectedMethod ? order.indexOf(selectedMethod) : 0;
+            const nextIndex = (delta: number) => (idx + delta + order.length) % order.length;
+            if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+              setSelectedMethod(order[nextIndex(1)]);
+              setShowDetails(true);
+            }
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+              setSelectedMethod(order[nextIndex(-1)]);
+              setShowDetails(true);
+            }
+            if (e.key === 'Enter' && selectedMethod) {
+              handleConfirmMethod();
+            }
+          }}
+        >
           {budgetMethods.map((method) => {
             const IconComponent = method.icon;
             const isSelected = selectedMethod === method.id;
@@ -173,6 +192,10 @@ export function BudgetMethodSelector() {
                     ? 'border-primary-trust-blue bg-primary-trust-blue/5'
                     : 'border-neutral-gray/30 hover:border-primary-trust-blue/50'
                 }`}
+                role="radio"
+                aria-checked={isSelected}
+                aria-label={method.name}
+                title={method.description}
               >
                 <div className="flex items-start mb-3">
                   <div className={`p-2 rounded-lg mr-3 ${

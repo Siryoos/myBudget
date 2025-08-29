@@ -5,30 +5,39 @@ module.exports = {
     './components/**/*.{js,ts,jsx,tsx,mdx}',
     './app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
+  darkMode: 'class',
   theme: {
+    screens: {
+      xs: '320px',
+      sm: '640px',
+      md: '768px',
+      lg: '1024px',
+      xl: '1280px',
+      '2xl': '1536px',
+    },
     extend: {
       colors: {
         primary: {
-          'trust-blue': '#1E5A8D',
-          'trust-blue-light': '#4A8BC2',
-          'trust-blue-dark': '#0D3656',
+          'trust-blue': 'rgb(var(--color-primary-trust-blue) / <alpha-value>)',
+          'trust-blue-light': 'rgb(var(--color-primary-trust-blue-light) / <alpha-value>)',
+          'trust-blue-dark': 'rgb(var(--color-primary-trust-blue-dark) / <alpha-value>)',
         },
         secondary: {
-          'growth-green': '#27AE60',
-          'growth-green-light': '#52C77E',
-          'growth-green-dark': '#1E8449',
+          'growth-green': 'rgb(var(--color-secondary-growth-green) / <alpha-value>)',
+          'growth-green-light': 'rgb(var(--color-secondary-growth-green-light) / <alpha-value>)',
+          'growth-green-dark': 'rgb(var(--color-secondary-growth-green-dark) / <alpha-value>)',
         },
         neutral: {
-          white: '#FFFFFF',
-          'light-gray': '#F8F9FA',
-          gray: '#6C757D',
-          'dark-gray': '#343A40',
-          black: '#212529',
+          white: 'rgb(var(--color-neutral-white) / <alpha-value>)',
+          'light-gray': 'rgb(var(--color-neutral-light-gray) / <alpha-value>)',
+          gray: 'rgb(var(--color-neutral-gray) / <alpha-value>)',
+          'dark-gray': 'rgb(var(--color-neutral-dark-gray) / <alpha-value>)',
+          black: 'rgb(var(--color-neutral-black) / <alpha-value>)',
         },
         accent: {
-          'action-orange': '#FF6B35',
-          'warning-red': '#DC3545',
-          'success-emerald': '#10B981',
+          'action-orange': 'rgb(var(--color-accent-action-orange) / <alpha-value>)',
+          'warning-red': 'rgb(var(--color-accent-warning-red) / <alpha-value>)',
+          'success-emerald': 'rgb(var(--color-accent-success-emerald) / <alpha-value>)',
         },
       },
       fontFamily: {

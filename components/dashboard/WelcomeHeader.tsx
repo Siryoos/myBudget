@@ -13,6 +13,8 @@ import { Button } from '@/components/ui/Button';
 import { formatCurrency } from '@/lib/i18n';
 import { useTranslation } from '@/lib/useTranslation';
 import { formatDate } from '@/lib/utils';
+import { useToast } from '@/hooks/useToast';
+import { useAuth } from '@/contexts/AppProvider';
 
 interface WelcomeHeaderProps {
   showGreeting?: boolean
@@ -39,6 +41,8 @@ export function WelcomeHeader({
   const [userName] = useState('Alex'); // This would come from user context
   const [greeting, setGreeting] = useState('morning'); // Default to morning
   const [today, setToday] = useState(new Date());
+  const { toast } = useToast();
+  const { user } = useAuth();
 
   // Set greeting and date on client side to avoid hydration mismatch
   useEffect(() => {
@@ -48,28 +52,24 @@ export function WelcomeHeader({
     setToday(new Date());
   }, []);
 
-  // Debug logging
-  useEffect(() => {
-    console.log('WelcomeHeader i18n state:', { ready, language: i18n.language, isInitialized: i18n.isInitialized });
-  }, [ready, i18n.language, i18n.isInitialized]);
 
   const quickActions = [
     {
       label: t('dashboard:quickActions.addTransaction', { defaultValue: 'Add Transaction' }),
       icon: PlusIcon,
-      action: () => console.log('Add transaction'),
+      action: () => toast({ title: t('dashboard:quickActions.addTransaction', { defaultValue: 'Add Transaction' }), description: t('dashboard:tip.addTransaction', { defaultValue: 'Opening add transaction flow...' }), variant: 'info', duration: 2000 }),
       variant: 'primary' as const,
     },
     {
       label: t('dashboard:quickActions.quickSave', { defaultValue: 'Quick Save' }),
       icon: BanknotesIcon,
-      action: () => console.log('Quick save'),
+      action: () => toast({ title: t('dashboard:quickActions.quickSave', { defaultValue: 'Quick Save' }), description: t('dashboard:tip.quickSave', { defaultValue: 'Opening quick save...' }), variant: 'info', duration: 2000 }),
       variant: 'secondary' as const,
     },
     {
       label: t('dashboard:quickActions.viewBudget', { defaultValue: 'View Budget' }),
       icon: ChartBarIcon,
-      action: () => console.log('View budget'),
+      action: () => toast({ title: t('dashboard:quickActions.viewBudget', { defaultValue: 'View Budget' }), description: t('dashboard:tip.viewBudget', { defaultValue: 'Navigating to budget...' }), variant: 'info', duration: 2000 }),
       variant: 'outline' as const,
     },
   ];
@@ -80,7 +80,7 @@ export function WelcomeHeader({
         <div className="flex-1">
           {showGreeting && (
             <h1 className="text-2xl sm:text-3xl font-bold mb-2">
-              {t(`common:app.greeting.${greeting}`, { defaultValue: `Good ${greeting}` })}, {userName}! 👋
+              {t(`common:app.greeting.${greeting}`, { defaultValue: `Good ${greeting}` })}, {user?.name || userName}! 👋
             </h1>
           )}
 
@@ -100,6 +100,13 @@ export function WelcomeHeader({
                 {t('dashboard:insights.newAvailable', { count: 3, defaultValue: '3 new insights available' })}
               </span>
             </div>
+          </div>
+        </div>
+
+        {/* Avatar */}
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center text-white font-semibold" aria-hidden="true">
+            {(user?.name || userName).charAt(0).toUpperCase()}
           </div>
         </div>
 

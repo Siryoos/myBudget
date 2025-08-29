@@ -10,7 +10,7 @@ import {
   XMarkIcon,
   EllipsisHorizontalIcon,
 } from '@heroicons/react/24/outline';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
@@ -19,6 +19,7 @@ import { formatRelativeTime } from '@/lib/i18n';
 import { useI18n } from '@/lib/i18n-provider';
 import { useTranslation } from '@/lib/useTranslation';
 import type { Transaction } from '@/types';
+import { useToast } from '@/hooks/useToast';
 
 interface TransactionTableProps {
   sortable?: boolean
@@ -45,6 +46,8 @@ export function TransactionTable({
   const [selectedTransactions, setSelectedTransactions] = useState<string[]>([]);
   const [editingTransaction, setEditingTransaction] = useState<string | null>(null);
   const [editCategory, setEditCategory] = useState('');
+  const { toast } = useToast();
+  const lastDeletedRef = useRef<Transaction[] | null>(null);
 
   // Mock transaction data
   const [transactions, setTransactions] = useState<Transaction[]>([
@@ -214,8 +217,27 @@ export function TransactionTable({
   };
 
   const handleDeleteTransactions = (transactionIds: string[]) => {
-    setTransactions(prev => prev.filter(t => !transactionIds.includes(t.id)));
+    setTransactions(prev => {
+      const toDelete = prev.filter(t => transactionIds.includes(t.id));
+      (lastDeletedRef as any).current = toDelete;
+      return prev.filter(t => !transactionIds.includes(t.id));
+    });
     setSelectedTransactions([]);
+    const id = toast({
+      title: t('toast.deleted', { defaultValue: 'Transactions deleted' }),
+      description: t('toast.undo', { defaultValue: 'Undo' }),
+      variant: 'info',
+      duration: 5000,
+      action: {
+        label: t('actions.undo', { defaultValue: 'Undo' }),
+        onClick: () => {
+          const deleted = (lastDeletedRef as any).current as Transaction[];
+          if (deleted && deleted.length) {
+            setTransactions(prev => [...deleted, ...prev].sort((a,b)=>a.date.getTime()-b.date.getTime()));
+          }
+        },
+      },
+    });
   };
 
   const getCategoryIcon = (category: string) => {

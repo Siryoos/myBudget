@@ -64,9 +64,7 @@ export function InsightsPanel({
   const peerComparisons = useMemo(() => getMockPeerComparisons(t), [t]);
 
   // Mock dismiss function
-  const dismissInsight = (id: string) => {
-    console.log('Dismiss insight:', id);
-  };
+  const dismissInsight = (_id: string) => {};
 
   const handleInsightAction = useCallback(async (action: InsightAction) => {
     switch (action.type) {
